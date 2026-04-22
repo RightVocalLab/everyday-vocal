@@ -5188,6 +5188,15 @@ function _stopMetronome(){
 if(_metroTimer){ clearInterval(_metroTimer); _metroTimer=null; }
 }
 
+/* 스케일 실제 첫 음 반환 — 하행 스케일은 pattern[0]만큼 위 음 */
+function _getFirstNote(mod){
+if(!mod)return 0;
+const pat=mod.pattern||[];
+/* 첫 번째 note 타입 패턴 값 */
+const firstSemi=pat.length>0&&typeof pat[0]==='number'?pat[0]:0;
+return mod.startNote+firstSemi;
+}
+
 function startEngine(){
 
 gCtx();playing=true;document.getElementById('pp').textContent='⏸';
@@ -5199,7 +5208,8 @@ _startMetronome(curBpm, function(){
 
 if(!playing)return;
 if(pt&&pt!=='없음'){
-playPreviewChord(curMod.startNote,pt,curBpm,false,null);
+const _firstNote=_getFirstNote(curMod);
+playPreviewChord(_firstNote,pt,curBpm,false,null);
 const spb2=60/curBpm;
 const delayMs2=Math.round(spb2*4*1000);
 setTimeout(function(){if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs2);
@@ -5211,7 +5221,8 @@ return;
 }
 
 if(pt&&pt!=='없음'){
-playPreviewChord(curMod.startNote,pt,curBpm,false,null);
+const _firstNote=_getFirstNote(curMod);
+playPreviewChord(_firstNote,pt,curBpm,false,null);
 const spb=60/curBpm;
 const delayMs=Math.round(spb*4*1000);
 setTimeout(()=>{if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs);
