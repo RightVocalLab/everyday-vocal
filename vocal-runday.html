@@ -4552,137 +4552,147 @@ function gCtx(){
     cmp.attack.value=0.002;cmp.release.value=0.15;cmp.connect(actx.destination);
     mGain=actx.createGain();mGain.gain.value=0.72;mGain.connect(cmp);
     /* 업라이트 피아노 리버브 (약간 긴 홀) */
-    /* 콘서트홀 리버브 — Karplus-Strong에 어울리는 자연스러운 잔향 */
-    const sr=actx.sampleRate,len=Math.floor(sr*0.8);
+    /* 피아노 콘서트홀 리버브 — 따뜻하고 자연스러운 잔향 */
+    const sr=actx.sampleRate,len=Math.floor(sr*0.9);
     const buf=actx.createBuffer(2,len,sr);
     for(let c=0;c<2;c++){
       const d=buf.getChannelData(c);
-      /* 초기 반사(early reflection) + 후기 확산(late diffusion) */
-      const jitter=c===0?1.0:0.97;
+      const ch=c===0?1.0:0.96;
       for(let i=0;i<len;i++){
-        const earlyRef=i<sr*0.05?Math.exp(-i/(sr*0.012))*0.5:0;
-        const lateRev=Math.pow(Math.max(0,1-i/len),1.4)*0.18;
-        d[i]=(Math.random()*2-1)*(earlyRef+lateRev)*jitter;
+        /* 초기반사(35ms) + 후기 잔향(긴 꼬리) */
+        const earlyMs=sr*0.035;
+        const early=i<earlyMs ? Math.exp(-i/(earlyMs*0.4))*0.45 : 0;
+        const late=Math.pow(Math.max(0,1-i/len),1.3)*0.20;
+        /* 약간의 확산 모듈레이션 */
+        const mod=1+0.003*Math.sin(i*0.0007*(c+1));
+        d[i]=(Math.random()*2-1)*(early+late)*ch*mod;
       }
     }
     rv=actx.createConvolver();rv.buffer=buf;
-    const rg=actx.createGain();rg.gain.value=0.13;rv.connect(rg);rg.connect(mGain);
+    const rg=actx.createGain();rg.gain.value=0.12;rv.connect(rg);rg.connect(mGain);
   }
   if(actx.state==='suspended')actx.resume();return actx;
 }
 
 /* 업라이트 피아노 — 현악기 느낌, 더 따뜻한 음색 */
-function playPiano(midi,dur=0.5,vol=0.52){
-  const ctx=gCtx(), t=ctx.currentTime;
-  const freq=m2f(midi);
-  const norm=Math.max(0,Math.min(1,(midi-36)/52));
+/* ── 피아노 샘플러 (Salamander Grand Piano) ─────────────────
+   실제 그랜드 피아노 녹음 샘플을 불러와서 재생
+   CDN: tonejs.github.io/audio/salamander/
+   ──────────────────────────────────────────────────────────── */
+let _pianoSamples = {};   /* 로드된 오디오 버퍼 캐시 */
+let _samplesLoading = false;
+let _samplesReady = false;
 
-  const master=ctx.createGain();
-  master.connect(mGain);
-  if(rv)master.connect(rv);
+/* 샘플러에서 사용할 기준음 목록 */
+const _SAMPLE_NOTES = [
+  {midi:21,  name:'A0'},  {midi:24,  name:'C1'},
+  {midi:27,  name:'Eb1'}, {midi:30,  name:'F#1'},
+  {midi:33,  name:'A1'},  {midi:36,  name:'C2'},
+  {midi:39,  name:'Eb2'}, {midi:42,  name:'F#2'},
+  {midi:45,  name:'A2'},  {midi:48,  name:'C3'},
+  {midi:51,  name:'Eb3'}, {midi:54,  name:'F#3'},
+  {midi:57,  name:'A3'},  {midi:60,  name:'C4'},
+  {midi:63,  name:'Eb4'}, {midi:66,  name:'F#4'},
+  {midi:69,  name:'A4'},  {midi:72,  name:'C5'},
+  {midi:75,  name:'Eb5'}, {midi:78,  name:'F#5'},
+  {midi:81,  name:'A5'},  {midi:84,  name:'C6'},
+  {midi:87,  name:'Eb6'}, {midi:90,  name:'F#6'},
+  {midi:93,  name:'A6'},  {midi:96,  name:'C7'},
+  {midi:99,  name:'Eb7'}, {midi:102, name:'F#7'},
+  {midi:105, name:'A7'},  {midi:108, name:'C8'},
+];
+const _SAMPLE_BASE = 'https://tonejs.github.io/audio/salamander/';
 
-  /* ── ADSR 마스터 ─────────────────────────────── */
-  master.gain.setValueAtTime(0,t);
-  master.gain.linearRampToValueAtTime(1.0, t+0.007);
-  master.gain.exponentialRampToValueAtTime(0.72, t+0.04);
-  master.gain.setValueAtTime(0.72, t+dur-0.05);
-  master.gain.exponentialRampToValueAtTime(0.0001, t+dur+0.25);
+/* 가장 가까운 샘플음 찾기 */
+function _nearestSample(midi){
+  return _SAMPLE_NOTES.reduce((best, s)=>
+    Math.abs(s.midi-midi) < Math.abs(best.midi-midi) ? s : best
+  );
+}
 
-  /* ── 레이어 1: FM 합성 (피아노 핵심 음색) ───────
-     변조기(mod)가 캐리어(car) 주파수를 변조
-     → 배음이 자연스럽게 생성됨
-     저음: 따뜻한 FM / 고음: 밝은 FM                */
-  const carFreq = freq;
-  const modRatio = 1.0;          /* 정수비: 조화 배음 */
-  const modFreq  = freq * modRatio;
-  const modIndex = 3.5 - norm*1.8; /* 저음:높은 인덱스(두꺼움), 고음:낮은 인덱스(맑음) */
+/* 샘플 미리 로드 (앱 시작 시 & 필요 시) */
+function _loadPianoSamples(){
+  if(_samplesLoading || _samplesReady) return;
+  _samplesLoading = true;
+  const ctx = gCtx();
+  let loaded = 0;
+  const total = _SAMPLE_NOTES.length;
+  _SAMPLE_NOTES.forEach(s=>{
+    fetch(_SAMPLE_BASE + s.name + '.mp3')
+      .then(r=>r.arrayBuffer())
+      .then(ab=>ctx.decodeAudioData(ab))
+      .then(buf=>{
+        _pianoSamples[s.midi] = buf;
+        loaded++;
+        if(loaded >= total){ _samplesReady=true; _samplesLoading=false; }
+      })
+      .catch(()=>{ loaded++; if(loaded>=total){_samplesReady=true;_samplesLoading=false;} });
+  });
+}
 
-  /* 변조기 */
-  const mod  = ctx.createOscillator();
-  const modG = ctx.createGain();
-  mod.type = 'sine';
-  mod.frequency.value = modFreq;
-  modG.gain.setValueAtTime(modFreq * modIndex, t);
-  modG.gain.exponentialRampToValueAtTime(modFreq * modIndex * 0.3, t+0.08);
-  modG.gain.exponentialRampToValueAtTime(modFreq * 0.05, t+dur*0.6);
-  mod.connect(modG);
+/* 샘플 재생 (합성 폴백 포함) */
+function playPiano(midi, dur=0.5, vol=0.52){
+  const ctx = gCtx();
+  const t = ctx.currentTime;
 
-  /* 캐리어 */
-  const car  = ctx.createOscillator();
-  const carG = ctx.createGain();
-  car.type = 'sine';
-  car.frequency.value = carFreq;
-  modG.connect(car.frequency);  /* FM 연결 */
-  carG.gain.setValueAtTime(vol*0.62, t);
-  carG.gain.exponentialRampToValueAtTime(vol*0.50, t+0.05);
-  carG.gain.exponentialRampToValueAtTime(vol*0.001, t+dur*(0.7+norm*0.2)+0.1);
-  car.connect(carG);
-  carG.connect(master);
+  /* 샘플 로드 시작 (아직 안 했으면) */
+  if(!_samplesReady && !_samplesLoading) _loadPianoSamples();
 
-  /* 2차 FM 레이어: 5도 위 (피아노 특유의 금속성) */
-  const car2  = ctx.createOscillator();
-  const car2G = ctx.createGain();
-  const mod2  = ctx.createOscillator();
-  const mod2G = ctx.createGain();
-  car2.type = 'sine';
-  car2.frequency.value = carFreq * 2.0;
-  mod2.type = 'sine';
-  mod2.frequency.value = carFreq * 2.0;
-  mod2G.gain.setValueAtTime(carFreq * (modIndex*0.4), t);
-  mod2G.gain.exponentialRampToValueAtTime(carFreq * 0.03, t+0.06);
-  mod2.connect(mod2G);
-  mod2G.connect(car2.frequency);
-  car2G.gain.setValueAtTime(vol*0.22, t);
-  car2G.gain.exponentialRampToValueAtTime(vol*0.001, t+dur*0.35+0.05);
-  car2.connect(car2G);
-  car2G.connect(master);
+  /* 샘플이 준비됐으면 샘플로 재생 */
+  if(_samplesReady){
+    const nearest = _nearestSample(midi);
+    const buf = _pianoSamples[nearest.midi];
+    if(buf){
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      /* 반음 차이만큼 피치 조정 (2^(semitones/12)) */
+      src.playbackRate.value = Math.pow(2, (midi - nearest.midi) / 12);
 
-  /* ── 레이어 2: 따뜻한 사인 기음 보강 ────────────*/
-  const base  = ctx.createOscillator();
-  const baseG = ctx.createGain();
-  base.type = 'triangle';
-  base.frequency.value = freq;
-  baseG.gain.setValueAtTime(vol*(0.18+norm*0.08), t+0.003);
-  baseG.gain.exponentialRampToValueAtTime(vol*0.001, t+dur*(0.55+norm*0.3));
-  base.connect(baseG);
-  baseG.connect(master);
+      const gain = ctx.createGain();
+      gain.connect(mGain);
+      if(rv) gain.connect(rv);
+      src.connect(gain);
 
-  /* ── 레이어 3: 서브 옥타브 (저음 풍성함) ─────── */
-  if(norm<0.6){
-    const sub  = ctx.createOscillator();
-    const subG = ctx.createGain();
-    sub.type = 'sine';
-    sub.frequency.value = freq * 0.5;
-    subG.gain.setValueAtTime(vol*(0.08*(1-norm*1.5)), t);
-    subG.gain.exponentialRampToValueAtTime(0.0001, t+dur*0.4);
-    sub.connect(subG);
-    subG.connect(master);
-    sub.start(t); sub.stop(t+dur*0.45);
+      /* ADSR */
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(vol, t+0.004);
+      gain.gain.setValueAtTime(vol, t+dur-0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t+dur+0.3);
+
+      src.start(t);
+      src.stop(t + dur + 0.4);
+      return;
+    }
   }
 
-  /* ── 해머 타건음 ─────────────────────────────── */
-  const hLen = Math.floor(ctx.sampleRate*0.018);
-  const hBuf = ctx.createBuffer(1,hLen,ctx.sampleRate);
-  const hD   = hBuf.getChannelData(0);
-  for(let i=0;i<hLen;i++)
-    hD[i]=(Math.random()*2-1)*Math.exp(-i/(hLen*0.09))*(0.55-norm*0.18);
-  const hSrc = ctx.createBufferSource();
-  const hBpf = ctx.createBiquadFilter();
-  const hG   = ctx.createGain();
-  hBpf.type='bandpass';
-  hBpf.frequency.value = freq*(2.8+norm*3.5);
-  hBpf.Q.value = 2.2;
-  hSrc.buffer=hBuf;
-  hSrc.connect(hBpf); hBpf.connect(hG); hG.connect(master);
-  hG.gain.setValueAtTime(0.16-norm*0.05, t);
-  hG.gain.exponentialRampToValueAtTime(0.0001, t+0.019);
-  hSrc.start(t); hSrc.stop(t+0.023);
+  /* ── 샘플 미준비 시 폴백: 깨끗한 합성 피아노 ────────────── */
+  const freq = m2f(midi);
+  const norm = Math.max(0, Math.min(1, (midi-36)/72));
+  const mst = ctx.createGain();
+  const lpf = ctx.createBiquadFilter();
+  lpf.type='lowpass';
+  lpf.frequency.value = Math.min(freq*10, 12000);
+  lpf.connect(mst); mst.connect(mGain); if(rv)mst.connect(rv);
 
-  /* 전체 시작/정지 */
-  [mod,car,car2,mod2,base].forEach(o=>{o.start(t);});
-  const stopT = t+dur*(0.85+norm*0.15)+0.35;
-  [mod,car,car2,mod2,base].forEach(o=>{o.stop(stopT);});
+  /* ADSR */
+  mst.gain.setValueAtTime(0,t);
+  mst.gain.linearRampToValueAtTime(vol, t+0.004);
+  mst.gain.exponentialRampToValueAtTime(vol*0.6, t+0.06);
+  mst.gain.setValueAtTime(vol*0.6, t+dur-0.05);
+  mst.gain.exponentialRampToValueAtTime(0.0001, t+dur+0.25);
+
+  /* 배음 */
+  [[1,0.75],[2,0.12],[3,0.07],[4,0.03],[5,0.04*norm]].forEach(([n,g])=>{
+    const f2=freq*n; if(f2>16000) return;
+    const o=ctx.createOscillator(), gn=ctx.createGain();
+    o.type='sine'; o.frequency.value=f2;
+    gn.gain.setValueAtTime(g,t+0.003);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t+dur*(0.8-norm*0.2));
+    o.connect(gn); gn.connect(lpf);
+    o.start(t); o.stop(t+dur+0.1);
+  });
 }
+
 
 /* 예비음
    처음 시작: 5도화음 동시 4박 서스테인 → 4박 후 스케일
@@ -6034,7 +6044,7 @@ function rdXl(file){
 function setXlSt(m,err){const el=document.getElementById('xl-status');el.textContent=m;el.style.color=err?'#dc2626':'#16a34a';}
 
 /* ══ INIT ══ */
-window.addEventListener('DOMContentLoaded',()=>{buildHome();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();});
+window.addEventListener('DOMContentLoaded',()=>{buildHome();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();setTimeout(_loadPianoSamples,1500);});
 </script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
