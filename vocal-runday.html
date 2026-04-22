@@ -432,27 +432,33 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
       <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
     </div>
-    <!-- 코칭 -->
-    <div class="coach-box">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span style="font-size:10px;color:var(--or);font-weight:800">💬 코칭 멘트</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:10px;color:var(--mu)">자동재생</span>
-          <button id="coach-toggle" class="btn-ghost on" onclick="toggleCoachAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">ON</button>
-        </div>
-      </div>
-      <div class="coach-txt" id="coach">재생 버튼을 누르면 시작합니다.</div>
-    </div>
-    <!-- 훈련 설명 (항상 표시) -->
+    <!-- 훈련 설명 + 코칭 통합 카드 -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--mu);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn-ghost" id="desc-read-btn" onclick="readDesc()" style="display:flex;align-items:center;gap:4px;font-size:11px">🔊 읽기</button>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()" style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
+        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <!-- 화이팅 멘트 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🎉화이팅</span>
+            <button id="cheer-toggle" class="btn-ghost on" onclick="toggleCheerAuto()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px">ON</button>
+          </div>
+          <!-- 훈련음+화이팅 자동재생 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🔊자동</span>
+            <button id="coach-desc-toggle" class="btn-ghost on" onclick="toggleCoachDesc()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="훈련설명">📖ON</button>
+            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="화이팅멘트">💪ON</button>
+          </div>
+          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
+            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
         </div>
       </div>
-      <div style="font-size:13px;color:var(--tx);line-height:1.75" id="ex-desc">—</div>
+      <!-- 훈련 설명 본문 -->
+      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
+      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
+      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
     </div>
     <!-- 컨트롤 -->
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
@@ -1079,27 +1085,33 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
       <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
     </div>
-    <!-- 코칭 -->
-    <div class="coach-box">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span style="font-size:10px;color:var(--or);font-weight:800">💬 코칭 멘트</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:10px;color:var(--mu)">자동재생</span>
-          <button id="coach-toggle" class="btn-ghost on" onclick="toggleCoachAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">ON</button>
-        </div>
-      </div>
-      <div class="coach-txt" id="coach">재생 버튼을 누르면 시작합니다.</div>
-    </div>
-    <!-- 훈련 설명 (항상 표시) -->
+    <!-- 훈련 설명 + 코칭 통합 카드 -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--mu);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn-ghost" id="desc-read-btn" onclick="readDesc()" style="display:flex;align-items:center;gap:4px;font-size:11px">🔊 읽기</button>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()" style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
+        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <!-- 화이팅 멘트 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🎉화이팅</span>
+            <button id="cheer-toggle" class="btn-ghost on" onclick="toggleCheerAuto()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px">ON</button>
+          </div>
+          <!-- 훈련음+화이팅 자동재생 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🔊자동</span>
+            <button id="coach-desc-toggle" class="btn-ghost on" onclick="toggleCoachDesc()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="훈련설명">📖ON</button>
+            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="화이팅멘트">💪ON</button>
+          </div>
+          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
+            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
         </div>
       </div>
-      <div style="font-size:13px;color:var(--tx);line-height:1.75" id="ex-desc">—</div>
+      <!-- 훈련 설명 본문 -->
+      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
+      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
+      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
     </div>
     <!-- 컨트롤 -->
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
@@ -1726,27 +1738,33 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
       <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
     </div>
-    <!-- 코칭 -->
-    <div class="coach-box">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span style="font-size:10px;color:var(--or);font-weight:800">💬 코칭 멘트</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:10px;color:var(--mu)">자동재생</span>
-          <button id="coach-toggle" class="btn-ghost on" onclick="toggleCoachAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">ON</button>
-        </div>
-      </div>
-      <div class="coach-txt" id="coach">재생 버튼을 누르면 시작합니다.</div>
-    </div>
-    <!-- 훈련 설명 (항상 표시) -->
+    <!-- 훈련 설명 + 코칭 통합 카드 -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--mu);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn-ghost" id="desc-read-btn" onclick="readDesc()" style="display:flex;align-items:center;gap:4px;font-size:11px">🔊 읽기</button>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()" style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
+        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <!-- 화이팅 멘트 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🎉화이팅</span>
+            <button id="cheer-toggle" class="btn-ghost on" onclick="toggleCheerAuto()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px">ON</button>
+          </div>
+          <!-- 훈련음+화이팅 자동재생 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🔊자동</span>
+            <button id="coach-desc-toggle" class="btn-ghost on" onclick="toggleCoachDesc()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="훈련설명">📖ON</button>
+            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="화이팅멘트">💪ON</button>
+          </div>
+          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
+            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
         </div>
       </div>
-      <div style="font-size:13px;color:var(--tx);line-height:1.75" id="ex-desc">—</div>
+      <!-- 훈련 설명 본문 -->
+      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
+      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
+      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
     </div>
     <!-- 컨트롤 -->
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
@@ -2373,27 +2391,33 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
       <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
     </div>
-    <!-- 코칭 -->
-    <div class="coach-box">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span style="font-size:10px;color:var(--or);font-weight:800">💬 코칭 멘트</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:10px;color:var(--mu)">자동재생</span>
-          <button id="coach-toggle" class="btn-ghost on" onclick="toggleCoachAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">ON</button>
-        </div>
-      </div>
-      <div class="coach-txt" id="coach">재생 버튼을 누르면 시작합니다.</div>
-    </div>
-    <!-- 훈련 설명 (항상 표시) -->
+    <!-- 훈련 설명 + 코칭 통합 카드 -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--mu);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn-ghost" id="desc-read-btn" onclick="readDesc()" style="display:flex;align-items:center;gap:4px;font-size:11px">🔊 읽기</button>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()" style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
+        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <!-- 화이팅 멘트 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🎉화이팅</span>
+            <button id="cheer-toggle" class="btn-ghost on" onclick="toggleCheerAuto()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px">ON</button>
+          </div>
+          <!-- 훈련음+화이팅 자동재생 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:9px;color:var(--mu)">🔊자동</span>
+            <button id="coach-desc-toggle" class="btn-ghost on" onclick="toggleCoachDesc()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="훈련설명">📖ON</button>
+            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px" title="화이팅멘트">💪ON</button>
+          </div>
+          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
+            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
         </div>
       </div>
-      <div style="font-size:13px;color:var(--tx);line-height:1.75" id="ex-desc">—</div>
+      <!-- 훈련 설명 본문 -->
+      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
+      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
+      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
     </div>
     <!-- 컨트롤 -->
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
@@ -2685,7 +2709,7 @@ const INIT_DB={
     {
       "id": "ex_1",
       "name": "발성훈련 셋팅",
-      "desc": "최대값의 발성훈련을 실행하기 위한 발성훈련 자세의 기본 셋팅.",
+      "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
       "videoId": "",
       "active": true,
       "hasScale": false
@@ -2693,7 +2717,7 @@ const INIT_DB={
     {
       "id": "ex_2",
       "name": "복흉식호흡",
-      "desc": "입술을 떨며 음정을 내는 발성훈련.",
+      "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
       "videoId": "",
       "active": true,
       "hasScale": false
@@ -2701,7 +2725,7 @@ const INIT_DB={
     {
       "id": "ex_3",
       "name": "S 브레셔",
-      "desc": "S를 끊어서 내보내보며 횡격막의 움직임을 느껴보는 훈련.",
+      "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
       "videoId": "",
       "active": true,
       "hasScale": false
@@ -2709,7 +2733,7 @@ const INIT_DB={
     {
       "id": "ex_4",
       "name": "Z 브레셔",
-      "desc": "Z브레셔를 가슴에 대기 위해 스타카토로 훈련.",
+      "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2717,7 +2741,7 @@ const INIT_DB={
     {
       "id": "ex_5",
       "name": "허밍",
-      "desc": "입을 다물고 음mmm 소리를 내는 훈련. 성대 이완 및 공명 위치 탐색.",
+      "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2725,7 +2749,7 @@ const INIT_DB={
     {
       "id": "ex_6",
       "name": "오픈 허밍",
-      "desc": "입을 열고 NG발음으로 허밍하는 훈련. 허밍에서 모음 발성으로 전환하는 중간 단계.",
+      "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2733,7 +2757,7 @@ const INIT_DB={
     {
       "id": "ex_7",
       "name": "Press 우",
-      "desc": "강한 우 모음으로 성대의 강한 장력을 만드는 훈련.",
+      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2741,7 +2765,7 @@ const INIT_DB={
     {
       "id": "ex_8",
       "name": "Breath 우",
-      "desc": "호흡을 강하게 불어내는 우 모음으로 성대 주변의 긴장을 풀어내는 훈련.",
+      "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2749,7 +2773,7 @@ const INIT_DB={
     {
       "id": "ex_9",
       "name": "Press 아",
-      "desc": "강한 아 모음으로 성대의 강한 장력을 만드는 훈련.",
+      "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2757,7 +2781,7 @@ const INIT_DB={
     {
       "id": "ex_10",
       "name": "Press 오",
-      "desc": "강한 오 모음으로 목구멍의 공간을 뒤쪽까지 더 열어주는 훈련.",
+      "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2765,7 +2789,7 @@ const INIT_DB={
     {
       "id": "ex_11",
       "name": "호흡훈련",
-      "desc": "호흡과 압력이 뒷통수 윗쪽으로 빨려들어간다는 생각으로 하향하는 훈련.",
+      "desc": "**후 내려오기.**\n'후' 라는 발음을 활용하여 호흡의압력과 소리를 뒤로 당겨주기위한 훈련입니다.\n\n**훈련 방법.**\n'후' 라는 발음을 뒤로 위로 향하게 당겨줍니다.\n처음엔 가성으로 시작하여 가볍게 고음의 길부터 만들어 줍니다.\n본격적으로 가슴소리를 추가하여 두성화 시킨 소리를 내줍니다.\n이 때 뒷통수에 마치 진공청소기를 댄 듯한 느낌으로 훈련해주면 도움이 됩니다.",
       "videoId": "",
       "active": true,
       "hasScale": false
@@ -2773,7 +2797,7 @@ const INIT_DB={
     {
       "id": "ex_12",
       "name": "백프레셔",
-      "desc": "등 뒤쪽으로 압력을 유지하면서 스케일을 진행하는 프레셔 훈련. 과도한 긴장 없이 압력을 버티는 것이 핵심.",
+      "desc": "**백 프레셔.**\n두성화된 소리를 만드는 방법의 꽃으로 뱃고동소리를 유지하며 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n양볼을 최대한 빵빵하게 한 뒤 입술은 모아주고 바람을 불어주며 입술 주변근육에 힘부터 만들어줍니다.\n입술 주변근육에 힘이 충분히 생기면 Z브레셔와 같이 성대음을 추가합니다.\n되돌아가는 압력을 통하여 성대음을 가슴 위치까지 내려 뱃고동 소리를 유지해줍니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2781,7 +2805,7 @@ const INIT_DB={
     {
       "id": "ex_13",
       "name": "흉강고정+Press 우(학!우빡!)",
-      "desc": "흉강고정기법인 학! 을 사용하여",
+      "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2789,7 +2813,7 @@ const INIT_DB={
     {
       "id": "ex_14",
       "name": "Press 후우(후우빡!)",
-      "desc": "후 발음을 빠르게 넣어 우빡 발음(Press)으로 이어가는 훈련. 벽을 밀며 연습하면 효과적.",
+      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2797,7 +2821,7 @@ const INIT_DB={
     {
       "id": "ex_15",
       "name": "학! 아빡",
-      "desc": "흉강고정기법을 추가해 가슴소리 '아' 내보는 훈련.",
+      "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2805,7 +2829,7 @@ const INIT_DB={
     {
       "id": "ex_16",
       "name": "하아빡",
-      "desc": "하아 발음으로 가슴 위치에 소리를 당기면서 스케일을 진행하는 훈련.",
+      "desc": "**Press 하아(하아 빡!).**\nH어택을 사용하여 '아'모음을 냅니다.\n\n**훈련 방법.**\n'아' 모음을 발화하기 전 H어택을 사용하여 성대의 로우마진을 최소화 시킨 상태로 시작하여 빡! 을 해주며 얇아진 성대의 모양을 유지하며 강한 압력의 '아'를 만듭니다.\n\n**훈련 효과.**\n'아' 모음의 두성화를 만들어냅니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2813,7 +2837,7 @@ const INIT_DB={
     {
       "id": "ex_17",
       "name": "오픈허밍(흉성)",
-      "desc": "흉성구 확립을 위한 흉성구의 위치와 소리를 대는 위치를 만들기 위한 훈련.",
+      "desc": "**소울음소리.**\n흉성에 느낌과 호흡을 가슴에 대는 느낌을 체헙합니다.\n\n**훈련 방법.**\n소 울음소리를 음머어~~ 하고 따라하며 길~게 유지합니다. \n이때 가슴앞으로 소리가 아닌 호흡이 유지된다고 생각하며 유지합니다. \n\n**주의 사항.**\n주의할점은 소리를 내려고 할 필요는 없으며 소리가 코로 올라가는 것을 주의해야합니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2821,7 +2845,7 @@ const INIT_DB={
     {
       "id": "ex_18",
       "name": "오픈허밍(두성)",
-      "desc": "깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
+      "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2829,7 +2853,7 @@ const INIT_DB={
     {
       "id": "ex_19",
       "name": "오픈허밍(흉성~두성)",
-      "desc": "오픈허밍 두성상태로 올라가서 한번 눌러서 뒤로위로 더 당긴다고 생각하면서 그 위치에서 '아'로 바꾸기(진행방향은 뒤로 위로)",
+      "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2837,7 +2861,7 @@ const INIT_DB={
     {
       "id": "ex_20",
       "name": "오픈허밍 마아~(5도쉬고)",
-      "desc": "오픈허밍에서 마아~ 로 이어가는 5도 쉬고 내려오기 훈련. 음역 구간은 숙제에서 지정. 마스께라와 가슴에 소리를 대면서 공명 확장.",
+      "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2845,7 +2869,7 @@ const INIT_DB={
     {
       "id": "ex_21",
       "name": "학!아 5도",
-      "desc": "'아' 모음을 사용하여 가슴위치에서 소리내보는 훈련.",
+      "desc": "**아~아~아~.**\n'아' 모음을 사용하여 가슴위치에서 호흡을 대는 연습을 하는 훈련입니다.\n\n**훈련 방법.**\n가슴의 위치에 호흡을 불어낸다(쓸어낸다) 라는 느낌으로, 단 성대음을 내는 느낌보다는 호흡을 앞으로 댄다. 라고 생각하면서 아~아~아~\n\n**주의 사항.**\n성대음을 되도록 사용하지 않고 위치만 느껴봅니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -2853,7 +2877,7 @@ const INIT_DB={
     {
       "id": "ex_22",
       "name": "H어택+아 Press(학!아 하아)",
-      "desc": "가슴소리를 아예 배제한 채 '오'모음으로 두성화 시키는 훈련.",
+      "desc": "**오 두성.**\n공명강을 최대한 연 상태로 가성과 진성 구분없이 두성화 된 감각을 훈련합니다.\n\n**훈련 방법.**\n입을 '오' 모양으로 잘 만들어 둔 뒤, 진성과 가성의 구분을 두지않고 머리통이 울리는 느낌을 갖으며 뒤,위 방향으로 올라갑니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
       "videoId": "",
       "active": true,
       "hasScale": true
@@ -4582,7 +4606,7 @@ if(/^-?\d+$/.test(p)){res.push(parseInt(p));continue;}
 return res.length>=2?res:null;
 }
 
-let ttsV=null,ttsOn=false,descReading=false,coachAuto=true,stepAutoRead=true;
+let ttsV=null,ttsOn=false,descReading=false,coachAuto=true,stepAutoRead=true,cheerAuto=true;
 
 let EL={apiKey:atob('c2tfYzIyNWRlMTNlNzMyZDA0OTJhZWM1OTM2ZjE1N2MzMDU4NzdlMzg2MjBiY2ZiMWVh'),voiceId:'Mny3tJezAvDLdb8JlyUs',enabled:true,stability:0.95,speed:0.80};
 (function(){
@@ -4776,7 +4800,7 @@ stopEL();
 if(window.speechSynthesis)speechSynthesis.cancel();
 }
 
-function speakEL(txt,onEnd){
+function speakEL(txt,onEnd,_stab,_spd){
 
 if(!txt){if(onEnd)setTimeout(onEnd,0);return;}
 
@@ -4880,9 +4904,9 @@ xhr.timeout = 15000;
 xhr.send(JSON.stringify({
 text: cleanTxt,
 model_id: 'eleven_multilingual_v2',
-voice_settings: {stability:EL.stability||0.95, similarity_boost:0.80, style:0, use_speaker_boost:true},
+voice_settings: {stability:(_stab!==undefined?_stab:EL.stability)||0.95, similarity_boost:0.80, style:0, use_speaker_boost:true},
 output_format: 'mp3_44100_128',
-speed: EL.speed||0.80
+speed: (_spd!==undefined?_spd:EL.speed)||0.80
 }));
 });
 const ctx=gCtx();
@@ -4915,6 +4939,7 @@ if(_u){speechSynthesis.cancel();speechSynthesis.speak(_u);}
 }
 function setCoachTxt(t){
 const el=document.getElementById('coach');if(!el)return;
+el.style.display=t?'':'none';
 el.style.opacity=0;setTimeout(()=>{el.textContent=t;el.style.opacity=1;},180);
 }
 function stopTTS(){
@@ -4946,9 +4971,39 @@ else{descReading=true;btn.innerHTML='⏹ 읽기 중지';
 speakEL(txt,()=>{descReading=false;btn.innerHTML='🔊 설명 읽기';});}
 }
 function toggleCoachAuto(){
-coachAuto=!coachAuto;const b=document.getElementById('coach-toggle');
-b.textContent=coachAuto?'ON':'OFF';b.classList.toggle('on',coachAuto);
-if(!coachAuto&&window.speechSynthesis)speechSynthesis.cancel();
+/* 레거시 — 하위호환 */
+coachAuto=!coachAuto;
+}
+function toggleCoachDesc(){
+/* 훈련 설명 토글 */
+coachAuto=!coachAuto;
+const btn=document.getElementById('coach-desc-toggle');
+if(btn){
+  const on=coachAuto;
+  btn.textContent=on?'📖ON':'📖OFF';
+  btn.style.background=on?'':'#9ca3af';
+  btn.style.color=on?'':'#fff';
+  if(on)btn.classList.add('on'); else btn.classList.remove('on');
+}
+if(!coachAuto)cancelTTS();
+}
+function toggleCoachCheer(){
+/* 화이팅 멘트 토글 */
+cheerAuto=!cheerAuto;
+const btn=document.getElementById('coach-cheer-toggle');
+if(btn){
+  const on=cheerAuto;
+  btn.textContent=on?'💪ON':'💪OFF';
+  btn.style.background=on?'':'#9ca3af';
+  btn.style.color=on?'':'#fff';
+  if(on)btn.classList.add('on'); else btn.classList.remove('on');
+}
+}
+
+function toggleCheerAuto(){
+cheerAuto=!cheerAuto;
+const btn=document.getElementById('cheer-toggle');
+if(btn){btn.textContent=cheerAuto?'ON':'OFF';btn.classList.toggle('on',cheerAuto);}
 }
 function diagnoseTTS(){
 const el=document.getElementById('tts-diag');el.style.display='block';
@@ -5220,7 +5275,9 @@ const _CHEER=[
 '화이팅!','할 수 있어!','잘 하고 있어!','힘내!',
 '좋아, 계속해!','거의 다 왔어!','최고야!','멋지다!',
 '포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!',
-'그렇지, 바로 그거야!','훌륭해!','끝까지 가자!'
+'그렇지, 바로 그거야!','훌륭해!','끝까지 가자!',
+'완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!',
+'조금만 더!','이 느낌 유지해!','완벽해!'
 ];
 function _randCheer(exclude){
 const pool=_CHEER.filter(c=>c!==exclude);
@@ -5236,19 +5293,20 @@ if(!c.msg)return;
 coachT.push(setTimeout(()=>{if(playing&&coachAuto)speak(c.msg,c.rate||1.08);},c.sec*1000));
 });
 
-/* 훈련 설명 — 매 훈련 25%, 65% 타이밍에 2회 읽어주기 */
+/* 훈련 설명 — 시작 3초 후 1번만 (coachAuto ON일 때) / 설명 중엔 화이팅 안 나옴 */
 const exDesc = (DB.exercises||[]).find(e=>e.name===mod.exId||e.id===mod.exId);
 if(exDesc&&exDesc.desc&&coachAuto){
-const patLen_d=(mod.pattern||[]).filter(p=>typeof p==='number').length||1;
-const steps_d=allSteps.length;
-const spb_d=60/(mod.bpm||60);
-const totalSec_d=steps_d*patLen_d*spb_d*1.05;
-if(totalSec_d>10){
-  const t1=Math.max(5, totalSec_d*0.25);
-  const t2=Math.max(15, totalSec_d*0.65);
-  coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(exDesc.desc);},t1*1000));
-  coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(exDesc.desc);},t2*1000));
-}
+  coachT.push(setTimeout(()=>{
+    if(playing&&coachAuto){
+      /* 설명 읽는 동안 화이팅 일시 중단 */
+      const _prevCheer=cheerAuto;
+      cheerAuto=false;
+      speakEL(exDesc.desc, function(){
+        /* 설명 끝나면 화이팅 복원 */
+        cheerAuto=_prevCheer;
+      });
+    }
+  }, 3000));
 }
 
 const hwComment = mod.hwComment || '';
@@ -5275,8 +5333,10 @@ if(totalSec2 > 8){
    짧은 훈련(~30초): 3회 / 중간(~60초): 4회 / 긴(~120초): 5회 / 아주 긴(120초+): 6회 */
 const cheerCount = totalSec2 < 30 ? 3 : totalSec2 < 60 ? 4 : totalSec2 < 120 ? 5 : 6;
 /* 전체 구간을 균등 분할 — 앞 15% / 뒤 15% 제외하고 배분 */
-const cheerStart = 0.15;
-const cheerEnd   = 0.85;
+/* 훈련설명 OFF면 전체 구간에 화이팅 배분, ON이면 설명 끝난 후부터 */
+const _descSec = (coachAuto&&exDesc&&exDesc.desc) ? Math.min(3+(exDesc.desc.length/5), totalSec2*0.35) : 0;
+const cheerStart = coachAuto ? Math.min(_descSec/totalSec2+0.05, 0.35) : 0.10;
+const cheerEnd   = 0.90;
 const step = (cheerEnd - cheerStart) / (cheerCount - 1);
 let _lastCheer2='';
 for(let ci=0; ci<cheerCount; ci++){
@@ -5286,9 +5346,10 @@ for(let ci=0; ci<cheerCount; ci++){
   const cSec = totalSec2 * Math.max(0.10, Math.min(0.90, ratio + jitter));
   (function(t){
     coachT.push(setTimeout(function(){
-      if(playing&&coachAuto){
+      if(playing&&coachAuto&&cheerAuto){
         _lastCheer2=_randCheer(_lastCheer2);
-        speakEL(_lastCheer2);
+        /* 화이팅 멘트 — 에너지있게: stability 낮게, speed 빠르게 */
+        speakEL(_lastCheer2, null, 0.40, 0.95);
       }
     }, t*1000));
   })(cSec);
