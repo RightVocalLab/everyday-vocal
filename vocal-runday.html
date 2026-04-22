@@ -5257,9 +5257,12 @@ sch.p=0;sch.s++;
 
 if(sch.s<allSteps.length){
 const hasPreview=curMod.previewType&&curMod.previewType!=='없음';
+const isDownScale=(curMod&&(curMod.id||'').indexOf('DN')!==-1);
 if(hasPreview){
-
-sch.nx+=spb*0.15;
+const tspb_wait=60/100; /* BPM 100 고정 */
+/* 하행 스케일: 마지막음 후 2.5박 여음 주고 예비음 — 일반: 0.15박 후 바로 */
+const preGap = isDownScale ? spb*2.5 : spb*0.15;
+sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
 (function(newR, prevR, schedT){
@@ -5268,12 +5271,8 @@ setTimeout(function(){
 if(playing)playPreviewChord(newR,curMod.previewType,curBpm,true,prevR);
 },dl);
 })(nr, prevRoot, sch.nx);
-
-/* 전조 대기: BPM 100 기준 2박 + 하행 스케일 추가 1박 여유 */
-const tspb_wait=60/100;
-const isDownScale=(curMod&&(curMod.id||'').indexOf('DN')!==-1);
-/* 하행 스케일은 마지막음 끌어짐 위해 1박 추가 대기 */
-sch.nx+=tspb_wait*(isDownScale?3.0:2.0);
+/* 예비음 2박 후 다음 스케일 시작 */
+sch.nx+=tspb_wait*2.0;
 } else {
 sch.nx+=spb*0.15;
 }
