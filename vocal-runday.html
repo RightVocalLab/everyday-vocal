@@ -4647,10 +4647,10 @@ function _playSample(midi,dur,vol){
   gain.connect(mGain);
   if(rv)gain.connect(rv);
   src.connect(gain);
-  /* 볼륨 1.8배 증폭 */
+  /* 볼륨 3.5배 증폭 */
   gain.gain.setValueAtTime(0,t);
-  gain.gain.linearRampToValueAtTime(vol*1.8,t+0.004);
-  gain.gain.setValueAtTime(vol*1.8,t+dur-0.04);
+  gain.gain.linearRampToValueAtTime(vol*3.5,t+0.004);
+  gain.gain.setValueAtTime(vol*3.5,t+dur-0.04);
   gain.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.3);
   src.start(t);
   src.stop(t+dur+0.4);
@@ -4688,9 +4688,15 @@ function playPreviewChord(rootMidi, type, bpm, isTransition, prevRootMidi){
     } else {
       /* 처음 시작 예비음: 동시 타건 + 4박 서스테인 */
       const sustainDur=spb*4;
-      [0,4,7,12,16].forEach(function(offset){
-        playPianoSustain(rootMidi+offset, sustainDur, 0.20);
-      });
+      if(_samplesReady){
+        /* 샘플 준비됨 → 샘플로 재생 */
+        [0,4,7,12,16].forEach(function(offset){
+          playPianoSustain(rootMidi+offset, sustainDur, 0.20);
+        });
+      } else {
+        /* 샘플 미준비 → 합성음으로 즉시 재생 (기다리면 안 들림) */
+        _playPreviewSynth(rootMidi, sustainDur);
+      }
     }
   } else {
     /* 첫음단음 */
@@ -4713,8 +4719,8 @@ function playPianoSustain(midi, dur, vol){
       gain.connect(mGain); if(rv)gain.connect(rv);
       src.connect(gain);
       gain.gain.setValueAtTime(0,t);
-      gain.gain.linearRampToValueAtTime(vol,t+0.006);
-      gain.gain.setValueAtTime(vol,t+dur*0.5);
+      gain.gain.linearRampToValueAtTime(vol*3.5,t+0.006);
+      gain.gain.setValueAtTime(vol*3.5,t+dur*0.5);
       gain.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.5);
       src.start(t); src.stop(t+dur+0.6);
       return;
@@ -4726,12 +4732,31 @@ function playPianoSustain(midi, dur, vol){
 
 /* ══ PIANO SVG ══ */
 let activeMidi=null;
-function buildPianoSVG(sM,eM){
+/* 샘플 미준비 시 합성음 예비음 */
+function _playPreviewSynth(rootMidi, dur){
+  const ctx=gCtx(), t=ctx.currentTime;
+  [0,4,7,12,16].forEach(function(offset){
+    const midi=rootMidi+offset;
+    const f=m2f(midi);
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type='triangle'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.18,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(mGain);
+    o.start(t); o.stop(t+dur+0.1);
+  });
+}
+
+function buildPianoSVG(sM,eM,focus){
   const svg=document.getElementById('piano-svg');
-  /* 실제 훈련 음역 기준으로 건반 표시 — 앞뒤 1~2음 여유 */
-  const pad=2;
-  const lo=Math.max(21,sM-pad);
-  const hi=Math.min(108,eM+pad);
+  /* 3옥타브(36반음) 고정 창
+     focus 있으면 focus 기준, 없으면 훈련 음역 중앙 기준 */
+  const SPAN=36;
+  const center = focus!=null ? focus : Math.round((sM+eM)/2);
+  let lo=Math.max(21, center-Math.floor(SPAN/2));
+  let hi=lo+SPAN;
+  if(hi>108){hi=108;lo=Math.max(21,hi-SPAN);}
   const whites=[];for(let m=lo;m<=hi;m++)if(!isBlack(m))whites.push(m);
   const wc=whites.length,W=svg.clientWidth||360,iW=W-12,wkW=(iW-(wc-1)*2)/wc,bkW=wkW*0.62;
   let h=`<rect width="100%" height="88" fill="#d8d2cb"/>`;
@@ -4752,10 +4777,14 @@ function buildPianoSVG(sM,eM){
 }
 function litKey(midi){
   const svg=document.getElementById('piano-svg');if(!svg)return;
+  /* 건반 창 이동 — 현재 음이 표시 범위 밖이면 재빌드 */
+  if(!svg.querySelector(`[data-midi="${midi}"]`)&&curMod){
+    buildPianoSVG(curMod.startNote,curMod.endNote,midi);
+  }
   if(activeMidi!==null){const p=svg.querySelector(`[data-midi="${activeMidi}"]`);if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');}
   activeMidi=midi;const cur=svg.querySelector(`[data-midi="${midi}"]`);
   if(cur){cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
-    setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},350);} /* fix#6: 350ms 여음 */
+    setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},350);}
 }
 window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-train').classList.contains('hidden'))setTimeout(()=>buildPianoSVG(curMod.startNote,curMod.endNote),50);});
 
