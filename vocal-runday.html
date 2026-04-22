@@ -5632,12 +5632,12 @@ scrStack=['scr-intro'];
 
 /* 3초 후 홈으로 자동 전환 */
 let elapsed=0;
-const loadingTxts=['로딩 중...','훈련 데이터 준비 중...','피아노 샘플 준비 중...','거의 다 됐어요!','시작합니다!'];
+const loadingTxts=['로딩 중...','훈련 데이터 준비 중...','피아노 샘플 준비 중...','거의 다 됐어요!','피아노 소리 준비 중...','시작합니다!'];
 const txtEl=document.getElementById('intro-loading-txt');
 const timer=setInterval(()=>{
   elapsed+=1;
   if(txtEl&&elapsed<loadingTxts.length) txtEl.textContent=loadingTxts[elapsed];
-  if(elapsed>=4){
+  if(elapsed>=6){
     clearInterval(timer);
     /* 인트로 fade out 후 홈으로 */
     intro.style.transition='opacity .4s';
