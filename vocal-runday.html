@@ -4747,13 +4747,19 @@ function _playPreviewSynth(rootMidi, dur){
 
 function buildPianoSVG(sM,eM,focus){
   const svg=document.getElementById('piano-svg');
-  /* 3옥타브(36반음) 고정 창
-     focus 있으면 focus 기준, 없으면 훈련 음역 중앙 기준 */
+  /* 3옥타브 고정 창 — 항상 C(도)에서 시작
+     focus 있으면 focus 기준, 없으면 훈련 시작음 기준 */
   const SPAN=36;
-  const center = focus!=null ? focus : Math.round((sM+eM)/2);
-  let lo=Math.max(21, center-Math.floor(SPAN/2));
-  let hi=lo+SPAN;
-  if(hi>108){hi=108;lo=Math.max(21,hi-SPAN);}
+  const ref = focus!=null ? focus : sM;
+  /* C 음으로 맞추기: ref 이하의 가장 가까운 C */
+  let lo = ref - ((ref - 12) % 12);  /* 해당 옥타브 C */
+  if(lo > ref) lo -= 12;             /* ref보다 크면 한 옥타브 내림 */
+  lo = Math.max(12, lo);             /* A0(21) 이상 보장 */
+  let hi = lo + SPAN;
+  if(hi > 108){ hi=108; lo=Math.max(12, hi-SPAN);
+    /* hi 초과 시 lo도 C로 조정 */
+    lo = lo - ((lo-12)%12);
+  }
   const whites=[];for(let m=lo;m<=hi;m++)if(!isBlack(m))whites.push(m);
   const wc=whites.length,W=svg.clientWidth||360,iW=W-12,wkW=(iW-(wc-1)*2)/wc,bkW=wkW*0.62;
   let h=`<rect width="100%" height="88" fill="#d8d2cb"/>`;
