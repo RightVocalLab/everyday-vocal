@@ -5276,8 +5276,12 @@ const hasPreview=curMod.previewType&&curMod.previewType!=='없음';
 const isDownScale=(curMod&&(curMod.id||'').indexOf('DN')!==-1);
 if(hasPreview){
 const tspb_wait=60/100; /* BPM 100 고정 */
-/* 하행 스케일: 마지막음 후 2.5박 여음 주고 예비음 — 일반: 0.15박 후 바로 */
-const preGap = isDownScale ? spb*2.5 : spb*0.15;
+/* 마지막음 후 텀:
+   하행 스케일 → 2.5박
+   일반 스케일 → 0.5박 (반박 텀 + 마지막음 여음 합쳐서 1박 느낌) */
+/* 일반 스케일: 마지막음(1박) 후 1박 추가 텀 → 총 2박 쉬고 예비음
+   사용자 체감: 도레미레도(1박 텀)빰빰레미파미레 */
+const preGap = isDownScale ? spb*2.5 : spb*1.0;
 sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
@@ -6196,7 +6200,7 @@ row.innerHTML=`
 <div style="font-size:10px;color:var(--mu2)">${m2n(sc.startNote).full}~${m2n(sc.endNote).full} · BPM ${sc.bpm||60}</div>
 </div>
 <button data-exid="${(ex.id||ex.name)}" data-scid="${sc.id}"
-onclick="addFree(this.dataset.exid,this.dataset.scid)"
+onclick="addFreeBtn(this)"
 style="background:var(--or);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">+</button>`;
 body.appendChild(row);
 });
@@ -6215,6 +6219,24 @@ pick.appendChild(wrap);
 });
 }
 
+/* + 버튼 눌림 피드백 — 체크 표시 후 원래대로 */
+function addFreeBtn(btn){
+  const exId=btn.dataset.exid, scaleId=btn.dataset.scid;
+  /* 버튼 상태 변경 */
+  btn.textContent='✓';
+  btn.style.background='#16a34a';
+  btn.style.transform='scale(1.2)';
+  btn.disabled=true;
+  addFree(exId, scaleId);
+  /* 1.2초 후 원래대로 */
+  setTimeout(function(){
+    btn.textContent='+';
+    btn.style.background='var(--or)';
+    btn.style.transform='scale(1)';
+    btn.disabled=false;
+  }, 1200);
+}
+
 function addFree(exId,scaleId){
 const sc=(DB.scales||[]).find(s=>s.id===scaleId);
 const ex=(DB.exercises||[]).find(e=>e.name===exId||e.id===exId);
@@ -6225,7 +6247,8 @@ exId,scaleId,
 label:`${ex?.name||exId} — ${sc.name} (${sc.range})`,
 rangeLabel:sc.range,desc:ex?.desc||'',scaleNote:sc.note||'',
 startNote:sc.startNote,endNote:sc.endNote,pattern:sc.pattern,
-bpm:sc.bpm||60,previewType:sc.previewType||'없음',videoId:ex?.videoId||''
+bpm:sc.bpm||60,previewType:sc.previewType||'없음',videoId:ex?.videoId||'',
+repeat:1
 });
 _saveFreeList();
 rndrFree();
@@ -6264,12 +6287,19 @@ return;
 freeList.forEach((ex,i)=>{
 const d=document.createElement('div');
 d.className='wod-slot';d.draggable=true;d.dataset.idx=i;
+const rep=ex.repeat||1;
 d.innerHTML=`
 <div style="color:var(--mu2);font-size:15px;flex-shrink:0;cursor:grab">⠿</div>
 <div class="wnum">${i+1}</div>
 <div style="flex:1;min-width:0">
 <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.label||ex.exId}</div>
 <div style="font-size:10px;color:var(--mu)">${m2n(ex.startNote).full}~${m2n(ex.endNote).full} · BPM ${ex.bpm||60}</div>
+</div>
+<!-- 횟수 조절 -->
+<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
+  <button onclick="changeRepeat(${i},-1)" style="background:none;border:1px solid var(--bd2);border-radius:5px;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu)">−</button>
+  <div style="font-size:11px;font-weight:800;color:var(--or);min-width:22px;text-align:center">${rep}회</div>
+  <button onclick="changeRepeat(${i},1)" style="background:none;border:1px solid var(--bd2);border-radius:5px;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu)">+</button>
 </div>
 <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
 <button onclick="moveFree(${i},-1)" ${i===0?'disabled':''} style="background:none;border:1px solid var(--bd2);border-radius:5px;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;${i===0?'opacity:.3':''}">▲</button>
@@ -6293,9 +6323,23 @@ c.appendChild(d);
 });
 }
 
+function changeRepeat(idx, delta){
+  if(!freeList[idx])return;
+  const cur=freeList[idx].repeat||1;
+  freeList[idx].repeat=Math.max(1,Math.min(10,cur+delta));
+  _saveFreeList();
+  rndrFree();
+}
+
 function startFreeSeq(){
 if(!freeList.length){alert('훈련을 1개 이상 추가하세요.');return;}
-startSeq([...freeList]);
+/* repeat 횟수만큼 항목 복제 */
+const expanded=[];
+freeList.forEach(function(ex){
+  const r=ex.repeat||1;
+  for(let i=0;i<r;i++) expanded.push(Object.assign({},ex));
+});
+startSeq(expanded);
 }
 
 const SCALE_NUM_MAP = {
