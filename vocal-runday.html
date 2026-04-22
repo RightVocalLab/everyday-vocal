@@ -571,6 +571,18 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
+
+    <!-- 숙제 완료 현황 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
+      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      </div>
+    </div>
+
   </div></div>
 </div>
 
@@ -1161,6 +1173,18 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
+
+    <!-- 숙제 완료 현황 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
+      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      </div>
+    </div>
+
   </div></div>
 </div>
 
@@ -1751,6 +1775,18 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
+
+    <!-- 숙제 완료 현황 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
+      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      </div>
+    </div>
+
   </div></div>
 </div>
 
@@ -2341,6 +2377,18 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
+
+    <!-- 숙제 완료 현황 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
+      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      </div>
+    </div>
+
   </div></div>
 </div>
 
@@ -4747,19 +4795,8 @@ function _playPreviewSynth(rootMidi, dur){
 
 function buildPianoSVG(sM,eM,focus){
   const svg=document.getElementById('piano-svg');
-  /* 3옥타브 고정 창 — 항상 C(도)에서 시작
-     focus 있으면 focus 기준, 없으면 훈련 시작음 기준 */
-  const SPAN=36;
-  const ref = focus!=null ? focus : sM;
-  /* C 음으로 맞추기: ref 이하의 가장 가까운 C */
-  let lo = ref - ((ref - 12) % 12);  /* 해당 옥타브 C */
-  if(lo > ref) lo -= 12;             /* ref보다 크면 한 옥타브 내림 */
-  lo = Math.max(12, lo);             /* A0(21) 이상 보장 */
-  let hi = lo + SPAN;
-  if(hi > 108){ hi=108; lo=Math.max(12, hi-SPAN);
-    /* hi 초과 시 lo도 C로 조정 */
-    lo = lo - ((lo-12)%12);
-  }
+  /* A3(57) ~ A6(93) 고정 3옥타브 — 항상 동일한 건반 표시 */
+  const lo=57, hi=93;
   const whites=[];for(let m=lo;m<=hi;m++)if(!isBlack(m))whites.push(m);
   const wc=whites.length,W=svg.clientWidth||360,iW=W-12,wkW=(iW-(wc-1)*2)/wc,bkW=wkW*0.62;
   let h=`<rect width="100%" height="88" fill="#d8d2cb"/>`;
@@ -4780,10 +4817,7 @@ function buildPianoSVG(sM,eM,focus){
 }
 function litKey(midi){
   const svg=document.getElementById('piano-svg');if(!svg)return;
-  /* 건반 창 이동 — 현재 음이 표시 범위 밖이면 재빌드 */
-  if(!svg.querySelector(`[data-midi="${midi}"]`)&&curMod){
-    buildPianoSVG(curMod.startNote,curMod.endNote,midi);
-  }
+  /* A3~A6 고정 건반 — 범위 밖 음은 lit 표시 생략 */
   if(activeMidi!==null){const p=svg.querySelector(`[data-midi="${activeMidi}"]`);if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');}
   activeMidi=midi;const cur=svg.querySelector(`[data-midi="${midi}"]`);
   if(cur){cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
@@ -4852,27 +4886,17 @@ function schedCoach(mod){
     }, t2*1000));
   }
 
-  /* 3. 파이팅 문구 — 모든 훈련에 2회 랜덤 타이밍 */
+  /* 3. 파이팅 문구 — 1회만 (60~75% 구간 랜덤) */
   const steps2 = allSteps.length;
   const spb2 = 60 / (mod.bpm || 60);
   const totalSec2 = steps2 * spb2 * 1.1;
   if(totalSec2 > 12){
-    /* 40~55% 구간, 75~88% 구간에서 랜덤 */
-    const cheer1Sec = totalSec2 * (0.40 + Math.random()*0.15);
-    const cheer2Sec = totalSec2 * (0.75 + Math.random()*0.13);
-    let lastCheer = '';
+    const cheerSec = totalSec2 * (0.60 + Math.random()*0.15);
     coachT.push(setTimeout(()=>{
       if(playing&&coachAuto){
-        lastCheer = _randCheer(lastCheer);
-        speak(lastCheer, 1.05);
+        speak(_randCheer(''), 1.05);
       }
-    }, cheer1Sec*1000));
-    coachT.push(setTimeout(()=>{
-      if(playing&&coachAuto){
-        const c2 = _randCheer(lastCheer);
-        speak(c2, 1.05);
-      }
-    }, cheer2Sec*1000));
+    }, cheerSec*1000));
   }
 }
 
@@ -5071,10 +5095,34 @@ function onDone(){
       }},
     ]);
   } else {
-    showDone('🎉',isSeq?'전체 완주!':'훈련 완료!',isSeq?'모두 완주했습니다! 🎉':'완료!',[
-      {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
-      {label:'← 나가기',fn:exitTrain},
-    ]);
+    /* 코스 일차에서 온 경우: 스텝 화면으로 돌아가기 */
+    const _fromStep = scrStack.includes('scr-step');
+    const _hasMoreStep = _fromStep && stepIdx < stepItems.length-1;
+    showDone('🎉', isSeq?'전체 완주!':'훈련 완료!', isSeq?'모두 완주했습니다! 🎉':'수고했습니다!', [
+      {label:'↺ 다시', ol:true, fn:()=>{closeDone();doRestart();}},
+      _hasMoreStep
+        ? {label:'다음 훈련하기 →', fn:()=>{
+            closeDone();
+            /* 훈련 화면 닫고 스텝 화면으로 복귀 후 다음 스텝 */
+            cancelTTS();stopEngine();
+            document.getElementById('scr-train')?.classList.add('hidden');
+            scrStack = scrStack.filter(s=>s!=='scr-train');
+            const hwScr=document.getElementById('scr-step');
+            if(hwScr){hwScr.classList.remove('hidden','behind');}
+            if(!scrStack.includes('scr-step'))scrStack.push('scr-step');
+            stepIdx++;
+            renderStep();
+          }}
+        : {label:'← 목록으로', fn:()=>{
+            closeDone();exitTrain();
+            /* 스텝 화면도 닫고 일차 그리드로 */
+            setTimeout(()=>{
+              const _cname=document.getElementById('ds-title')?.textContent||'';
+              const _cobj=(DB.courses||[]).find(c=>c.name===_cname);
+              if(_cobj) openDaySelect(_cobj);
+            },100);
+          }},
+    ].filter(Boolean));
   }
 }
 function showDone(ico,head,txt,btns){
@@ -5150,6 +5198,90 @@ function push(id){const cur=scrStack[scrStack.length-1];if(cur===id)return;docum
 function pop(){cancelTTS();if(scrStack.length<=1)return;const cur=scrStack.pop();document.getElementById(cur)?.classList.add('hidden');document.getElementById(scrStack[scrStack.length-1])?.classList.remove('behind');}
 /* ══ 관리자 비밀번호 ══ */
 const _APW='Zmtxa2RybmVrMSE=';
+/* ══ 숙제 완료 현황 ══ */
+function refreshHwStatus(){
+  const list=document.getElementById('hw-status-list');
+  if(!list)return;
+  list.innerHTML='';
+
+  if(!STUDENTS_DB||!STUDENTS_DB.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--mu)">등록된 학생이 없습니다</div>';
+    return;
+  }
+
+  const today=new Date();
+  const dateStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  const dateDisplay=today.getMonth()+1+'월 '+today.getDate()+'일';
+
+  STUDENTS_DB.forEach(function(student){
+    const hwDoneKey='ev_hw_done_'+student.name+'_'+dateStr;
+    let doneArr=[];
+    try{doneArr=JSON.parse(localStorage.getItem(hwDoneKey)||'[]');}catch(e){}
+    const total=(student.homework||[]).filter(h=>h.scaleId&&h.active!==false).length;
+    const done=doneArr.length;
+    const pct=total>0?Math.round(done/total*100):0;
+    const color=pct===100?'#16a34a':pct>0?'#f97316':'#9ca3af';
+    const badge=pct===100?'🎉 완료':''+done+'/'+total;
+
+    const el=document.createElement('div');
+    el.style.cssText='background:#f9f9f9;border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px';
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="font-size:13px;font-weight:800">${student.name}</div>
+        <div style="font-size:12px;font-weight:700;color:${color}">${badge}</div>
+      </div>
+      <div style="height:6px;background:#e5e7eb;border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:width .4s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:4px">${dateDisplay} 기준</div>`;
+    list.appendChild(el);
+  });
+}
+
+function shareHwStatus(){
+  const today=new Date();
+  const dateStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  const dateDisplay=today.getFullYear()+'년 '+(today.getMonth()+1)+'월 '+today.getDate()+'일';
+  let msg='📚 [Everyday Vocal 숙제 현황]\n'+dateDisplay+'\n\n';
+
+  if(!STUDENTS_DB||!STUDENTS_DB.length){
+    alert('등록된 학생이 없습니다.');return;
+  }
+
+  STUDENTS_DB.forEach(function(student){
+    const hwDoneKey='ev_hw_done_'+student.name+'_'+dateStr;
+    let doneArr=[];
+    try{doneArr=JSON.parse(localStorage.getItem(hwDoneKey)||'[]');}catch(e){}
+    const total=(student.homework||[]).filter(h=>h.scaleId&&h.active!==false).length;
+    const done=doneArr.length;
+    const pct=total>0?Math.round(done/total*100):0;
+    const status=pct===100?'✅ 완료!':pct>0?'🔄 진행중 ('+done+'/'+total+')':'❌ 미완료';
+    msg+=student.name+' : '+status+'\n';
+  });
+
+  msg+='\n- Everyday Vocal -';
+
+  /* 카카오톡 공유 (카카오 SDK 없이 링크 방식) */
+  const encoded=encodeURIComponent(msg);
+  /* 클립보드 복사 후 카카오톡 열기 안내 */
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(msg).then(function(){
+      if(confirm('완료 현황이 클립보드에 복사됐습니다!\n카카오톡을 열어서 붙여넣기 하시겠어요?')){
+        /* 모바일에서 카카오톡 열기 시도 */
+        window.location.href='kakaolink://send?text='+encoded;
+        setTimeout(function(){
+          /* 앱이 없으면 웹 카카오톡 */
+          window.open('https://sharer.kakao.com/talk/friends/picker/link?app_key=DEMO&text='+encoded,'_blank');
+        },1000);
+      }
+    }).catch(function(){
+      alert('복사 실패. 직접 메시지를 복사해주세요:\n\n'+msg);
+    });
+  } else {
+    prompt('아래 내용을 복사해서 카카오톡으로 보내세요:', msg);
+  }
+}
+
 function openAdminPW(){
   document.getElementById('pw-input').value='';
   document.getElementById('pw-err').textContent='';
@@ -5167,6 +5299,7 @@ function checkPW(){
   if(encoded===_APW){
     closePWModal();
     push('scr-admin');
+    setTimeout(refreshHwStatus,200);
   } else {
     const err=document.getElementById('pw-err');
     err.textContent='비밀번호가 올바르지 않습니다.';
@@ -5387,7 +5520,7 @@ function renderStep(){
   /* 이전/다음 버튼 */
   document.getElementById('step-prev-btn').disabled=(stepIdx===0);
   document.getElementById('step-next-btn').textContent=
-    stepIdx===total-1?'✅ 오늘 훈련 완료':'다음 →';
+    stepIdx===total-1?'✅ 오늘 훈련 완료':'다음 훈련 →';
   /* 자동 TTS */
   /* topbar notice */
   const tnc=document.getElementById('step-tts-topbar-notice');
@@ -5408,13 +5541,13 @@ function renderStep(){
 }
 function nextStep(){
   if(stepIdx>=stepItems.length-1){
-    /* 완료 — 일차 완료 마킹 */
+    /* 마지막 스텝 — 일차 완료 마킹 */
     if(window.speechSynthesis)window.speechSynthesis.cancel();
     const _dayNum=parseInt((stepTitle||'').replace(/[^0-9]/g,''));
     const _cname=document.getElementById('ds-title')?.textContent||'';
     if(_dayNum&&_cname)_markDayDone(_cname,_dayNum);
-    showDone('🎉','오늘 훈련 완료!','수고했습니다!',[
-      {label:'← 목록으로',fn:()=>{
+    showDone('🎉','오늘 훈련 완료!','수고했습니다! 오늘도 최고예요 🌟',[
+      {label:'← 일차 목록', fn:()=>{
         closeDone();pop();
         const _cobj=(DB.courses||[]).find(c=>c.name===_cname);
         if(_cobj){setTimeout(()=>openDaySelect(_cobj),50);}
