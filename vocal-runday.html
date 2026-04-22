@@ -4575,24 +4575,25 @@ function gCtx(){
 }
 
 /* 업라이트 피아노 — 현악기 느낌, 더 따뜻한 음색 */
-/* ── 피아노 샘플러 (Salamander Grand Piano) XHR 방식 ───────
-   XHR = file:// 포함 모든 환경에서 작동
-   로드 전 요청은 큐에 저장 → 준비되면 자동 재생 (합성음 절대 안 섞임)
+/* ── 피아노 샘플러 (MusyngKite Acoustic Grand Piano) ────────
+   CDN: gleitz.github.io/midi-js-soundfonts/MusyngKite
+   파일명: A4, Cs4(C#), Ds4(D#), Fs4(F#), Gs4(G#), As4(A#)
+   특수문자 없음 → file:// 포함 모든 환경에서 정상 로드
    ─────────────────────────────────────────────────────────── */
 let _pianoSamples={}, _samplesLoading=false, _samplesReady=false;
 let _pianoQueue=[];
 
 const _SAMPLE_NOTES=[
-  {midi:21,name:'A0'}, {midi:24,name:'C1'}, {midi:27,name:'Eb1'},{midi:30,name:'Gb1'},
-  {midi:33,name:'A1'}, {midi:36,name:'C2'}, {midi:39,name:'Eb2'},{midi:42,name:'Gb2'},
-  {midi:45,name:'A2'}, {midi:48,name:'C3'}, {midi:51,name:'Eb3'},{midi:54,name:'Gb3'},
-  {midi:57,name:'A3'}, {midi:60,name:'C4'}, {midi:63,name:'Eb4'},{midi:66,name:'Gb4'},
-  {midi:69,name:'A4'}, {midi:72,name:'C5'}, {midi:75,name:'Eb5'},{midi:78,name:'Gb5'},
-  {midi:81,name:'A5'}, {midi:84,name:'C6'}, {midi:87,name:'Eb6'},{midi:90,name:'Gb6'},
-  {midi:93,name:'A6'}, {midi:96,name:'C7'}, {midi:99,name:'Eb7'},{midi:102,name:'Gb7'},
-  {midi:105,name:'A7'},{midi:108,name:'C8'},
+  {midi:21, name:'A0'}, {midi:25, name:'Db1'},{midi:29, name:'F1'},
+  {midi:33, name:'A1'}, {midi:37, name:'Db2'},{midi:41, name:'F2'},
+  {midi:45, name:'A2'}, {midi:49, name:'Db3'},{midi:53, name:'F3'},
+  {midi:57, name:'A3'}, {midi:61, name:'Db4'},{midi:65, name:'F4'},
+  {midi:69, name:'A4'}, {midi:73, name:'Db5'},{midi:77, name:'F5'},
+  {midi:81, name:'A5'}, {midi:85, name:'Db6'},{midi:89, name:'F6'},
+  {midi:93, name:'A6'}, {midi:97, name:'Db7'},{midi:101,name:'F7'},
+  {midi:105,name:'A7'},
 ];
-const _SAMPLE_BASE='https://tonejs.github.io/audio/salamander/';
+const _SAMPLE_BASE='https://gleitz.github.io/midi-js-soundfonts/MusyngKite/acoustic_grand_piano-mp3/';
 
 function _nearestSample(midi){
   return _SAMPLE_NOTES.reduce((b,s)=>Math.abs(s.midi-midi)<Math.abs(b.midi-midi)?s:b);
@@ -4602,7 +4603,7 @@ function _loadOneSample(s,ctx,onDone){
   const xhr=new XMLHttpRequest();
   xhr.open('GET',_SAMPLE_BASE+s.name+'.mp3',true);
   xhr.responseType='arraybuffer';
-  xhr.timeout=10000;
+  xhr.timeout=12000;
   xhr.onload=function(){
     if(xhr.status===200||xhr.status===0){
       ctx.decodeAudioData(xhr.response,
@@ -4620,14 +4621,13 @@ function _loadPianoSamples(){
   if(_samplesLoading||_samplesReady)return;
   _samplesLoading=true;
   const ctx=gCtx();
-  let done=0, total=_SAMPLE_NOTES.length;
+  let done=0,total=_SAMPLE_NOTES.length;
   _SAMPLE_NOTES.forEach(function(s){
     _loadOneSample(s,ctx,function(){
       done++;
       if(done>=total){
         _samplesReady=true;
         _samplesLoading=false;
-        /* 로드 완료 — 큐에 쌓인 요청 처리 */
         _pianoQueue.forEach(function(q){_playSample(q.midi,q.dur,q.vol);});
         _pianoQueue=[];
       }
@@ -4636,7 +4636,7 @@ function _loadPianoSamples(){
 }
 
 function _playSample(midi,dur,vol){
-  const ctx=gCtx(), t=ctx.currentTime;
+  const ctx=gCtx(),t=ctx.currentTime;
   const nearest=_nearestSample(midi);
   const buf=_pianoSamples[nearest.midi];
   if(!buf)return;
@@ -4659,8 +4659,7 @@ function playPiano(midi,dur=0.5,vol=0.52){
   if(!_samplesReady&&!_samplesLoading)_loadPianoSamples();
   if(_samplesReady){
     _playSample(midi,dur,vol);
-  } else {
-    /* 아직 로드 중 — 큐에 저장, 합성음 절대 안 냄 */
+  }else{
     _pianoQueue.push({midi:midi,dur:dur,vol:vol});
     if(_pianoQueue.length>60)_pianoQueue.shift();
   }
