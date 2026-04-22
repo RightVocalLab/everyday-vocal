@@ -2869,7 +2869,7 @@ const INIT_DB={
       "range": "흉성",
       "startNote": 57,
       "endNote": 61,
-      "bpm": 125,
+      "bpm": 180,
       "pattern": [
         0,
         2,
@@ -2919,7 +2919,7 @@ const INIT_DB={
       "range": "중성",
       "startNote": 62,
       "endNote": 67,
-      "bpm": 125,
+      "bpm": 180,
       "pattern": [
         0,
         2,
@@ -2969,7 +2969,7 @@ const INIT_DB={
       "range": "흉성~두성",
       "startNote": 57,
       "endNote": 83,
-      "bpm": 125,
+      "bpm": 180,
       "pattern": [
         0,
         2,
@@ -4725,8 +4725,12 @@ _withFallback(u,(_ntxt.length/5)*1000);
 function _normTTS(txt){
 
 return txt
+.replace(/Z 브레셔/g, '즈 브레셔')
+.replace(/z 브레셔/g, '즈 브레셔')
 .replace(/Z브레셔/g, '즈 브레셔')
 .replace(/z브레셔/g, '즈 브레셔')
+.replace(/S 브레셔/g, '에스 브레셔')
+.replace(/s 브레셔/g, '에스 브레셔')
 .replace(/S브레셔/g, '에스 브레셔')
 .replace(/s브레셔/g, '에스 브레셔');
 }
