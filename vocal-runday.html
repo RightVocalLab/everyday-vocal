@@ -2876,21 +2876,33 @@ const INIT_DB={
         4,
         2,
         0,
+        {
+          "hold": 1
+        },
         2,
         4,
         5,
         4,
         2,
+        {
+          "hold": 1
+        },
         4,
         5,
         7,
         5,
         4,
+        {
+          "hold": 1
+        },
         2,
         4,
         5,
         4,
         2,
+        {
+          "hold": 1
+        },
         0,
         2,
         4,
@@ -2914,21 +2926,33 @@ const INIT_DB={
         4,
         2,
         0,
+        {
+          "hold": 1
+        },
         2,
         4,
         5,
         4,
         2,
+        {
+          "hold": 1
+        },
         4,
         5,
         7,
         5,
         4,
+        {
+          "hold": 1
+        },
         2,
         4,
         5,
         4,
         2,
+        {
+          "hold": 1
+        },
         0,
         2,
         4,
@@ -2952,21 +2976,33 @@ const INIT_DB={
         4,
         2,
         0,
+        {
+          "hold": 1
+        },
         2,
         4,
         5,
         4,
         2,
+        {
+          "hold": 1
+        },
         4,
         5,
         7,
         5,
         4,
+        {
+          "hold": 1
+        },
         2,
         4,
         5,
         4,
         2,
+        {
+          "hold": 1
+        },
         0,
         2,
         4,
@@ -5279,9 +5315,10 @@ const tspb_wait=60/100; /* BPM 100 고정 */
 /* 마지막음 후 텀:
    하행 스케일 → 2.5박
    일반 스케일 → 0.5박 (반박 텀 + 마지막음 여음 합쳐서 1박 느낌) */
-/* 일반 스케일: 마지막음(1박) 후 1박 추가 텀 → 총 2박 쉬고 예비음
-   사용자 체감: 도레미레도(1박 텀)빰빰레미파미레 */
-const preGap = isDownScale ? spb*2.5 : spb*1.0;
+/* 마지막음이 완전히 끝난 후 반박 쉬고 예비음
+   noteDur(0.9박) + 여음(0.8초≈1.67박@BPM125) + 반박여유(0.5박) ≈ 3.0박
+   → 마지막 도 울리고 → 여음 잠잠해지고 → 예비음(빰빰) */
+const preGap = isDownScale ? spb*2.5 : spb*3.0;
 sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
