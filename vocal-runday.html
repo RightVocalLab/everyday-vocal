@@ -4945,20 +4945,24 @@ if(type==='5도화음'){
 if(isTransition && prevRootMidi!=null){
   /* 전조 예비음: BPM 100으로 두 박 */
   const dur=tspb*0.85;
-  /* 첫 박: 이전 키 5도화음 */
+  /* 첫 박: 이전 키 5도화음 + 건반 표시 */
   [0,4,7,12,16].forEach(function(off){ playPiano(prevRootMidi+off, dur, 0.20); });
-  /* 둘째 박: 새 키 5도화음 (1박 후) */
+  litKey(prevRootMidi); /* 이전 키 루트 건반 표시 */
+  /* 둘째 박: 새 키 5도화음 + 건반 표시 (1박 후) */
   setTimeout(function(){
-    if(playing)[0,4,7,12,16].forEach(function(off){ playPiano(rootMidi+off, dur, 0.24); });
+    if(!playing)return;
+    [0,4,7,12,16].forEach(function(off){ playPiano(rootMidi+off, dur, 0.24); });
+    litKey(rootMidi); /* 새 키 루트 건반 표시 */
   }, tspb*1000);
 } else {
-  /* 처음 시작 예비음: 4박 서스테인 */
+  /* 처음 시작 예비음: 4박 서스테인 + 건반 표시 */
   const sustainDur=spb*4;
   if(_samplesReady){
     [0,4,7,12,16].forEach(function(offset){
       playPianoSustain(rootMidi+offset, sustainDur, 0.20);
     });
   }
+  litKey(rootMidi); /* 루트 건반 표시 */
 }
 } else {
 /* 하행스케일 단음 예비음 — 서스테인 + 건반 표시 */
