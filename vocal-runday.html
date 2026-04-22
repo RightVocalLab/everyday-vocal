@@ -5252,7 +5252,7 @@ if(pt&&pt!=='없음'){
 const _firstNote=_getFirstNote(curMod);
 playPreviewChord(_firstNote,pt,curBpm,false,null);
 const spb2=60/curBpm;
-const delayMs2=Math.round(spb2*4*1000);
+const delayMs2=Math.round(spb2*3*1000);
 setTimeout(function(){if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs2);
 } else {
 schedCoach(curMod);runLoop();
@@ -5265,7 +5265,7 @@ if(pt&&pt!=='없음'){
 const _firstNote=_getFirstNote(curMod);
 playPreviewChord(_firstNote,pt,curBpm,false,null);
 const spb=60/curBpm;
-const delayMs=Math.round(spb*4*1000);
+const delayMs=Math.round(spb*3*1000);
 setTimeout(()=>{if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs);
 } else {schedCoach(curMod);runLoop();}
 }
@@ -5288,21 +5288,14 @@ setTimeout(onDone,_downDelay);return;
 const step=allSteps[sch.s],root=curMod.startNote+step.semi;
 const ps=step.ps||[],pstep=ps[sch.p],sT=sch.nx;
 if(pstep&&pstep.type==='hold'){
-/* hold: 직전 음 서스테인 여음 — 첫 번째 hold박에서만 */
-if(sch.p===0||(ps[sch.p-1]&&ps[sch.p-1].type!=='hold')){
-  const prevStep=ps[sch.p-1];
-  if(prevStep&&prevStep.type==='note'){
-    const hM=root+prevStep.semi;
-    (function(m,t){const dl=Math.max(0,(t-ctx.currentTime)*1000);
-      setTimeout(()=>{if(playing)playPianoSustain(m,spb*1.6,0.28);},dl);
-    })(hM,sT);
-  }
-}
+/* hold: 아무것도 안 함 — 이전 note의 여음(0.8초)이 자연스럽게 울림 */
 } else if(pstep&&pstep.type==='note'){
 const nM=root+pstep.semi;
 
-const noteDur=spb*0.90; 
-(function(m,t){const dl=Math.max(0,(t-ctx.currentTime)*1000);setTimeout(()=>{if(playing)playPiano(m,noteDur,0.52);},dl);})(nM,sT);
+/* 다음 스텝이 hold이면 현재 음을 길게 서스테인 */
+const nextPstep=ps[sch.p+1];
+const noteDur=(nextPstep&&nextPstep.type==='hold') ? spb*2.5 : spb*0.90;
+(function(m,t,dur){const dl=Math.max(0,(t-ctx.currentTime)*1000);setTimeout(()=>{if(playing)playPiano(m,dur,0.52);},dl);})(nM,sT,noteDur);
 (function(m,si,dir){const dl=Math.max(0,(sT-ctx.currentTime)*1000);setTimeout(()=>{
 if(!playing)return;litKey(m);const n=m2n(m);
 document.getElementById('cur-n').textContent=n.name;document.getElementById('cur-o').textContent=n.oct;
