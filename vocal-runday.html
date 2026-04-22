@@ -4548,9 +4548,9 @@ function gCtx(){
   if(!actx){
     actx=new(window.AudioContext||window.webkitAudioContext)();
     cmp=actx.createDynamicsCompressor();
-    cmp.threshold.value=-14;cmp.knee.value=6;cmp.ratio.value=4;
+    cmp.threshold.value=-6;cmp.knee.value=10;cmp.ratio.value=2;
     cmp.attack.value=0.002;cmp.release.value=0.15;cmp.connect(actx.destination);
-    mGain=actx.createGain();mGain.gain.value=0.72;mGain.connect(cmp);
+    mGain=actx.createGain();mGain.gain.value=1.8;mGain.connect(cmp);
     /* 업라이트 피아노 리버브 (약간 긴 홀) */
     /* 피아노 콘서트홀 리버브 — 따뜻하고 자연스러운 잔향 */
     const sr=actx.sampleRate,len=Math.floor(sr*0.9);
@@ -4647,16 +4647,16 @@ function _playSample(midi,dur,vol){
   gain.connect(mGain);
   if(rv)gain.connect(rv);
   src.connect(gain);
-  /* 볼륨 3.5배 증폭 */
+  /* 볼륨 10배 증폭 (샘플 원본 볼륨이 낮음) */
   gain.gain.setValueAtTime(0,t);
-  gain.gain.linearRampToValueAtTime(vol*3.5,t+0.004);
-  gain.gain.setValueAtTime(vol*3.5,t+dur-0.04);
+  gain.gain.linearRampToValueAtTime(vol*10,t+0.004);
+  gain.gain.setValueAtTime(vol*10,t+dur-0.04);
   gain.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.3);
   src.start(t);
   src.stop(t+dur+0.4);
 }
 
-function playPiano(midi,dur=0.5,vol=0.52){
+function playPiano(midi,dur=0.5,vol=0.85){
   if(!_samplesReady&&!_samplesLoading)_loadPianoSamples();
   if(_samplesReady){
     _playSample(midi,dur,vol);
@@ -4716,8 +4716,8 @@ function playPianoSustain(midi, dur, vol){
       gain.connect(mGain); if(rv)gain.connect(rv);
       src.connect(gain);
       gain.gain.setValueAtTime(0,t);
-      gain.gain.linearRampToValueAtTime(vol*3.5,t+0.006);
-      gain.gain.setValueAtTime(vol*3.5,t+dur*0.5);
+      gain.gain.linearRampToValueAtTime(vol*10,t+0.006);
+      gain.gain.setValueAtTime(vol*10,t+dur*0.5);
       gain.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.5);
       src.start(t); src.stop(t+dur+0.6);
       return;
