@@ -4803,16 +4803,21 @@ if(window.speechSynthesis)speechSynthesis.speak(u);
 if(EL.enabled&&EL.apiKey&&EL.voiceId){
 
 stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
-_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd).catch(err=>{
+_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd).catch(err=>{
 if(!_tokenValid(myToken))return;
-console.warn('EL 실패:',err.message||err);
-
+const errMsg=err.message||String(err);
+console.warn('EL 실패:',errMsg);
+/* 코치 텍스트 영역에 오류 표시 */
+const coachEl=document.getElementById('coach-txt');
+if(coachEl&&coachEl.textContent===''){
+  coachEl.textContent='[음성오류: '+errMsg.substring(0,30)+']';
+  setTimeout(()=>{if(coachEl.textContent.startsWith('[음성오류'))coachEl.textContent='';},3000);
+}
 if(window.speechSynthesis&&window.SpeechSynthesisUtterance){
 const _ntxt=_normTTS(txt);
 const u=mkUtt(_ntxt,0.90);
 _withFallback(u,(_ntxt.length/5)*1000);
 } else {
-
 if(onEnd) setTimeout(_safeEnd,(txt.length/5)*1000+500);
 }
 });
@@ -4858,7 +4863,7 @@ return line;
 .join('\n');
 }
 
-async function _elSpeak(txt,key,vid,onEnd){
+async function _elSpeak(txt,key,vid,onEnd,_stab,_spd){
 const cleanTxt=_prepTxt(txt);
 
 const arrayBuf = await new Promise((resolve, reject)=>{
