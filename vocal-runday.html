@@ -4686,17 +4686,14 @@ function playPreviewChord(rootMidi, type, bpm, isTransition, prevRootMidi){
         if(playing)[0,4,7,12,16].forEach(function(off){ playPiano(rootMidi+off, dur, 0.24); });
       }, t2);
     } else {
-      /* 처음 시작 예비음: 동시 타건 + 4박 서스테인 */
+      /* 처음 시작 예비음: 동시 타건 + 4박 서스테인 (샘플 준비된 경우만) */
       const sustainDur=spb*4;
       if(_samplesReady){
-        /* 샘플 준비됨 → 샘플로 재생 */
         [0,4,7,12,16].forEach(function(offset){
           playPianoSustain(rootMidi+offset, sustainDur, 0.20);
         });
-      } else {
-        /* 샘플 미준비 → 합성음으로 즉시 재생 (기다리면 안 들림) */
-        _playPreviewSynth(rootMidi, sustainDur);
       }
+      /* 샘플 미준비면 아무 소리 없이 대기 (startEngine에서 메트로놈 처리) */
     }
   } else {
     /* 첫음단음 */
@@ -4902,19 +4899,88 @@ function prepTrain(mod){
 }
 function togglePlay(){if(!curMod)return;playing?stopEngine():startEngine();}
 
+/* ── 메트로놈 ─────────────────────────────────────────────
+   샘플 로드 중 박자를 알려주는 틱 소리
+   샘플 준비되면 자동으로 스케일 시작
+   ──────────────────────────────────────────────────────── */
+let _metroTimer=null;
+let _metroBeat=0;
+
+function _playMetroTick(strong){
+  const ctx=gCtx(), t=ctx.currentTime;
+  const freq = strong ? 1200 : 900;  /* 강박: 높은음, 약박: 낮은음 */
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  o.type='square';
+  o.frequency.value=freq;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(0.08,t+0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+  o.connect(g); g.connect(mGain);
+  o.start(t); o.stop(t+0.08);
+}
+
+function _startMetronome(bpm, onReady){
+  /* 이미 메트로놈 실행 중이면 중지 */
+  _stopMetronome();
+  _metroBeat=0;
+  setCoachTxt('🎵 피아노 소리 준비 중... 박자에 맞춰 시작합니다');
+  const interval=Math.round(60000/bpm);
+
+  /* 즉시 첫 틱 */
+  _playMetroTick(true);
+
+  _metroTimer=setInterval(function(){
+    if(!playing){ _stopMetronome(); return; }
+    _metroBeat++;
+    _playMetroTick(_metroBeat%4===0);  /* 4박마다 강박 */
+
+    /* 샘플 준비됐으면 메트로놈 종료 후 onReady 호출 */
+    if(_samplesReady){
+      _stopMetronome();
+      onReady();
+    }
+  }, interval);
+}
+
+function _stopMetronome(){
+  if(_metroTimer){ clearInterval(_metroTimer); _metroTimer=null; }
+}
+
 function startEngine(){
+
   gCtx();playing=true;document.getElementById('pp').textContent='⏸';
   const pt=curMod.previewType;
+
+  /* 샘플 미준비 시: 메트로놈 → 준비되면 자동 시작 */
+  if(!_samplesReady){
+    _loadPianoSamples();
+    _startMetronome(curBpm, function(){
+      /* 메트로놈 종료 후 예비음 + 스케일 시작 */
+      if(!playing)return;
+      if(pt&&pt!=='없음'){
+        playPreviewChord(curMod.startNote,pt,curBpm,false,null);
+        const spb2=60/curBpm;
+        const delayMs2=Math.round(spb2*4*1000);
+        setTimeout(function(){if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs2);
+      } else {
+        schedCoach(curMod);runLoop();
+      }
+    });
+    return;
+  }
+
+  /* 샘플 준비됨: 바로 예비음 + 스케일 시작 */
   if(pt&&pt!=='없음'){
-    /* 처음: 4박 서스테인 예비음 → 4박 후 스케일 자동 시작 */
     playPreviewChord(curMod.startNote,pt,curBpm,false,null);
     const spb=60/curBpm;
-    const delayMs=Math.round(spb*4*1000);  /* 4박 */
+    const delayMs=Math.round(spb*4*1000);
     setTimeout(()=>{if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs);
   } else {schedCoach(curMod);runLoop();}
 }
 function stopEngine(){
   playing=false;if(loopT)clearTimeout(loopT);clrCT();
+  _stopMetronome();
   document.getElementById('pp').textContent='▶';
   if(coachAuto&&window.speechSynthesis)speechSynthesis.cancel();
 }
