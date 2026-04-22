@@ -5275,74 +5275,49 @@ return pool[Math.floor(Math.random()*pool.length)];
 }
 
 function schedCoach(mod){
-clrCT();if(!coachAuto)return;
+clrCT();
 
-/* 엑셀 코칭 멘트 (특정 시간에 재생) */
-DB.coachings.filter(c=>c.exId===mod.exId&&c.scaleId===mod.scaleId).forEach(c=>{
-if(!c.msg)return;
-coachT.push(setTimeout(()=>{if(playing&&coachAuto)speak(c.msg,c.rate||1.08);},c.sec*1000));
-});
+/* ── 화이팅 멘트만 자동재생 (설명은 버튼으로만) ── */
 
-/* 훈련 설명 — 시작 3초 후 1번만 (coachAuto ON일 때) / 설명 중엔 화이팅 안 나옴 */
-const exDesc = (DB.exercises||[]).find(e=>e.name===mod.exId||e.id===mod.exId);
-if(exDesc&&exDesc.desc&&coachAuto){
-  coachT.push(setTimeout(()=>{
-    if(playing&&coachAuto){
-      /* 설명 읽는 동안 화이팅 일시 중단 */
-      const _prevCheer=cheerAuto;
-      cheerAuto=false;
-      speakEL(exDesc.desc, function(){
-        /* 설명 끝나면 화이팅 복원 */
-        cheerAuto=_prevCheer;
-      });
-    }
-  }, 3000));
-}
-
+/* 숙제 코멘트 — 학생 로그인 시에만 3회 자동재생 */
 const hwComment = mod.hwComment || '';
 if(hwComment && curStudent){
-const steps = allSteps.length;
-const spb = 60 / (mod.bpm || 60);
-const totalSec = steps * spb * 1.1;
-/* 숙제 코멘트 3번: 20%, 50%, 80% 타이밍 */
-const t1 = Math.max(8, totalSec * 0.20);
-const t2 = Math.max(15, totalSec * 0.50);
-const t3 = Math.max(20, totalSec * 0.80);
-coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(hwComment);},t1*1000));
-coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(hwComment);},t2*1000));
-coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(hwComment);},t3*1000));
+  const steps = allSteps.length;
+  const spb = 60 / (mod.bpm || 60);
+  const totalSec = steps * spb * 1.1;
+  const t1 = Math.max(8, totalSec * 0.20);
+  const t2 = Math.max(15, totalSec * 0.50);
+  const t3 = Math.max(20, totalSec * 0.80);
+  coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);},t1*1000));
+  coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);},t2*1000));
+  coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);},t3*1000));
 }
 
+/* 화이팅 멘트 — cheerAuto ON일 때만, 전체 구간 균등 배분 */
+if(!cheerAuto)return;
 const steps2 = allSteps.length;
 const spb2 = 60 / (mod.bpm || 60);
-/* 패턴 길이 포함한 실제 훈련 전체 시간 */
 const patLen2 = (mod.pattern||[]).filter(p=>typeof p==='number').length || 1;
 const totalSec2 = steps2 * patLen2 * spb2 * 1.05;
 if(totalSec2 > 8){
-/* 화이팅 멘트 — 스케일 길이에 따라 3~6회 균등 배분
-   짧은 훈련(~30초): 3회 / 중간(~60초): 4회 / 긴(~120초): 5회 / 아주 긴(120초+): 6회 */
-const cheerCount = totalSec2 < 30 ? 3 : totalSec2 < 60 ? 4 : totalSec2 < 120 ? 5 : 6;
-/* 전체 구간을 균등 분할 — 앞 15% / 뒤 15% 제외하고 배분 */
-/* 화이팅 멘트: 전체 구간(10%~90%) 균등 배분 */
-const cheerStart = 0.10;
-const cheerEnd   = 0.90;
-const step = (cheerEnd - cheerStart) / (cheerCount - 1);
-let _lastCheer2='';
-for(let ci=0; ci<cheerCount; ci++){
-  const ratio = cheerStart + step * ci;
-  /* 각 구간마다 ±5% 랜덤 편차 */
-  const jitter = (Math.random()-0.5) * 0.05;
-  const cSec = totalSec2 * Math.max(0.10, Math.min(0.90, ratio + jitter));
-  (function(t){
-    coachT.push(setTimeout(function(){
-      if(playing&&coachAuto&&cheerAuto){
-        _lastCheer2=_randCheer(_lastCheer2);
-        /* 화이팅 멘트 — 에너지있게: stability 낮게, speed 빠르게 */
-        speakEL(_lastCheer2, null, 0.40, 0.95);
-      }
-    }, t*1000));
-  })(cSec);
-}
+  const cheerCount = totalSec2 < 30 ? 3 : totalSec2 < 60 ? 4 : totalSec2 < 120 ? 5 : 6;
+  const cheerStart = 0.10;
+  const cheerEnd = 0.90;
+  const step = (cheerEnd - cheerStart) / (cheerCount - 1);
+  let _lastCheer2='';
+  for(let ci=0; ci<cheerCount; ci++){
+    const ratio = cheerStart + step * ci;
+    const jitter = (Math.random()-0.5) * 0.05;
+    const cSec = totalSec2 * Math.max(0.10, Math.min(0.90, ratio + jitter));
+    (function(t){
+      coachT.push(setTimeout(function(){
+        if(playing&&cheerAuto){
+          _lastCheer2=_randCheer(_lastCheer2);
+          speakEL(_lastCheer2, null, 0.40, 0.95);
+        }
+      }, t*1000));
+    })(cSec);
+  }
 }
 }
 
