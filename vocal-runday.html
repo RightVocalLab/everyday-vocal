@@ -180,21 +180,31 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="openAdminPW()">⚙</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <div class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
+    <!-- 이론 및 훈련설명 -->
+    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
       <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
       <div style="color:var(--mu2);font-size:17px">›</div>
     </div>
-    <div class="div" style="margin:4px 0"></div>
-    <div style="font-size:15px;font-weight:800;margin-bottom:4px">훈련 코스</div>
-    <div id="course-list" style="display:flex;flex-direction:column;gap:8px"></div>
-    <div class="div" style="margin:4px 0"></div>
-    <div class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
+    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
+    <!-- 훈련 코스 — 기본 접힘 -->
+    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
+      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
+        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
+        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
+      </div>
+      <div id="course-list-wrap" style="display:none;overflow:hidden">
+        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
+      </div>
+    </div>
+    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
+    <!-- 자유 연습 -->
+    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
       <div class="menu-ico" style="background:#fff3e8">🎯</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
       <div style="color:var(--or);font-size:17px">›</div>
     </div>
-    <div class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
+    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
       <div class="menu-ico" style="background:#dcfce7">📚</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800">숙제</div>
@@ -572,14 +582,49 @@ input,select,button,textarea{font-family:inherit;}
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
 
+    <!-- 메뉴 노출 설정 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
+      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
+    </div>
+
     <!-- 숙제 완료 현황 -->
     <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
-      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:7px">
-        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
+          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
+        </div>
+      </div>
+      <!-- 오늘 현황 -->
+      <div id="hw-today-view">
+        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+      </div>
+      <!-- 월별 캘린더 -->
+      <div id="hw-cal-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
+        </div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+        </div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
+        </div>
       </div>
     </div>
 
@@ -782,21 +827,31 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="openAdminPW()">⚙</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <div class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
+    <!-- 이론 및 훈련설명 -->
+    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
       <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
       <div style="color:var(--mu2);font-size:17px">›</div>
     </div>
-    <div class="div" style="margin:4px 0"></div>
-    <div style="font-size:15px;font-weight:800;margin-bottom:4px">훈련 코스</div>
-    <div id="course-list" style="display:flex;flex-direction:column;gap:8px"></div>
-    <div class="div" style="margin:4px 0"></div>
-    <div class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
+    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
+    <!-- 훈련 코스 — 기본 접힘 -->
+    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
+      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
+        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
+        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
+      </div>
+      <div id="course-list-wrap" style="display:none;overflow:hidden">
+        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
+      </div>
+    </div>
+    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
+    <!-- 자유 연습 -->
+    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
       <div class="menu-ico" style="background:#fff3e8">🎯</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
       <div style="color:var(--or);font-size:17px">›</div>
     </div>
-    <div class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
+    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
       <div class="menu-ico" style="background:#dcfce7">📚</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800">숙제</div>
@@ -1174,14 +1229,49 @@ input,select,button,textarea{font-family:inherit;}
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
 
+    <!-- 메뉴 노출 설정 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
+      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
+    </div>
+
     <!-- 숙제 완료 현황 -->
     <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
-      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:7px">
-        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
+          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
+        </div>
+      </div>
+      <!-- 오늘 현황 -->
+      <div id="hw-today-view">
+        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+      </div>
+      <!-- 월별 캘린더 -->
+      <div id="hw-cal-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
+        </div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+        </div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
+        </div>
       </div>
     </div>
 
@@ -1384,21 +1474,31 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="openAdminPW()">⚙</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <div class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
+    <!-- 이론 및 훈련설명 -->
+    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
       <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
       <div style="color:var(--mu2);font-size:17px">›</div>
     </div>
-    <div class="div" style="margin:4px 0"></div>
-    <div style="font-size:15px;font-weight:800;margin-bottom:4px">훈련 코스</div>
-    <div id="course-list" style="display:flex;flex-direction:column;gap:8px"></div>
-    <div class="div" style="margin:4px 0"></div>
-    <div class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
+    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
+    <!-- 훈련 코스 — 기본 접힘 -->
+    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
+      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
+        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
+        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
+      </div>
+      <div id="course-list-wrap" style="display:none;overflow:hidden">
+        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
+      </div>
+    </div>
+    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
+    <!-- 자유 연습 -->
+    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
       <div class="menu-ico" style="background:#fff3e8">🎯</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
       <div style="color:var(--or);font-size:17px">›</div>
     </div>
-    <div class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
+    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
       <div class="menu-ico" style="background:#dcfce7">📚</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800">숙제</div>
@@ -1776,14 +1876,49 @@ input,select,button,textarea{font-family:inherit;}
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
 
+    <!-- 메뉴 노출 설정 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
+      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
+    </div>
+
     <!-- 숙제 완료 현황 -->
     <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
-      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:7px">
-        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
+          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
+        </div>
+      </div>
+      <!-- 오늘 현황 -->
+      <div id="hw-today-view">
+        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+      </div>
+      <!-- 월별 캘린더 -->
+      <div id="hw-cal-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
+        </div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+        </div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
+        </div>
       </div>
     </div>
 
@@ -1986,21 +2121,31 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="openAdminPW()">⚙</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <div class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
+    <!-- 이론 및 훈련설명 -->
+    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
       <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
       <div style="color:var(--mu2);font-size:17px">›</div>
     </div>
-    <div class="div" style="margin:4px 0"></div>
-    <div style="font-size:15px;font-weight:800;margin-bottom:4px">훈련 코스</div>
-    <div id="course-list" style="display:flex;flex-direction:column;gap:8px"></div>
-    <div class="div" style="margin:4px 0"></div>
-    <div class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
+    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
+    <!-- 훈련 코스 — 기본 접힘 -->
+    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
+      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
+        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
+        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
+      </div>
+      <div id="course-list-wrap" style="display:none;overflow:hidden">
+        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
+      </div>
+    </div>
+    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
+    <!-- 자유 연습 -->
+    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
       <div class="menu-ico" style="background:#fff3e8">🎯</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
       <div style="color:var(--or);font-size:17px">›</div>
     </div>
-    <div class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
+    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
       <div class="menu-ico" style="background:#dcfce7">📚</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800">숙제</div>
@@ -2378,14 +2523,49 @@ input,select,button,textarea{font-family:inherit;}
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
 
+    <!-- 메뉴 노출 설정 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
+      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
+    </div>
+
     <!-- 숙제 완료 현황 -->
     <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📋 숙제 완료 현황</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">학생별 오늘의 숙제 완료 현황을 확인합니다</div>
-      <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:7px">
-        <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-        <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
+          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
+        </div>
+      </div>
+      <!-- 오늘 현황 -->
+      <div id="hw-today-view">
+        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+      </div>
+      <!-- 월별 캘린더 -->
+      <div id="hw-cal-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
+        </div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+        </div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
+        </div>
       </div>
     </div>
 
@@ -5199,6 +5379,110 @@ function pop(){cancelTTS();if(scrStack.length<=1)return;const cur=scrStack.pop()
 /* ══ 관리자 비밀번호 ══ */
 const _APW='Zmtxa2RybmVrMSE=';
 /* ══ 숙제 완료 현황 ══ */
+/* ══ 숙제 완료 현황 탭 전환 ══ */
+let _hwCalYear=new Date().getFullYear();
+let _hwCalMonth=new Date().getMonth(); /* 0-based */
+
+function showHwToday(){
+  document.getElementById('hw-today-view').style.display='';
+  document.getElementById('hw-cal-view').style.display='none';
+  document.getElementById('hw-tab-today').style.background='var(--or)';
+  document.getElementById('hw-tab-today').style.color='#fff';
+  document.getElementById('hw-tab-cal').style.background='';
+  document.getElementById('hw-tab-cal').style.color='';
+  refreshHwStatus();
+}
+function showHwCalendar(){
+  document.getElementById('hw-today-view').style.display='none';
+  document.getElementById('hw-cal-view').style.display='';
+  document.getElementById('hw-tab-today').style.background='';
+  document.getElementById('hw-tab-today').style.color='';
+  document.getElementById('hw-tab-cal').style.background='var(--or)';
+  document.getElementById('hw-tab-cal').style.color='#fff';
+  /* 학생 드롭다운 채우기 */
+  const sel=document.getElementById('hw-cal-student');
+  sel.innerHTML='';
+  (STUDENTS_DB||[]).forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.name; opt.textContent=s.name;
+    sel.appendChild(opt);
+  });
+  renderHwCalendar();
+}
+function hwCalPrev(){
+  _hwCalMonth--;
+  if(_hwCalMonth<0){_hwCalMonth=11;_hwCalYear--;}
+  renderHwCalendar();
+}
+function hwCalNext(){
+  _hwCalMonth++;
+  if(_hwCalMonth>11){_hwCalMonth=0;_hwCalYear++;}
+  renderHwCalendar();
+}
+function renderHwCalendar(){
+  const sel=document.getElementById('hw-cal-student');
+  const studentName=sel?sel.value:'';
+  const student=(STUDENTS_DB||[]).find(s=>s.name===studentName);
+  const total=student?(student.homework||[]).filter(h=>h.scaleId&&h.active!==false).length:0;
+
+  /* 타이틀 */
+  const title=document.getElementById('hw-cal-title');
+  if(title)title.textContent=`${_hwCalYear}년 ${_hwCalMonth+1}월`;
+
+  const grid=document.getElementById('hw-calendar-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+
+  /* 요일 헤더 */
+  ['일','월','화','수','목','금','토'].forEach(d=>{
+    const h=document.createElement('div');
+    h.style.cssText='text-align:center;font-size:9px;font-weight:700;color:var(--mu);padding:2px';
+    h.textContent=d;
+    grid.appendChild(h);
+  });
+
+  const firstDay=new Date(_hwCalYear,_hwCalMonth,1).getDay();
+  const daysInMonth=new Date(_hwCalYear,_hwCalMonth+1,0).getDate();
+
+  /* 빈 칸 */
+  for(let i=0;i<firstDay;i++){
+    grid.appendChild(document.createElement('div'));
+  }
+
+  /* 날짜 */
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${_hwCalYear}-${_hwCalMonth+1}-${d}`;
+    const key='ev_hw_done_'+(studentName||'')+'_'+dateStr;
+    let doneArr=[];
+    try{doneArr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
+    const done=doneArr.length;
+    const pct=total>0?done/total:0;
+    const isToday=new Date().getDate()===d&&new Date().getMonth()===_hwCalMonth&&new Date().getFullYear()===_hwCalYear;
+
+    const cell=document.createElement('div');
+    const bg=pct>=1?'#16a34a':pct>0?`rgba(249,115,22,${0.3+pct*0.7})`:'transparent';
+    const fg=pct>=1?'#fff':pct>0?'#fff':isToday?'var(--or)':'var(--tx)';
+    cell.style.cssText=`text-align:center;border-radius:6px;padding:4px 2px;font-size:10px;font-weight:${isToday?'800':'600'};background:${bg};color:${fg};cursor:${done>0?'pointer':'default'};border:${isToday?'1.5px solid var(--or)':'1px solid transparent'}`;
+    cell.textContent=d;
+    if(done>0){
+      cell.title=`${d}일: ${done}/${total} 완료`;
+      cell.onclick=(function(ds,da,t){return function(){
+        const det=document.getElementById('hw-cal-detail');
+        if(!det)return;
+        const hw=student?student.homework||[]:[];
+        const doneItems=hw.filter((_,i)=>da.includes(i));
+        det.style.display='';
+        det.innerHTML=`<b>${ds} 완료 항목 (${da.length}/${t}개)</b><br>`+
+          doneItems.map(h=>`✅ ${h.name}${h.scaleId?' ('+h.scaleId+')':''}`).join('<br>')||'기록 없음';
+      };})(dateStr,doneArr,total);
+    }
+    grid.appendChild(cell);
+  }
+  /* 상세 초기화 */
+  const det=document.getElementById('hw-cal-detail');
+  if(det)det.style.display='none';
+}
+
 function refreshHwStatus(){
   const list=document.getElementById('hw-status-list');
   if(!list)return;
@@ -5299,7 +5583,7 @@ function checkPW(){
   if(encoded===_APW){
     closePWModal();
     push('scr-admin');
-    setTimeout(refreshHwStatus,200);
+    setTimeout(()=>{showHwToday();buildMenuVisList();},200);
   } else {
     const err=document.getElementById('pw-err');
     err.textContent='비밀번호가 올바르지 않습니다.';
@@ -5322,6 +5606,121 @@ function exitTrain(){cancelTTS();stopEngine();isSeq=false;seqList=[];closeDone()
 
 /* ══ HOME ══ */
 const ICONS=['💪','🌬️','🎵','🌿','🔥','🚀','✨','🎙️'];
+/* ══ 메뉴 노출 설정 ════════════════════════════════════════
+   localStorage 키: ev_menu_vis
+   기본값: 전부 표시
+   ══════════════════════════════════════════════════════════ */
+const MENU_ITEMS = [
+  {key:'theory', label:'이론 및 훈련설명', icon:'🎤📚', ids:['menu-theory','menu-theory-div'], parent:null},
+  {key:'course', label:'훈련 코스 (전체)', icon:'💪',   ids:['menu-course','menu-course-div'], parent:null},
+  /* 코스 소메뉴 — key는 course_id로 동적 생성 */
+  {key:'free',   label:'자유 연습',        icon:'🎯',   ids:['menu-free'], parent:null},
+  {key:'hw',     label:'숙제',             icon:'📚',   ids:['menu-hw'],   parent:null},
+];
+
+function _getMenuVis(){
+  try{ return JSON.parse(localStorage.getItem('ev_menu_vis')||'{}'); }catch(e){ return {}; }
+}
+
+function _applyMenuVis(){
+  const vis = _getMenuVis();
+  /* 대메뉴 */
+  const topMap = {
+    theory: ['menu-theory','menu-theory-div'],
+    course: ['menu-course','menu-course-div'],
+    free:   ['menu-free'],
+    hw:     ['menu-hw'],
+  };
+  Object.entries(topMap).forEach(([key,ids])=>{
+    const show = vis[key] !== false;
+    ids.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display = show ? '' : 'none';
+    });
+  });
+  /* 코스 소메뉴 — buildHome 이후에 적용 */
+  (DB.courses||[]).forEach(c=>{
+    const ckey='course_'+c.id;
+    const show = vis[ckey] !== false;
+    const el=document.getElementById('course-item-'+c.id);
+    if(el) el.style.display = show ? '' : 'none';
+  });
+}
+
+function _makeToggleRow(key, icon, label, show, indent){
+  const row=document.createElement('div');
+  const pad=indent?'padding:8px 12px 8px '+(indent?'28px':'12px'):'padding:10px 12px';
+  row.style.cssText=`display:flex;align-items:center;gap:10px;${pad};border:1.5px solid var(--bd);border-radius:10px;background:${show?'#f0fdf4':'#f9f9f9'};${indent?'margin-left:14px;border-style:dashed':''}`;
+  row.dataset.key=key;
+  row.innerHTML=`
+    <div style="font-size:${indent?14:18}px">${icon}</div>
+    <div style="flex:1;font-size:${indent?12:13}px;font-weight:${indent?600:700};color:${indent?'var(--mu)':'var(--tx)'}">${label}</div>
+    <label style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer;flex-shrink:0">
+      <input type="checkbox" data-key="${key}" ${show?'checked':''} style="opacity:0;width:0;height:0">
+      <span class="tog-track" style="position:absolute;inset:0;border-radius:99px;background:${show?'#22c55e':'#d1d5db'};transition:.3s">
+        <span class="tog-dot" style="position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:${show?'21':'3'}px;transition:.3s"></span>
+      </span>
+    </label>`;
+  const cb=row.querySelector('input');
+  cb.onchange=function(){
+    const c=this.checked;
+    row.querySelector('.tog-track').style.background=c?'#22c55e':'#d1d5db';
+    row.querySelector('.tog-dot').style.left=c?'21px':'3px';
+    row.style.background=c?'#f0fdf4':'#f9f9f9';
+  };
+  return row;
+}
+
+function buildMenuVisList(){
+  const wrap=document.getElementById('menu-vis-list');
+  if(!wrap)return;
+  const vis=_getMenuVis();
+  wrap.innerHTML='';
+
+  /* 대메뉴 + 코스 소메뉴 */
+  const topItems=[
+    {key:'theory', label:'이론 및 훈련설명', icon:'🎤📚'},
+    {key:'course', label:'훈련 코스',        icon:'💪'},
+    {key:'free',   label:'자유 연습',        icon:'🎯'},
+    {key:'hw',     label:'숙제',             icon:'📚'},
+  ];
+
+  topItems.forEach(m=>{
+    const show = vis[m.key] !== false;
+    wrap.appendChild(_makeToggleRow(m.key, m.icon, m.label, show, false));
+
+    /* 훈련 코스 → 소메뉴(개별 코스) */
+    if(m.key==='course'){
+      (DB.courses||[]).forEach(c=>{
+        const ckey='course_'+c.id;
+        const cshow = vis[ckey] !== false;
+        wrap.appendChild(_makeToggleRow(ckey, '▸', c.name, cshow, true));
+      });
+    }
+  });
+}
+
+function saveMenuVis(){
+  const vis={};
+  document.querySelectorAll('#menu-vis-list input[type=checkbox]').forEach(cb=>{
+    vis[cb.dataset.key]=cb.checked;
+  });
+  try{ localStorage.setItem('ev_menu_vis',JSON.stringify(vis)); }catch(e){}
+  _applyMenuVis();
+  /* 저장 완료 피드백 */
+  const btn=document.querySelector('#menu-vis-list')?.nextElementSibling;
+  if(btn){ btn.textContent='✅ 저장됨!'; setTimeout(()=>btn.textContent='저장',1500); }
+}
+
+function toggleCourseList(){
+  const wrap=document.getElementById('course-list-wrap');
+  const arrow=document.getElementById('course-arrow');
+  if(!wrap)return;
+  const open=wrap.style.display==='none'||wrap.style.display==='';
+  wrap.style.display=open?'':'none';  /* 역 — 지금 닫혀있으면 열기 */
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+}
+
 function buildHome(){
   const cl=document.getElementById('course-list');cl.innerHTML='';
   (DB.courses||[]).forEach((c,ci)=>{
@@ -5334,9 +5733,12 @@ function buildHome(){
         <div style="font-size:11px;color:var(--mu);margin-top:1px">${modeLabel}</div>
       </div>
       <div style="color:var(--mu2);font-size:17px">›</div>`;
+    el.id='course-item-'+c.id;
     el.onclick=()=>openCourse(c.id);
     cl.appendChild(el);
   });
+  /* 메뉴 노출 설정 적용 */
+  _applyMenuVis();
 }
 
 /* ══ THEORY ══ */
@@ -5840,27 +6242,110 @@ function scaleNumToId(numStr){
    학생 데이터: {name, pw, homework:[{num,name,scaleId,repeat,comment}]}
    ══════════════════════════════════════════════════════════ */
 let STUDENTS_DB = [
+  /* ━━━ 김동현 ━━━ */
   {
-    name: '박주은', pw: 'jueun24',
-    homework: [
-      /* 번호 | 훈련명 | scaleId(번호→ID 매핑) | 반복 | 코멘트 */
+    name:'김동현', pw:'donghyun24',
+    homework:[
       {num:0,  name:'호흡훈련',                        scaleId:'',     repeat:1, comment:'주먹말고 서서 x10, 숙여서 x10', active:true},
-      {num:1,  name:'백프레셔',                         scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 가슴에 진동이 최대한 많아지게 강하게! 대신 바람이 사라지면 안됨', active:true},
+      {num:1,  name:'백프레셔',                         scaleId:'3D-A', repeat:1, comment:'가슴에 진동이 최대한 많아지게 강하게! 대신 바람이 사라지면 안됨', active:true},
+      {num:2,  name:'백프레셔',                         scaleId:'3D-C', repeat:1, comment:'1번을 미친듯이 버티는 걸 좀 살살해야 돼!', active:true},
+      {num:3,  name:'흉강고정+Press 우(학!우빡!)',       scaleId:'3D-A', repeat:1, comment:'호흡만 뱉으면 안 돼! 성대음을 순간 내고 멈추는 거야!', active:true},
+      {num:4,  name:'Press 후우(후우빡!)',               scaleId:'3D-B', repeat:1, comment:'하나씩 연습해보고 안 되면 벽 밀면서!', active:true},
+      {num:5,  name:'허밍',                             scaleId:'5D-B', repeat:1, comment:'목 상태 확인용! 편하게 잘 되면 그때 하나씩 압력 추가해봐!', active:true},
+      {num:6,  name:'Z 브레셔',                         scaleId:'3D-A', repeat:1, comment:'가슴압력 열기! 조여지지 않고 압력 유지해서 소리 버티기!', active:true},
+      {num:7,  name:'학! 아빡',                         scaleId:'3D-A', repeat:1, comment:'학! 잘하고 있어!', active:true},
+      {num:8,  name:'하아빡',                           scaleId:'3D-B', repeat:1, comment:'가슴 위치로 소리 당기면서! (무거운 거 들면서)', active:true},
+      {num:9,  name:'오픈허밍(흉성)',                    scaleId:'3D-A', repeat:1, comment:'후두를 턱으로 완전 박아서 열 것!', active:true},
+      {num:10, name:'오픈허밍(두성)',                    scaleId:'5D-B', repeat:1, comment:'하앙~ 응 잘 하고 가볍게 뒤로위로!', active:true},
+      {num:11, name:'오픈허밍(흉성~두성)',                scaleId:'9D-A', repeat:1, comment:'뇌한테 틈 주지 말고 턱으로 후두 고정! 조여지지 않게!', active:true},
+      {num:12, name:'오픈허밍 마아~(5도쉬고)',            scaleId:'5H-A', repeat:1, comment:'마아에서 이제 가슴에도 소리 대보기!', active:true},
+      {num:13, name:'학!아 5도',                        scaleId:'5D-A', repeat:1, comment:'엄지 잘 대고 학! 아아아아 완전 놨다가 내려올 때 가슴압력 풀리지 않게!', active:true},
+      {num:14, name:'H어택+아 Press(학!아 하아)',         scaleId:'9D-A', repeat:1, comment:'내려올 때 가슴 앞쪽으로 호흡 버틴다는 생각!', active:true},
+    ]
+  },
+  /* ━━━ 박주은 ━━━ */
+  {
+    name:'박주은', pw:'jueun24',
+    homework:[
+      {num:0,  name:'호흡훈련',                        scaleId:'',     repeat:1, comment:'주먹말고 서서 x10, 숙여서 x10', active:true},
+      {num:1,  name:'백프레셔',                         scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 가슴에 진동이 최대한 많아지게 강하게!', active:true},
       {num:2,  name:'백프레셔',                         scaleId:'3D-C', repeat:1, comment:'3번(3도흉성~두성) — 1번을 미친듯이 버티는 걸 좀 살살해야 돼!', active:true},
       {num:3,  name:'흉강고정+Press 우(학!우빡!)',       scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 호흡만 뱉으면 안 돼! 성대음을 순간 내고 멈추는 거야!', active:true},
       {num:4,  name:'Press 후우(후우빡!)',               scaleId:'3D-B', repeat:1, comment:'2번(3도중성) — 하나씩 연습해보고 안 되면 벽 밀면서!', active:true},
-      {num:5,  name:'허밍',                             scaleId:'5D-B', repeat:1, comment:'7번(5도중성) — 목 상태 확인용! 편하게 잘 되면 그때 하나씩 압력 추가해봐!', active:true},
-      {num:6,  name:'Z 브레셔',                         scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 가슴압력 열기! 조여지지 않고 압력 유지해서 소리 버티기!', active:true},
+      {num:5,  name:'허밍',                             scaleId:'5D-B', repeat:1, comment:'7번(5도중성) — 목 상태 확인용!', active:true},
+      {num:6,  name:'Z 브레셔',                         scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 가슴압력 열기! 특히 G#4~B4', active:true},
       {num:7,  name:'학! 아빡',                         scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 학! 잘하고 있어!', active:true},
-      {num:8,  name:'하아빡',                           scaleId:'3D-B', repeat:1, comment:'2번(3도중성) — 가슴 위치로 소리 당기면서! 당겨지면 꺾어서 내민다 생각! (무거운 거 들면서)', active:true},
-      {num:9,  name:'오픈허밍(흉성)',                    scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 조여지는 느낌 말고 후두를 턱으로 완전 박아서 열 것!', active:true},
+      {num:8,  name:'하아빡',                           scaleId:'3D-B', repeat:1, comment:'2번(3도중성) — 가슴 위치로 소리 당기면서! (무거운 거 들면서)', active:true},
+      {num:9,  name:'오픈허밍(흉성)',                    scaleId:'3D-A', repeat:1, comment:'1번(3도흉성) — 후두를 턱으로 완전 박아서 열 것!', active:true},
       {num:10, name:'오픈허밍(두성)',                    scaleId:'5D-B', repeat:1, comment:'7번(5도중성) — 하앙~ 응 잘 하고 가볍게 뒤로위로!', active:true},
-      {num:11, name:'오픈허밍(흉성~두성)',                scaleId:'9D-A', repeat:1, comment:'5번(9도흉성~두성) — 뇌한테 틈 주지 말고 턱으로 후두 고정! 조여지지 않게!', active:true},
+      {num:11, name:'오픈허밍(흉성~두성)',                scaleId:'9D-A', repeat:1, comment:'5번(9도흉성~두성) — 뇌한테 틈 주지 말고 턱으로 후두 고정!', active:true},
       {num:12, name:'오픈허밍 마아~(5도쉬고)',            scaleId:'5H-A', repeat:1, comment:'8-1번(5도쉬고흉성) — 마아에서 이제 가슴에도 소리 대보기!', active:true},
-      {num:13, name:'학!아 5도',                        scaleId:'5D-A', repeat:1, comment:'6번(5도흉성) — 엄지 잘 대고 학! 아아아아 완전 놨다가 내려올 때 가슴압력 풀리지 않게!', active:true},
+      {num:13, name:'학!아 5도',                        scaleId:'5D-A', repeat:1, comment:'6번(5도흉성) — 엄지 잘 대고 학!', active:true},
       {num:14, name:'H어택+아 Press(학!아 하아)',         scaleId:'9D-A', repeat:1, comment:'5번(9도흉성~두성) — 내려올 때 가슴 앞쪽으로 호흡 버틴다는 생각!', active:true},
     ]
-  }
+  },
+  /* ━━━ 최서진 ━━━ */
+  {
+    name:'최서진', pw:'seojin24',
+    homework:[
+      {num:0,  name:'호흡훈련',            scaleId:'',     repeat:1, comment:'주먹을 말아서 입술을 집어넣은 상태로 호흡 마시고 뱉기 x10. 상복부 꼭 사용하면서!', active:true},
+      {num:1,  name:'S 브레셔',           scaleId:'',     repeat:1, comment:'바늘구멍만큼 더 얇고 작게 뚫어서 멀리멀리 보내준다고 생각! 호흡낭비없이!', active:true},
+      {num:2,  name:'Z 브레셔',           scaleId:'3D-A', repeat:1, comment:'벽에 붙어서. 맨 첫음에서 너무 넓게 하려고 하지말고 더 한 점으로 모은다고 생각!', active:true},
+      {num:3,  name:'Z 브레셔',           scaleId:'3D-C', repeat:1, comment:'벽에 붙어서, 밴딩. 내가 할 수 있는만큼 가슴에 창문 열어서 대주고! G#5부터 더 얇아진게 다시 가슴으로 붙는다고 생각!', active:true},
+      {num:4,  name:'학! 아빡',           scaleId:'3D-A', repeat:1, comment:'무거운 거 들면서. 벽에 붙어서 가슴위치에서만! 앞으로 나가면서 밝은 아를 자랑한다고 생각!', active:true},
+      {num:5,  name:'허밍',               scaleId:'5H-B', repeat:1, comment:'8번(5도쉬고중성). 내려올 때 호흡의 단수를 절대 낮추면 안 돼! 콧구멍으로 호흡을 빼면 안 돼!', active:true},
+      {num:6,  name:'오픈허밍(흉성)',      scaleId:'3D-A', repeat:1, comment:'처음에는 앞에만 사용해서!', active:true},
+      {num:7,  name:'오픈허밍(흉성)',      scaleId:'3D-A', repeat:1, comment:'3,4번 방향으로 ㅅ자 모양으로 버텨진다고 생각! 앞에가 뒤로 따라가지 않게 주의!', active:true},
+      {num:8,  name:'오픈허밍(두성)',      scaleId:'5D-B', repeat:1, comment:'7번(5도중성). 뒤로위로 소리를 보냈다가 앞으로 보내면서 내려오기!', active:true},
+      {num:9,  name:'오픈허밍(두성)',      scaleId:'5H-B', repeat:1, comment:'8번(5도쉬고중성). 맨위에 음정에서 내려올 때 호흡 떨어뜨리지 말기!', active:true},
+      {num:10, name:'오픈허밍(흉성~두성)', scaleId:'9D-C', repeat:1, comment:'4번(9도고급). 4개는 흉성으로 버티고 5개째부터 두성으로 훅 띄워서!', active:true},
+      {num:11, name:'오픈허밍(두성)',      scaleId:'5H-B', repeat:1, comment:'8번(5도쉬고중성). 2옥타브 구간에서 버티면서 내려오는데 호흡은 계속 보내줘야 돼!', active:true},
+    ]
+  },
+  /* ━━━ 박수연 ━━━ */
+  {
+    name:'박수연', pw:'suyeon24',
+    homework:[
+      {num:0, name:'호흡훈련',            scaleId:'',      repeat:1, comment:'주먹말아서 호흡마시기. 처음 3일은 최대한 빠르고 깊게 마셨다가 빠르고 강하게 뱉기! x10', active:true},
+      {num:1, name:'S 브레셔',           scaleId:'',      repeat:1, comment:'S~~~ 25초 이상 x5', active:true},
+      {num:2, name:'Z 브레셔',           scaleId:'3D-A',  repeat:1, comment:'1번(3도흉성). 가슴앞에 소리 잘 붙혀서 유지하고! 가슴소리가 너무 없으면 안 돼!', active:true},
+      {num:3, name:'Z 브레셔',           scaleId:'3D-C',  repeat:1, comment:'3번(3도흉성~두성). 벽에 붙어서. 앞에 바람 잘 버티면서! 두성구쯤 올라가면 뒤에서 아래로 눌리는 상압이 생긴다고 상상!', active:true},
+      {num:4, name:'허밍',               scaleId:'5D-B',  repeat:1, comment:'7번(5도중성). 입닫고 뒤로위로 내려올 때 앞으로!', active:true},
+      {num:5, name:'오픈허밍(흉성)',      scaleId:'3D-A',  repeat:1, comment:'1번(3도흉성). 앞에만! 수연이는 밑에를 더 많이 밖으로 꺼낸 생각!', active:true},
+      {num:6, name:'오픈허밍(흉성)',      scaleId:'3D-A',  repeat:1, comment:'3번 4번 위치에서 수평으로만 움직일 것! G4, G#4 되면 뒤에 한칸씩 더 있다고 생각하면서!', active:true},
+      {num:7, name:'Press 후우(후우빡!)', scaleId:'5DN-E', repeat:1, comment:'9번(5도하향). 호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!', active:true},
+    ]
+  },
+  /* ━━━ 박지유 ━━━ */
+  {
+    name:'박지유', pw:'jiyu24',
+    homework:[
+      {num:0, name:'호흡훈련',       scaleId:'',    repeat:1, comment:'주먹말고 서서 x10 숙여서 x10. 잘 유지하고 있음!', active:true},
+      {num:1, name:'S 브레셔',      scaleId:'',    repeat:1, comment:'길게~ x10. 들어가는 호흡이 컨트롤해준다 생각하면서 더 얇게, 길게~!', active:true},
+      {num:2, name:'Z 브레셔',      scaleId:'3D-A',repeat:1, comment:'1번(3도흉성). 벽에 붙어서. 상복부 더 생각하고 집중하면서!', active:true},
+      {num:3, name:'Z 브레셔',      scaleId:'3D-C',repeat:1, comment:'3번(3도흉성~두성). D5부터 뒤가 안 돼. 뒤로꿰서만 가면 D6까지도 가능!', active:true},
+      {num:4, name:'허밍',          scaleId:'5D-B',repeat:1, comment:'7번(5도중성). 1번방식 연습. 처음 시작할 때 코로 뱉지마!! 꽃향기를 맡는다 생각!', active:true},
+      {num:5, name:'오픈허밍(흉성)', scaleId:'3D-A',repeat:1, comment:'1번(3도흉성). 처음엔 가슴앞에만 열기! 공이 앞에만 있어! 축구공이야!', active:true},
+      {num:6, name:'오픈허밍(흉성)', scaleId:'3D-A',repeat:1, comment:'1번(3도흉성). 요번엔 앞뒤로! 럭비공이야! 가슴 앞뒤로 럭비공이 들어있는데 공기를 채우고 계속 늘려나가야 돼!', active:true},
+    ]
+  },
+  /* ━━━ 허율아 ━━━ */
+  {
+    name:'허율아', pw:'yura24',
+    homework:[
+      {num:0,  name:'호흡훈련',       scaleId:'',    repeat:1, comment:'주먹말아쥐고 입으로 호흡훈련 서서 10번 숙여서 10번', active:true},
+      {num:1,  name:'S 브레셔',      scaleId:'',    repeat:1, comment:'x10. 입에 바늘로 작은구멍을 뚫어서 압력이 생긴 바람이 실처럼 쭉쭉쭉 나간다고 생각!', active:true},
+      {num:2,  name:'립트릴',        scaleId:'9D-A',repeat:1, comment:'5번(9도흉성~두성). 가슴위치에서 뒷통수 뒤로위로 갔다오기! 목 푼다 생각!', active:true},
+      {num:3,  name:'립트릴',        scaleId:'9D-A',repeat:1, comment:'5번(9도흉성~두성). 내려올 때 가슴위치에 호흡(소리) 더 대보기!', active:true},
+      {num:4,  name:'Z 브레셔',      scaleId:'3D-A',repeat:1, comment:'1번(3도흉성). 뒤에를 애매하게 안쓰고 그냥 뒤를 써! 제일 마지막 위에음에서 한번 놨다가 빠르게 다시 훅 불기!', active:true},
+      {num:5,  name:'Z 브레셔',      scaleId:'3D-C',repeat:1, comment:'3번(3도흉성~두성). 밴딩해서! 되는 음정까지 가슴채워보고 안되는 데부터는 다 꿰서 가면 돼!', active:true},
+      {num:6,  name:'허밍',          scaleId:'5H-B',repeat:1, comment:'8번(5도쉬고중성). 아주~~! 잘했어! 음정이 올라가서 성구 바뀔 때마다 뒤가 벌어지는데 더 한줄로 모아주려고!', active:true},
+      {num:7,  name:'오픈허밍(흉성)', scaleId:'3D-A',repeat:1, comment:'1번(3도흉성). 앞에만! 앞에 주먹만한 공기공이 튀어나온다고 생각! 음정 올라갈 때 집어먹지말고 더 늘려꺼낸 생각', active:true},
+      {num:8,  name:'오픈허밍(두성)', scaleId:'5H-B',repeat:1, comment:'8번(5도쉬고중성). G#5에만 힘이 조금 있음! 수업시간에 여기 사용해서 늘려도 괜찮을 듯!', active:true},
+      {num:9,  name:'Z 브레셔',      scaleId:'3D-C',repeat:1, comment:'주먹말아쥐고, 3번(3도흉성~두성). 주먹을 꽉 잘 말아쥐고 가슴에서 호흡압이 나간다 느낌! 소리가 오히려 펴진다고 생각!', active:true},
+      {num:10, name:'Z 브레셔',      scaleId:'3D-C',repeat:1, comment:'다음시간 Z브레셔 3번스케일 G5이상 확인해보기. 오늘은 여기까지 잘 됐음!', active:true},
+    ]
+  },
 ];  /* 엑셀 업로드 시 덮어씀 */
 let curStudent = null; /* 현재 로그인한 학생 */
 let hwList = [];       /* 현재 숙제 목록 (학생이 수정 가능) */
@@ -6251,7 +6736,7 @@ function rdXl(file){
 function setXlSt(m,err){const el=document.getElementById('xl-status');el.textContent=m;el.style.color=err?'#dc2626':'#16a34a';}
 
 /* ══ INIT ══ */
-window.addEventListener('DOMContentLoaded',()=>{buildHome();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
+window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
 </script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
