@@ -5279,18 +5279,18 @@ clrCT();
 
 /* ── 화이팅 멘트만 자동재생 (설명은 버튼으로만) ── */
 
-/* 숙제 코멘트 — 학생 로그인 시에만 3회 자동재생 */
+/* 숙제 코멘트 — 학생 로그인 시에만, 전체 스케일 훈련 길이 기준 3회 균등 배분 */
 const hwComment = mod.hwComment || '';
 if(hwComment && curStudent){
-  const steps = allSteps.length;
-  const spb = 60 / (mod.bpm || 60);
-  const totalSec = steps * spb * 1.1;
-  const t1 = Math.max(8, totalSec * 0.20);
-  const t2 = Math.max(15, totalSec * 0.50);
-  const t3 = Math.max(20, totalSec * 0.80);
-  coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);},t1*1000));
-  coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);},t2*1000));
-  coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);},t3*1000));
+  const steps_hw = allSteps.length;
+  const spb_hw = 60 / (mod.bpm || 60);
+  const patLen_hw = (mod.pattern||[]).filter(p=>typeof p==='number').length || 1;
+  const totalSec_hw = steps_hw * patLen_hw * spb_hw * 1.05;
+  /* 20%, 50%, 80% 구간에 균등 배분 */
+  [0.20, 0.50, 0.80].forEach(function(ratio){
+    const t = Math.max(8, totalSec_hw * ratio);
+    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);}, t*1000));
+  });
 }
 
 /* 화이팅 멘트 — cheerAuto ON일 때만, 전체 구간 균등 배분 */
