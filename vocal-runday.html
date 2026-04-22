@@ -428,7 +428,7 @@ input,select,button,textarea{font-family:inherit;}
     <!-- BPM 인라인 -->
     <div class="bpm-row">
       <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="180" value="60" oninput="onBpmChg(this.value)">
+      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
       <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
       <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
       <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
@@ -1075,7 +1075,7 @@ input,select,button,textarea{font-family:inherit;}
     <!-- BPM 인라인 -->
     <div class="bpm-row">
       <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="180" value="60" oninput="onBpmChg(this.value)">
+      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
       <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
       <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
       <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
@@ -1722,7 +1722,7 @@ input,select,button,textarea{font-family:inherit;}
     <!-- BPM 인라인 -->
     <div class="bpm-row">
       <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="180" value="60" oninput="onBpmChg(this.value)">
+      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
       <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
       <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
       <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
@@ -2369,7 +2369,7 @@ input,select,button,textarea{font-family:inherit;}
     <!-- BPM 인라인 -->
     <div class="bpm-row">
       <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="180" value="60" oninput="onBpmChg(this.value)">
+      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
       <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
       <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
       <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
@@ -2869,7 +2869,7 @@ const INIT_DB={
       "range": "흉성",
       "startNote": 57,
       "endNote": 61,
-      "bpm": 180,
+      "bpm": 190,
       "pattern": [
         0,
         2,
@@ -2919,7 +2919,7 @@ const INIT_DB={
       "range": "중성",
       "startNote": 62,
       "endNote": 67,
-      "bpm": 180,
+      "bpm": 190,
       "pattern": [
         0,
         2,
@@ -2969,7 +2969,7 @@ const INIT_DB={
       "range": "흉성~두성",
       "startNote": 57,
       "endNote": 83,
-      "bpm": 180,
+      "bpm": 190,
       "pattern": [
         0,
         2,
@@ -4303,6 +4303,13 @@ const INIT_DB={
     {
       "exId": "허밍",
       "scaleId": "5D-A",
+      "sec": 0,
+      "msg": "코로 공명시키면서 따라와!",
+      "rate": 1.0
+    },
+    {
+      "exId": "허밍",
+      "scaleId": "5D-A",
       "sec": 90,
       "msg": "공명이 살아있어! 계속!",
       "rate": 1.0
@@ -4313,6 +4320,90 @@ const INIT_DB={
       "sec": 200,
       "msg": "5도 허밍 완료! 최고다!",
       "rate": 1.0
+    },
+    {
+      "exId": "Z 브레셔",
+      "scaleId": "",
+      "sec": 30,
+      "msg": "성대라는 진동체를 추가하여 영어 즈발음으로 가슴에 진동을 직접 만드는 훈련.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Z 브레셔",
+      "scaleId": "",
+      "sec": 90,
+      "msg": "성대라는 진동체를 추가하여 영어 즈발음으로 가슴에 진동을 직접 만드는 훈련.",
+      "rate": 1.05
+    },
+    {
+      "exId": "오픈 허밍",
+      "scaleId": "",
+      "sec": 30,
+      "msg": "입을 열고 NG발음으로 허밍하는 훈련. 허밍에서 모음 발성으로 전환하는 중간 단계.",
+      "rate": 1.05
+    },
+    {
+      "exId": "오픈 허밍",
+      "scaleId": "",
+      "sec": 90,
+      "msg": "입을 열고 NG발음으로 허밍하는 훈련. 허밍에서 모음 발성으로 전환하는 중간 단계.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Breath 우",
+      "scaleId": "",
+      "sec": 30,
+      "msg": "호흡을 강하게 불어내는 우 모음으로 성대 주변의 긴장을 풀어내는 훈련.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Breath 우",
+      "scaleId": "",
+      "sec": 90,
+      "msg": "호흡을 강하게 불어내는 우 모음으로 성대 주변의 긴장을 풀어내는 훈련.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Press 오",
+      "scaleId": "",
+      "sec": 30,
+      "msg": "강한 오 모음으로 목구멍의 공간을 뒤쪽까지 더 열어주는 훈련.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Press 오",
+      "scaleId": "",
+      "sec": 90,
+      "msg": "강한 오 모음으로 목구멍의 공간을 뒤쪽까지 더 열어주는 훈련.",
+      "rate": 1.05
+    },
+    {
+      "exId": "백프레셔",
+      "scaleId": "",
+      "sec": 30,
+      "msg": "등 뒤쪽으로 압력을 유지하면서 스케일을 진행하는 프레셔 훈련. 과도한 긴장 없이 압력을 버티는 것이 핵심.",
+      "rate": 1.05
+    },
+    {
+      "exId": "백프레셔",
+      "scaleId": "",
+      "sec": 90,
+      "msg": "등 뒤쪽으로 압력을 유지하면서 스케일을 진행하는 프레셔 훈련. 과도한 긴장 없이 압력을 버티는 것이 핵심.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Press 후우(후우빡!)",
+      "scaleId": "",
+      "sec": 30,
+      "msg": "후 발음을 빠르게 넣어 우빡 발음(Press)으로 이어가는 훈련. 벽을 밀며 연습하면 효과적.",
+      "rate": 1.05
+    },
+    {
+      "exId": "Press 후우(후우빡!)",
+      "scaleId": "",
+      "sec": 90,
+      "msg": "후 발음을 빠르게 넣어 우빡 발음(Press)으로 이어가는 훈련. 벽을 밀며 연습하면 효과적.",
+      "rate": 1.05
     }
   ],
   "theories": [
@@ -5135,30 +5226,33 @@ coachT.push(setTimeout(()=>{if(playing&&coachAuto)speak(c.msg,c.rate||1.08);},c.
 
 const hwComment = mod.hwComment || '';
 if(hwComment && curStudent){
-
 const steps = allSteps.length;
 const spb = 60 / (mod.bpm || 60);
-const totalSec = steps * spb * 1.1; 
-const t1 = Math.max(8, totalSec * 0.25);
-const t2 = Math.max(15, totalSec * 0.65);
-coachT.push(setTimeout(()=>{
-if(playing&&coachAuto) speak(hwComment, 0.88);
-}, t1*1000));
-coachT.push(setTimeout(()=>{
-if(playing&&coachAuto) speak(hwComment, 0.88);
-}, t2*1000));
+const totalSec = steps * spb * 1.1;
+/* 숙제 코멘트 3번: 20%, 50%, 80% 타이밍 */
+const t1 = Math.max(8, totalSec * 0.20);
+const t2 = Math.max(15, totalSec * 0.50);
+const t3 = Math.max(20, totalSec * 0.80);
+coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(hwComment);},t1*1000));
+coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(hwComment);},t2*1000));
+coachT.push(setTimeout(()=>{if(playing&&coachAuto)speakEL(hwComment);},t3*1000));
 }
 
 const steps2 = allSteps.length;
 const spb2 = 60 / (mod.bpm || 60);
 const totalSec2 = steps2 * spb2 * 1.1;
 if(totalSec2 > 12){
-const cheerSec = totalSec2 * (0.60 + Math.random()*0.15);
-coachT.push(setTimeout(()=>{
-if(playing&&coachAuto){
-speak(_randCheer(''), 1.05);
-}
-}, cheerSec*1000));
+/* 화이팅 멘트 3회: 30%, 55%, 80% 구간 */
+let _lastCheer='';
+[0.30, 0.55, 0.80].forEach(function(ratio){
+  const cSec=totalSec2*(ratio+(Math.random()-0.5)*0.04);
+  coachT.push(setTimeout(()=>{
+    if(playing&&coachAuto){
+      _lastCheer=_randCheer(_lastCheer);
+      speakEL(_lastCheer);
+    }
+  },cSec*1000));
+});
 }
 }
 
