@@ -2877,7 +2877,7 @@ const INIT_DB={
         2,
         0,
         {
-          "hold": 1
+          "hold": 2
         },
         2,
         4,
@@ -2885,7 +2885,7 @@ const INIT_DB={
         4,
         2,
         {
-          "hold": 1
+          "hold": 2
         },
         4,
         5,
@@ -2893,7 +2893,7 @@ const INIT_DB={
         5,
         4,
         {
-          "hold": 1
+          "hold": 2
         },
         2,
         4,
@@ -2901,7 +2901,7 @@ const INIT_DB={
         4,
         2,
         {
-          "hold": 1
+          "hold": 2
         },
         0,
         2,
@@ -2927,7 +2927,7 @@ const INIT_DB={
         2,
         0,
         {
-          "hold": 1
+          "hold": 2
         },
         2,
         4,
@@ -2935,7 +2935,7 @@ const INIT_DB={
         4,
         2,
         {
-          "hold": 1
+          "hold": 2
         },
         4,
         5,
@@ -2943,7 +2943,7 @@ const INIT_DB={
         5,
         4,
         {
-          "hold": 1
+          "hold": 2
         },
         2,
         4,
@@ -2951,7 +2951,7 @@ const INIT_DB={
         4,
         2,
         {
-          "hold": 1
+          "hold": 2
         },
         0,
         2,
@@ -2977,7 +2977,7 @@ const INIT_DB={
         2,
         0,
         {
-          "hold": 1
+          "hold": 2
         },
         2,
         4,
@@ -2985,7 +2985,7 @@ const INIT_DB={
         4,
         2,
         {
-          "hold": 1
+          "hold": 2
         },
         4,
         5,
@@ -2993,7 +2993,7 @@ const INIT_DB={
         5,
         4,
         {
-          "hold": 1
+          "hold": 2
         },
         2,
         4,
@@ -3001,7 +3001,7 @@ const INIT_DB={
         4,
         2,
         {
-          "hold": 1
+          "hold": 2
         },
         0,
         2,
@@ -5287,7 +5287,18 @@ setTimeout(onDone,_downDelay);return;
 }
 const step=allSteps[sch.s],root=curMod.startNote+step.semi;
 const ps=step.ps||[],pstep=ps[sch.p],sT=sch.nx;
-if(pstep&&pstep.type==='note'){
+if(pstep&&pstep.type==='hold'){
+/* hold: 직전 음 서스테인 여음 — 첫 번째 hold박에서만 */
+if(sch.p===0||(ps[sch.p-1]&&ps[sch.p-1].type!=='hold')){
+  const prevStep=ps[sch.p-1];
+  if(prevStep&&prevStep.type==='note'){
+    const hM=root+prevStep.semi;
+    (function(m,t){const dl=Math.max(0,(t-ctx.currentTime)*1000);
+      setTimeout(()=>{if(playing)playPianoSustain(m,spb*1.6,0.28);},dl);
+    })(hM,sT);
+  }
+}
+} else if(pstep&&pstep.type==='note'){
 const nM=root+pstep.semi;
 
 const noteDur=spb*0.90; 
@@ -5315,10 +5326,8 @@ const tspb_wait=60/100; /* BPM 100 고정 */
 /* 마지막음 후 텀:
    하행 스케일 → 2.5박
    일반 스케일 → 0.5박 (반박 텀 + 마지막음 여음 합쳐서 1박 느낌) */
-/* 마지막음이 완전히 끝난 후 반박 쉬고 예비음
-   noteDur(0.9박) + 여음(0.8초≈1.67박@BPM125) + 반박여유(0.5박) ≈ 3.0박
-   → 마지막 도 울리고 → 여음 잠잠해지고 → 예비음(빰빰) */
-const preGap = isDownScale ? spb*2.5 : spb*3.0;
+/* 예비음 직전 갭: 하행은 2.5박, 일반은 0.15박 (원래대로) */
+const preGap = isDownScale ? spb*2.5 : spb*0.15;
 sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
