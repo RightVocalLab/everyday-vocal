@@ -5510,7 +5510,7 @@ if(mod.noScale){
   const _rtts=((mod.hwComment||mod.comment||mod.desc||'').split('**').filter((_,i)=>i%2===0).join('').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스 ')).trim();
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
   const _ppEl=document.getElementById('pp');
-  if(_ppEl){_ppEl.textContent='다음';_ppEl.style.fontSize='14px';_ppEl.style.padding='8px 22px';_ppEl.onclick=()=>onDone();}
+  if(_ppEl){_ppEl.textContent='완료 →';_ppEl.style.fontSize='14px';_ppEl.style.padding='8px 22px';_ppEl.onclick=()=>onDone();}
   /* noScale 훈련에서는 skip 버튼 항상 숨김 */
   const _skipBN=document.getElementById('skip-btn');
   if(_skipBN) _skipBN.style.display='none';
@@ -5854,12 +5854,16 @@ const ntr=document.getElementById('next-train-row');
 if(isSeq&&seqList.length>1){
 bar.style.display='';
 bar.textContent=`${seqIdx+1}/${seqList.length} — ${seqList[seqIdx].label||''}`;
-
 if(ntr){
-ntr.style.display=(seqIdx<seqList.length-1)?'':'none';
-const btn=ntr.querySelector('button');
-if(btn&&seqIdx<seqList.length-1)
-btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;
+  /* 숙제 모드에서는 "다음 훈련으로" 버튼 항상 숨김 — 훈련 완주 후 팝업으로만 이동 */
+  if(curStudent){
+    ntr.style.display='none';
+  } else {
+    ntr.style.display=(seqIdx<seqList.length-1)?'':'none';
+    const btn=ntr.querySelector('button');
+    if(btn&&seqIdx<seqList.length-1)
+      btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;
+  }
 }
 } else {
 bar.style.display='none';
@@ -5868,11 +5872,14 @@ if(ntr)ntr.style.display='none';
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
+/* 숙제 모드: 이 버튼 사용 안 함 (updSeqBar에서 숨김) */
+if(curStudent) return;
 stopEngine();
+/* 완료 체크 (자유연습) */
+if(seqList[seqIdx].hwIdx!==undefined) _markHwDone(seqList[seqIdx].hwIdx);
 seqIdx++;
 updSeqBar();
 prepTrain(seqList[seqIdx]);
-
 const label=seqList[seqIdx].label||seqList[seqIdx].exId||'다음 훈련';
 speakEL(label+' 시작합니다.',()=>{
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
