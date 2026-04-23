@@ -393,11 +393,16 @@ input,select,button,textarea{font-family:inherit;}
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
     <!-- 스케일 없는 훈련 — 훈련 안내 카드 -->
-    <div id="comment-card" style="display:none;flex-direction:column;gap:0">
+    <div id="comment-card" style="display:none;flex-direction:column;gap:12px">
       <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:22px 18px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="background:#16a34a;color:#fff;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:800">📋 훈련 안내</span></div>
         <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.2;font-weight:500"></div>
       </div>
+      <!-- noScale 완료 버튼 -->
+      <button id="noscale-done-btn" onclick="onDone()"
+        style="width:100%;padding:16px;background:var(--or);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px">
+        ✅ 훈련 완료
+      </button>
     </div>
     <div>
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
@@ -5509,9 +5514,8 @@ if(mod.noScale){
   document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
   const _rtts=((mod.hwComment||mod.comment||mod.desc||'').split('**').filter((_,i)=>i%2===0).join('').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스 ')).trim();
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
-  const _ppEl=document.getElementById('pp');
-  if(_ppEl){_ppEl.textContent='완료 →';_ppEl.style.fontSize='14px';_ppEl.style.padding='8px 22px';_ppEl.onclick=()=>onDone();}
-  /* noScale 훈련에서는 skip 버튼 항상 숨김 */
+  /* noscale-done-btn은 comment-card 안에 있어서 자동으로 표시됨 */
+  /* pp 버튼(ctrl-bar 안)은 숨겨져있으므로 별도 처리 불필요 */
   const _skipBN=document.getElementById('skip-btn');
   if(_skipBN) _skipBN.style.display='none';
   return;
@@ -5525,6 +5529,7 @@ if(mod.noScale){
   const _exDC2=document.getElementById('ex-desc')?.closest('.card'); if(_exDC2)_exDC2.style.display='';
   const _pp2=document.getElementById('pp');
   if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
+  /* noScale 완료 버튼 숨기기 (comment-card 전체가 숨겨지므로 자동) */
   /* 건너뛰기 버튼: 김동현만 표시 */
   const _skipB=document.getElementById('skip-btn');
   if(_skipB){
