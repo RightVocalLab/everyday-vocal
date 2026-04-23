@@ -5929,8 +5929,25 @@ const MENU_ITEMS = [
 ];
 
 function _getMenuVis(){
-  /* 모든 항목 강제 표시 */
-  return {};
+  /* localStorage 설정 우선, 없으면 기본값 사용 */
+  const _defaults = {
+    "theory": true,
+    "theory_group_ex": true,
+    "theory_group_th": false,
+    "theory_t_th1": false,"theory_t_th2": false,"theory_t_th3": false,
+    "theory_t_th4": false,"theory_t_th5": false,"theory_t_th6": false,
+    "theory_t_th7": false,"theory_t_th8": false,"theory_t_th9": false,
+    "theory_t_th10": false,
+    "course": false,
+    "course_c_1": false,"course_c_2": false,"course_c_3": false,
+    "free": true,
+    "hw": true
+  };
+  try{
+    const stored = JSON.parse(localStorage.getItem('ev_menu_vis') || '{}');
+    /* 저장된 값이 있으면 우선, 없으면 기본값 */
+    return Object.assign({}, _defaults, stored);
+  }catch(e){ return _defaults; }
 }
 
 function _applyMenuVis(){
