@@ -454,9 +454,15 @@ input,select,button,textarea{font-family:inherit;}
       <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
       <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
     </div>
-    <!-- 스케일 없는 훈련 — 코멘트 카드 (기본 숨김) -->
-    <div id="comment-card" style="display:none;background:#f0fdf4;border:2px solid #86efac;border-radius:15px;padding:20px 16px">
-      <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:12px;letter-spacing:0.3px">📋 훈련 안내</div>
+        <!-- 스케일 없는 훈련 — 코멘트 전체화면 -->
+    <div id="comment-card" style="display:none;flex-direction:column;gap:12px">
+      <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:22px 18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="background:#16a34a;color:#fff;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:800">📋 훈련 안내</span>
+        </div>
+        <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.2;font-weight:500"></div>
+      </div>
+    </div>
       <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.0;font-weight:500"></div>
     </div>
 
@@ -5389,33 +5395,56 @@ stopEngine();curMod=mod;
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
-  /* 피아노 영역 완전 숨기기 */
-  const pianoArea=document.getElementById('piano-area');
-  if(pianoArea) pianoArea.style.display='none';
-  /* 진행률바 숨기기 */
+  /* ── 스케일 없는 훈련: 피아노/진행률/dots 전부 숨기고 코멘트만 ── */
+  /* 피아노 영역 숨기기 */
+  ['piano-area'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  /* 진행률바 + dots 숨기기 */
   const progParent=document.querySelector('.pt')?.parentElement;
   if(progParent) progParent.style.display='none';
-  /* 코멘트 카드 표시 — 마크다운 **굵게** 변환 */
+  const dotsEl=document.getElementById('dots');
+  if(dotsEl) dotsEl.style.display='none';
+
+  /* 코멘트 카드 표시 */
   const commentCard=document.getElementById('comment-card');
   const commentText=document.getElementById('comment-text');
-  if(commentCard) commentCard.style.display='';
+  if(commentCard) commentCard.style.display='flex';
+
   if(commentText){
-    const raw=mod.hwComment||mod.desc||'';
-    /* **텍스트** → <b>텍스트</b> 변환 */
-    /* **굵게** → <b>굵게</b>, 줄바꿈 → <br> */
-    let formatted=raw.split('**').map(function(s,i){return i%2===1?'<b>'+s+'</b>':s;}).join('');
-    formatted=formatted.replace(/\n/g,'<br>');
-    commentText.innerHTML=formatted;
+    const rawCmt = mod.hwComment || mod.comment || mod.desc || '';
+    /* **굵게** → <b style="color:#166534">굵게</b> 변환 */
+    let parts = rawCmt.split('**');
+    let formatted = parts.map(function(s,i){
+      return i%2===1
+        ? '<b style="color:#166534;font-size:14px">'+s+'</b>'
+        : s;
+    }).join('');
+    /* 줄바꿈 → <br><br> (문단 구분) */
+    formatted = formatted.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+    commentText.innerHTML = formatted
+      || '<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';
   }
-  document.getElementById('t-title').textContent=mod.label||mod.exId||'—';
-  document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
-  /* 코멘트 읽어주기 */
-  const raw_cmt=mod.hwComment||mod.desc||'';
-  const cmt=raw_cmt.split('**').filter(function(_,i){return i%2===0;}).join('');
-  if(cmt) speakEL(cmt,null,0.75,0.80);
+
+  /* 제목 (exName 우선 — Undefined 방지) */
+  const titleText = mod.exName || mod.name || mod.label || '훈련';
+  document.getElementById('t-title').textContent = titleText;
+  document.getElementById('t-sub').textContent = '내용 확인 후 다음 버튼을 눌러주세요';
+
+  /* ElevenLabs로 읽어주기 (** 제거) */
+  const rawTTS = mod.hwComment || mod.comment || mod.desc || '';
+  const ttsText = rawTTS.split('**').filter(function(_,i){return i%2===0;}).join('').trim();
+  if(ttsText) speakEL(ttsText, null, 0.75, 0.80);
+
   /* 다음 버튼 */
-  const pp=document.getElementById('pp');
-  if(pp){ pp.textContent='다음'; pp.style.fontSize='14px'; pp.style.padding='8px 16px'; pp.onclick=function(){ onDone(); }; }
+  const pp = document.getElementById('pp');
+  if(pp){
+    pp.textContent = '다음';
+    pp.style.fontSize = '14px';
+    pp.style.padding = '8px 22px';
+    pp.onclick = function(){ onDone(); };
+  }
   return;
 } else {
   /* 피아노 복원 + 코멘트 카드 숨기기 */
@@ -6895,24 +6924,27 @@ let STUDENTS_DB = [
     "homework": [
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       },
       {
         "exId": "ex_3",
+        "exName": "S 브레셔",
         "scaleId": "",
         "repeat": 1,
         "comment": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
         "active": true,
-        "label": "S 브레셔 x10",
-        "name": "S 브레셔 x10"
+        "label": "S 브레셔",
+        "name": "S 브레셔"
       },
       {
         "exId": "ex_2",
+        "exName": "립트릴",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "올라갈때 앞을타고 위로가서 뒤로가고 내려올때 삼각형 다 버텨보기",
@@ -6922,6 +6954,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_13",
+        "exName": "흉강고정+Press 우(학!우빡!)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에 좁히면 안되 주은아! 밖으로 아래로 공간에 성대의 힘을 밀어 넣는다고 생각하면서!",
@@ -6931,6 +6964,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_14",
+        "exName": "Press 후우(후우빡!)",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "이제부터 후 는 위치를 올리는 서비스 이고 계속 가슴에 우빡을 잘 버티려고 해야 되!",
@@ -6940,6 +6974,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "가슴까지 닿은 소리를 창문열고 나간다 생각하면서 앞으로 꺼내기!\n뚜껑 닫기!",
@@ -6949,6 +6984,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_15",
+        "exName": "학! 아빡",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에 좁히지말고 버티기! 힘들어지는 음정부터 앞에밑으로 꺽이며 누른다 생각하기!",
@@ -6958,6 +6994,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_16",
+        "exName": "하아빡",
         "scaleId": "3D-B",
         "repeat": 2,
         "comment": "피아노에 턱 대고 한번(가슴열어 대기), 벽에 붙어서 한번(가슴열어 대기)",
@@ -6967,6 +7004,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "후두를 턱으로 완전 박아서 가슴앞에 공을 상상하며 열 것!",
@@ -6976,6 +7014,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_18",
+        "exName": "오픈허밍(두성)",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "피치만 생각하면서, 가볍게 뒤로위로 당겨가기",
@@ -6985,6 +7024,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_19",
+        "exName": "오픈허밍(흉성~두성)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "앞에 잘 버틴거 생각하면서 위로, 뒤로 연결해서 지나가기!\n잘 되면 뒤에도 내리기",
@@ -7000,15 +7040,17 @@ let STUDENTS_DB = [
     "homework": [
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련 주먹말고 서서x10, 숙여서 x10",
-        "name": "호흡훈련 주먹말고 서서x10, 숙여서 x10"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       },
       {
         "exId": "ex_12",
+        "exName": "백프레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴에 진동이 최대한 많아지게 강하게! 대신 바람이 사라지면 안됨",
@@ -7018,6 +7060,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_12",
+        "exName": "백프레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "1번을 미친듯이 버티는 걸 좀 살살해야 돼!",
@@ -7027,6 +7070,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_13",
+        "exName": "흉강고정+Press 우(학!우빡!)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "호흡만 뱉으면 안 돼! 성대음을 순간 내고 멈추는 거야!",
@@ -7036,6 +7080,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_14",
+        "exName": "Press 후우(후우빡!)",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "하나씩 연습해보고 안 되면 벽 밀면서!",
@@ -7045,6 +7090,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_5",
+        "exName": "허밍",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "목 상태 확인용! 편하게 잘 되면 그때 하나씩 압력 추가해봐!",
@@ -7054,6 +7100,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴압력 열기! 조여지지 않고 압력 유지해서 소리 버티기!",
@@ -7063,6 +7110,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_15",
+        "exName": "학! 아빡",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "학! 잘하고 있어!",
@@ -7072,6 +7120,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_16",
+        "exName": "하아빡",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "가슴 위치로 소리 당기면서! (무거운 거 들면서)",
@@ -7081,6 +7130,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "후두를 턱으로 완전 박아서 열 것!",
@@ -7090,6 +7140,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_18",
+        "exName": "오픈허밍(두성)",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "하앙~ 응 잘 하고 가볍게 뒤로위로!",
@@ -7099,6 +7150,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_19",
+        "exName": "오픈허밍(흉성~두성)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "뇌한테 틈 주지 말고 턱으로 후두 고정! 조여지지 않게!",
@@ -7108,6 +7160,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_20",
+        "exName": "오픈허밍 마아~(5도쉬고)",
         "scaleId": "5H-A",
         "repeat": 1,
         "comment": "마아에서 이제 가슴에도 소리 대보기!",
@@ -7117,6 +7170,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_21",
+        "exName": "학!아 5도",
         "scaleId": "5D-A",
         "repeat": 1,
         "comment": "엄지 잘 대고 학! 아아아아 완전 놨다가 내려올 때 가슴압력 풀리지 않게!",
@@ -7126,6 +7180,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_22",
+        "exName": "H어택+아 Press(학!아 하아)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "내려올 때 가슴 앞쪽으로 호흡 버틴다는 생각!",
@@ -7141,24 +7196,27 @@ let STUDENTS_DB = [
     "homework": [
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       },
       {
         "exId": "ex_3",
+        "exName": "S 브레셔",
         "scaleId": "",
         "repeat": 1,
         "comment": "29초 호흡낭비 심해! 바늘구멍만큼 더 얇고 작게 뚫어서 멀리멀리 보내준다고 생각!",
         "active": true,
-        "label": "S 브레셔 x10",
-        "name": "S 브레셔 x10"
+        "label": "S 브레셔",
+        "name": "S 브레셔"
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "벽에 붙어서. 맨 첫음에서 너무 넓게 하려고 하지말고 더 한 점으로 모은다고 생각!",
@@ -7168,6 +7226,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "내가 할 수 있는만큼 가슴에 창문 열어서 대주고,\n힘들면 그 구간부터 자연스럽게 가슴에호흡을 꿰서 뒤로위로 멀리멀리 올라가기!, 모든구간에서 다 가슴에 창문 열수있게!\n잘 되서 밴딩으로 넘어갔어! \n밴딩했을때 처음에는 D#5부터안났었는데 한번 붙기시작하니까 G5까지 났는데! G#5부터 더 얇게 안만들어지는거야! \n근데 여기는 밑애 G5랑 같은 느낌이라고 생각하면 절대 못올라가! \n더 얆아진게 다시 가슴으로 붙는다고 생각해야되!\n그래도 안되면 방법 2가지 번갈아가면서 해보기! \n1번은 가슴에 압력을 확보하되 안되는음정은 상상! \n내려올때 붙혀보기(음정을 내려고 해보기), \n2번은 가성으로 빼도 되는데 그럼 더 오래걸리니까 가성이라고 상상하고 더 멀리보내기!(조금 조여지지만 그래도 나기시작하거든? 그럼또 반대로 나기시작한음에서 점점 열어간다 생각하면되!)",
@@ -7177,6 +7236,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_15",
+        "exName": "학! 아빡",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "무거운 거 들면서. 벽에 붙어서 가슴위치에서만! 앞으로 나가면서 밝은 아를 자랑한다고 생각! 맨처음 수업들 기억하기! 후두하강해서 누르며 버티는 힘 기르기!",
@@ -7186,6 +7246,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_5",
+        "exName": "허밍",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "내려올 때 호흡의 단수를 절대 낮추면 안 돼! 콧구멍으로 호흡을 빼면 안 돼!",
@@ -7195,6 +7256,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "처음에는 앞에만 사용해서!",
@@ -7204,6 +7266,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "3,4번 방향으로 ㅅ자 모양으로 버텨진다고 생각! \n앞에 압력이 뒤로 따라가지 않게 주의!",
@@ -7213,6 +7276,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_18",
+        "exName": "오픈허밍(두성)",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "뒤로위로 소리를 보냈다가 앞으로 보내면서 내려오기!",
@@ -7222,6 +7286,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_19",
+        "exName": "오픈허밍(흉성~두성)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "4개는 흉성, 5개째부터 두성으로 훅 띄워서 내고 내려올 때는 두성으로!",
@@ -7231,12 +7296,13 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_19",
+        "exName": "오픈허밍(흉성~두성)",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "오픈허밍(두성) 상태에서 아래로 한번 눌러서 뒤로 보내고 위로 당겨 올라가는 걸 버티면서 위를 든다는 생각으로 '아' 하기",
         "active": true,
-        "label": "오픈허밍(두성) 아~",
-        "name": "오픈허밍(두성) 아~"
+        "label": "오픈허밍(흉성~두성)",
+        "name": "오픈허밍(흉성~두성)"
       }
     ]
   },
@@ -7246,42 +7312,47 @@ let STUDENTS_DB = [
     "homework": [
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       },
       {
         "exId": "ex_3",
+        "exName": "S 브레셔",
         "scaleId": "",
         "repeat": 1,
         "comment": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
         "active": true,
-        "label": "S 브레셔 x10",
-        "name": "S 브레셔 x10"
+        "label": "S 브레셔",
+        "name": "S 브레셔"
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴앞에 소리 잘 붙혀서 유지하고 음정 올라가면 뒤에 잘 당겨쓰고! 가슴소리가 너무 없으면 안 돼!(중요)",
         "active": true,
-        "label": "Z 브레셔(흉성)",
-        "name": "Z 브레셔(흉성)"
+        "label": "Z 브레셔",
+        "name": "Z 브레셔"
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "벽에 붙어서. 앞에 바람 잘 버티면서! 두성구쯤 올라가면 뒤에서 아래로 눌리는 상압이 생긴다고 상상!",
         "active": true,
-        "label": "Z 브레셔(흉성~두성)",
-        "name": "Z 브레셔(흉성~두성)"
+        "label": "Z 브레셔",
+        "name": "Z 브레셔"
       },
       {
         "exId": "ex_5",
+        "exName": "허밍",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "입닫고 뒤로위로 내려올 때 앞으로!",
@@ -7291,6 +7362,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에만 신경써서! 수연이는 밑에를 더 많이 밖으로 꺼낸다 생각!",
@@ -7300,6 +7372,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "3번 4번 위치에서 수평으로만 움직일 것! G4, G#4 되면 뒤에 한칸씩 더 있다고 생각하면서!",
@@ -7309,12 +7382,13 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "5DN-C",
         "repeat": 1,
         "comment": "호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!",
         "active": true,
-        "label": "후 내려오기(5도 하향)",
-        "name": "후 내려오기(5도 하향)"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       }
     ]
   },
@@ -7324,24 +7398,27 @@ let STUDENTS_DB = [
     "homework": [
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       },
       {
         "exId": "ex_3",
+        "exName": "S 브레셔",
         "scaleId": "",
         "repeat": 1,
         "comment": "길게~ 들어가는 호흡이 컨트롤해준다 생각하면서 더 얇게, 길게~!",
         "active": true,
-        "label": "S 브레셔 x10",
-        "name": "S 브레셔 x10"
+        "label": "S 브레셔",
+        "name": "S 브레셔"
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 벽에 붙어서. 상복부 더 생각하고 집중하면서!",
@@ -7351,6 +7428,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). D5부터 뒤가 안 돼. 뒤로꿰서만 가면 D6까지도 가능! 내려올 때는 가슴에 계속 집어넣으려고 하다가!",
@@ -7360,6 +7438,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_5",
+        "exName": "허밍",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "7번(5도중성). 1번방식 연습. 처음 시작할 때 코로 뱉지마!! 꽃향기를 맡는다 생각!",
@@ -7369,6 +7448,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 처음엔 가슴앞에만 열기! 공이 앞에만 있어! 축구공이야!",
@@ -7378,6 +7458,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 요번엔 앞뒤로! 럭비공이야! 가슴 앞뒤로 럭비공이 들어있는데 공기를 채우고 계속 늘려나가야 돼!",
@@ -7393,24 +7474,27 @@ let STUDENTS_DB = [
     "homework": [
       {
         "exId": "ex_11",
+        "exName": "호흡훈련",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
+        "label": "호흡훈련",
+        "name": "호흡훈련"
       },
       {
         "exId": "ex_3",
+        "exName": "S 브레셔",
         "scaleId": "",
         "repeat": 1,
         "comment": "입에 바늘로 작은구멍을 뚫어서 압력이 생긴 바람이 실처럼 쭉쭉쭉 나간다고 생각! 입 근처에서 퍼지면 안 돼!",
         "active": true,
-        "label": "S 브레셔 x10",
-        "name": "S 브레셔 x10"
+        "label": "S 브레셔",
+        "name": "S 브레셔"
       },
       {
         "exId": "ex_2",
+        "exName": "립트릴",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "5번(9도흉성~두성). 가슴위치에서 뒷통수 뒤로위로 갔다오기! 목 푼다 생각!",
@@ -7420,6 +7504,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_2",
+        "exName": "립트릴",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "5번(9도흉성~두성). 내려올 때 가슴위치에 호흡(소리) 더 대보기!",
@@ -7429,6 +7514,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 뒤에를 애매하게 안쓰고 그냥 뒤를 써! 제일 마지막 위에음에서 한번 놨다가 빠르게 다시 훅 불기!",
@@ -7438,6 +7524,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). 밴딩해서! 되는 음정까지 가슴채워보고 안되는 데부터는 다 꿰서 가면 돼!",
@@ -7447,6 +7534,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_5",
+        "exName": "허밍",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "8번(5도쉬고중성). 아주~~! 잘했어! 음정이 올라가서 성구가 바뀔 때마다 뒤가 벌어지는데 더 한줄로 모아주려고!",
@@ -7456,6 +7544,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_17",
+        "exName": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 앞에만! 앞에 주먹만한 공기공이 튀어나온다고 생각하고! 음정 올라갈 때 집어먹지말고 더 늘려꺼낸 생각",
@@ -7465,6 +7554,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_18",
+        "exName": "오픈허밍(두성)",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "8번(5도쉬고중성). G#5에만 힘이 조금 있음! 수업시간에 여기 사용해서 늘려도 괜찮을 듯!",
@@ -7474,6 +7564,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "주먹말아쥐고, 3번(3도흉성~두성). 주먹을 꽉 잘 말아쥐고 가슴에서 호흡압이 나간다 느낌! 소리가 오히려 펴진다고 생각!",
@@ -7483,6 +7574,7 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_4",
+        "exName": "Z 브레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "다음시간 Z브레셔 3번스케일 G5이상 확인해보기. 오늘은 여기까지 잘 됐음!",
@@ -7845,9 +7937,12 @@ for(let r=0;r<repeat;r++){
 if(sc){
 /* 스케일 있는 항목 — 피아노 훈련 */
 trainList.push({
-id:item.name+'_'+item.scaleId+'_'+r,
-exId:item.name, scaleId:item.scaleId,
-label:item.name+' — '+sc.name+' ('+sc.range+')'+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
+id:(item.exName||item.name||item.exId||'hw')+'_'+item.scaleId+'_'+r,
+exId:item.exId||(item.exName||item.name||''),
+exName:item.exName||item.name||item.label||'훈련',
+name:item.exName||item.name||item.label||'훈련',
+scaleId:item.scaleId,
+label:(item.exName||item.name||item.label||'훈련')+' — '+sc.name+' ('+sc.range+')'+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:sc.range, desc:item.comment||'',
 scaleNote:sc.note||'', startNote:sc.startNote, endNote:sc.endNote,
 pattern:sc.pattern, bpm:sc.bpm||60,
@@ -7857,9 +7952,12 @@ hwComment:item.comment||''
 } else {
 /* 스케일 없는 항목 — 설명만 표시하고 넘기기 */
 trainList.push({
-id:item.name+'_noScale_'+r,
-exId:item.name, scaleId:'',
-label:item.name+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
+id:(item.exName||item.name||item.exId||'hw')+'_noScale_'+r,
+exId:item.exId||(item.exName||item.name||''),
+exName:item.exName||item.name||item.label||'훈련',
+name:item.exName||item.name||item.label||'훈련',
+scaleId:'',
+label:(item.exName||item.name||item.label||'훈련')+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:'', desc:item.comment||'',
 scaleNote:'', startNote:0, endNote:0,
 pattern:[], bpm:60,
