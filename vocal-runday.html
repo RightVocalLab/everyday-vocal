@@ -392,17 +392,12 @@ input,select,button,textarea{font-family:inherit;}
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
-    <!-- 스케일 없는 훈련 — 훈련 안내 카드 -->
     <div id="comment-card" style="display:none;flex-direction:column;gap:12px">
       <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:22px 18px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="background:#16a34a;color:#fff;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:800">📋 훈련 안내</span></div>
         <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.2;font-weight:500"></div>
       </div>
-      <!-- noScale 완료 버튼 -->
-      <button id="noscale-done-btn" onclick="onDone()"
-        style="width:100%;padding:16px;background:var(--or);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px">
-        ✅ 훈련 완료
-      </button>
+      <button id="noscale-done-btn" onclick="onDone()" style="width:100%;padding:16px;background:var(--or);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">✅ 훈련 완료</button>
     </div>
     <div>
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
@@ -476,7 +471,9 @@ input,select,button,textarea{font-family:inherit;}
     <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" id="skip-step-btn" title="스텝 건너뛰기" style="display:none">⏭</button>
+      <button class="ico" style="font-size:17px;display:none" onclick="freeSkipStep()" id="free-skip-step-btn" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px;display:none" onclick="freeSkipTrain()" id="free-skip-train-btn" title="다음 훈련으로">⏩</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -493,7 +490,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -514,7 +510,7 @@ input,select,button,textarea{font-family:inherit;}
 
     <!-- 훈련 추가하기 (아코디언) -->
     <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 훈련 및 설명 훈련을 추가할 수 있습니다</div>
     <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
 
   </div></div>
@@ -525,10 +521,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -712,6 +705,10 @@ input,select,button,textarea{font-family:inherit;}
         <div style="display:flex;gap:7px">
           <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
           <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+        <div style="margin-top:10px;padding:10px 12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px">
+          <div style="font-size:12px;font-weight:800;color:#dc2626;margin-bottom:8px">🔄 오늘 숙제 초기화</div>
+          <div id="admin-reset-btns" style="display:flex;flex-direction:column;gap:6px"></div>
         </div>
       </div>
       <!-- 월별 캘린더 -->
@@ -734,70 +731,13 @@ input,select,button,textarea{font-family:inherit;}
 <!-- 설정 모달 -->
 <div class="modal-bg" id="settings-modal" onclick="if(event.target===this)closeSettings()" style="display:none;align-items:flex-end">
   <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;margin:0 auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div style="font-size:16px;font-weight:900">🔊 음량 설정</div>
-      <button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button>
-    </div>
-
-    <!-- 스케일 음량 -->
-    <div style="margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800">🎹 스케일 음량</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div>
-        </div>
-        <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">70</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="70" id="vol-scale-sl"
-          style="flex:1;accent-color:var(--or);height:4px"
-          oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()">
-        <span style="font-size:11px;color:var(--mu)">100</span>
-      </div>
-    </div>
-
-    <!-- 훈련안내/멘트 음량 -->
-    <div style="margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div>
-        </div>
-        <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">80</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="80" id="vol-tts-sl"
-          style="flex:1;accent-color:var(--or);height:4px"
-          oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()">
-        <span style="font-size:11px;color:var(--mu)">100</span>
-      </div>
-    </div>
-
-    <!-- 화이팅멘트 음량 -->
-    <div style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div>
-        </div>
-        <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">30</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="30" id="vol-coach-sl"
-          style="flex:1;accent-color:var(--or);height:4px"
-          oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()">
-        <span style="font-size:11px;color:var(--mu)">100</span>
-      </div>
-    </div>
-
-    <!-- 저장 완료 표시 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:16px;font-weight:900">🔊 음량 설정</div><button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button></div>
+    <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎹 스케일 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-scale-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">10</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="10" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:16px">변경 즉시 자동 저장됩니다</div>
   </div>
 </div>
-
 <!-- MODALS -->
 <div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
   <div class="modal-box">
@@ -1127,10 +1067,7 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -1206,7 +1143,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -1223,7 +1160,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -1255,10 +1191,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -1303,7 +1236,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -1446,676 +1379,20 @@ input,select,button,textarea{font-family:inherit;}
       </div>
       <!-- 월별 캘린더 -->
       <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:6px 14px;font-size:16px">‹</button>
-          <div style="font-size:14px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:6px 14px;font-size:16px">›</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px 10px;background:#f9fafb;border-radius:10px" id="hw-cal-legend"></div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px"></div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:12px;color:#166534;line-height:1.9"></div>
-      </div>
-    </div>
-
-  </div></div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
-  <div class="modal-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:14px;font-weight:800">▶ 예시 영상</span>
-      <button onclick="closeVidM(null)" style="background:none;border:none;font-size:20px;color:var(--mu);cursor:pointer">✕</button>
-    </div>
-    <div style="position:relative;padding-bottom:56.25%;border-radius:9px;overflow:hidden;background:#000">
-      <iframe id="yt" style="position:absolute;inset:0;width:100%;height:100%" frameborder="0" allowfullscreen></iframe>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="done-modal">
-  <div class="modal-box" style="text-align:center;max-width:320px">
-    <div style="font-size:46px;margin-bottom:7px" id="done-ico">🎉</div>
-    <div style="font-size:19px;font-weight:900;margin-bottom:5px" id="done-head">완료!</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="done-txt"></div>
-    <div style="display:flex;gap:8px;justify-content:center" id="done-btns"></div>
-  </div>
-</div>
-
-<style>
-:root{
-  --or:#f97316;--or-d:#c2410c;--or-l:#fff7f0;--or-m:#fed7aa;--or-b:#fb923c;
-  --tx:#1c1917;--mu:#78716c;--mu2:#a8a29e;--bd:#fed7aa;--bd2:#fde8d0;--line:#f1ede8;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{background:#fff;color:var(--tx);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
-input,select,button,textarea{font-family:inherit;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--or-m);border-radius:99px;}
-
-/* ── SCREENS ── */
-.scr{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff;
-  transition:transform .30s cubic-bezier(.4,0,.2,1),opacity .26s;}
-.scr.hidden{transform:translateX(100%);pointer-events:none;}
-.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;}
-
-/* ── TOPBAR ── */
-.topbar{background:#fff;border-bottom:2px solid var(--or-b);padding:0 14px;height:54px;
-  flex-shrink:0;display:flex;align-items:center;gap:8px;z-index:10;}
-.tb{font-size:14px;font-weight:800;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ico{width:38px;height:38px;border-radius:50%;background:#fff;border:1.5px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;
-  transition:all .11s;color:var(--mu);flex-shrink:0;}
-.ico:hover{border-color:var(--or);color:var(--or);background:var(--or-l);}
-.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.inner{max-width:680px;margin:0 auto;padding:16px 14px;}
-
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:50px;
-  padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .11s;}
-.btn-or{background:var(--or);color:#fff;box-shadow:0 3px 12px rgba(249,115,22,.28);}
-.btn-or:hover{background:var(--or-d);}.btn-or:active{transform:scale(.97);}
-.btn-ol{background:#fff;color:var(--or);border:2px solid var(--or);}.btn-ol:hover{background:var(--or-l);}
-.btn-sm{padding:7px 14px;font-size:12px;}
-.btn-ghost{background:transparent;color:var(--mu);border:1.5px solid var(--bd2);border-radius:8px;
-  padding:5px 10px;font-size:12px;cursor:pointer;transition:all .11s;}
-.btn-ghost:hover{border-color:var(--or);color:var(--or);}
-.btn-ghost.on{background:var(--or);color:#fff;border-color:var(--or);}
-.play-btn{width:66px;height:66px;border-radius:50%;background:var(--or);color:#fff;border:none;
-  font-size:24px;cursor:pointer;transition:all .11s;box-shadow:0 4px 18px rgba(249,115,22,.40);
-  display:flex;align-items:center;justify-content:center;}
-.play-btn:hover{background:var(--or-d);transform:scale(1.05);}
-
-/* ── CARDS ── */
-.card{background:#fff;border:1.5px solid var(--bd2);border-radius:14px;padding:14px;}
-.tap{cursor:pointer;transition:border-color .12s,transform .10s,box-shadow .12s;}
-.tap:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.09);}
-.tap:active{transform:scale(.99);}
-
-/* ── PROGRESS ── */
-.pt{background:var(--or-m);border-radius:99px;height:6px;overflow:hidden;}
-.pf{background:var(--or);height:100%;border-radius:99px;transition:width .28s ease;}
-.sd{width:5px;height:5px;border-radius:50%;background:var(--or-m);transition:background .14s,transform .14s;}
-.sd.dn{background:var(--or);}.sd.cr{background:var(--or-d);transform:scale(1.7);}
-.nb{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--or);
-  color:var(--or-d);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;}
-
-/* ── PIANO ── */
-.piano-wrap{background:#d8d2cb;border:1.5px solid #c0b8b0;border-radius:12px;overflow:hidden;
-  box-shadow:0 3px 10px rgba(0,0,0,.13);}
-.piano-hd{background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:8px 12px;
-  display:flex;align-items:center;justify-content:space-between;}
-#piano-svg{width:100%;display:block;}
-
-/* ── BPM ROW ── */
-.bpm-row{background:#fff;border:1.5px solid var(--bd2);border-radius:12px;padding:10px 14px;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.bpm-row input[type=range]{flex:1;min-width:80px;accent-color:var(--or);}
-
-/* ── COACH ── */
-.coach-box{background:var(--or-l);border:1.5px solid var(--bd);border-radius:13px;padding:12px 14px;}
-.coach-txt{font-size:13px;color:var(--tx);line-height:1.65;min-height:36px;transition:opacity .2s;}
-
-/* ── HOME MENU ── */
-.menu-row{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:14px;padding:13px;cursor:pointer;transition:all .12s;}
-.menu-row:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.08);}
-.menu-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.cc{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:12px;padding:12px 13px;cursor:pointer;transition:all .11s;}
-.cc:hover{border-color:var(--or);transform:translateY(-1px);}
-
-/* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
-.day-cell{
-  aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .13s;gap:2px;
-}
-.day-cell:hover:not(.rest-c):not(.future-c){border-color:var(--or);background:var(--or-l);}
-.day-cell .dc-num{font-size:26px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:600;}
-.day-cell.rest-c{background:#f5f5f4;border-color:#e5e5e4;cursor:default;}
-.day-cell.rest-c .dc-num{color:var(--mu2);}
-.day-cell.future-c{opacity:.45;}
-.day-cell.done-c{background:#f0fdf4;border-color:#86efac;}
-.day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#16a34a;font-weight:700;}
-
-/* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
-.step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
-.step-screen.hidden{transform:translateX(100%);pointer-events:none;}
-.step-prog-bar{height:4px;background:var(--or-m);flex-shrink:0;}
-.step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
-
-/* ── THEORY ── */
-.th-item{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:12px;padding:12px;cursor:pointer;transition:all .11s;}
-.th-item:hover{border-color:var(--or);}
-
-/* ── TRAIN ITEM ── */
-.train-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:11px;padding:11px 13px;cursor:pointer;transition:all .11s;}
-.train-row:hover{border-color:var(--or);}
-
-/* ── FREE DRAG ── */
-.wod-slot{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:11px;padding:10px 12px;cursor:grab;transition:border-color .12s,opacity .12s;user-select:none;}
-.wod-slot.drag-over{border-color:var(--or);box-shadow:0 0 0 3px rgba(249,115,22,.12);}
-.wod-slot.dragging{opacity:.38;}
-.wnum{width:22px;height:22px;border-radius:50%;background:var(--or);color:#fff;font-size:10px;
-  font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-
-/* ── MODALS ── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.54);z-index:400;
-  align-items:center;justify-content:center;padding:14px;}
-.modal-bg.open{display:flex;}
-.modal-box{background:#fff;border:2px solid var(--or);border-radius:18px;padding:22px;
-  width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(249,115,22,.14);}
-
-#scr-splash{background:linear-gradient(155deg,#fff7f0 0%,#fff 65%);justify-content:center;align-items:center;text-align:center;}
-.div{height:1px;background:var(--line);margin:12px 0;}
-.empty{text-align:center;padding:26px 14px;color:var(--mu2);}
-@keyframes shake{
-  0%,100%{transform:translateX(0);}
-  20%{transform:translateX(-8px);}
-  40%{transform:translateX(8px);}
-  60%{transform:translateX(-5px);}
-  80%{transform:translateX(5px);}
-}
-</style>
-</head>
-<body>
-
-<!-- SPLASH -->
-<div id="scr-splash" class="scr">
-  <div style="padding:28px 22px;width:100%;max-width:440px;margin:0 auto">
-    <div style="width:82px;height:82px;border-radius:22px;background:var(--or);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(249,115,22,.36)">
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M16 8v20a6.5 6.5 0 1 0 4.5 0V14h12V8H16z" fill="#fff"/></svg>
-    </div>
-    <div id="splash-title" style="font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Everyday Vocal</div>
-    <div id="splash-subtitle" style="font-size:11px;color:var(--or);font-weight:700;letter-spacing:1.2px;margin-bottom:22px">PROFESSIONAL VOCAL TRAINING</div>
-    <div style="font-size:13px;color:var(--mu);line-height:1.8;max-width:300px;margin:0 auto 30px">
-      안녕하세요.<br>가수, 뮤지컬배우, 성악가, 전공생 등<br>음성직업군의 성대기능을 훈련시키기 위한<br>훈련프로그램 'Everyday Vocal'입니다.
-    </div>
-    <button class="btn btn-or" onclick="goIntro()" style="width:100%;padding:15px;font-size:16px;border-radius:14px">시작하기  →</button>
-    <div id="splash-footer" style="margin-top:12px;font-size:11px;color:var(--mu2)">by Right Vocal Lab</div>
-  </div>
-</div>
-
-<!-- HOME -->
-<div id="scr-home" class="scr hidden">
-  <div class="topbar">
-    <div style="width:38px"></div>
-    <div class="tb" style="display:flex;align-items:center;justify-content:center;gap:7px">
-      <div style="width:22px;height:22px;border-radius:6px;background:var(--or);display:flex;align-items:center;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 3v9a3 3 0 1 0 2 0V6h6V3H7z" fill="#fff"/></svg>
-      </div>Everyday Vocal
-    </div>
-    <button class="ico" onclick="openAdminPW()">⚙</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <!-- 이론 및 훈련설명 -->
-    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
-      <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
-      <div style="color:var(--mu2);font-size:17px">›</div>
-    </div>
-    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
-    <!-- 훈련 코스 — 기본 접힘 -->
-    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
-      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
-        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
-        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
-      </div>
-      <div id="course-list-wrap" style="display:none;overflow:hidden">
-        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
-      </div>
-    </div>
-    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
-    <!-- 자유 연습 -->
-    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
-      <div class="menu-ico" style="background:#fff3e8">🎯</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
-      <div style="color:var(--or);font-size:17px">›</div>
-    </div>
-    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
-      <div class="menu-ico" style="background:#dcfce7">📚</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800">숙제</div>
-        <div style="font-size:11px;color:var(--mu)" id="hw-menu-sub">학생 코드로 로그인하여 숙제 확인</div>
-      </div>
-      <div style="color:#16a34a;font-size:17px">›</div>
-    </div>
-    <div style="height:12px"></div>
-  </div></div>
-</div>
-
-<!-- THEORY LIST -->
-<div id="scr-theory-list" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">이론 및 훈련설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px" id="theory-list"></div></div>
-</div>
-
-<!-- THEORY DETAIL -->
-<div id="scr-theory-detail" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="th-title">—</div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="th-tts-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px;display:none">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner">
-<div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
-    <div style="height:28px"></div>
-  </div></div>
-</div>
-
-<!-- COURSE STAGE SELECT -->
-<div id="scr-course-diff" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="cd-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner"><div style="display:flex;flex-direction:column;gap:9px" id="diff-list"></div></div></div>
-</div>
-
-<!-- DAY SELECT (일차 그리드) -->
-<div id="scr-day-select" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="ds-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner">
-    <div style="font-size:12px;color:var(--mu);margin-bottom:14px" id="ds-info"></div>
-    <div id="ds-grid"></div>
-  </div></div>
-</div>
-
-<!-- STEP PLAYER (안내멘트 + 다음 버튼) -->
-<div id="scr-step" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="closeStep()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 4px">
-      <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="step-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="step-counter">—</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="step-tts-topbar-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="step-tts-btn" onclick="toggleStepTTS()" title="읽기/정지" style="font-size:13px">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="step-prog-bar"><div class="step-prog-fill" id="step-prog" style="width:0%"></div></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px">
-
-    <!-- 훈련 이름 -->
-    <div style="text-align:center;padding:18px 0 10px">
-      <div style="font-size:11px;color:var(--mu);font-weight:700;margin-bottom:6px">현재 훈련</div>
-      <div style="font-size:20px;font-weight:900;color:var(--or-d)" id="step-ex-name">—</div>
-      <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
-    </div>
-
-    <!-- 안내 멘트 박스 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:800;color:#166534">📋 안내 멘트</div>
-        <button id="step-auto-btn" class="btn-ghost on" onclick="toggleStepAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">자동읽기 ON</button>
-      </div>
-      <div id="step-tts-notice" style="font-size:10px;color:#6b7280;margin-bottom:8px">⏳ 2~3초 후 자동으로 음성이 나옵니다</div>
-      <div style="font-size:14px;color:#1c1917;line-height:1.75" id="step-guide">—</div>
-    </div>
-
-    <!-- 버튼 영역 -->
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" id="step-piano-btn" onclick="startStepPiano()" style="flex:1;padding:13px;font-size:13px;display:none">
-        🎹 피아노 훈련 시작
-      </button>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" onclick="prevStep()" id="step-prev-btn" style="flex:1;padding:13px;font-size:13px" disabled>← 이전</button>
-      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="flex:1;padding:13px;font-size:14px">다음 →</button>
-    </div>
-  </div></div>
-</div>
-
-<!-- TRAINING (피아노 실행) -->
-<div id="scr-train" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="exitTrain()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 5px">
-      <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
-    <div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:10px;color:var(--mu);font-weight:700">진행률</span>
-        <span style="font-size:11px;font-weight:800;color:var(--or)" id="pct">0%</span>
-      </div>
-      <div class="pt"><div class="pf" id="prog" style="width:0%"></div></div>
-      <div id="dots" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px"></div>
-    </div>
-    <!-- 현재 음 + 피아노 -->
-    <div style="background:var(--or-l);border:2px solid var(--or);border-radius:15px;padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-        <div>
-          <div style="font-size:10px;color:var(--mu);font-weight:700">지금 연주 중</div>
-          <div style="display:flex;align-items:baseline;gap:3px">
-            <span style="font-size:46px;font-weight:900;color:var(--or);line-height:1.05" id="cur-n">—</span>
-            <span style="font-size:18px;color:var(--mu)" id="cur-o"></span>
-          </div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--mu);font-weight:700;margin-bottom:4px">현재 키</div>
-          <div class="nb" id="cur-key">—</div>
-          <div style="font-size:11px;color:var(--mu);margin-top:4px" id="dir-l">↑ 상행</div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
         </div>
-      </div>
-      <div class="piano-wrap">
-        <div class="piano-hd">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div class="nb" style="font-size:11px" id="rng-f">—</div>
-            <span style="color:var(--mu);font-size:11px">~</span>
-            <div class="nb" style="font-size:11px" id="rng-t">—</div>
-          </div>
-          <div style="font-size:11px;color:var(--mu)" id="dir-l2">↑</div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
         </div>
-        <svg id="piano-svg" height="88" style="display:block;width:100%"><rect width="100%" height="100%" fill="#d8d2cb"/></svg>
-      </div>
-    </div>
-    <!-- BPM 인라인 -->
-    <div class="bpm-row">
-      <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
-      <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
-      <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
-      <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
-      <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
-      <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
-    </div>
-    <!-- 훈련 설명 + 코칭 통합 카드 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <!-- 화이팅 멘트 ON/OFF -->
-          <!-- 훈련설명 버튼 + 화이팅멘트 ON/OFF -->
-          <div style="display:flex;align-items:center;gap:4px">
-            <button id="desc-play-btn" onclick="playTrainDesc()"
-              style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:99px;padding:2px 9px;font-size:10px;font-weight:700;color:#1e40af;cursor:pointer">설명▶</button>
-            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
-              style="padding:2px 8px;font-size:10px;border-radius:99px">화이팅ON</button>
-          </div>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
-            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
-        </div>
-      </div>
-      <!-- 훈련 설명 본문 -->
-      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
-      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
-      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
-    </div>
-    <!-- 컨트롤 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
-      <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
-      <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
-    </div>
-    <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
-    <div id="next-train-row" style="display:none;padding:0 0 6px">
-      <button class="btn btn-ol" onclick="goNextTrain()" style="width:100%;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">
-        다음 훈련으로 ›
-      </button>
-    </div>
-  </div></div>
-</div>
-
-<!-- FREE -->
-<div id="scr-free" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb">자유 연습</div>
-    <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
-      <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 내 프로그램 (리스트) -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">내 프로그램</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button onclick="clearFreeList()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid #fecaca;border-radius:8px;color:#dc2626;cursor:pointer">전체 삭제</button>
-    </div>
-    <div id="free-slots" style="display:flex;flex-direction:column;gap:6px;min-height:52px;margin-bottom:12px"></div>
-
-    <div style="height:1px;background:var(--line);margin-bottom:12px"></div>
-
-    <!-- 훈련 추가하기 (아코디언) -->
-    <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
-    <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
-
-  </div></div>
-</div>
-
-<!-- HOMEWORK -->
-<div id="scr-homework" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
-        </div>
-        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
-      </div>
-      <!-- 진행 상황 바 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
-        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
-      </div>
-      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
-        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
-      </div>
-    </div>
-
-    <!-- 숙제 리스트 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
-    </div>
-
-    <!-- 전체 훈련 시작 버튼 -->
-    <button onclick="startHomeworkSeq()"
-      style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(22,163,74,.35)">
-      ▶ 전체 훈련 시작
-    </button>
-
-    <div id="hw-slots" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
-
-  </div></div>
-</div>
-
-<!-- ADMIN -->
-<div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">수정한 .xlsx 파일을 업로드하면 전체 데이터가 업데이트됩니다.</div>
-      <div id="xl-drop" style="border:2px dashed var(--or-m);border-radius:11px;padding:18px;text-align:center;cursor:pointer"
-        onclick="document.getElementById('xl-file').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--or)'"
-        ondragleave="this.style.borderColor=''"
-        ondrop="handleXlDrop(event)">
-        <div style="font-size:26px;margin-bottom:5px">📂</div>
-        <div style="font-size:12px;font-weight:700;color:var(--or)">클릭 또는 드래그</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:2px">.xlsx 파일만 지원</div>
-      </div>
-      <input type="file" id="xl-file" accept=".xlsx" style="display:none" onchange="handleXlFile(event)">
-      <div id="xl-status" style="margin-top:8px;font-size:12px;text-align:center;white-space:pre-line"></div>
-    </div>
-    <div class="card" id="el-card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
-        실제 남성 성우 AI 목소리를 사용합니다.<br>
-        API 키와 Voice ID를 입력하면 즉시 적용됩니다.
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">API 키</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-key-input" type="password" placeholder="●●●●●●●●●●●●●●●●"
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:12px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default" readonly>
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534">
-            ✅ API 키 내장됨 — 별도 입력 없이 자동 작동합니다.
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">
-            Voice ID
-            <span style="font-weight:400;color:var(--mu2)"> — 어떤 목소리로 읽을지 지정</span>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-vid-input" type="text" value="Mny3tJezAvDLdb8JlyUs" readonly
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:11px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default">
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534;line-height:1.5">
-            ✅ 고정 목소리 사용 중 — 어떤 기기에서 열어도 항상 같은 목소리로 출력됩니다.
-          </div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:7px;margin-bottom:10px">
-        <button class="btn btn-or" onclick="saveElSettings()" style="flex:1;padding:10px;font-size:13px" id="el-save-btn">🔊 연결 확인</button>
-        <button class="btn-ghost" onclick="testElTTS()" style="padding:9px 14px;font-size:12px">🔊 테스트</button>
-      </div>
-
-      <!-- 목소리 상세 설정 -->
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
-        <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-          🎛 목소리 안정성 (템포 불안정 시 높이세요)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:10px;color:var(--mu);white-space:nowrap">안정성</span>
-          <input type="range" id="el-stability" min="0" max="100" value="95" disabled
-            style="flex:1;accent-color:#86efac;opacity:0.7">
-          <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:34px;text-align:right" id="el-stab-val">95%</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-bottom:2px">
-          <span>낮음 (감정 풍부, 불안정)</span><span>높음 (일정한 템포)</span>
-        </div>
-        <div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;padding:5px 8px;margin-top:6px">
-          클론 목소리 권장: <strong>80~95%</strong> (style은 0 고정)
-        </div>
-        <!-- 속도 슬라이더 -->
-        <div style="margin-top:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-            🐢 말하기 속도
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:10px;color:var(--mu);white-space:nowrap">속도</span>
-            <input type="range" id="el-speed" min="70" max="120" value="80" step="5" disabled
-              style="flex:1;accent-color:#86efac;opacity:0.7">
-            <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:38px;text-align:right" id="el-speed-val">0.80x</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2)">
-            <span>0.70x (느림)</span><span>1.00x (보통)</span><span>1.20x (빠름)</span>
-          </div>
-          <div style="margin-top:5px;font-size:10px;color:#16a34a">✅ 속도 고정됨 (변경 불가)</div>
-        </div>
-      </div>
-      <div id="el-status" style="font-size:11px;text-align:center;min-height:16px;margin-top:8px"></div>
-
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:11px;color:var(--mu)">ElevenLabs 사용</div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <div id="el-dot" style="width:8px;height:8px;border-radius:50%;background:#e5e7eb"></div>
-          <span id="el-mode-label" style="font-size:11px;color:var(--mu2)">미설정 (브라우저 TTS)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎙 목소리 진단 & 안내</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.6">
-        브라우저 TTS는 기기·OS·브라우저에 따라 제공 목소리가 다릅니다.<br>
-        <strong>Android Chrome</strong>: 설정 → 접근성 → TTS → 엔진 변경<br>
-        <strong>iOS Safari</strong>: 설정 → 손쉬운 사용 → 말하기 → 목소리<br>
-        <strong>Mac/PC</strong>: 시스템 설정 → 손쉬운 사용 → 말하기 → 시스템 음성<br>
-        남성 음성이 없다면 <strong>Google Cloud TTS / ElevenLabs</strong> 연동을 추천합니다.
-      </div>
-      <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
-      <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
-    </div>
-
-    <!-- 메뉴 노출 설정 -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
-      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
-      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
-    </div>
-
-    <!-- 숙제 완료 현황 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
-        <div style="display:flex;gap:5px">
-          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
-          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
-        </div>
-      </div>
-      <!-- 오늘 현황 -->
-      <div id="hw-today-view">
-        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:7px">
-          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
-        </div>
-      </div>
-      <!-- 월별 캘린더 -->
-      <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:6px 14px;font-size:16px">‹</button>
-          <div style="font-size:14px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:6px 14px;font-size:16px">›</button>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px 10px;background:#f9fafb;border-radius:10px" id="hw-cal-legend"></div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px"></div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:12px;color:#166534;line-height:1.9"></div>
       </div>
     </div>
 
@@ -2451,10 +1728,7 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -2530,7 +1804,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -2547,7 +1821,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -2579,10 +1852,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -2627,7 +1897,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -2770,14 +2040,681 @@ input,select,button,textarea{font-family:inherit;}
       </div>
       <!-- 월별 캘린더 -->
       <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:6px 14px;font-size:16px">‹</button>
-          <div style="font-size:14px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:6px 14px;font-size:16px">›</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px 10px;background:#f9fafb;border-radius:10px" id="hw-cal-legend"></div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px"></div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:12px;color:#166534;line-height:1.9"></div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
+        </div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+        </div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:14px;font-weight:800">▶ 예시 영상</span>
+      <button onclick="closeVidM(null)" style="background:none;border:none;font-size:20px;color:var(--mu);cursor:pointer">✕</button>
+    </div>
+    <div style="position:relative;padding-bottom:56.25%;border-radius:9px;overflow:hidden;background:#000">
+      <iframe id="yt" style="position:absolute;inset:0;width:100%;height:100%" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="done-modal">
+  <div class="modal-box" style="text-align:center;max-width:320px">
+    <div style="font-size:46px;margin-bottom:7px" id="done-ico">🎉</div>
+    <div style="font-size:19px;font-weight:900;margin-bottom:5px" id="done-head">완료!</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="done-txt"></div>
+    <div style="display:flex;gap:8px;justify-content:center" id="done-btns"></div>
+  </div>
+</div>
+
+<style>
+:root{
+  --or:#f97316;--or-d:#c2410c;--or-l:#fff7f0;--or-m:#fed7aa;--or-b:#fb923c;
+  --tx:#1c1917;--mu:#78716c;--mu2:#a8a29e;--bd:#fed7aa;--bd2:#fde8d0;--line:#f1ede8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:#fff;color:var(--tx);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
+input,select,button,textarea{font-family:inherit;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--or-m);border-radius:99px;}
+
+/* ── SCREENS ── */
+.scr{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff;
+  transition:transform .30s cubic-bezier(.4,0,.2,1),opacity .26s;}
+.scr.hidden{transform:translateX(100%);pointer-events:none;}
+.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:2px solid var(--or-b);padding:0 14px;height:54px;
+  flex-shrink:0;display:flex;align-items:center;gap:8px;z-index:10;}
+.tb{font-size:14px;font-weight:800;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ico{width:38px;height:38px;border-radius:50%;background:#fff;border:1.5px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;
+  transition:all .11s;color:var(--mu);flex-shrink:0;}
+.ico:hover{border-color:var(--or);color:var(--or);background:var(--or-l);}
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.inner{max-width:680px;margin:0 auto;padding:16px 14px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:50px;
+  padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .11s;}
+.btn-or{background:var(--or);color:#fff;box-shadow:0 3px 12px rgba(249,115,22,.28);}
+.btn-or:hover{background:var(--or-d);}.btn-or:active{transform:scale(.97);}
+.btn-ol{background:#fff;color:var(--or);border:2px solid var(--or);}.btn-ol:hover{background:var(--or-l);}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.btn-ghost{background:transparent;color:var(--mu);border:1.5px solid var(--bd2);border-radius:8px;
+  padding:5px 10px;font-size:12px;cursor:pointer;transition:all .11s;}
+.btn-ghost:hover{border-color:var(--or);color:var(--or);}
+.btn-ghost.on{background:var(--or);color:#fff;border-color:var(--or);}
+.play-btn{width:66px;height:66px;border-radius:50%;background:var(--or);color:#fff;border:none;
+  font-size:24px;cursor:pointer;transition:all .11s;box-shadow:0 4px 18px rgba(249,115,22,.40);
+  display:flex;align-items:center;justify-content:center;}
+.play-btn:hover{background:var(--or-d);transform:scale(1.05);}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1.5px solid var(--bd2);border-radius:14px;padding:14px;}
+.tap{cursor:pointer;transition:border-color .12s,transform .10s,box-shadow .12s;}
+.tap:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.09);}
+.tap:active{transform:scale(.99);}
+
+/* ── PROGRESS ── */
+.pt{background:var(--or-m);border-radius:99px;height:6px;overflow:hidden;}
+.pf{background:var(--or);height:100%;border-radius:99px;transition:width .28s ease;}
+.sd{width:5px;height:5px;border-radius:50%;background:var(--or-m);transition:background .14s,transform .14s;}
+.sd.dn{background:var(--or);}.sd.cr{background:var(--or-d);transform:scale(1.7);}
+.nb{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--or);
+  color:var(--or-d);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;}
+
+/* ── PIANO ── */
+.piano-wrap{background:#d8d2cb;border:1.5px solid #c0b8b0;border-radius:12px;overflow:hidden;
+  box-shadow:0 3px 10px rgba(0,0,0,.13);}
+.piano-hd{background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:8px 12px;
+  display:flex;align-items:center;justify-content:space-between;}
+#piano-svg{width:100%;display:block;}
+
+/* ── BPM ROW ── */
+.bpm-row{background:#fff;border:1.5px solid var(--bd2);border-radius:12px;padding:10px 14px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.bpm-row input[type=range]{flex:1;min-width:80px;accent-color:var(--or);}
+
+/* ── COACH ── */
+.coach-box{background:var(--or-l);border:1.5px solid var(--bd);border-radius:13px;padding:12px 14px;}
+.coach-txt{font-size:13px;color:var(--tx);line-height:1.65;min-height:36px;transition:opacity .2s;}
+
+/* ── HOME MENU ── */
+.menu-row{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--bd2);
+  border-radius:14px;padding:13px;cursor:pointer;transition:all .12s;}
+.menu-row:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.08);}
+.menu-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.cc{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
+  border-radius:12px;padding:12px 13px;cursor:pointer;transition:all .11s;}
+.cc:hover{border-color:var(--or);transform:translateY(-1px);}
+
+/* ── 일차 그리드 (크게, 직관적) ── */
+.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
+@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
+.day-cell{
+  aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .13s;gap:2px;
+}
+.day-cell:hover:not(.rest-c):not(.future-c){border-color:var(--or);background:var(--or-l);}
+.day-cell .dc-num{font-size:26px;font-weight:900;color:var(--or-d);line-height:1;}
+.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:600;}
+.day-cell.rest-c{background:#f5f5f4;border-color:#e5e5e4;cursor:default;}
+.day-cell.rest-c .dc-num{color:var(--mu2);}
+.day-cell.future-c{opacity:.45;}
+.day-cell.done-c{background:#f0fdf4;border-color:#86efac;}
+.day-cell.done-c .dc-num{color:#16a34a;}
+.day-cell.done-c .dc-sub{color:#16a34a;font-weight:700;}
+
+/* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
+.step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
+.step-screen.hidden{transform:translateX(100%);pointer-events:none;}
+.step-prog-bar{height:4px;background:var(--or-m);flex-shrink:0;}
+.step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
+
+/* ── THEORY ── */
+.th-item{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
+  border-radius:12px;padding:12px;cursor:pointer;transition:all .11s;}
+.th-item:hover{border-color:var(--or);}
+
+/* ── TRAIN ITEM ── */
+.train-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--bd2);
+  border-radius:11px;padding:11px 13px;cursor:pointer;transition:all .11s;}
+.train-row:hover{border-color:var(--or);}
+
+/* ── FREE DRAG ── */
+.wod-slot{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--bd2);
+  border-radius:11px;padding:10px 12px;cursor:grab;transition:border-color .12s,opacity .12s;user-select:none;}
+.wod-slot.drag-over{border-color:var(--or);box-shadow:0 0 0 3px rgba(249,115,22,.12);}
+.wod-slot.dragging{opacity:.38;}
+.wnum{width:22px;height:22px;border-radius:50%;background:var(--or);color:#fff;font-size:10px;
+  font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── MODALS ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.54);z-index:400;
+  align-items:center;justify-content:center;padding:14px;}
+.modal-bg.open{display:flex;}
+.modal-box{background:#fff;border:2px solid var(--or);border-radius:18px;padding:22px;
+  width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(249,115,22,.14);}
+
+#scr-splash{background:linear-gradient(155deg,#fff7f0 0%,#fff 65%);justify-content:center;align-items:center;text-align:center;}
+.div{height:1px;background:var(--line);margin:12px 0;}
+.empty{text-align:center;padding:26px 14px;color:var(--mu2);}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-8px);}
+  40%{transform:translateX(8px);}
+  60%{transform:translateX(-5px);}
+  80%{transform:translateX(5px);}
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="scr-splash" class="scr">
+  <div style="padding:28px 22px;width:100%;max-width:440px;margin:0 auto">
+    <div style="width:82px;height:82px;border-radius:22px;background:var(--or);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(249,115,22,.36)">
+      <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M16 8v20a6.5 6.5 0 1 0 4.5 0V14h12V8H16z" fill="#fff"/></svg>
+    </div>
+    <div id="splash-title" style="font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Everyday Vocal</div>
+    <div id="splash-subtitle" style="font-size:11px;color:var(--or);font-weight:700;letter-spacing:1.2px;margin-bottom:22px">PROFESSIONAL VOCAL TRAINING</div>
+    <div style="font-size:13px;color:var(--mu);line-height:1.8;max-width:300px;margin:0 auto 30px">
+      안녕하세요.<br>가수, 뮤지컬배우, 성악가, 전공생 등<br>음성직업군의 성대기능을 훈련시키기 위한<br>훈련프로그램 'Everyday Vocal'입니다.
+    </div>
+    <button class="btn btn-or" onclick="goIntro()" style="width:100%;padding:15px;font-size:16px;border-radius:14px">시작하기  →</button>
+    <div id="splash-footer" style="margin-top:12px;font-size:11px;color:var(--mu2)">by Right Vocal Lab</div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="scr-home" class="scr hidden">
+  <div class="topbar">
+    <div style="width:38px"></div>
+    <div class="tb" style="display:flex;align-items:center;justify-content:center;gap:7px">
+      <div style="width:22px;height:22px;border-radius:6px;background:var(--or);display:flex;align-items:center;justify-content:center">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 3v9a3 3 0 1 0 2 0V6h6V3H7z" fill="#fff"/></svg>
+      </div>Everyday Vocal
+    </div>
+    <button class="ico" onclick="openAdminPW()">⚙</button>
+  </div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
+    <!-- 이론 및 훈련설명 -->
+    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
+      <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
+      <div style="color:var(--mu2);font-size:17px">›</div>
+    </div>
+    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
+    <!-- 훈련 코스 — 기본 접힘 -->
+    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
+      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
+        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
+        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
+      </div>
+      <div id="course-list-wrap" style="display:none;overflow:hidden">
+        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
+      </div>
+    </div>
+    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
+    <!-- 자유 연습 -->
+    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
+      <div class="menu-ico" style="background:#fff3e8">🎯</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
+      <div style="color:var(--or);font-size:17px">›</div>
+    </div>
+    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
+      <div class="menu-ico" style="background:#dcfce7">📚</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800">숙제</div>
+        <div style="font-size:11px;color:var(--mu)" id="hw-menu-sub">학생 코드로 로그인하여 숙제 확인</div>
+      </div>
+      <div style="color:#16a34a;font-size:17px">›</div>
+    </div>
+    <div style="height:12px"></div>
+  </div></div>
+</div>
+
+<!-- THEORY LIST -->
+<div id="scr-theory-list" class="scr hidden">
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">이론 및 훈련설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px" id="theory-list"></div></div>
+</div>
+
+<!-- THEORY DETAIL -->
+<div id="scr-theory-detail" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="cancelTTS();pop()">←</button>
+    <div class="tb" id="th-title">—</div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <div id="th-tts-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px;display:none">
+        ⏳ 잠시 후<br>음성 시작
+      </div>
+      <button class="ico" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">⏹</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
+  </div>
+  <div class="body"><div class="inner">
+<div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
+    <div style="height:28px"></div>
+  </div></div>
+</div>
+
+<!-- COURSE STAGE SELECT -->
+<div id="scr-course-diff" class="scr hidden">
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="cd-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="body"><div class="inner"><div style="display:flex;flex-direction:column;gap:9px" id="diff-list"></div></div></div>
+</div>
+
+<!-- DAY SELECT (일차 그리드) -->
+<div id="scr-day-select" class="scr hidden">
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="ds-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="body"><div class="inner">
+    <div style="font-size:12px;color:var(--mu);margin-bottom:14px" id="ds-info"></div>
+    <div id="ds-grid"></div>
+  </div></div>
+</div>
+
+<!-- STEP PLAYER (안내멘트 + 다음 버튼) -->
+<div id="scr-step" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="closeStep()">←</button>
+    <div style="flex:1;text-align:center;min-width:0;padding:0 4px">
+      <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="step-title">—</div>
+      <div style="font-size:10px;color:var(--mu)" id="step-counter">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <div id="step-tts-topbar-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px">
+        ⏳ 잠시 후<br>음성 시작
+      </div>
+      <button class="ico" id="step-tts-btn" onclick="toggleStepTTS()" title="읽기/정지" style="font-size:13px">⏹</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
+  </div>
+  <div class="step-prog-bar"><div class="step-prog-fill" id="step-prog" style="width:0%"></div></div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px">
+
+    <!-- 훈련 이름 -->
+    <div style="text-align:center;padding:18px 0 10px">
+      <div style="font-size:11px;color:var(--mu);font-weight:700;margin-bottom:6px">현재 훈련</div>
+      <div style="font-size:20px;font-weight:900;color:var(--or-d)" id="step-ex-name">—</div>
+      <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
+    </div>
+
+    <!-- 안내 멘트 박스 -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:800;color:#166534">📋 안내 멘트</div>
+        <button id="step-auto-btn" class="btn-ghost on" onclick="toggleStepAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">자동읽기 ON</button>
+      </div>
+      <div id="step-tts-notice" style="font-size:10px;color:#6b7280;margin-bottom:8px">⏳ 2~3초 후 자동으로 음성이 나옵니다</div>
+      <div style="font-size:14px;color:#1c1917;line-height:1.75" id="step-guide">—</div>
+    </div>
+
+    <!-- 버튼 영역 -->
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ol" id="step-piano-btn" onclick="startStepPiano()" style="flex:1;padding:13px;font-size:13px;display:none">
+        🎹 피아노 훈련 시작
+      </button>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ol" onclick="prevStep()" id="step-prev-btn" style="flex:1;padding:13px;font-size:13px" disabled>← 이전</button>
+      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="flex:1;padding:13px;font-size:14px">다음 →</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- TRAINING (피아노 실행) -->
+<div id="scr-train" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="exitTrain()">←</button>
+    <div style="flex:1;text-align:center;min-width:0;padding:0 5px">
+      <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
+      <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
+    </div>
+    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+  </div>
+  <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:10px;color:var(--mu);font-weight:700">진행률</span>
+        <span style="font-size:11px;font-weight:800;color:var(--or)" id="pct">0%</span>
+      </div>
+      <div class="pt"><div class="pf" id="prog" style="width:0%"></div></div>
+      <div id="dots" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px"></div>
+    </div>
+    <!-- 현재 음 + 피아노 -->
+    <div style="background:var(--or-l);border:2px solid var(--or);border-radius:15px;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+        <div>
+          <div style="font-size:10px;color:var(--mu);font-weight:700">지금 연주 중</div>
+          <div style="display:flex;align-items:baseline;gap:3px">
+            <span style="font-size:46px;font-weight:900;color:var(--or);line-height:1.05" id="cur-n">—</span>
+            <span style="font-size:18px;color:var(--mu)" id="cur-o"></span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--mu);font-weight:700;margin-bottom:4px">현재 키</div>
+          <div class="nb" id="cur-key">—</div>
+          <div style="font-size:11px;color:var(--mu);margin-top:4px" id="dir-l">↑ 상행</div>
+        </div>
+      </div>
+      <div class="piano-wrap">
+        <div class="piano-hd">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="nb" style="font-size:11px" id="rng-f">—</div>
+            <span style="color:var(--mu);font-size:11px">~</span>
+            <div class="nb" style="font-size:11px" id="rng-t">—</div>
+          </div>
+          <div style="font-size:11px;color:var(--mu)" id="dir-l2">↑</div>
+        </div>
+        <svg id="piano-svg" height="88" style="display:block;width:100%"><rect width="100%" height="100%" fill="#d8d2cb"/></svg>
+      </div>
+    </div>
+    <!-- BPM 인라인 -->
+    <div class="bpm-row">
+      <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
+      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
+      <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
+      <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
+      <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
+      <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
+      <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
+    </div>
+    <!-- 훈련 설명 + 코칭 통합 카드 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <!-- 화이팅 멘트 ON/OFF -->
+          <!-- 훈련설명 버튼 + 화이팅멘트 ON/OFF -->
+          <div style="display:flex;align-items:center;gap:4px">
+            <button id="desc-play-btn" onclick="playTrainDesc()"
+              style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:99px;padding:2px 9px;font-size:10px;font-weight:700;color:#1e40af;cursor:pointer">설명▶</button>
+            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
+              style="padding:2px 8px;font-size:10px;border-radius:99px">화이팅ON</button>
+          </div>
+          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
+            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
+        </div>
+      </div>
+      <!-- 훈련 설명 본문 -->
+      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
+      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
+      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
+    </div>
+    <!-- 컨트롤 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
+      <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
+      <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+    </div>
+    <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
+    <div id="next-train-row" style="display:none;padding:0 0 6px">
+      <button class="btn btn-ol" onclick="goNextTrain()" style="width:100%;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">
+        다음 훈련으로 ›
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<!-- FREE -->
+<div id="scr-free" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="cancelTTS();pop()">←</button>
+    <div class="tb">자유 연습</div>
+    <div style="display:flex;gap:5px;align-items:center">
+      <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
+  </div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
+
+    <!-- 내 프로그램 (리스트) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div>
+        <div style="font-size:13px;font-weight:800">내 프로그램</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
+      </div>
+      <button onclick="clearFreeList()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid #fecaca;border-radius:8px;color:#dc2626;cursor:pointer">전체 삭제</button>
+    </div>
+    <div id="free-slots" style="display:flex;flex-direction:column;gap:6px;min-height:52px;margin-bottom:12px"></div>
+
+    <div style="height:1px;background:var(--line);margin-bottom:12px"></div>
+
+    <!-- 훈련 추가하기 (아코디언) -->
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
+    <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
+
+  </div></div>
+</div>
+
+<!-- HOMEWORK -->
+<div id="scr-homework" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="cancelTTS();pop()">←</button>
+    <div class="tb" id="hw-topbar-title">숙제</div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+  </div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
+
+    <!-- 학생 정보 바 -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
+          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+        </div>
+        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
+      </div>
+      <!-- 진행 상황 바 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
+        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
+      </div>
+      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
+        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+      </div>
+    </div>
+
+    <!-- 숙제 리스트 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div>
+        <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
+      </div>
+      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
+    </div>
+
+    <!-- 전체 훈련 시작 버튼 -->
+    <button onclick="startHomeworkSeq()"
+      style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(22,163,74,.35)">
+      ▶ 전체 훈련 시작
+    </button>
+
+    <div id="hw-slots" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
+
+  </div></div>
+</div>
+
+<!-- ADMIN -->
+<div id="scr-admin" class="scr hidden">
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">수정한 .xlsx 파일을 업로드하면 전체 데이터가 업데이트됩니다.</div>
+      <div id="xl-drop" style="border:2px dashed var(--or-m);border-radius:11px;padding:18px;text-align:center;cursor:pointer"
+        onclick="document.getElementById('xl-file').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--or)'"
+        ondragleave="this.style.borderColor=''"
+        ondrop="handleXlDrop(event)">
+        <div style="font-size:26px;margin-bottom:5px">📂</div>
+        <div style="font-size:12px;font-weight:700;color:var(--or)">클릭 또는 드래그</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:2px">.xlsx 파일만 지원</div>
+      </div>
+      <input type="file" id="xl-file" accept=".xlsx" style="display:none" onchange="handleXlFile(event)">
+      <div id="xl-status" style="margin-top:8px;font-size:12px;text-align:center;white-space:pre-line"></div>
+    </div>
+    <div class="card" id="el-card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
+        실제 남성 성우 AI 목소리를 사용합니다.<br>
+        API 키와 Voice ID를 입력하면 즉시 적용됩니다.
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">API 키</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="el-key-input" type="password" placeholder="●●●●●●●●●●●●●●●●"
+              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:12px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default" readonly>
+          </div>
+          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534">
+            ✅ API 키 내장됨 — 별도 입력 없이 자동 작동합니다.
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">
+            Voice ID
+            <span style="font-weight:400;color:var(--mu2)"> — 어떤 목소리로 읽을지 지정</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="el-vid-input" type="text" value="Mny3tJezAvDLdb8JlyUs" readonly
+              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:11px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default">
+          </div>
+          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534;line-height:1.5">
+            ✅ 고정 목소리 사용 중 — 어떤 기기에서 열어도 항상 같은 목소리로 출력됩니다.
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:7px;margin-bottom:10px">
+        <button class="btn btn-or" onclick="saveElSettings()" style="flex:1;padding:10px;font-size:13px" id="el-save-btn">🔊 연결 확인</button>
+        <button class="btn-ghost" onclick="testElTTS()" style="padding:9px 14px;font-size:12px">🔊 테스트</button>
+      </div>
+
+      <!-- 목소리 상세 설정 -->
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
+        <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
+          🎛 목소리 안정성 (템포 불안정 시 높이세요)
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:10px;color:var(--mu);white-space:nowrap">안정성</span>
+          <input type="range" id="el-stability" min="0" max="100" value="95" disabled
+            style="flex:1;accent-color:#86efac;opacity:0.7">
+          <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:34px;text-align:right" id="el-stab-val">95%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-bottom:2px">
+          <span>낮음 (감정 풍부, 불안정)</span><span>높음 (일정한 템포)</span>
+        </div>
+        <div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;padding:5px 8px;margin-top:6px">
+          클론 목소리 권장: <strong>80~95%</strong> (style은 0 고정)
+        </div>
+        <!-- 속도 슬라이더 -->
+        <div style="margin-top:12px">
+          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
+            🐢 말하기 속도
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:10px;color:var(--mu);white-space:nowrap">속도</span>
+            <input type="range" id="el-speed" min="70" max="120" value="80" step="5" disabled
+              style="flex:1;accent-color:#86efac;opacity:0.7">
+            <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:38px;text-align:right" id="el-speed-val">0.80x</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2)">
+            <span>0.70x (느림)</span><span>1.00x (보통)</span><span>1.20x (빠름)</span>
+          </div>
+          <div style="margin-top:5px;font-size:10px;color:#16a34a">✅ 속도 고정됨 (변경 불가)</div>
+        </div>
+      </div>
+      <div id="el-status" style="font-size:11px;text-align:center;min-height:16px;margin-top:8px"></div>
+
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;color:var(--mu)">ElevenLabs 사용</div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <div id="el-dot" style="width:8px;height:8px;border-radius:50%;background:#e5e7eb"></div>
+          <span id="el-mode-label" style="font-size:11px;color:var(--mu2)">미설정 (브라우저 TTS)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎙 목소리 진단 & 안내</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.6">
+        브라우저 TTS는 기기·OS·브라우저에 따라 제공 목소리가 다릅니다.<br>
+        <strong>Android Chrome</strong>: 설정 → 접근성 → TTS → 엔진 변경<br>
+        <strong>iOS Safari</strong>: 설정 → 손쉬운 사용 → 말하기 → 목소리<br>
+        <strong>Mac/PC</strong>: 시스템 설정 → 손쉬운 사용 → 말하기 → 시스템 음성<br>
+        남성 음성이 없다면 <strong>Google Cloud TTS / ElevenLabs</strong> 연동을 추천합니다.
+      </div>
+      <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
+      <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
+    </div>
+
+    <!-- 메뉴 노출 설정 -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
+      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
+    </div>
+
+    <!-- 숙제 완료 현황 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
+          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
+            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
+        </div>
+      </div>
+      <!-- 오늘 현황 -->
+      <div id="hw-today-view">
+        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+      </div>
+      <!-- 월별 캘린더 -->
+      <div id="hw-cal-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
+          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <select id="hw-cal-student" onchange="renderHwCalendar()"
+            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
+          </select>
+        </div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+        </div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
+        </div>
       </div>
     </div>
 
@@ -2825,777 +2762,790 @@ onend:null,onerror:null,onstart:null};
 
 const INIT_DB={
   "exercises": [
-    {
-      "id": "ex_1",
-      "name": "발성훈련 셋팅",
-      "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_2",
-      "name": "복흉식호흡",
-      "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_3",
-      "name": "S 브레셔",
-      "desc": "**주먹말고 호흡 훈련.**\n울트라브리드의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n울트라브리드를 잘 잠그고 입에 완전히 짛어 넣어 이빨로 물고 입술로 울트라브리드를 덮습니다.\n울트라 브리드를 더 조이거나 풀어가며 강도를 조절하여 입으로 호흡합니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.\n기구를 통한 훈련으로 더 일관되고 정확하게 호흡훈련이 가능합니다.\n\n**울트라브리드란?**\n호주에서 수영선수의 폐활량증대를 위해 만들어낸 호흡기구 입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_4",
-      "name": "Z 브레셔",
-      "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_5",
-      "name": "허밍",
-      "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_6",
-      "name": "오픈 허밍",
-      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_7",
-      "name": "Press 우",
-      "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_8",
-      "name": "Breath 우",
-      "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_9",
-      "name": "Press 아",
-      "desc": "**아~아~아~.**\n'아' 모음을 사용하여 가슴위치에서 호흡을 대는 연습을 하는 훈련입니다.\n\n**훈련 방법.**\n가슴의 위치에 호흡을 불어낸다(쓸어낸다) 라는 느낌으로, 단 성대음을 내는 느낌보다는 호흡을 앞으로 댄다. 라고 생각하면서 아~아~아~\n\n**주의 사항.**\n성대음을 되도록 사용하지 않고 위치만 느껴봅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_10",
-      "name": "Press 오",
-      "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_11",
-      "name": "호흡훈련",
-      "desc": "**오 두성.**\n공명강을 최대한 연 상태로 가성과 진성 구분없이 두성화 된 감각을 훈련합니다.\n\n**훈련 방법.**\n입을 '오' 모양으로 잘 만들어 둔 뒤, 진성과 가성의 구분을 두지않고 머리통이 울리는 느낌을 갖으며 뒤,위 방향으로 올라갑니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_12",
-      "name": "백프레셔",
-      "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_13",
-      "name": "흉강고정+Press 우(학!우빡!)",
-      "desc": "**소울음소리.**\n흉성에 느낌과 호흡을 가슴에 대는 느낌을 체헙합니다.\n\n**훈련 방법.**\n소 울음소리를 음머어~~ 하고 따라하며 길~게 유지합니다. \n이때 가슴앞으로 소리가 아닌 호흡이 유지된다고 생각하며 유지합니다. \n\n**주의 사항.**\n주의할점은 소리를 내려고 할 필요는 없으며 소리가 코로 올라가는 것을 주의해야합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_14",
-      "name": "Press 후우(후우빡!)",
-      "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_15",
-      "name": "학! 아빡",
-      "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_16",
-      "name": "하아빡",
-      "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_17",
-      "name": "오픈허밍(흉성)",
-      "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_18",
-      "name": "오픈허밍(두성)",
-      "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_19",
-      "name": "오픈허밍(흉성~두성)",
-      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_20",
-      "name": "오픈허밍 마아~(5도쉬고)",
-      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_21",
-      "name": "학!아 5도",
-      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_22",
-      "name": "H어택+아 Press(학!아 하아)",
-      "desc": "**Press 하아(하아 빡!).**\nH어택을 사용하여 '아'모음을 냅니다.\n\n**훈련 방법.**\n'아' 모음을 발화하기 전 H어택을 사용하여 성대의 로우마진을 최소화 시킨 상태로 시작하여 빡! 을 해주며 얇아진 성대의 모양을 유지하며 강한 압력의 '아'를 만듭니다.\n\n**훈련 효과.**\n'아' 모음의 두성화를 만들어냅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    }
-  ],
+  {
+    "id": "ex_1",
+    "name": "발성훈련 셋팅",
+    "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_2",
+    "name": "복흉식호흡",
+    "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_3",
+    "name": "S 브레셔",
+    "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_4",
+    "name": "Z 브레셔",
+    "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_5",
+    "name": "허밍",
+    "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_6",
+    "name": "오픈 허밍",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_7",
+    "name": "Press 우",
+    "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_8",
+    "name": "Breath 우",
+    "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_9",
+    "name": "Press 아",
+    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_10",
+    "name": "Press 오",
+    "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_11",
+    "name": "호흡훈련",
+    "desc": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_12",
+    "name": "백프레셔",
+    "desc": "**백 프레셔.**\n두성화된 소리를 만드는 방법의 꽃으로 뱃고동소리를 유지하며 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n양볼을 최대한 빵빵하게 한 뒤 입술은 모아주고 바람을 불어주며 입술 주변근육에 힘부터 만들어줍니다.\n입술 주변근육에 힘이 충분히 생기면 Z브레셔와 같이 성대음을 추가합니다.\n되돌아가는 압력을 통하여 성대음을 가슴 위치까지 내려 뱃고동 소리를 유지해줍니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_13",
+    "name": "흉강고정+Press 우(학!우빡!)",
+    "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_14",
+    "name": "Press 후우(후우빡!)",
+    "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_15",
+    "name": "학! 아빡",
+    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_16",
+    "name": "하아빡",
+    "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_17",
+    "name": "오픈허밍(흉성)",
+    "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_18",
+    "name": "오픈허밍(두성)",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_19",
+    "name": "오픈허밍(흉성~두성)",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_20",
+    "name": "오픈허밍 마아~(5도쉬고)",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_21",
+    "name": "학!아 5도",
+    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_22",
+    "name": "H어택+아 Press(학!아 하아)",
+    "desc": "**Press 하아(하아 빡!).**\nH어택을 사용하여 '아'모음을 냅니다.\n\n**훈련 방법.**\n'아' 모음을 발화하기 전 H어택을 사용하여 성대의 로우마진을 최소화 시킨 상태로 시작하여 빡! 을 해주며 얇아진 성대의 모양을 유지하며 강한 압력의 '아'를 만듭니다.\n\n**훈련 효과.**\n'아' 모음의 두성화를 만들어냅니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  }
+],
   "scales": [
-    {
-      "id": "3D-A",
-      "name": "3도 스케일",
-      "range": "흉성",
-      "startNote": 57,
-      "endNote": 61,
-      "bpm": 190,
-      "pattern": [
-        0,
-        2,
-        4,
-        2,
-        0,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        4,
-        5,
-        7,
-        5,
-        4,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        0,
-        2,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "3D-B",
-      "name": "3도 스케일",
-      "range": "중성",
-      "startNote": 62,
-      "endNote": 67,
-      "bpm": 190,
-      "pattern": [
-        0,
-        2,
-        4,
-        2,
-        0,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        4,
-        5,
-        7,
-        5,
-        4,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        0,
-        2,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "3D-C",
-      "name": "3도 스케일",
-      "range": "흉성~두성",
-      "startNote": 57,
-      "endNote": 83,
-      "bpm": 190,
-      "pattern": [
-        0,
-        2,
-        4,
-        2,
-        0,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        4,
-        5,
-        7,
-        5,
-        4,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        0,
-        2,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "5D-A",
-      "name": "5도 스케일",
-      "range": "흉성",
-      "startNote": 57,
-      "endNote": 61,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "5D-B",
-      "name": "5도 스케일",
-      "range": "중성",
-      "startNote": 62,
-      "endNote": 74,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "5D-C",
-      "name": "5도 스케일",
-      "range": "중성~두성",
-      "startNote": 62,
-      "endNote": 83,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "5D-D",
-      "name": "5도 스케일",
-      "range": "고급",
-      "startNote": 62,
-      "endNote": 91,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "5H-A",
-      "name": "5도 쉬고 내려오기",
-      "range": "흉성",
-      "startNote": 57,
-      "endNote": 61,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-    },
-    {
-      "id": "5H-B",
-      "name": "5도 쉬고 내려오기",
-      "range": "중성",
-      "startNote": 62,
-      "endNote": 74,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-    },
-    {
-      "id": "5H-C",
-      "name": "5도 쉬고 내려오기",
-      "range": "중성~두성",
-      "startNote": 62,
-      "endNote": 83,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-    },
-    {
-      "id": "5H-D",
-      "name": "5도 쉬고 내려오기",
-      "range": "고급",
-      "startNote": 62,
-      "endNote": 91,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-    },
-    {
-      "id": "9D-A",
-      "name": "9도 스케일",
-      "range": "흉성~두성",
-      "startNote": 57,
-      "endNote": 69,
-      "bpm": 180,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        9,
-        11,
-        12,
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "9D-B",
-      "name": "9도 스케일",
-      "range": "고급",
-      "startNote": 57,
-      "endNote": 77,
-      "bpm": 180,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        9,
-        11,
-        12,
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
-    },
-    {
-      "id": "5DN-A",
-      "name": "5도 하향 스케일",
-      "range": "흉성",
-      "startNote": 64,
-      "endNote": 68,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
-    },
-    {
-      "id": "5DN-B",
-      "name": "5도 하향 스케일",
-      "range": "중성",
-      "startNote": 69,
-      "endNote": 74,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
-    },
-    {
-      "id": "5DN-C",
-      "name": "5도 하향 스케일",
-      "range": "두성~흉성",
-      "startNote": 64,
-      "endNote": 83,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
-    },
-    {
-      "id": "5DN-D",
-      "name": "5도 하향 스케일",
-      "range": "고급",
-      "startNote": 64,
-      "endNote": 91,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
-    },
-    {
-      "id": "9DN-A",
-      "name": "9도 하향 스케일",
-      "range": "기본",
-      "startNote": 71,
-      "endNote": 83,
-      "bpm": 180,
-      "pattern": [
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
-    },
-    {
-      "id": "9DN-B",
-      "name": "9도 하향 스케일",
-      "range": "고급",
-      "startNote": 71,
-      "endNote": 91,
-      "bpm": 180,
-      "pattern": [
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
-    },
-    {
-      "id": "9DN-C",
-      "name": "9도 하향 스케일(하향만)",
-      "range": "두성",
-      "startNote": 83,
-      "endNote": 88,
-      "bpm": 180,
-      "pattern": [
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
-    },
-    {
-      "id": "9D-C",
-      "name": "9도 스케일",
-      "range": "고급(A3~F#5)",
-      "startNote": 57,
-      "endNote": 78,
-      "bpm": 180,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        9,
-        11,
-        12,
-        14
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "9도 고급 스케일 A3~F#5. 4번 스케일"
-    },
-    {
-      "id": "5DN-E",
-      "name": "5도 하향 스케일",
-      "range": "중성~낮은두성",
-      "startNote": 69,
-      "endNote": 79,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "5도 하향 중성~낮은두성 A4~G5. 9번 스케일"
-    }
-  ],
+  {
+    "id": "3D-A",
+    "name": "3도 스케일",
+    "range": "흉성",
+    "startNote": 57,
+    "endNote": 61,
+    "bpm": 190,
+    "pattern": [
+      0,
+      2,
+      4,
+      2,
+      0,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      4,
+      5,
+      7,
+      5,
+      4,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      0,
+      2,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "3D-B",
+    "name": "3도 스케일",
+    "range": "중성",
+    "startNote": 62,
+    "endNote": 67,
+    "bpm": 190,
+    "pattern": [
+      0,
+      2,
+      4,
+      2,
+      0,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      4,
+      5,
+      7,
+      5,
+      4,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      0,
+      2,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "3D-C",
+    "name": "3도 스케일",
+    "range": "흉성~높은중성",
+    "startNote": 57,
+    "endNote": 70,
+    "bpm": 190,
+    "pattern": [
+      0,
+      2,
+      4,
+      2,
+      0,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      4,
+      5,
+      7,
+      5,
+      4,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      0,
+      2,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "3D-D",
+    "name": "3도 스케일",
+    "range": "흉성~두성",
+    "note": "",
+    "startNote": 57,
+    "endNote": 76,
+    "bpm": 190,
+    "previewType": "5도화음",
+    "pattern": [
+      0,
+      2,
+      4,
+      2,
+      0,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      4,
+      5,
+      7,
+      5,
+      4,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      0,
+      2,
+      4,
+      2,
+      0
+    ]
+  },
+  {
+    "id": "5D-A",
+    "name": "5도 스케일",
+    "range": "흉성",
+    "startNote": 57,
+    "endNote": 61,
+    "bpm": 130,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "5D-B",
+    "name": "5도 스케일",
+    "range": "중성~낮은두성",
+    "startNote": 62,
+    "endNote": 72,
+    "bpm": 130,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "5D-C",
+    "name": "5도 스케일",
+    "range": "중성~높은두성",
+    "startNote": 62,
+    "endNote": 76,
+    "bpm": 130,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "5D-D",
+    "name": "5도 스케일",
+    "range": "고급",
+    "startNote": 62,
+    "endNote": 84,
+    "bpm": 130,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "5H-A",
+    "name": "5도 쉬고 내려오기",
+    "range": "흉성",
+    "startNote": 57,
+    "endNote": 61,
+    "bpm": 125,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      {
+        "hold": 3
+      },
+      7,
+      {
+        "hold": 1
+      },
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+  },
+  {
+    "id": "5H-B",
+    "name": "5도 쉬고 내려오기",
+    "range": "중성~낮은두성",
+    "startNote": 62,
+    "endNote": 72,
+    "bpm": 125,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      {
+        "hold": 3
+      },
+      7,
+      {
+        "hold": 1
+      },
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+  },
+  {
+    "id": "5H-C",
+    "name": "5도 쉬고 내려오기",
+    "range": "중성~높은두성",
+    "startNote": 62,
+    "endNote": 76,
+    "bpm": 125,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      {
+        "hold": 3
+      },
+      7,
+      {
+        "hold": 1
+      },
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+  },
+  {
+    "id": "5H-D",
+    "name": "5도 쉬고 내려오기",
+    "range": "고급",
+    "startNote": 62,
+    "endNote": 84,
+    "bpm": 125,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      {
+        "hold": 3
+      },
+      7,
+      {
+        "hold": 1
+      },
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+  },
+  {
+    "id": "9D-A",
+    "name": "9도 스케일",
+    "range": "흉성~낮은두성",
+    "startNote": 57,
+    "endNote": 65,
+    "bpm": 180,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11,
+      12,
+      14,
+      12,
+      11,
+      9,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "9D-B",
+    "name": "9도 스케일",
+    "range": "흉성~높은두성",
+    "startNote": 57,
+    "endNote": 69,
+    "bpm": 180,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11,
+      12,
+      14,
+      12,
+      11,
+      9,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": ""
+  },
+  {
+    "id": "5DN-A",
+    "name": "5도 하향 스케일",
+    "range": "중성~낮은두성",
+    "startNote": 69,
+    "endNote": 79,
+    "bpm": 125,
+    "pattern": [
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "첫음단음",
+    "previewBeats": 4,
+    "note": "하행 진행 → 반음씩 상행 반복"
+  },
+  {
+    "id": "5DN-B",
+    "name": "5도 하향 스케일",
+    "range": "중성~높은두성",
+    "startNote": 69,
+    "endNote": 83,
+    "bpm": 125,
+    "pattern": [
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "첫음단음",
+    "previewBeats": 4,
+    "note": "하행 진행 → 반음씩 상행 반복"
+  },
+  {
+    "id": "5DN-C",
+    "name": "5도 하향 스케일",
+    "range": "고급",
+    "startNote": 69,
+    "endNote": 91,
+    "bpm": 125,
+    "pattern": [
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "첫음단음",
+    "previewBeats": 4,
+    "note": "하행 진행 → 반음씩 상행 반복"
+  },
+  {
+    "id": "9DN-A",
+    "name": "9도 하향 스케일",
+    "range": "높은두성 시작",
+    "startNote": 83,
+    "endNote": 71,
+    "bpm": 180,
+    "pattern": [
+      14,
+      12,
+      11,
+      9,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "첫음단음",
+    "previewBeats": 4,
+    "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+  },
+  {
+    "id": "9DN-B",
+    "name": "9도 하향 스케일",
+    "range": "고급",
+    "startNote": 91,
+    "endNote": 71,
+    "bpm": 180,
+    "pattern": [
+      14,
+      12,
+      11,
+      9,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "첫음단음",
+    "previewBeats": 4,
+    "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+  },
+  {
+    "id": "9DN-C",
+    "name": "9도 하향 스케일(하향만)",
+    "range": "두성",
+    "startNote": 83,
+    "endNote": 88,
+    "bpm": 180,
+    "pattern": [
+      14,
+      12,
+      11,
+      9,
+      7,
+      5,
+      4,
+      2,
+      0
+    ],
+    "previewType": "첫음단음",
+    "previewBeats": 4,
+    "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+  },
+  {
+    "id": "9D-C",
+    "name": "9도 스케일",
+    "range": "고급",
+    "startNote": 57,
+    "endNote": 77,
+    "bpm": 180,
+    "pattern": [
+      0,
+      2,
+      4,
+      5,
+      7,
+      9,
+      11,
+      12,
+      14
+    ],
+    "previewType": "5도화음",
+    "previewBeats": 4,
+    "note": "9도 고급 스케일 A3~F#5. 4번 스케일"
+  }
+],
   "courses": [
     {
       "id": "c_1",
@@ -4973,7 +4923,15 @@ _withFallback(u,(_ntxt.length/5)*1000);
 }
 
 function _normTTS(txt){
-
+txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
+txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
+var _nm={'C':'씨','D':'디','E':'이','F':'에프','G':'쥐','A':'에이','B':'비','c':'씨','d':'디','e':'이','f':'에프','g':'쥐','a':'에이','b':'비'};
+var _om={'0':'제로','1':'원','2':'투','3':'쓰리','4':'풔','5':'파이브','6':'식스','7':'세븐','8':'에잇','9':'나인'};
+txt=txt.replace(/([A-Ga-g])#([0-9])/g,function(_,n,o){return (_nm[n]||n)+'샾'+(_om[o]||o);});
+txt=txt.replace(/([A-Ga-g])b([0-9])/g,function(_,n,o){return (_nm[n]||n)+'플랫'+(_om[o]||o);});
+txt=txt.replace(/([A-Ga-g])([0-9])(?!회)/g,function(_,n,o){return (_nm[n]||n)+(_om[o]||o);});
+txt=txt.replace(/([A-Ga-g])#/g,function(_,n){return (_nm[n]||n)+'샾';});
+txt=txt.replace(/([A-Ga-g])b(?=[\s,.]|$)/g,function(_,n){return (_nm[n]||n)+'플랫';});
 return txt
 .replace(/Z 브레셔/g, '즈 브레셔')
 .replace(/z 브레셔/g, '즈 브레셔')
@@ -4985,8 +4943,6 @@ return txt
 .replace(/s브레셔/g, '에스 브레셔');
 }
 function _prepTxt(txt){
-txt=txt.replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복');
-txt=txt.replace(/\+/g,' 플러스 ');
 
 txt = _normTTS(txt);
 
@@ -5037,18 +4993,13 @@ speed: (_spd!==undefined?_spd:EL.speed)||0.80
 });
 const ctx=gCtx();
 const audioBuf=await ctx.decodeAudioData(arrayBuf);
-if(_callToken!==undefined&&!_tokenValid(_callToken))return;
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
-/* TTS 볼륨 적용 */
 const _elGain=ctx.createGain();
-/* speakEL의 _spd 파라미터로 coach 여부 판별 (0.95=화이팅, 그외=TTS) */
-const _isCoach=(_isCoachFlag===true)||(_spd===0.95||_spd===0.9);
-_elGain.gain.value=(_isCoach?_volCoach:_volTTS)/100;
+_elGain.gain.value=_isCoachFlag?(_volCoach/100)*1.8:(_volTTS/100);
 src.connect(_elGain);_elGain.connect(ctx.destination);
 if(window._elSrc){try{window._elSrc.onended=null;window._elSrc.stop();}catch(e){}}
-if(window._elGainNode){try{window._elGainNode.disconnect();}catch(e){}}
-window._elSrc=src;window._elGainNode=_elGain;
+window._elSrc=src;
 src.onended=()=>{window._elSrc=null;if(onEnd)onEnd();};
 src.start(0);
 }
@@ -5108,17 +5059,15 @@ function toggleCoachAuto(){
 coachAuto=!coachAuto;
 }
 function playTrainDesc(){
-/* 현재 훈련 설명 읽기 버튼 */
-if(!curMod)return;
-const exDesc=(DB.exercises||[]).find(e=>e.name===curMod.exId||e.id===curMod.exId);
-if(!exDesc||!exDesc.desc){
-  setCoachTxt('훈련 설명이 없습니다.');
-  return;
-}
-cancelTTS();
-setCoachTxt(exDesc.desc.substring(0,60)+'...');
-/* stability 0.75 — 더 크고 명확한 목소리, speed 0.80 */
-speakEL(exDesc.desc, null, 0.75, 0.80);
+if(!curMod) return;
+const btn=document.getElementById('desc-play-btn');
+if(window._descPlaying){cancelTTS();stopEL();window._descPlaying=false;if(btn)btn.textContent='설명▶';return;}
+const edEl=document.getElementById('ex-desc');
+const rawTxt=(edEl&&edEl.dataset.raw)?edEl.dataset.raw:(edEl?edEl.textContent:'');
+const txt=rawTxt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';}).trim();
+if(!txt||txt==='—'){setCoachTxt('훈련 설명이 없습니다.');return;}
+cancelTTS();window._descPlaying=true;if(btn)btn.textContent='설명⏹';
+speakEL(txt,function(){window._descPlaying=false;if(btn)btn.textContent='설명▶';},0.75,0.80,false);
 }
 
 function toggleCoachDesc(){
@@ -5158,21 +5107,14 @@ ko.map(v=>`${v===ttsV?'★ ':' '}${v.name}`).join('<br>');
 if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(mkUtt('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!'));}
 }
 
-/* 음량 설정 (0~100) */
-let _volScale=70;   /* 스케일 피아노 음량 */
-let _volTTS=80;     /* 훈련안내/멘트 음량 */
-let _volCoach=30;   /* 화이팅멘트 음량 */
-(function _loadVolSettings(){
-  try{
-    const s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');
-    if(s.scale!==undefined)_volScale=s.scale;
-    if(s.tts!==undefined)_volTTS=s.tts;
-    if(s.coach!==undefined)_volCoach=s.coach;
-  }catch(e){}
-})();
-function _saveVolSettings(){
-  try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}
-}
+var _volScale=50,_volTTS=50,_volCoach=10;
+(function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
+function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
+function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
+function _applyVolTTS(){_saveVolSettings();}
+function _applyVolCoach(){_saveVolSettings();}
+function openSettings(){var ss=document.getElementById('vol-scale-sl'),ts=document.getElementById('vol-tts-sl'),cs=document.getElementById('vol-coach-sl');if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}var m=document.getElementById('settings-modal');if(m)m.style.display='flex';}
+function closeSettings(){var m=document.getElementById('settings-modal');if(m)m.style.display='none';}
 let actx=null,mGain=null,cmp=null,rv=null;
 function gCtx(){
 if(!actx){
@@ -5402,7 +5344,7 @@ const svg=document.getElementById('piano-svg');if(!svg)return;
 if(activeMidi!==null){const p=svg.querySelector(`[data-midi="${activeMidi}"]`);if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');}
 activeMidi=midi;const cur=svg.querySelector(`[data-midi="${midi}"]`);
 if(cur){cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
-setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},350);}
+const offMs=curBpm>0?Math.min(350,(60/curBpm)*1000*0.80):300;setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},offMs);}
 }
 window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-train').classList.contains('hidden'))setTimeout(()=>buildPianoSVG(curMod.startNote,curMod.endNote),50);});
 
@@ -5422,23 +5364,38 @@ else s.push({type:'note',semi:typeof p==='number'?p:0});
 return s;
 };
 const ps=ep(mod.pattern);
+const isDN=(mod.id||'').indexOf('DN')!==-1;
+const patNotes=mod.pattern.filter(p=>typeof p==='number');
+const patMax=patNotes.length?Math.max(...patNotes):0;
+const offset=isDN?-patMax:0;
 const a=[],r=mod.endNote-mod.startNote;
-for(let s=0;s<=r;s++)a.push({semi:s,dir:'up',ps});
-for(let s=r-1;s>=0;s--)a.push({semi:s,dir:'down',ps});
+if(isDN){
+  /* DN 스케일: 고음(startNote=레8/솔)에서 저음(endNote)으로 하행만 */
+  if(r>=0){
+    /* 5DN: startNote < endNote, 낮은 키부터 높은 키까지 올라감 (각 키는 하행) */
+    for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'down',ps});
+  } else {
+    /* 9DN: startNote > endNote, 높은 레8에서 낮은 레8로 하행만 */
+    for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+  }
+} else {
+  if(r>=0){
+    for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'up',ps});
+    for(let s=r-1;s>=0;s--)a.push({semi:s+offset,dir:'down',ps});
+  } else {
+    for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+    for(let s=r+1;s<=0;s++)a.push({semi:s+offset,dir:'up',ps});
+  }
+}
 return a;
 }
 function clrCT(){coachT.forEach(t=>clearTimeout(t));coachT=[];}
 
-const _CHEER=[
-'화이팅!','할 수 있어!','잘 하고 있어!','힘내!',
-'좋아, 계속해!','거의 다 왔어!','최고야!','멋지다!',
-'포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!',
-'그렇지, 바로 그거야!','훌륭해!','끝까지 가자!',
-'완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!',
-'조금만 더!','이 느낌 유지해!','완벽해!'
-];
-function _randCheer(exclude){
-const pool=_CHEER.filter(c=>c!==exclude);
+var _CHEER_EARLY=['화이팅!','할 수 있어!','잘 하고 있어!','힘내!','좋아, 계속해!','최고야!','멋지다!','포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!','그렇지, 바로 그거야!','훌륭해!','완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!','이 느낌 유지해!'];
+var _CHEER_LATE=['거의 다 왔어!','조금만 더!','끝까지 가자!','완벽해!'];
+var _CHEER=[..._CHEER_EARLY,..._CHEER_LATE];
+function _randCheer(exclude,isLate){
+var pool=(isLate?[..._CHEER_EARLY,..._CHEER_LATE]:_CHEER_EARLY).filter(c=>c!==exclude);
 return pool[Math.floor(Math.random()*pool.length)];
 }
 
@@ -5457,7 +5414,7 @@ if(hwComment && curStudent){
   /* 20%, 50%, 80% 구간에 균등 배분 */
   [0.20, 0.50, 0.80].forEach(function(ratio){
     const t = Math.max(8, totalSec_hw * ratio);
-    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment, null, 0.75, 0.80, false);}, t*1000));
+    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);}, t*1000));
   });
 }
 
@@ -5480,7 +5437,8 @@ if(totalSec2 > 8){
     (function(t){
       coachT.push(setTimeout(function(){
         if(playing&&cheerAuto){
-          _lastCheer2=_randCheer(_lastCheer2);
+          const _isLate=(ratio>=0.65);
+          _lastCheer2=_randCheer(_lastCheer2,_isLate);
           speakEL(_lastCheer2, null, 0.40, 0.95, true);
         }
       }, t*1000));
@@ -5491,58 +5449,44 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
-window._savedSch=null;
-window._pausedSch=null; /* 새 훈련: 일시정지/이어가기 상태 초기화 */
+/* 스킵 버튼 제어 */
+const _skipBtn=document.getElementById('skip-step-btn');
+if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
+const _freeSkipBtn=document.getElementById('free-skip-step-btn');
+const _freeNextBtn=document.getElementById('free-skip-train-btn');
+const _isFree=!curStudent&&isSeq;
+if(_freeSkipBtn)_freeSkipBtn.style.display=_isFree?'':'none';
+if(_freeNextBtn)_freeNextBtn.style.display=(_isFree&&seqIdx<seqList.length-1)?'':'none';
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
-  cancelTTS(); if(typeof stopEL==='function')stopEL();
-  const _pianoA=document.getElementById('piano-area'); if(_pianoA)_pianoA.style.display='none';
-  const _progP=document.querySelector('.pt')?.parentElement; if(_progP)_progP.style.display='none';
-  const _dotsEl=document.getElementById('dots'); if(_dotsEl)_dotsEl.style.display='none';
-  const _ctrlB=document.getElementById('ctrl-bar'); if(_ctrlB)_ctrlB.style.display='none';
-  const _exDC=document.getElementById('ex-desc')?.closest('.card'); if(_exDC)_exDC.style.display='none';
-  const _ccEl=document.getElementById('comment-card');
-  const _ctEl=document.getElementById('comment-text');
+  cancelTTS();if(typeof stopEL==='function')stopEL();
+  const _pianoA=document.getElementById('piano-area');if(_pianoA)_pianoA.style.display='none';
+  const _progP=document.querySelector('.pt')?.parentElement;if(_progP)_progP.style.display='none';
+  const _dotsEl=document.getElementById('dots');if(_dotsEl)_dotsEl.style.display='none';
+  const _ctrlB=document.getElementById('ctrl-bar');if(_ctrlB)_ctrlB.style.display='none';
+  const _exDC=document.getElementById('ex-desc')?.closest('.card');if(_exDC)_exDC.style.display='none';
+  const _ccEl=document.getElementById('comment-card');const _ctEl=document.getElementById('comment-text');
   if(_ccEl)_ccEl.style.display='flex';
-  if(_ctEl){
-    const _r=mod.hwComment||mod.comment||mod.desc||'';
-    let _f=_r.split('**').map((s,i)=>i%2===1?'<b style="color:#166634;font-weight:800">'+s+'</b>':s).join('');
-    _f=_f.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-    _ctEl.innerHTML=_f||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';
-  }
+  if(_ctEl){const _r=mod.hwComment||mod.comment||mod.desc||'';let _f=_r.split('**').map((s,i)=>i%2===1?'<b style="color:#166634;font-weight:800">'+s+'</b>':s).join('');_f=_f.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');_ctEl.innerHTML=_f||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';}
   document.getElementById('t-title').textContent=mod.displayLabel||mod.exName||mod.name||mod.label||'훈련';
-  document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
-  const _rtts=((mod.hwComment||mod.comment||mod.desc||'').split('**').filter((_,i)=>i%2===0).join('').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스 ')).trim();
+  document.getElementById('t-sub').textContent='내용 확인 후 완료 버튼을 눌러주세요';
+  const _rtts=((mod.hwComment||mod.comment||mod.desc||'').replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스')).trim();
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
-  /* noscale-done-btn은 comment-card 안에 있어서 자동으로 표시됨 */
-  /* pp 버튼(ctrl-bar 안)은 숨겨져있으므로 별도 처리 불필요 */
-  const _skipBN=document.getElementById('skip-btn');
-  if(_skipBN) _skipBN.style.display='none';
+  window._savedSch=null;window._pausedSch=null;
+  window._descPlaying=false;const _dBtn=document.getElementById('desc-play-btn');if(_dBtn)_dBtn.textContent='설명▶';
   return;
 } else {
-  cancelTTS(); if(typeof stopEL==='function')stopEL();
-  const _pianoB=document.getElementById('piano-area'); if(_pianoB)_pianoB.style.display='';
-  const _cc2=document.getElementById('comment-card'); if(_cc2)_cc2.style.display='none';
-  const _progW=document.querySelector('.pt'); if(_progW)_progW.parentElement.style.display='';
-  const _dots2=document.getElementById('dots'); if(_dots2)_dots2.style.display='flex';
-  const _ctrl2=document.getElementById('ctrl-bar'); if(_ctrl2)_ctrl2.style.display='flex';
-  const _exDC2=document.getElementById('ex-desc')?.closest('.card'); if(_exDC2)_exDC2.style.display='';
-  const _pp2=document.getElementById('pp');
-  if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
-  /* noScale 완료 버튼 숨기기 (comment-card 전체가 숨겨지므로 자동) */
-  /* 건너뛰기 버튼: 김동현만 표시 */
-  const _skipB=document.getElementById('skip-btn');
-  if(_skipB){
-    /* 숙제 모드: 김동현만 표시 / 자유연습: 항상 표시 */
-    if(curStudent){
-      _skipB.style.display=curStudent.name==='김동현'?'':'none';
-    } else {
-      _skipB.style.display='';
-    }
-  }
-}
-
+  cancelTTS();if(typeof stopEL==='function')stopEL();
+  const _pianoB=document.getElementById('piano-area');if(_pianoB)_pianoB.style.display='';
+  const _cc2=document.getElementById('comment-card');if(_cc2)_cc2.style.display='none';
+  const _progW=document.querySelector('.pt');if(_progW)_progW.parentElement.style.display='';
+  const _dots2=document.getElementById('dots');if(_dots2)_dots2.style.display='flex';
+  const _ctrl2=document.getElementById('ctrl-bar');if(_ctrl2)_ctrl2.style.display='flex';
+  const _exDC2=document.getElementById('ex-desc')?.closest('.card');if(_exDC2)_exDC2.style.display='';
+  const _pp2=document.getElementById('pp');if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
+  window._savedSch=null;window._pausedSch=null;
+  window._descPlaying=false;const _dBtn2=document.getElementById('desc-play-btn');if(_dBtn2)_dBtn2.textContent='설명▶';
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
 curBpm=mod.bpm||60;
 const sn=m2n(mod.startNote),en=m2n(mod.endNote);
@@ -5568,35 +5512,25 @@ _edEl.dataset.raw = _descFull;
 window._pendingStepGuide = ''; 
 const ytBtn=document.getElementById('yt-btn');ytBtn.style.display=mod.videoId?'flex':'none';
 buildPianoSVG(mod.startNote,mod.endNote);buildDots();
+} _edEl=document.getElementById('ex-desc');
+
+const _stepGuide = window._pendingStepGuide || '';
+const _descBase = mod.desc || mod.scaleNote || '';
+const _descFull = _stepGuide && _descBase
+? _stepGuide + '\n\n---\n\n' + _descBase
+: _stepGuide || _descBase;
+_edEl.innerHTML = _md2html(_descFull);
+_edEl.dataset.raw = _descFull;
+window._pendingStepGuide = ''; 
+const ytBtn=document.getElementById('yt-btn');ytBtn.style.display=mod.videoId?'flex':'none';
+buildPianoSVG(mod.startNote,mod.endNote);buildDots();
 }
 function togglePlay(){
   if(!curMod) return;
-  if(playing){
-    /* ── 일시정지: 현재 위치 저장 ── */
-    window._pausedSch = {s: sch.s, p: sch.p};
-    stopEngine();
-  } else {
-    /* ── 재생: 저장된 위치에서 이어가기 ── */
-    const savedPos = window._pausedSch || window._savedSch;
-    if(savedPos && savedPos.s > 0){
-      /* 일시정지 또는 창 이탈 후 복귀 — 예비음 없이 이어가기 */
-      window._pausedSch = null;
-      window._savedSch = null;
-      gCtx();
-      playing = true;
-      document.getElementById('pp').textContent = '⏸';
-      sch.s = savedPos.s;
-      sch.p = 0;
-      sch.nx = 0;
-      _startMetronome(curBpm, function(){
-        if(!playing) return;
-        runLoop();
-      });
-    } else {
-      /* 처음 시작 — 예비음 포함 */
-      startEngine();
-    }
-  }
+  if(playing){window._pausedSch={s:sch.s,p:sch.p};stopEngine();}
+  else{const sv=window._pausedSch||window._savedSch;
+  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;document.getElementById('pp').textContent='⏸';sch.s=sv.s;sch.p=0;sch.nx=0;_startMetronome(curBpm,function(){if(!playing)return;runLoop();});}
+  else{startEngine();}}
 }
 
 let _metroTimer=null;
@@ -5644,8 +5578,9 @@ if(_metroTimer){ clearInterval(_metroTimer); _metroTimer=null; }
 /* 스케일 실제 첫 음 반환 — 하행 스케일은 pattern[0]만큼 위 음 */
 function _getFirstNote(mod){
 if(!mod)return 0;
+/* DN 스케일: 첫음 = startNote (레8/솔) */
+if((mod.id||'').indexOf('DN')!==-1) return mod.startNote;
 const pat=mod.pattern||[];
-/* 첫 번째 note 타입 패턴 값 */
 const firstSemi=pat.length>0&&typeof pat[0]==='number'?pat[0]:0;
 return mod.startNote+firstSemi;
 }
@@ -5708,7 +5643,7 @@ const nM=root+pstep.semi;
 const nextPstep=ps[sch.p+1];
 const noteDur=(nextPstep&&nextPstep.type==='hold') ? spb*2.5 : spb*0.90;
 (function(m,t,dur){const dl=Math.max(0,(t-ctx.currentTime)*1000);setTimeout(()=>{if(playing)playPiano(m,dur,0.52);},dl);})(nM,sT,noteDur);
-(function(m,si,dir){const dl=Math.max(0,(sT-ctx.currentTime)*1000);setTimeout(()=>{
+(function(m,si,dir){const dl=Math.max(0,(sT-ctx.currentTime)*1000-20);setTimeout(()=>{
 if(!playing)return;litKey(m);const n=m2n(m);
 document.getElementById('cur-n').textContent=n.name;document.getElementById('cur-o').textContent=n.oct;
 document.getElementById('cur-key').textContent=m2n(curMod.startNote+si).full;
@@ -5736,12 +5671,17 @@ const preGap = isDownScale ? spb*2.5 : spb*0.15;
 sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
+/* DN 스케일 예비음: root(도)가 아닌 startNote(레8/솔) 음 사용 */
+const _isDNmod=(curMod.id||'').indexOf('DN')!==-1;
+const _dnPatMax=_isDNmod?(function(){const pn=curMod.pattern.filter(p=>typeof p==='number');return pn.length?Math.max(...pn):0;})():0;
+const previewNr=_isDNmod?nr+_dnPatMax:nr;
+const previewPrevR=_isDNmod?prevRoot+_dnPatMax:prevRoot;
 (function(newR, prevR, schedT){
 const dl=Math.max(0,(schedT-ctx.currentTime)*1000);
 setTimeout(function(){
 if(playing)playPreviewChord(newR,curMod.previewType,curBpm,true,prevR);
 },dl);
-})(nr, prevRoot, sch.nx);
+})(previewNr, previewPrevR, sch.nx);
 /* 예비음 2박 후 다음 스케일 시작 */
 sch.nx+=tspb_wait*2.0;
 } else {
@@ -5767,35 +5707,24 @@ showDone('✅','훈련 완료!','수고했습니다!',[
 ]); return;
 }
 if(isSeq&&seqIdx<seqList.length-1){
-/* "다음" 눌러야 완료 체크 + 다음 훈련으로 이동 */
 const _goN=()=>{
-  /* ── 다음 누를 때 완료 체크 ── */
-  if(curStudent && seqList[seqIdx].hwIdx !== undefined){
-    _markHwDone(seqList[seqIdx].hwIdx);
-  }
+  if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
   closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
     const ok=scrStack[scrStack.length-1]==='scr-train';
-    if(seqList[seqIdx].noScale){
+    if(seqList[seqIdx]&&seqList[seqIdx].noScale){
       const _p=window._pendingNoScaleTTS;
-      if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
-    } else {
-      if(!playing&&ok)startEngine();
-    }
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+    } else { if(!playing&&ok)startEngine(); }
   });
 };
-/* 모든 경우 팝업 — "다음" 눌러야 완료 */
 showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
   {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
   {label:'▶ 다음',fn:_goN}
 ]);
 } else {
-/* 마지막 훈련 완료 */
-if(curStudent && seqList[seqIdx].hwIdx !== undefined){
-  _markHwDone(seqList[seqIdx].hwIdx);
-  rndrHw();
-}
+if(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
 const _fromStep = scrStack.includes('scr-step');
 const _hasMoreStep = _fromStep && stepIdx < stepItems.length-1;
 showDone('🎉', isSeq?'전체 완주!':'훈련 완료!', isSeq?'모두 완주했습니다! 🎉':'수고했습니다!', [
@@ -5816,24 +5745,11 @@ renderStep();
 : {label: curStudent?'숙제로 돌아가기':'← 목록으로', fn:()=>{
 closeDone();exitTrain();
 if(curStudent){
-  /* 숙제 완료 — 숙제 화면 복원 + Firebase 동기화 후 렌더링 */
+  /* 숙제 완료 — 숙제 화면 복원 */
   setTimeout(()=>{
     const hwScr=document.getElementById('scr-homework');
     if(hwScr){hwScr.classList.remove('hidden','behind');}
     if(!scrStack.includes('scr-homework'))scrStack.push('scr-homework');
-    /* 즉시 렌더링 */
-    rndrHw();_updateHwProgress();
-    /* 백그라운드 Firebase sync */
-    if(curStudent&&_fbReady){
-      _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
-        if(Array.isArray(fbDone)&&fbDone.length>0){
-          const local=_getHwDone();
-          const merged=Array.from(new Set([...local,...fbDone]));
-          _setHwDone(merged);
-          rndrHw();_updateHwProgress();
-        }
-      });
-    }
   },100);
 } else {
   setTimeout(()=>{
@@ -5854,9 +5770,21 @@ document.getElementById('done-modal').classList.add('open');
 }
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
 function doRestart(){
-  window._savedSch = null;
-  window._pausedSch = null; /* 일시정지 상태 초기화 */if(curMod){prepTrain(curMod);startEngine();}}
+  window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod);startEngine();}}
 function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
+function freeSkipStep(){if(curStudent)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
+function freeSkipTrain(){
+  if(curStudent||!isSeq||seqIdx>=seqList.length-1)return;
+  stopEngine();closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
+  const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
+  speakEL(lbl+'. 시작합니다.',function(){
+    const ok=scrStack[scrStack.length-1]==='scr-train';
+    if(seqList[seqIdx]&&seqList[seqIdx].noScale){
+      const _p=window._pendingNoScaleTTS;
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+    } else {if(!playing&&ok)startEngine();}
+  });
+}
 function buildDots(){const c=document.getElementById('dots');c.innerHTML='';const n=Math.min(allSteps.length,28);for(let i=0;i<n;i++){const d=document.createElement('div');d.className='sd';c.appendChild(d);}}
 function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=allSteps.length;ds.forEach((d,i)=>{const idx=Math.round(i*(tot/ds.length));d.className='sd';if(all||idx<sch.s)d.classList.add('dn');else if(idx===sch.s)d.classList.add('cr');});}
 function updSeqBar(){
@@ -5865,17 +5793,13 @@ const ntr=document.getElementById('next-train-row');
 if(isSeq&&seqList.length>1){
 bar.style.display='';
 bar.textContent=`${seqIdx+1}/${seqList.length} — ${seqList[seqIdx].label||''}`;
+
 if(ntr){
-  /* 숙제 모드에서는 "다음 훈련으로" 버튼 항상 숨김 — 훈련 완주 후 팝업으로만 이동 */
-  if(curStudent){
-    ntr.style.display='none';
-  } else {
-    ntr.style.display=(seqIdx<seqList.length-1)?'':'none';
-    const btn=ntr.querySelector('button');
-    if(btn&&seqIdx<seqList.length-1)
-      btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;
-  }
+  if(curStudent){ntr.style.display='none';}
+  else{ntr.style.display=(seqIdx<seqList.length-1)?'':'none';const btn=ntr.querySelector('button');if(btn&&seqIdx<seqList.length-1)btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;}
 }
+const _freeNB=document.getElementById('free-skip-train-btn');
+if(_freeNB&&!curStudent)_freeNB.style.display=(isSeq&&seqIdx<seqList.length-1)?'':'none';
 } else {
 bar.style.display='none';
 if(ntr)ntr.style.display='none';
@@ -5883,14 +5807,12 @@ if(ntr)ntr.style.display='none';
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
-/* 숙제 모드: 이 버튼 사용 안 함 (updSeqBar에서 숨김) */
-if(curStudent) return;
+if(curStudent)return;
 stopEngine();
-/* 완료 체크 (자유연습) */
-if(seqList[seqIdx].hwIdx!==undefined) _markHwDone(seqList[seqIdx].hwIdx);
 seqIdx++;
 updSeqBar();
 prepTrain(seqList[seqIdx]);
+
 const label=seqList[seqIdx].label||seqList[seqIdx].exId||'다음 훈련';
 speakEL(label+' 시작합니다.',()=>{
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
@@ -5915,12 +5837,10 @@ const msg=label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
-if(seqList[0].noScale){
+if(seqList[0]&&seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
-} else {
-  if(!playing&&onTrainScreen)startEngine();
-}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+} else { if(!playing&&onTrainScreen)startEngine(); }
 });
 }
 function openVid(){openVidUrl(curMod?.videoId||'');}
@@ -5952,7 +5872,31 @@ const _APW='Zmtxa2RybmVrMSE=';
 let _hwCalYear=new Date().getFullYear();
 let _hwCalMonth=new Date().getMonth(); 
 
+
+function resetStudentHw(name){
+if(!confirm(name+' 오늘 숙제 기록을 초기화할까요?'))return;
+const sKey=name.replace(/\s/g,'_'),dateKey=_fbDateKey();
+Object.keys(localStorage).filter(k=>k.includes('ev_hw_')&&k.includes(name)).forEach(k=>localStorage.removeItem(k));
+if(_fbReady){
+  Promise.all([_fbDb.ref('hwDone/'+sKey+'/'+dateKey).remove(),_fbDb.ref('hwHistory/'+sKey+'/'+dateKey).remove()])
+  .then(function(){alert('✅ '+name+' 오늘 숙제가 초기화되었습니다!');refreshHwStatus();})
+  .catch(function(e){alert('오류: '+e.message);});
+}else{alert('✅ localStorage 초기화 완료');refreshHwStatus();}
+}
+function renderAdminResetBtns(){
+const c=document.getElementById('admin-reset-btns');if(!c)return;c.innerHTML='';
+(STUDENTS_DB||[]).forEach(function(s){
+  const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0';
+  const nameEl=document.createElement('span');nameEl.style.cssText='font-size:12px;font-weight:700';nameEl.textContent=s.name;
+  const btn=document.createElement('button');
+  btn.style.cssText='background:#dc2626;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:800;cursor:pointer';
+  btn.textContent='초기화';
+  (function(nm){btn.onclick=function(){resetStudentHw(nm);};})(s.name);
+  row.appendChild(nameEl);row.appendChild(btn);c.appendChild(row);
+});
+}
 function showHwToday(){
+renderAdminResetBtns();
 document.getElementById('hw-today-view').style.display='';
 document.getElementById('hw-cal-view').style.display='none';
 document.getElementById('hw-tab-today').style.background='var(--or)';
@@ -5982,20 +5926,6 @@ _hwCalMonth++;
 if(_hwCalMonth>11){_hwCalMonth=0;_hwCalYear++;}
 renderHwCalendar();
 }
-function renderHwCalendar(){
-const title=document.getElementById('hw-cal-title');
-if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
-const students=STUDENTS_DB||[];
-if(!_fbReady){_renderAllStudentsCal({});return;}
-let loaded=0;const allData={};
-if(!students.length){_renderAllStudentsCal({});return;}
-students.forEach(s=>{
-  _fbDb.ref('hwDone/'+s.name.replace(/\s/g,'_')).once('value')
-    .then(snap=>{allData[s.name]=snap.val()||{};loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);})
-    .catch(()=>{loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);});
-});
-}
-
 function _renderAllStudentsCal(allData){
 const students=STUDENTS_DB||[],year=_hwCalYear,month=_hwCalMonth;
 const COLORS=['#16a34a','#2563eb','#d97706','#dc2626','#7c3aed','#0891b2'];
@@ -6020,29 +5950,39 @@ for(let d=1;d<=dim;d++){
 }
 const det=document.getElementById('hw-cal-detail');if(det)det.style.display='none';
 }
+function renderHwCalendar(){
+const title=document.getElementById('hw-cal-title');
+if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
+if(!_fbReady){_renderAllStudentsCal({});return;}
+const students=STUDENTS_DB||[];let loaded=0;const allData={};
+if(!students.length){_renderAllStudentsCal({});return;}
+students.forEach(s=>{_fbDb.ref('hwDone/'+s.name.replace(/\s/g,'_')).once('value').then(snap=>{allData[s.name]=snap.val()||{};loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);}).catch(()=>{loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);});});
+}
 
-
-function _renderHwStatusWithData(fbData){
-  /* Firebase 또는 localStorage 데이터로 현황 렌더링 */
-  const list=document.getElementById('hw-status-list');
-  if(!list)return;
-  list.innerHTML='';
+function _renderHwStatusWithData(fbData,histData){
+  const list=document.getElementById('hw-status-list');if(!list)return;list.innerHTML='';
+  histData=histData||{};const dateKey=_fbDateKey();
   (STUDENTS_DB||[]).forEach(function(s){
-    const sKey=s.name.replace(/\s/g,'_');
-    let done=[];
-    if(fbData && fbData[sKey]) done=fbData[sKey];
-    else {
-      /* localStorage fallback */
-      const today=new Date();
-      const dateStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-      try{ done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateStr)||'[]'); }catch(e){}
-    }
+    const sKey=s.name.replace(/\s/g,'_');let done=[];
+    if(fbData&&fbData[sKey]) done=fbData[sKey];
+    else{try{done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateKey)||'[]');}catch(e){}}
     const total=(s.homework||[]).filter(h=>h.active!==false).length;
-    const cnt=done.length;
-    const pct=total>0?Math.round(cnt/total*100):0;
-    const bar=document.createElement('div');
-    bar.style.cssText='margin-bottom:8px';
-    bar.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:700">'+s.name+'</span><span style="font-size:11px;color:var(--mu)">'+cnt+'/'+total+' ('+pct+'%)</span></div><div style="background:#f3f4f6;border-radius:99px;height:8px"><div style="background:'+(pct>=100?'#16a34a':'var(--or)')+';height:8px;border-radius:99px;width:'+pct+'%;transition:width .3s"></div></div>';
+    const cnt=done.length;const pct=total>0?Math.round(cnt/total*100):0;
+    const hist=histData[sKey]||null;let startStr='',endStr='',durStr='';
+    if(hist&&hist.startedAt){const dt=new Date(hist.startedAt);startStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
+    if(hist&&hist.updatedAt){const dt=new Date(hist.updatedAt);endStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
+    if(hist&&hist.totalSec&&hist.totalSec>0){const ts=Math.round(hist.totalSec);const tm=Math.floor(ts/60),ts2=ts%60;durStr=tm+'분'+(ts2>0?' '+ts2+'초':'');}
+    else if(hist&&hist.startedAt&&hist.updatedAt){const el=Math.round((new Date(hist.updatedAt)-new Date(hist.startedAt))/1000);if(el>0){const tm=Math.floor(el/60),ts2=el%60;durStr=tm+'분'+(ts2>0?' '+ts2+'초':'');}}
+    let timeHtml='';
+    if(startStr||endStr||durStr){
+      timeHtml='<div style="font-size:10px;color:var(--mu);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">';
+      if(startStr)timeHtml+='<span>🕐 시작 '+startStr+'</span>';
+      if(endStr&&endStr!==startStr)timeHtml+='<span>✅ 최근 '+endStr+'</span>';
+      if(durStr)timeHtml+='<span>⏱ '+durStr+'</span>';
+      timeHtml+='</div>';
+    }
+    const bar=document.createElement('div');bar.style.cssText='background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px';
+    bar.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:13px;font-weight:800">'+s.name+'</span><span style="font-size:11px;font-weight:700;color:'+(pct>=100?'#16a34a':'var(--or)')+'">'+cnt+'/'+total+' ('+pct+'%)</span></div><div style="background:#f3f4f6;border-radius:99px;height:7px;margin-bottom:'+(timeHtml?'5px':'0')+'"><div style="background:'+(pct>=100?'#16a34a':'var(--or)')+';height:7px;border-radius:99px;width:'+pct+'%;transition:width .3s"></div></div>'+timeHtml;
     list.appendChild(bar);
   });
 }
@@ -6138,13 +6078,13 @@ function _renderCalWithData(studentName, student, fbMonthData){
 function refreshHwStatus(){
 /* Firebase에서 실시간 데이터 로드 */
 if(_fbReady){
-  _fbLoadAllToday(function(fbData){
-    _renderHwStatusWithData(fbData);
+  _fbLoadAllToday(function(fbData,histData){
+    _renderHwStatusWithData(fbData,histData);
   });
   return;
 }
 /* Firebase 미연결 시 localStorage fallback */
-_renderHwStatusWithData({});
+_renderHwStatusWithData({},{});
 const list=document.getElementById('hw-status-list');
 if(!list)return;
 list.innerHTML='';
@@ -6299,13 +6239,8 @@ cancelTTS();stopEngine();isSeq=false;seqList=[];closeDone();
 const _cur=scrStack[scrStack.length-1];
 pop();
 const _prev=scrStack[scrStack.length-1];
-if(_prev==='scr-free'||_prev==='scr-homework'){
-  document.getElementById(_prev)?.classList.remove('hidden','behind');
-}
-/* 숙제 화면으로 돌아갈 때 즉시 렌더링 */
-if(_prev==='scr-homework'&&curStudent){
-  rndrHw();_updateHwProgress();
-}
+if(_prev==='scr-free'||_prev==='scr-homework'){document.getElementById(_prev)?.classList.remove('hidden','behind');}
+if(_prev==='scr-homework'&&curStudent){rndrHw();_updateHwProgress();}
 }
 
 const ICONS=['💪','🌬️','🎵','🌿','🔥','🚀','✨','🎙️'];
@@ -6830,7 +6765,9 @@ push('scr-free');
 
 function _getScaleExercises(){
 
-return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
+const withScale=(DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
+const noScale=(DB.exercises||[]).filter(ex=>ex.hasScale!==true&&ex.active!==false);
+return [...withScale,...noScale];
 }
 
 function bldFreePick(){
@@ -6886,6 +6823,29 @@ wrap.appendChild(hdr);
 wrap.appendChild(body);
 pick.appendChild(wrap);
 });
+const noScaleEx=(DB.exercises||[]).filter(ex=>ex.hasScale!==true&&ex.active!==false);
+if(noScaleEx.length){
+  const sec=document.createElement('div');
+  sec.style.cssText='font-size:11px;font-weight:800;color:var(--mu);margin:12px 0 6px;padding-top:10px;border-top:1px solid var(--line)';
+  sec.textContent='📋 설명 훈련 (스케일 없음)';
+  pick.appendChild(sec);
+  noScaleEx.forEach(ex=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1.5px solid var(--bd);border-radius:10px;margin-bottom:4px;background:#fff';
+    const nm=document.createElement('span');nm.style.cssText='font-size:12px;font-weight:700';nm.textContent=ex.name;
+    const btn=document.createElement('button');
+    btn.style.cssText='background:var(--or);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:800;cursor:pointer';
+    btn.textContent='+ 추가';
+    (function(e,b){b.onclick=function(){
+      freeList.push({id:'free_ns_'+Date.now(),exId:e.id||e.name,exName:e.name,name:e.name,scaleId:'',noScale:true,label:e.name,desc:e.desc||'',hwComment:e.desc||'',comment:e.desc||'',repeat:1});
+      _saveFreeList();rndrFree();
+      b.textContent='✅ 추가됨';b.style.background='#16a34a';
+      setTimeout(function(){b.textContent='+ 추가';b.style.background='var(--or)';},1200);
+    };})(ex,btn);
+    row.appendChild(nm);row.appendChild(btn);
+    pick.appendChild(row);
+  });
+}
 }
 
 /* + 버튼 눌림 피드백 — 체크 표시 후 원래대로 */
@@ -7096,7 +7056,7 @@ let STUDENTS_DB = [
         "exId": "ex_4",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
-        "scaleId": "3D-C",
+        "scaleId": "3D-D",
         "repeat": 1,
         "comment": "가슴까지 닿은 소리를 창문열고 나간다 생각하면서 앞으로 꺼내기!\n뚜껑 닫기!",
         "active": true,
@@ -7372,7 +7332,7 @@ let STUDENTS_DB = [
         "exId": "ex_4",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
-        "scaleId": "3D-C",
+        "scaleId": "3D-D",
         "repeat": 1,
         "comment": "내가 할 수 있는만큼 가슴에 창문 열어서 대주고,\n힘들면 그 구간부터 자연스럽게 가슴에호흡을 꿰서 뒤로위로 멀리멀리 올라가기!, 모든구간에서 다 가슴에 창문 열수있게!\n잘 되서 밴딩으로 넘어갔어! \n밴딩했을때 처음에는 D#5부터안났었는데 한번 붙기시작하니까 G5까지 났는데! G#5부터 더 얇게 안만들어지는거야! \n근데 여기는 밑애 G5랑 같은 느낌이라고 생각하면 절대 못올라가! \n더 얆아진게 다시 가슴으로 붙는다고 생각해야되!\n그래도 안되면 방법 2가지 번갈아가면서 해보기! \n1번은 가슴에 압력을 확보하되 안되는음정은 상상! \n내려올때 붙혀보기(음정을 내려고 해보기), \n2번은 가성으로 빼도 되는데 그럼 더 오래걸리니까 가성이라고 상상하고 더 멀리보내기!(조금 조여지지만 그래도 나기시작하거든? 그럼또 반대로 나기시작한음에서 점점 열어간다 생각하면되!)",
         "active": true,
@@ -7427,7 +7387,7 @@ let STUDENTS_DB = [
         "exId": "ex_18",
         "exName": "오픈허밍(두성)",
         "displayLabel": "오픈허밍(두성)",
-        "scaleId": "5D-B",
+        "scaleId": "9D-B",
         "repeat": 1,
         "comment": "뒤로위로 소리를 보냈다가 앞으로 보내면서 내려오기!",
         "active": true,
@@ -7447,14 +7407,14 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_19",
-        "exName": "오픈허밍(두성)",
+        "exName": "오픈허밍(두성) 아~",
         "displayLabel": "오픈허밍(두성) 아~",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "오픈허밍(두성) 상태에서 아래로 한번 눌러서 뒤로 보내고 위로 당겨 올라가는 걸 버티면서 위를 든다는 생각으로 '아' 하기",
         "active": true,
-        "label": "오픈허밍(두성)",
-        "name": "오픈허밍(두성)"
+        "label": "오픈허밍(두성) 아~",
+        "name": "오픈허밍(두성) 아~"
       }
     ]
   },
@@ -7499,7 +7459,7 @@ let STUDENTS_DB = [
         "exId": "ex_4",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔(흉성~두성)",
-        "scaleId": "3D-C",
+        "scaleId": "3D-D",
         "repeat": 1,
         "comment": "벽에 붙어서. 앞에 바람 잘 버티면서! 두성구쯤 올라가면 뒤에서 아래로 눌리는 상압이 생긴다고 상상!",
         "active": true,
@@ -7541,14 +7501,14 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exName": "후 내려오기",
         "displayLabel": "후 내려오기(5도 하향)",
         "scaleId": "5DN-C",
         "repeat": 1,
         "comment": "호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "label": "후 내려오기",
+        "name": "후 내려오기"
       }
     ]
   },
@@ -7593,7 +7553,7 @@ let STUDENTS_DB = [
         "exId": "ex_4",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
-        "scaleId": "3D-C",
+        "scaleId": "3D-D",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). D5부터 뒤가 안 돼. 뒤로꿰서만 가면 D6까지도 가능! 내려올 때는 가슴에 계속 집어넣으려고 하다가!",
         "active": true,
@@ -7698,7 +7658,7 @@ let STUDENTS_DB = [
         "exId": "ex_4",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
-        "scaleId": "3D-C",
+        "scaleId": "3D-D",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). 밴딩해서! 되는 음정까지 가슴채워보고 안되는 데부터는 다 꿰서 가면 돼!",
         "active": true,
@@ -7742,20 +7702,9 @@ let STUDENTS_DB = [
         "exId": "ex_4",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
-        "scaleId": "3D-C",
+        "scaleId": "3D-D",
         "repeat": 1,
         "comment": "주먹말아쥐고, 3번(3도흉성~두성). 주먹을 꽉 잘 말아쥐고 가슴에서 호흡압이 나간다 느낌! 소리가 오히려 펴진다고 생각!",
-        "active": true,
-        "label": "Z 브레셔",
-        "name": "Z 브레셔"
-      },
-      {
-        "exId": "ex_4",
-        "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
-        "scaleId": "3D-C",
-        "repeat": 1,
-        "comment": "다음시간 Z브레셔 3번스케일 G5이상 확인해보기. 오늘은 여기까지 잘 됐음!",
         "active": true,
         "label": "Z 브레셔",
         "name": "Z 브레셔"
@@ -7843,20 +7792,21 @@ pop();
 function openHomework(){
 if(!curStudent) return;
 _loadHwList();
+rndrHw();
 document.getElementById('hw-topbar-title').textContent = curStudent.name + '님 숙제';
 document.getElementById('hw-student-name').textContent = curStudent.name + '님 숙제';
 const saved = localStorage.getItem('ev_hw_time_' + curStudent.name);
 document.getElementById('hw-update-time').textContent = saved ? '마지막 저장: ' + saved : '선생님 최신 숙제';
-push('scr-homework');
-/* Firebase에서 오늘 완료 기록 동기화 후 화면 렌더링 */
+/* Firebase에서 오늘 완료 기록 동기화 후 화면 열기 */
 _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
-  if(Array.isArray(fbDone) && fbDone.length > 0){
+  if(fbDone && fbDone.length > 0){
     const local = _getHwDone();
-    const merged = Array.from(new Set([...local, ...fbDone]));
+    const merged = Array.from(new Set([].concat(local, fbDone)));
     _setHwDone(merged);
   }
-  rndrHw();
-  _updateHwProgress();
+  push('scr-homework');
+  rndrHw();_updateHwProgress();
+if(curStudent&&_fbReady){_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){if(Array.isArray(fbDone)&&fbDone.length>0){const local=_getHwDone();const merged=Array.from(new Set([...local,...fbDone]));_setHwDone(merged);rndrHw();_updateHwProgress();}});}
 });
 }
 
@@ -7950,20 +7900,46 @@ if(total>0 && done.length>=total){
 }
 
 function rndrHw(){
-const c=document.getElementById('hw-slots');
-if(!c)return;c.innerHTML='';
-if(!hwList.length){c.innerHTML='<div class="empty" style="padding:16px">숙제가 없습니다</div>';return;}
+const c = document.getElementById('hw-slots');
+if(!c) return;
+c.innerHTML = '';
+if(!hwList.length){
+c.innerHTML = '<div class="empty" style="padding:16px">숙제가 없습니다</div>';
+return;
+}
 const done=_getHwDone();
-hwList.forEach((item,i)=>{
-  const sc=item.scaleId?(DB.scales||[]).find(s=>s.id===item.scaleId):null;
-  const isDone=done.includes(i);const d=document.createElement('div');
-  d.style.cssText='background:'+(isDone?'#f0fdf4':'#fff')+';border:1.5px solid '+(isDone?'#bbf7d0':'var(--bd)')+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px';
-  const nBg=isDone?'#16a34a':'var(--or-l)',nFg=isDone?'#fff':'var(--or)',nBdr=isDone?'#16a34a':'var(--or-m)';
-  const sub=sc?sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':''):(item.displayLabel&&item.displayLabel!==item.name?item.displayLabel:'설명만 (스케일 없음)');
-  d.innerHTML=`<div style="width:36px;height:36px;border-radius:10px;background:${nBg};border:1.5px solid ${nBdr};display:flex;align-items:center;justify-content:center;font-size:${isDone?'16px':'12px'};font-weight:800;color:${nFg};flex-shrink:0">${isDone?'✓':String(i+1)}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">${item.name||item.label||''}${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':''}</div><div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">${sub}</div></div>`;
-  c.appendChild(d);
+hwList.forEach((item, i) => {
+const hasScale = !!item.scaleId && !!(DB.scales||[]).find(s=>s.id===item.scaleId);
+const sc = hasScale ? (DB.scales||[]).find(s=>s.id===item.scaleId) : null;
+const isDone=done.includes(i);
+
+const d = document.createElement('div');
+/* 코스 UI처럼 카드 스타일 */
+d.className='cc';
+d.style.cssText='background:'+(isDone?'#f0fdf4':'#fff')+';border:1.5px solid '+(isDone?'#bbf7d0':'var(--bd)')+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:default';
+
+/* 번호 뱃지 */
+const numBg=isDone?'#16a34a':'var(--or-l)';
+const numFg=isDone?'#fff':'var(--or)';
+const numBorder=isDone?'#16a34a':'var(--or-m)';
+
+d.innerHTML=`
+<div style="width:36px;height:36px;border-radius:10px;background:${numBg};border:1.5px solid ${numBorder};display:flex;align-items:center;justify-content:center;font-size:${isDone?'16px':'12px'};font-weight:800;color:${numFg};flex-shrink:0">
+  ${isDone?'✓':String((item.num!==undefined?item.num:i)+1)}
+</div>
+<div style="flex:1;min-width:0">
+  <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">
+    ${item.label||item.name||item.exId||''}
+    ${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':''}
+  </div>
+  <div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">
+    ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}${isDone?' ✓':''}
+  </div>
+  ${item.comment&&!isDone?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
+</div>`;
+
+c.appendChild(d);
 });
-_updateHwProgress();
 }
 
 function moveHw(i, dir){
@@ -7980,22 +7956,6 @@ return 'ev_hw_done_'+(curStudent?curStudent.name:'')+'_'+dateStr;
 }
 function _getHwDone(){
 try{ return JSON.parse(localStorage.getItem(_hwDoneKey())||'[]'); }catch(e){ return []; }
-}
-/* Firebase에서 오늘 done 불러와서 localStorage와 병합 */
-function _syncHwDoneFromFb(callback){
-  if(!curStudent||!_fbReady){ if(callback)callback(); return; }
-  const sKey=curStudent.name.replace(/\s/g,'_');
-  const dateKey=_fbDateKey();
-  _fbDb.ref('hwDone/'+sKey+'/'+dateKey).once('value').then(function(snap){
-    const fbDone=snap.val()||[];
-    if(Array.isArray(fbDone)&&fbDone.length>0){
-      const localDone=_getHwDone();
-      /* 합집합 */
-      const merged=[...new Set([...localDone,...fbDone])];
-      _setHwDone(merged);
-    }
-    if(callback)callback();
-  }).catch(function(){ if(callback)callback(); });
 }
 function _setHwDone(arr){
 try{ localStorage.setItem(_hwDoneKey(),JSON.stringify(arr)); }catch(e){}
@@ -8072,20 +8032,7 @@ const hwScr=document.getElementById('scr-homework');
 if(hwScr){ hwScr.classList.remove('hidden','behind'); }
 if(!scrStack.includes('scr-homework')) scrStack.push('scr-homework');
 
-/* 즉시 렌더링 (localStorage 기준) */
-rndrHw();_updateHwProgress();
-
-/* 백그라운드에서 Firebase sync 후 재렌더 */
-if(curStudent&&_fbReady){
-  _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
-    if(Array.isArray(fbDone)&&fbDone.length>0){
-      const local=_getHwDone();
-      const merged=Array.from(new Set([...local,...fbDone]));
-      _setHwDone(merged);
-      rndrHw();_updateHwProgress();
-    }
-  });
-}
+rndrHw();
 }
 
 function startHomeworkSeq(){
@@ -8102,39 +8049,22 @@ if(sc){
 /* 스케일 있는 항목 — 피아노 훈련 */
 trainList.push({
 id:(item.exName||item.name)+'_'+item.scaleId+'_'+r,
-exId:item.exId||(item.exName||item.name),
-exName:item.exName||item.name,
-name:item.exName||item.name,
-displayLabel:item.displayLabel||item.exName||item.name,
-noScale:false,
-hwIdx:_hwIdx,  /* 숙제 목록 인덱스 — 완료 체크용 */
-scaleId:item.scaleId,
+exId:item.exId||(item.exName||item.name),exName:item.exName||item.name,name:item.exName||item.name,
+displayLabel:item.displayLabel||item.exName||item.name,noScale:false,hwIdx:_hwIdx,scaleId:item.scaleId,
 label:(item.displayLabel||item.exName||item.name)+' — '+sc.name+' ('+sc.range+')'+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
-rangeLabel:sc.range, desc:item.comment||'',
-scaleNote:sc.note||'', startNote:sc.startNote, endNote:sc.endNote,
-pattern:sc.pattern, bpm:sc.bpm||60,
-previewType:sc.previewType||'없음', videoId:'',
-hwComment:item.comment||'',
-comment:item.comment||''
+rangeLabel:sc.range,desc:item.comment||'',scaleNote:sc.note||'',startNote:sc.startNote,endNote:sc.endNote,
+pattern:sc.pattern,bpm:sc.bpm||60,previewType:sc.previewType||'없음',videoId:'',
+hwComment:item.comment||'',comment:item.comment||''
 });
 } else {
 /* 스케일 없는 항목 — 설명만 표시하고 넘기기 */
 trainList.push({
 id:(item.exName||item.name)+'_noScale_'+r,
-exId:item.exId||(item.exName||item.name),
-exName:item.exName||item.name,
-name:item.exName||item.name,
-displayLabel:item.displayLabel||item.exName||item.name,
-noScale:true,
-hwIdx:_hwIdx,  /* 숙제 목록 인덱스 — 완료 체크용 */
-scaleId:'',
+exId:item.exId||(item.exName||item.name),exName:item.exName||item.name,name:item.exName||item.name,
+displayLabel:item.displayLabel||item.exName||item.name,noScale:true,hwIdx:_hwIdx,scaleId:'',
 label:(item.displayLabel||item.exName||item.name)+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
-rangeLabel:'', desc:item.comment||'',
-scaleNote:'', startNote:0, endNote:0,
-pattern:[], bpm:60,
-previewType:'없음', videoId:'',
-hwComment:item.comment||'',
-comment:item.comment||''
+rangeLabel:'',desc:item.comment||'',scaleNote:'',startNote:0,endNote:0,
+pattern:[],bpm:60,previewType:'없음',videoId:'',hwComment:item.comment||'',comment:item.comment||''
 });
 }
 }
@@ -8149,17 +8079,28 @@ if(_hwPrev==='scr-homework'){
   document.getElementById('scr-homework')?.classList.add('hidden');
   document.getElementById('scr-homework')?.classList.remove('behind');
 }
-push('scr-train'); updSeqBar(); prepTrain(trainList[0]);
+push('scr-train'); updSeqBar(); window._hwStartTime=Date.now();
+/* Firebase에 시작시간 즉시 기록 */
+if(curStudent&&_fbReady){
+  const _sKey=curStudent.name.replace(/\s/g,'_');
+  const _dKey=_fbDateKey();
+  const _tot=(curStudent.homework||[]).filter(h=>h.active!==false).length;
+  _fbDb.ref('hwHistory/'+_sKey+'/'+_dKey).transaction(function(cur){
+    if(!cur) cur={};
+    if(!cur.startedAt) cur.startedAt=new Date().toISOString();
+    cur.total=_tot;
+    return cur;
+  }).catch(function(){});
+}
+prepTrain(trainList[0]);
 const msg=trainList[0].label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
 const ok=scrStack[scrStack.length-1]==='scr-train';
-if(seqList[0].noScale){
+if(seqList[0]&&seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
-} else {
-  if(!playing&&ok)startEngine();
-}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+} else { if(!playing&&ok)startEngine(); }
 });
 }
 
@@ -8271,11 +8212,13 @@ function _fbRecordDailyCount(studentName, doneCount){
   const total = (STUDENTS_DB||[]).find(s=>s.name===studentName);
   const totalCount = total ? (total.homework||[]).filter(h=>h.active!==false).length : 0;
   const path = 'hwHistory/' + sKey + '/' + dateKey;
-  _fbDb.ref(path).set({
-    done: doneCount,
-    total: totalCount,
-    pct: totalCount > 0 ? Math.round(doneCount/totalCount*100) : 0,
-    updatedAt: new Date().toISOString()
+  const _totalSec=window._hwStartTime?Math.round((Date.now()-window._hwStartTime)/1000):0;
+  _fbDb.ref(path).transaction(function(cur){
+    if(!cur) cur={};
+    cur.done=doneCount;cur.total=totalCount;
+    cur.pct=totalCount>0?Math.round(doneCount/totalCount*100):0;
+    cur.updatedAt=new Date().toISOString();cur.totalSec=_totalSec;
+    return cur;
   }).then(function(){
     /* 3개월(90일) 초과 데이터 정리 */
     _fbCleanOldHistory(sKey);
@@ -8355,83 +8298,39 @@ function _fbLoadStudentMonth(studentName, year, month, callback){
 
 /* 모든 학생 오늘 완료 기록 로드 (관리자용) */
 function _fbLoadAllToday(callback){
-  if(!_fbReady){ callback({}); return; }
+  if(!_fbReady){ callback({},{}); return; }
   const key = _fbDateKey();
   try{
-    _fbDb.ref('hwDone').once('value').then(function(snap){
-      const all = snap.val() || {};
-      const today = {};
-      Object.keys(all).forEach(function(sName){
-        today[sName] = all[sName][key] || [];
-      });
-      callback(today);
-    }).catch(function(){ callback({}); });
-  }catch(e){ callback({}); }
+    Promise.all([_fbDb.ref('hwDone').once('value'),_fbDb.ref('hwHistory').once('value')]).then(function(snaps){
+      const allDone=snaps[0].val()||{},allHist=snaps[1].val()||{};
+      const today={},todayHist={};
+      Object.keys(allDone).forEach(function(sName){today[sName]=allDone[sName][key]||[];});
+      Object.keys(allHist).forEach(function(sName){todayHist[sName]=allHist[sName][key]||null;});
+      callback(today,todayHist);
+    }).catch(function(){ callback({},{}); });
+  }catch(e){ callback({},{}); }
 }
 
-
-function _applyVolScale(){
-  if(mGain) mGain.gain.value=(_volScale/100)*2.5;
-  _saveVolSettings();
-}
-function _applyVolTTS(){ _saveVolSettings(); }
-function _applyVolCoach(){ _saveVolSettings(); }
-function openSettings(){
-  /* 현재 볼륨 값으로 슬라이더 초기화 */
-  const ss=document.getElementById('vol-scale-sl');
-  const ts=document.getElementById('vol-tts-sl');
-  const cs=document.getElementById('vol-coach-sl');
-  if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}
-  if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}
-  if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}
-  const m=document.getElementById('settings-modal');
-  if(m){m.style.display='flex';}
-}
-function closeSettings(){
-  const m=document.getElementById('settings-modal');
-  if(m){m.style.display='none';}
-}
 window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
 
-/* ══ 백그라운드 전환 감지 (핸드폰 홈 버튼 / 앱 전환) ══════
-   Page Visibility API — 화면이 숨겨지면 소리/훈련 정지
-   ══════════════════════════════════════════════════════ */
+/* 백그라운드 전환 감지 */
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
-    /* 백그라운드 전환 — 모든 소리 즉시 정지 */
-    cancelTTS();
-    stopEL();
-    _stopMetronome();
-    if(actx && actx.state === 'running') actx.suspend();
-    /* 훈련 중이었으면 sch 상태 저장 후 정지 */
-    if(playing){
-      /* 현재 진행 위치 저장 */
-      window._savedSch = {s: sch.s, p: sch.p};
-      window._pausedSch = null; /* 창 이탈 시 일시정지 상태 초기화 */
-      window._wasPlaying = true;
-      stopEngine();
-    }
+    cancelTTS();stopEL();_stopMetronome();
+    if(actx && actx.state === 'running'){actx.suspend();}
+    if(playing){window._savedSch={s:sch.s,p:sch.p};window._wasPlaying=true;stopEngine();}
   } else {
-    /* 포그라운드 복귀 — AudioContext 재개 */
-    if(actx && actx.state === 'suspended') actx.resume();
+    if(actx && actx.state === 'suspended'){actx.resume();}
     window._wasPlaying = false;
   }
 });
 
 /* 페이지 언로드 시도 시에도 정리 */
 window.addEventListener('pagehide', function(){
-  cancelTTS();
-  stopEL();
-  if(actx) actx.suspend();
-  /* 앱 종료 시 현재까지 완료된 숙제 Firebase에 저장 */
-  if(curStudent && _fbReady){
-    const done=_getHwDone();
-    if(done.length>0){
-      _fbSaveHwDone(curStudent.name, done);
-      _fbRecordDailyCount(curStudent.name, done.length);
-    }
-  }
-});</script>
+  cancelTTS();stopEL();if(actx)actx.suspend();
+  if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
+});
+</script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
   <div class="modal-box" style="max-width:340px;text-align:center">
