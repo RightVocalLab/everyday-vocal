@@ -4965,7 +4965,8 @@ if(!exDesc||!exDesc.desc){
 }
 cancelTTS();
 setCoachTxt(exDesc.desc.substring(0,60)+'...');
-speakEL(exDesc.desc);
+/* stability 0.75 — 더 크고 명확한 목소리, speed 0.80 */
+speakEL(exDesc.desc, null, 0.75, 0.80);
 }
 
 function toggleCoachDesc(){
@@ -5548,14 +5549,22 @@ if(!scrStack.includes('scr-step'))scrStack.push('scr-step');
 stepIdx++;
 renderStep();
 }}
-: {label:'← 목록으로', fn:()=>{
+: {label: curStudent?'숙제로 돌아가기':'← 목록으로', fn:()=>{
 closeDone();exitTrain();
-
-setTimeout(()=>{
-const _cname=document.getElementById('ds-title')?.textContent||'';
-const _cobj=(DB.courses||[]).find(c=>c.name===_cname);
-if(_cobj) openDaySelect(_cobj);
-},100);
+if(curStudent){
+  /* 숙제 완료 — 숙제 화면 복원 */
+  setTimeout(()=>{
+    const hwScr=document.getElementById('scr-homework');
+    if(hwScr){hwScr.classList.remove('hidden','behind');}
+    if(!scrStack.includes('scr-homework'))scrStack.push('scr-homework');
+  },100);
+} else {
+  setTimeout(()=>{
+    const _cname=document.getElementById('ds-title')?.textContent||'';
+    const _cobj=(DB.courses||[]).find(c=>c.name===_cname);
+    if(_cobj) openDaySelect(_cobj);
+  },100);
+}
 }},
 ].filter(Boolean));
 }
@@ -7457,7 +7466,14 @@ hwComment: item.comment||''
 }
 });
 cancelTTS();
-seqList=trainList; seqIdx=0; isSeq=trainList.length>1;
+seqList=trainList; seqIdx=0; isSeq=true; /* 항상 시퀀스로 — 자동 다음 훈련 이어가기 */
+_hwReturnIdx=-1; /* 숙제 완료 팝업 대신 시퀀스 완료 팝업 사용 */
+/* 숙제 화면 hidden 처리 — 겹침 방지 */
+const _hwPrev=scrStack[scrStack.length-1];
+if(_hwPrev==='scr-homework'){
+  document.getElementById('scr-homework')?.classList.add('hidden');
+  document.getElementById('scr-homework')?.classList.remove('behind');
+}
 push('scr-train'); updSeqBar(); prepTrain(trainList[0]);
 const msg=trainList[0].label+'. 시작합니다.';
 setCoachTxt(msg);
