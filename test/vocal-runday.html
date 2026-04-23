@@ -777,11 +777,11 @@ input,select,button,textarea{font-family:inherit;}
           <div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div>
           <div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div>
         </div>
-        <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">75</div>
+        <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">30</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="75" id="vol-coach-sl"
+        <input type="range" min="0" max="100" value="30" id="vol-coach-sl"
           style="flex:1;accent-color:var(--or);height:4px"
           oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()">
         <span style="font-size:11px;color:var(--mu)">100</span>
@@ -4914,7 +4914,7 @@ stopEL();
 if(window.speechSynthesis)speechSynthesis.cancel();
 }
 
-function speakEL(txt,onEnd,_stab,_spd){
+function speakEL(txt,onEnd,_stab,_spd,_isCoachFlag){
 
 if(!txt){if(onEnd)setTimeout(onEnd,0);return;}
 
@@ -4941,7 +4941,7 @@ if(window.speechSynthesis)speechSynthesis.speak(u);
 if(EL.enabled&&EL.apiKey&&EL.voiceId){
 
 stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
-_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken).catch(err=>{
+_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(err=>{
 if(!_tokenValid(myToken))return;
 const errMsg=err.message||String(err);
 console.warn('EL 실패:',errMsg);
@@ -5003,7 +5003,7 @@ return line;
 .join('\n');
 }
 
-async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken){
+async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken,_isCoachFlag){
 const cleanTxt=_prepTxt(txt);
 
 const arrayBuf = await new Promise((resolve, reject)=>{
@@ -5038,7 +5038,7 @@ src.buffer=audioBuf;
 /* TTS 볼륨 적용 */
 const _elGain=ctx.createGain();
 /* speakEL의 _spd 파라미터로 coach 여부 판별 (0.95=화이팅, 그외=TTS) */
-const _isCoach=(_spd===0.95||_spd===0.9);
+const _isCoach=(_isCoachFlag===true)||(_spd===0.95||_spd===0.9);
 _elGain.gain.value=(_isCoach?_volCoach:_volTTS)/100;
 src.connect(_elGain);_elGain.connect(ctx.destination);
 if(window._elSrc){try{window._elSrc.onended=null;window._elSrc.stop();}catch(e){}}
@@ -5156,7 +5156,7 @@ if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(mkUtt(
 /* 음량 설정 (0~100) */
 let _volScale=70;   /* 스케일 피아노 음량 */
 let _volTTS=80;     /* 훈련안내/멘트 음량 */
-let _volCoach=75;   /* 화이팅멘트 음량 */
+let _volCoach=30;   /* 화이팅멘트 음량 */
 (function _loadVolSettings(){
   try{
     const s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');
@@ -5452,7 +5452,7 @@ if(hwComment && curStudent){
   /* 20%, 50%, 80% 구간에 균등 배분 */
   [0.20, 0.50, 0.80].forEach(function(ratio){
     const t = Math.max(8, totalSec_hw * ratio);
-    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);}, t*1000));
+    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment, null, 0.75, 0.80, false);}, t*1000));
   });
 }
 
@@ -5476,7 +5476,7 @@ if(totalSec2 > 8){
       coachT.push(setTimeout(function(){
         if(playing&&cheerAuto){
           _lastCheer2=_randCheer(_lastCheer2);
-          speakEL(_lastCheer2, null, 0.40, 0.95);
+          speakEL(_lastCheer2, null, 0.40, 0.95, true);
         }
       }, t*1000));
     })(cSec);
@@ -5719,10 +5719,9 @@ showDone('✅','훈련 완료!','수고했습니다!',[
 ]); return;
 }
 if(isSeq&&seqIdx<seqList.length-1){
-/* 현재 완료된 훈련 hwIdx로 완료 체크 */
+/* ── 현재 훈련 완료 체크 (noScale/scale 모두) ── */
 if(curStudent && seqList[seqIdx].hwIdx !== undefined){
   _markHwDone(seqList[seqIdx].hwIdx);
-  rndrHw();
 }
 const _goN=()=>{
   closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
@@ -5731,14 +5730,21 @@ const _goN=()=>{
     const ok=scrStack[scrStack.length-1]==='scr-train';
     if(seqList[seqIdx].noScale){
       const _p=window._pendingNoScaleTTS;
-      if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80);}
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
     } else {
       if(!playing&&ok)startEngine();
     }
   });
 };
-if(curStudent&&!seqList[seqIdx].noScale){ _goN(); }
-else { showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[{label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},{label:'▶ 다음',fn:_goN}]); }
+/* 숙제+스케일: 자동 다음 / noScale 또는 자유연습: 팝업 */
+if(curStudent && !seqList[seqIdx].noScale){
+  _goN();
+} else {
+  showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
+    {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
+    {label:'▶ 다음',fn:_goN}
+  ]);
+}
 } else {
 /* 마지막 훈련 완료 */
 if(curStudent && seqList[seqIdx].hwIdx !== undefined){
@@ -5765,11 +5771,23 @@ renderStep();
 : {label: curStudent?'숙제로 돌아가기':'← 목록으로', fn:()=>{
 closeDone();exitTrain();
 if(curStudent){
-  /* 숙제 완료 — 숙제 화면 복원 */
+  /* 숙제 완료 — 숙제 화면 복원 + Firebase 동기화 후 렌더링 */
   setTimeout(()=>{
     const hwScr=document.getElementById('scr-homework');
     if(hwScr){hwScr.classList.remove('hidden','behind');}
     if(!scrStack.includes('scr-homework'))scrStack.push('scr-homework');
+    if(curStudent&&_fbReady){
+      _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
+        if(Array.isArray(fbDone)&&fbDone.length>0){
+          const local=_getHwDone();
+          const merged=Array.from(new Set([...local,...fbDone]));
+          _setHwDone(merged);
+        }
+        rndrHw();_updateHwProgress();
+      });
+    } else {
+      rndrHw();_updateHwProgress();
+    }
   },100);
 } else {
   setTimeout(()=>{
@@ -5844,7 +5862,7 @@ speakEL(msg,function(){
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
 if(seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80);}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
 } else {
   if(!playing&&onTrainScreen)startEngine();
 }
@@ -7766,21 +7784,20 @@ pop();
 function openHomework(){
 if(!curStudent) return;
 _loadHwList();
-rndrHw();
 document.getElementById('hw-topbar-title').textContent = curStudent.name + '님 숙제';
 document.getElementById('hw-student-name').textContent = curStudent.name + '님 숙제';
 const saved = localStorage.getItem('ev_hw_time_' + curStudent.name);
 document.getElementById('hw-update-time').textContent = saved ? '마지막 저장: ' + saved : '선생님 최신 숙제';
-/* Firebase에서 오늘 완료 기록 동기화 후 화면 열기 */
+push('scr-homework');
+/* Firebase에서 오늘 완료 기록 동기화 후 화면 렌더링 */
 _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
-  if(fbDone && fbDone.length > 0){
+  if(Array.isArray(fbDone) && fbDone.length > 0){
     const local = _getHwDone();
-    const merged = Array.from(new Set([].concat(local, fbDone)));
+    const merged = Array.from(new Set([...local, ...fbDone]));
     _setHwDone(merged);
   }
-  push('scr-homework');
-  /* Firebase에서 오늘 완료 항목 동기화 후 렌더링 */
-  _syncHwDoneFromFb(function(){ rndrHw(); });
+  rndrHw();
+  _updateHwProgress();
 });
 }
 
@@ -7996,7 +8013,11 @@ const hwScr=document.getElementById('scr-homework');
 if(hwScr){ hwScr.classList.remove('hidden','behind'); }
 if(!scrStack.includes('scr-homework')) scrStack.push('scr-homework');
 
-rndrHw();
+/* Firebase 동기화 후 렌더링 */
+_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
+  if(Array.isArray(fbDone)&&fbDone.length>0){const local=_getHwDone();const merged=Array.from(new Set([...local,...fbDone]));_setHwDone(merged);}
+  rndrHw();_updateHwProgress();
+});
 }
 
 function startHomeworkSeq(){
@@ -8067,7 +8088,7 @@ speakEL(msg,function(){
 const ok=scrStack[scrStack.length-1]==='scr-train';
 if(seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80);}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
 } else {
   if(!playing&&ok)startEngine();
 }
