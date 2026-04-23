@@ -509,7 +509,7 @@ input,select,button,textarea{font-family:inherit;}
 
     <!-- 훈련 추가하기 (아코디언) -->
     <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 훈련과 설명 훈련을 추가할 수 있습니다</div>
     <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
 
   </div></div>
@@ -705,15 +705,10 @@ input,select,button,textarea{font-family:inherit;}
           <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
           <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
         </div>
-        <!-- 김동현 테스트 초기화 -->
+        <!-- 학생별 숙제 초기화 -->
         <div style="margin-top:10px;padding:10px 12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div>
-              <div style="font-size:12px;font-weight:800;color:#dc2626">🧪 김동현 테스트 초기화</div>
-              <div style="font-size:10px;color:#ef4444;margin-top:2px">오늘 숙제 완료 기록 전체 삭제</div>
-            </div>
-            <button onclick="resetDonghyunHw()" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:11px;font-weight:800;cursor:pointer">초기화</button>
-          </div>
+          <div style="font-size:12px;font-weight:800;color:#dc2626;margin-bottom:8px">🔄 오늘 숙제 초기화</div>
+          <div id="admin-reset-btns" style="display:flex;flex-direction:column;gap:6px"></div>
         </div>
       </div>
       <!-- 월별 캘린더 -->
@@ -1206,7 +1201,7 @@ input,select,button,textarea{font-family:inherit;}
 
     <!-- 훈련 추가하기 (아코디언) -->
     <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 훈련과 설명 훈련을 추가할 수 있습니다</div>
     <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
 
   </div></div>
@@ -1861,7 +1856,7 @@ input,select,button,textarea{font-family:inherit;}
 
     <!-- 훈련 추가하기 (아코디언) -->
     <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 훈련과 설명 훈련을 추가할 수 있습니다</div>
     <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
 
   </div></div>
@@ -2516,7 +2511,7 @@ input,select,button,textarea{font-family:inherit;}
 
     <!-- 훈련 추가하기 (아코디언) -->
     <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 훈련과 설명 훈련을 추가할 수 있습니다</div>
     <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
 
   </div></div>
@@ -3465,24 +3460,6 @@ const INIT_DB={
     "note": "하행 진행 → 반음씩 상행 반복"
   },
   {
-    "id": "5DN-D",
-    "name": "5도 하향 스케일",
-    "range": "고급",
-    "startNote": 64,
-    "endNote": 91,
-    "bpm": 125,
-    "pattern": [
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "하행 진행 → 반음씩 상행 반복"
-  },
-  {
     "id": "9DN-A",
     "name": "9도 하향 스케일",
     "range": "높은두성 시작",
@@ -3569,24 +3546,6 @@ const INIT_DB={
     "previewType": "5도화음",
     "previewBeats": 4,
     "note": "9도 고급 스케일 A3~F#5. 4번 스케일"
-  },
-  {
-    "id": "5DN-E",
-    "name": "5도 하향 스케일",
-    "range": "중성~낮은두성",
-    "startNote": 69,
-    "endNote": 79,
-    "bpm": 125,
-    "pattern": [
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "5도 하향 중성~낮은두성 A4~G5. 9번 스케일"
   }
 ],
   "courses": [
@@ -5434,15 +5393,19 @@ else s.push({type:'note',semi:typeof p==='number'?p:0});
 return s;
 };
 const ps=ep(mod.pattern);
+/* DN 스케일: startNote/endNote가 패턴 첫음(솔/레8) 기준 */
+/* 실제 root = 첫음 - patternMax (도 위치) */
+const isDN=(mod.id||'').indexOf('DN')!==-1;
+const patNotes=mod.pattern.filter(p=>typeof p==='number');
+const patMax=patNotes.length?Math.max(...patNotes):0;
+const offset=isDN?-patMax:0; /* DN이면 솔→도 오프셋 */
 const a=[],r=mod.endNote-mod.startNote;
 if(r>=0){
-  /* 상행 스케일: 낮은음→높은음 키 이동 */
-  for(let s=0;s<=r;s++)a.push({semi:s,dir:'up',ps});
-  for(let s=r-1;s>=0;s--)a.push({semi:s,dir:'down',ps});
+  for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'up',ps});
+  for(let s=r-1;s>=0;s--)a.push({semi:s+offset,dir:'down',ps});
 } else {
-  /* 하향 스케일 (9DN 등): 높은음→낮은음 키 이동 (r<0) */
-  for(let s=0;s>=r;s--)a.push({semi:s,dir:'down',ps});
-  for(let s=r+1;s<=0;s++)a.push({semi:s,dir:'up',ps});
+  for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+  for(let s=r+1;s<=0;s++)a.push({semi:s+offset,dir:'up',ps});
 }
 return a;
 }
@@ -5917,6 +5880,7 @@ let _hwCalYear=new Date().getFullYear();
 let _hwCalMonth=new Date().getMonth(); 
 
 function showHwToday(){
+renderAdminResetBtns();
 document.getElementById('hw-today-view').style.display='';
 document.getElementById('hw-cal-view').style.display='none';
 document.getElementById('hw-tab-today').style.background='var(--or)';
@@ -6787,63 +6751,83 @@ push('scr-free');
 }
 
 function _getScaleExercises(){
+/* 스케일 있는 것 + 없는 것 모두 반환 */
+return (DB.exercises||[]).filter(ex=>ex.active!==false);
+}
 
-return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
+
+function addFreeEx(item){
+freeList.push(Object.assign({id:'free_'+Date.now()+'_'+Math.random()},item));
+_saveFreeList();
+rndrFree();
 }
 
 function bldFreePick(){
 const pick=document.getElementById('free-pick');
 pick.innerHTML='';
-const exList=_getScaleExercises();
-if(!exList.length){
-pick.innerHTML='<div class="empty">스케일 가능한 훈련이 없습니다</div>';
-return;
+const allEx=(DB.exercises||[]).filter(ex=>ex.active!==false);
+if(!allEx.length){ pick.innerHTML='<div class="empty">훈련이 없습니다</div>'; return; }
+
+/* 스케일 있는 것 / 없는 것 분리 */
+const withScale=allEx.filter(ex=>ex.hasScale===true);
+const noScale=allEx.filter(ex=>ex.hasScale!==true);
+
+/* 스케일 있는 훈련 섹션 */
+if(withScale.length){
+  const sec1=document.createElement('div');
+  sec1.style.cssText='font-size:11px;font-weight:800;color:var(--mu);margin:8px 0 4px';
+  sec1.textContent='🎹 스케일 훈련';
+  pick.appendChild(sec1);
+  withScale.forEach(ex=>{
+    const isOpen=(_freeOpenEx===ex.name||_freeOpenEx===(ex.id||ex.name));
+    const wrap=document.createElement('div');
+    wrap.style.cssText='border:1.5px solid var(--bd);border-radius:11px;overflow:hidden;margin-bottom:4px';
+    /* 헤더 */
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;background:'+(isOpen?'var(--or-l)':'#fff');
+    hdr.innerHTML='<div style="font-size:12px;font-weight:800">'+ex.name+'</div><span style="font-size:12px;color:var(--mu)">'+(isOpen?'▲':'▼')+'</span>';
+    hdr.onclick=function(){_freeOpenEx=(isOpen?null:ex.name);bldFreePick();};
+    wrap.appendChild(hdr);
+    if(isOpen){
+      const body=document.createElement('div');
+      body.style.cssText='padding:8px 10px;background:var(--or-l);display:flex;flex-direction:column;gap:5px';
+      const scalesForEx=(DB.scales||[]).filter(sc=>{
+        const exScaleIds=(ex.scaleIds||[]);
+        return exScaleIds.includes(sc.id)||exScaleIds.some(id=>sc.id.startsWith(id));
+      });
+      (DB.scales||[]).forEach(sc=>{
+        const btn=document.createElement('button');
+        btn.className='btn-ghost';
+        btn.style.cssText='text-align:left;padding:7px 10px;font-size:11px;border-radius:8px;width:100%';
+        btn.innerHTML='<b>'+sc.name+'</b> <span style="color:var(--mu)">'+sc.range+'</span>';
+        btn.onclick=function(){
+          addFreeEx({exId:ex.id||ex.name,exName:ex.name,name:ex.name,scaleId:sc.id,noScale:false,label:ex.name+' — '+sc.name+' ('+sc.range+')',desc:ex.desc||'',repeat:1});
+        };
+        body.appendChild(btn);
+      });
+      wrap.appendChild(body);
+    }
+    pick.appendChild(wrap);
+  });
 }
-exList.forEach(ex=>{
-const isOpen=(_freeOpenEx===ex.name||_freeOpenEx===(ex.id||ex.name));
 
-const wrap=document.createElement('div');
-wrap.style.cssText='border:1.5px solid var(--bd2);border-radius:12px;overflow:hidden;background:#fff';
-
-const hdr=document.createElement('div');
-hdr.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;user-select:none';
-hdr.innerHTML=`
-<div style="width:34px;height:34px;border-radius:9px;background:#fff7f0;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🎤</div>
-<div style="flex:1;min-width:0">
-<div style="font-size:13px;font-weight:800">${ex.name}</div>
-<div style="font-size:10px;color:var(--mu);margin-top:1px">${ex.desc?ex.desc.slice(0,40)+'…':''}</div>
-</div>
-<div class="free-arr" style="font-size:12px;color:var(--or);transition:transform .2s;transform:${isOpen?'rotate(0deg)':'rotate(-90deg)'}"">▼</div>`;
-
-const body=document.createElement('div');
-body.style.cssText=`display:${isOpen?'flex':'none'};flex-direction:column;gap:0;border-top:1px solid var(--line)`;
-
-(DB.scales||[]).forEach((sc,si)=>{
-const row=document.createElement('div');
-row.style.cssText='display:flex;align-items:center;gap:8px;padding:9px 13px 9px 16px;'+(si<(DB.scales||[]).length-1?'border-bottom:1px solid var(--line)':'');
-row.innerHTML=`
-<div style="flex:1;min-width:0">
-<div style="font-size:12px;font-weight:700;color:var(--tx)">${sc.name} <span style="font-size:10px;font-weight:400;color:var(--mu)">${sc.range}</span></div>
-<div style="font-size:10px;color:var(--mu2)">${m2n(sc.startNote).full}~${m2n(sc.endNote).full} · BPM ${sc.bpm||60}</div>
-</div>
-<button data-exid="${(ex.id||ex.name)}" data-scid="${sc.id}"
-onclick="addFreeBtn(this)"
-style="background:var(--or);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">+</button>`;
-body.appendChild(row);
-});
-
-hdr.onclick=function(){
-const wasOpen=body.style.display!=='none';
-_freeOpenEx=wasOpen?null:(ex.id||ex.name);
-body.style.display=wasOpen?'none':'flex';
-const arr=hdr.querySelector('.free-arr');
-if(arr)arr.style.transform=wasOpen?'rotate(-90deg)':'rotate(0deg)';
-};
-
-wrap.appendChild(hdr);
-wrap.appendChild(body);
-pick.appendChild(wrap);
-});
+/* 스케일 없는 훈련 섹션 */
+if(noScale.length){
+  const sec2=document.createElement('div');
+  sec2.style.cssText='font-size:11px;font-weight:800;color:var(--mu);margin:12px 0 4px';
+  sec2.textContent='📋 설명 훈련 (스케일 없음)';
+  pick.appendChild(sec2);
+  noScale.forEach(ex=>{
+    const btn=document.createElement('button');
+    btn.className='btn-ghost';
+    btn.style.cssText='width:100%;text-align:left;padding:9px 12px;font-size:12px;font-weight:700;border:1.5px solid var(--bd);border-radius:11px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between';
+    btn.innerHTML='<span>'+ex.name+'</span><span style="font-size:11px;color:var(--or);font-weight:800">+ 추가</span>';
+    btn.onclick=function(){
+      addFreeEx({exId:ex.id||ex.name,exName:ex.name,name:ex.name,scaleId:'',noScale:true,label:ex.name,desc:ex.desc||'',hwComment:ex.desc||'',comment:ex.desc||'',repeat:1});
+    };
+    pick.appendChild(btn);
+  });
+}
 }
 
 /* + 버튼 눌림 피드백 — 체크 표시 후 원래대로 */
@@ -8344,14 +8328,41 @@ document.addEventListener('visibilitychange', function(){
 window.addEventListener('pagehide', function(){
   cancelTTS();stopEL();if(actx)actx.suspend();
   if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
-});function resetDonghyunHw(){
-if(!confirm('김동현 오늘 숙제 기록을 초기화할까요?'))return;
-const name='김동현',sKey=name.replace(/\s/g,'_'),dateKey=_fbDateKey();
-const lsKey='ev_hw_done_'+name+'_'+dateKey;localStorage.removeItem(lsKey);
-Object.keys(localStorage).filter(k=>k.startsWith('ev_hw_')&&k.includes(name)).forEach(k=>localStorage.removeItem(k));
-if(_fbReady){_fbDb.ref('hwDone/'+sKey+'/'+dateKey).remove().then(function(){_fbDb.ref('hwHistory/'+sKey+'/'+dateKey).remove();alert('✅ 김동현 오늘 숙제 기록이 초기화되었습니다!');refreshHwStatus();}).catch(function(e){alert('Firebase 오류: '+e.message);});}else{alert('✅ localStorage 초기화 완료');refreshHwStatus();}
+});function resetDonghyunHw(){ resetStudentHw('김동현'); }
+function resetStudentHw(name){
+if(!confirm(name+' 오늘 숙제 기록을 초기화할까요?'))return;
+const sKey=name.replace(/\s/g,'_'),dateKey=_fbDateKey();
+/* localStorage 초기화 */
+Object.keys(localStorage).filter(k=>k.includes('ev_hw_')&&k.includes(name)).forEach(k=>localStorage.removeItem(k));
+/* Firebase 초기화 */
+if(_fbReady){
+  _fbDb.ref('hwDone/'+sKey+'/'+dateKey).remove().then(function(){
+    _fbDb.ref('hwHistory/'+sKey+'/'+dateKey).remove();
+    alert('✅ '+name+' 오늘 숙제 기록이 초기화되었습니다!');
+    refreshHwStatus();
+  }).catch(function(e){alert('오류: '+e.message);});
+}else{alert('✅ localStorage 초기화 완료');refreshHwStatus();}
 }
-</script>
+/* 관리자 초기화 버튼 렌더 */
+function renderAdminResetBtns(){
+const c=document.getElementById('admin-reset-btns');
+if(!c)return;
+c.innerHTML='';
+(STUDENTS_DB||[]).forEach(function(s){
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0';
+  const nameEl=document.createElement('span');
+  nameEl.style.cssText='font-size:12px;font-weight:700';
+  nameEl.textContent=s.name;
+  const btn=document.createElement('button');
+  btn.style.cssText='background:#dc2626;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:800;cursor:pointer';
+  btn.textContent='초기화';
+  (function(nm){btn.onclick=function(){resetStudentHw(nm);};})(s.name);
+  row.appendChild(nameEl);
+  row.appendChild(btn);
+  c.appendChild(row);
+});
+}</script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
   <div class="modal-box" style="max-width:340px;text-align:center">
