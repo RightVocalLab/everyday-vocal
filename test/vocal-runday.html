@@ -398,11 +398,7 @@ input,select,button,textarea{font-family:inherit;}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="background:#16a34a;color:#fff;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:800">📋 훈련 안내</span></div>
         <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.2;font-weight:500"></div>
       </div>
-      <!-- noScale 완료 버튼 -->
-      <button id="noscale-done-btn" onclick="onDone()"
-        style="width:100%;padding:16px;background:var(--or);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px">
-        ✅ 훈련 완료
-      </button>
+      <button id="noscale-done-btn" onclick="onDone()" style="width:100%;padding:16px;background:var(--or);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px">✅ 훈련 완료</button>
     </div>
     <div>
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
@@ -476,7 +472,7 @@ input,select,button,textarea{font-family:inherit;}
     <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -493,7 +489,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -525,10 +520,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -712,6 +704,16 @@ input,select,button,textarea{font-family:inherit;}
         <div style="display:flex;gap:7px">
           <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
           <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
+        </div>
+        <!-- 김동현 테스트 초기화 -->
+        <div style="margin-top:10px;padding:10px 12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:#dc2626">🧪 김동현 테스트 초기화</div>
+              <div style="font-size:10px;color:#ef4444;margin-top:2px">오늘 숙제 완료 기록 전체 삭제</div>
+            </div>
+            <button onclick="resetDonghyunHw()" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:11px;font-weight:800;cursor:pointer">초기화</button>
+          </div>
         </div>
       </div>
       <!-- 월별 캘린더 -->
@@ -738,66 +740,30 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:16px;font-weight:900">🔊 음량 설정</div>
       <button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button>
     </div>
-
-    <!-- 스케일 음량 -->
     <div style="margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800">🎹 스케일 음량</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div>
-        </div>
+        <div><div style="font-size:13px;font-weight:800">🎹 스케일 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div></div>
         <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">70</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="70" id="vol-scale-sl"
-          style="flex:1;accent-color:var(--or);height:4px"
-          oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()">
-        <span style="font-size:11px;color:var(--mu)">100</span>
-      </div>
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="70" id="vol-scale-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()"><span style="font-size:11px;color:var(--mu)">100</span></div>
     </div>
-
-    <!-- 훈련안내/멘트 음량 -->
     <div style="margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div>
-        </div>
+        <div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div>
         <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">80</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="80" id="vol-tts-sl"
-          style="flex:1;accent-color:var(--or);height:4px"
-          oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()">
-        <span style="font-size:11px;color:var(--mu)">100</span>
-      </div>
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="80" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()"><span style="font-size:11px;color:var(--mu)">100</span></div>
     </div>
-
-    <!-- 화이팅멘트 음량 -->
     <div style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div>
-        </div>
+        <div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div>
         <div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">30</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--mu)">0</span>
-        <input type="range" min="0" max="100" value="30" id="vol-coach-sl"
-          style="flex:1;accent-color:var(--or);height:4px"
-          oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()">
-        <span style="font-size:11px;color:var(--mu)">100</span>
-      </div>
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="30" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div>
     </div>
-
-    <!-- 저장 완료 표시 -->
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:16px">변경 즉시 자동 저장됩니다</div>
   </div>
 </div>
-
 <!-- MODALS -->
 <div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
   <div class="modal-box">
@@ -1127,10 +1093,7 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -1206,7 +1169,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -1223,7 +1186,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -1255,10 +1217,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -1303,7 +1262,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -1789,10 +1748,7 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -1868,7 +1824,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -1885,7 +1841,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -1917,10 +1872,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -1965,7 +1917,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -2451,10 +2403,7 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -2530,7 +2479,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -2547,7 +2496,6 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -2579,10 +2527,7 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -2627,7 +2572,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -3004,598 +2949,647 @@ const INIT_DB={
   ],
   "scales": [
     {
-      "id": "3D-A",
-      "name": "3도 스케일",
-      "range": "흉성",
-      "startNote": 57,
-      "endNote": 61,
-      "bpm": 190,
-      "pattern": [
-        0,
-        2,
-        4,
-        2,
-        0,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        4,
-        5,
-        7,
-        5,
-        4,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        0,
-        2,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "3D-A",
+        "name": "3도 스케일",
+        "range": "흉성",
+        "startNote": 57,
+        "endNote": 61,
+        "bpm": 190,
+        "pattern": [
+            0,
+            2,
+            4,
+            2,
+            0,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            4,
+            5,
+            7,
+            5,
+            4,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            0,
+            2,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "3D-B",
-      "name": "3도 스케일",
-      "range": "중성",
-      "startNote": 62,
-      "endNote": 67,
-      "bpm": 190,
-      "pattern": [
-        0,
-        2,
-        4,
-        2,
-        0,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        4,
-        5,
-        7,
-        5,
-        4,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        0,
-        2,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "3D-B",
+        "name": "3도 스케일",
+        "range": "중성",
+        "startNote": 62,
+        "endNote": 67,
+        "bpm": 190,
+        "pattern": [
+            0,
+            2,
+            4,
+            2,
+            0,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            4,
+            5,
+            7,
+            5,
+            4,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            0,
+            2,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "3D-C",
-      "name": "3도 스케일",
-      "range": "흉성~두성",
-      "startNote": 57,
-      "endNote": 83,
-      "bpm": 190,
-      "pattern": [
-        0,
-        2,
-        4,
-        2,
-        0,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        4,
-        5,
-        7,
-        5,
-        4,
-        {
-          "hold": 2
-        },
-        2,
-        4,
-        5,
-        4,
-        2,
-        {
-          "hold": 2
-        },
-        0,
-        2,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "3D-C",
+        "name": "3도 스케일",
+        "range": "흉성~두성",
+        "startNote": 57,
+        "endNote": 83,
+        "bpm": 190,
+        "pattern": [
+            0,
+            2,
+            4,
+            2,
+            0,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            4,
+            5,
+            7,
+            5,
+            4,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            0,
+            2,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5D-A",
-      "name": "5도 스케일",
-      "range": "흉성",
-      "startNote": 57,
-      "endNote": 61,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "3D-D",
+        "name": "3도 스케일",
+        "range": "흉성~중성",
+        "note": "",
+        "startNote": 57,
+        "endNote": 67,
+        "bpm": 190,
+        "previewType": "5도화음",
+        "pattern": [
+            0,
+            2,
+            4,
+            2,
+            0,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            4,
+            5,
+            7,
+            5,
+            4,
+            {
+                "hold": 2
+            },
+            2,
+            4,
+            5,
+            4,
+            2,
+            {
+                "hold": 2
+            },
+            0,
+            2,
+            4,
+            2,
+            0
+        ]
     },
     {
-      "id": "5D-B",
-      "name": "5도 스케일",
-      "range": "중성",
-      "startNote": 62,
-      "endNote": 74,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "5D-A",
+        "name": "5도 스케일",
+        "range": "흉성",
+        "startNote": 57,
+        "endNote": 61,
+        "bpm": 130,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5D-C",
-      "name": "5도 스케일",
-      "range": "중성~두성",
-      "startNote": 62,
-      "endNote": 83,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "5D-B",
+        "name": "5도 스케일",
+        "range": "중성",
+        "startNote": 62,
+        "endNote": 74,
+        "bpm": 130,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5D-D",
-      "name": "5도 스케일",
-      "range": "고급",
-      "startNote": 62,
-      "endNote": 91,
-      "bpm": 130,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "5D-C",
+        "name": "5도 스케일",
+        "range": "중성~두성",
+        "startNote": 62,
+        "endNote": 83,
+        "bpm": 130,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5H-A",
-      "name": "5도 쉬고 내려오기",
-      "range": "흉성",
-      "startNote": 57,
-      "endNote": 61,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+        "id": "5D-D",
+        "name": "5도 스케일",
+        "range": "고급",
+        "startNote": 62,
+        "endNote": 91,
+        "bpm": 130,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5H-B",
-      "name": "5도 쉬고 내려오기",
-      "range": "중성",
-      "startNote": 62,
-      "endNote": 74,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+        "id": "5H-A",
+        "name": "5도 쉬고 내려오기",
+        "range": "흉성",
+        "startNote": 57,
+        "endNote": 61,
+        "bpm": 125,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            {
+                "hold": 3
+            },
+            7,
+            {
+                "hold": 1
+            },
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
     },
     {
-      "id": "5H-C",
-      "name": "5도 쉬고 내려오기",
-      "range": "중성~두성",
-      "startNote": 62,
-      "endNote": 83,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+        "id": "5H-B",
+        "name": "5도 쉬고 내려오기",
+        "range": "중성",
+        "startNote": 62,
+        "endNote": 74,
+        "bpm": 125,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            {
+                "hold": 3
+            },
+            7,
+            {
+                "hold": 1
+            },
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
     },
     {
-      "id": "5H-D",
-      "name": "5도 쉬고 내려오기",
-      "range": "고급",
-      "startNote": 62,
-      "endNote": 91,
-      "bpm": 125,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        {
-          "hold": 3
-        },
-        7,
-        {
-          "hold": 1
-        },
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
+        "id": "5H-C",
+        "name": "5도 쉬고 내려오기",
+        "range": "중성~두성",
+        "startNote": 62,
+        "endNote": 83,
+        "bpm": 125,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            {
+                "hold": 3
+            },
+            7,
+            {
+                "hold": 1
+            },
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
     },
     {
-      "id": "9D-A",
-      "name": "9도 스케일",
-      "range": "흉성~두성",
-      "startNote": 57,
-      "endNote": 69,
-      "bpm": 180,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        9,
-        11,
-        12,
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "5H-D",
+        "name": "5도 쉬고 내려오기",
+        "range": "고급",
+        "startNote": 62,
+        "endNote": 91,
+        "bpm": 125,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            {
+                "hold": 3
+            },
+            7,
+            {
+                "hold": 1
+            },
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
     },
     {
-      "id": "9D-B",
-      "name": "9도 스케일",
-      "range": "고급",
-      "startNote": 57,
-      "endNote": 77,
-      "bpm": 180,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        9,
-        11,
-        12,
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": ""
+        "id": "9D-A",
+        "name": "9도 스케일",
+        "range": "흉성~두성",
+        "startNote": 57,
+        "endNote": 69,
+        "bpm": 180,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11,
+            12,
+            14,
+            12,
+            11,
+            9,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5DN-A",
-      "name": "5도 하향 스케일",
-      "range": "흉성",
-      "startNote": 64,
-      "endNote": 68,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
+        "id": "9D-B",
+        "name": "9도 스케일",
+        "range": "고급",
+        "startNote": 57,
+        "endNote": 77,
+        "bpm": 180,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11,
+            12,
+            14,
+            12,
+            11,
+            9,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": ""
     },
     {
-      "id": "5DN-B",
-      "name": "5도 하향 스케일",
-      "range": "중성",
-      "startNote": 69,
-      "endNote": 74,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
+        "id": "5DN-A",
+        "name": "5도 하향 스케일",
+        "range": "흉성",
+        "startNote": 64,
+        "endNote": 68,
+        "bpm": 125,
+        "pattern": [
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "하행 진행 → 반음씩 상행 반복"
     },
     {
-      "id": "5DN-C",
-      "name": "5도 하향 스케일",
-      "range": "두성~흉성",
-      "startNote": 64,
-      "endNote": 83,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
+        "id": "5DN-B",
+        "name": "5도 하향 스케일",
+        "range": "중성",
+        "startNote": 69,
+        "endNote": 74,
+        "bpm": 125,
+        "pattern": [
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "하행 진행 → 반음씩 상행 반복"
     },
     {
-      "id": "5DN-D",
-      "name": "5도 하향 스케일",
-      "range": "고급",
-      "startNote": 64,
-      "endNote": 91,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "하행 진행 → 반음씩 상행 반복"
+        "id": "5DN-C",
+        "name": "5도 하향 스케일",
+        "range": "두성~흉성",
+        "startNote": 64,
+        "endNote": 83,
+        "bpm": 125,
+        "pattern": [
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "하행 진행 → 반음씩 상행 반복"
     },
     {
-      "id": "9DN-A",
-      "name": "9도 하향 스케일",
-      "range": "기본",
-      "startNote": 71,
-      "endNote": 83,
-      "bpm": 180,
-      "pattern": [
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+        "id": "5DN-D",
+        "name": "5도 하향 스케일",
+        "range": "고급",
+        "startNote": 64,
+        "endNote": 91,
+        "bpm": 125,
+        "pattern": [
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "하행 진행 → 반음씩 상행 반복"
     },
     {
-      "id": "9DN-B",
-      "name": "9도 하향 스케일",
-      "range": "고급",
-      "startNote": 71,
-      "endNote": 91,
-      "bpm": 180,
-      "pattern": [
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+        "id": "9DN-A",
+        "name": "9도 하향 스케일",
+        "range": "기본",
+        "startNote": 71,
+        "endNote": 83,
+        "bpm": 180,
+        "pattern": [
+            14,
+            12,
+            11,
+            9,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "높은레(9) 3박 홀드 ~도(1) 하행"
     },
     {
-      "id": "9DN-C",
-      "name": "9도 하향 스케일(하향만)",
-      "range": "두성",
-      "startNote": 83,
-      "endNote": 88,
-      "bpm": 180,
-      "pattern": [
-        14,
-        12,
-        11,
-        9,
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+        "id": "9DN-B",
+        "name": "9도 하향 스케일",
+        "range": "고급",
+        "startNote": 71,
+        "endNote": 91,
+        "bpm": 180,
+        "pattern": [
+            14,
+            12,
+            11,
+            9,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "높은레(9) 3박 홀드 ~도(1) 하행"
     },
     {
-      "id": "9D-C",
-      "name": "9도 스케일",
-      "range": "고급(A3~F#5)",
-      "startNote": 57,
-      "endNote": 78,
-      "bpm": 180,
-      "pattern": [
-        0,
-        2,
-        4,
-        5,
-        7,
-        9,
-        11,
-        12,
-        14
-      ],
-      "previewType": "5도화음",
-      "previewBeats": 4,
-      "note": "9도 고급 스케일 A3~F#5. 4번 스케일"
+        "id": "9DN-C",
+        "name": "9도 하향 스케일(하향만)",
+        "range": "두성",
+        "startNote": 83,
+        "endNote": 88,
+        "bpm": 180,
+        "pattern": [
+            14,
+            12,
+            11,
+            9,
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "높은레(9) 3박 홀드 ~도(1) 하행"
     },
     {
-      "id": "5DN-E",
-      "name": "5도 하향 스케일",
-      "range": "중성~낮은두성",
-      "startNote": 69,
-      "endNote": 79,
-      "bpm": 125,
-      "pattern": [
-        7,
-        5,
-        4,
-        2,
-        0
-      ],
-      "previewType": "첫음단음",
-      "previewBeats": 4,
-      "note": "5도 하향 중성~낮은두성 A4~G5. 9번 스케일"
+        "id": "9D-C",
+        "name": "9도 스케일",
+        "range": "고급(A3~F#5)",
+        "startNote": 57,
+        "endNote": 78,
+        "bpm": 180,
+        "pattern": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11,
+            12,
+            14
+        ],
+        "previewType": "5도화음",
+        "previewBeats": 4,
+        "note": "9도 고급 스케일 A3~F#5. 4번 스케일"
+    },
+    {
+        "id": "5DN-E",
+        "name": "5도 하향 스케일",
+        "range": "중성~낮은두성",
+        "startNote": 69,
+        "endNote": 79,
+        "bpm": 125,
+        "pattern": [
+            7,
+            5,
+            4,
+            2,
+            0
+        ],
+        "previewType": "첫음단음",
+        "previewBeats": 4,
+        "note": "5도 하향 중성~낮은두성 A4~G5. 9번 스케일"
     }
-  ],
+],
   "courses": [
     {
       "id": "c_1",
@@ -5040,9 +5034,7 @@ const audioBuf=await ctx.decodeAudioData(arrayBuf);
 if(_callToken!==undefined&&!_tokenValid(_callToken))return;
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
-/* TTS 볼륨 적용 */
 const _elGain=ctx.createGain();
-/* speakEL의 _spd 파라미터로 coach 여부 판별 (0.95=화이팅, 그외=TTS) */
 const _isCoach=(_isCoachFlag===true)||(_spd===0.95||_spd===0.9);
 _elGain.gain.value=(_isCoach?_volCoach:_volTTS)/100;
 src.connect(_elGain);_elGain.connect(ctx.destination);
@@ -5159,20 +5151,14 @@ if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(mkUtt(
 }
 
 /* 음량 설정 (0~100) */
-let _volScale=70;   /* 스케일 피아노 음량 */
-let _volTTS=80;     /* 훈련안내/멘트 음량 */
-let _volCoach=30;   /* 화이팅멘트 음량 */
-(function _loadVolSettings(){
-  try{
-    const s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');
-    if(s.scale!==undefined)_volScale=s.scale;
-    if(s.tts!==undefined)_volTTS=s.tts;
-    if(s.coach!==undefined)_volCoach=s.coach;
-  }catch(e){}
-})();
-function _saveVolSettings(){
-  try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}
-}
+var _volScale=70,_volTTS=80,_volCoach=30;
+(function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
+function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
+function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
+function _applyVolTTS(){_saveVolSettings();}
+function _applyVolCoach(){_saveVolSettings();}
+function openSettings(){var ss=document.getElementById('vol-scale-sl'),ts=document.getElementById('vol-tts-sl'),cs=document.getElementById('vol-coach-sl');if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}var m=document.getElementById('settings-modal');if(m)m.style.display='flex';}
+function closeSettings(){var m=document.getElementById('settings-modal');if(m)m.style.display='none';}
 let actx=null,mGain=null,cmp=null,rv=null;
 function gCtx(){
 if(!actx){
@@ -5429,16 +5415,11 @@ return a;
 }
 function clrCT(){coachT.forEach(t=>clearTimeout(t));coachT=[];}
 
-const _CHEER=[
-'화이팅!','할 수 있어!','잘 하고 있어!','힘내!',
-'좋아, 계속해!','거의 다 왔어!','최고야!','멋지다!',
-'포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!',
-'그렇지, 바로 그거야!','훌륭해!','끝까지 가자!',
-'완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!',
-'조금만 더!','이 느낌 유지해!','완벽해!'
-];
-function _randCheer(exclude){
-const pool=_CHEER.filter(c=>c!==exclude);
+var _CHEER_EARLY=['화이팅!','할 수 있어!','잘 하고 있어!','힘내!','좋아, 계속해!','최고야!','멋지다!','포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!','그렇지, 바로 그거야!','훌륭해!','완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!','이 느낌 유지해!'];
+var _CHEER_LATE=['거의 다 왔어!','조금만 더!','끝까지 가자!','완벽해!'];
+var _CHEER=[..._CHEER_EARLY,..._CHEER_LATE];
+function _randCheer(exclude,isLate){
+var pool=(isLate?[..._CHEER_EARLY,..._CHEER_LATE]:_CHEER_EARLY).filter(c=>c!==exclude);
 return pool[Math.floor(Math.random()*pool.length)];
 }
 
@@ -5457,7 +5438,7 @@ if(hwComment && curStudent){
   /* 20%, 50%, 80% 구간에 균등 배분 */
   [0.20, 0.50, 0.80].forEach(function(ratio){
     const t = Math.max(8, totalSec_hw * ratio);
-    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment, null, 0.75, 0.80, false);}, t*1000));
+    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);}, t*1000));
   });
 }
 
@@ -5480,7 +5461,8 @@ if(totalSec2 > 8){
     (function(t){
       coachT.push(setTimeout(function(){
         if(playing&&cheerAuto){
-          _lastCheer2=_randCheer(_lastCheer2);
+          const _isLate=(ratio>=0.65);
+          _lastCheer2=_randCheer(_lastCheer2,_isLate);
           speakEL(_lastCheer2, null, 0.40, 0.95, true);
         }
       }, t*1000));
@@ -5491,56 +5473,45 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
-window._savedSch=null;
-window._pausedSch=null; /* 새 훈련: 일시정지/이어가기 상태 초기화 */
+window._savedSch=null;window._pausedSch=null;
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
-  cancelTTS(); if(typeof stopEL==='function')stopEL();
-  const _pianoA=document.getElementById('piano-area'); if(_pianoA)_pianoA.style.display='none';
-  const _progP=document.querySelector('.pt')?.parentElement; if(_progP)_progP.style.display='none';
-  const _dotsEl=document.getElementById('dots'); if(_dotsEl)_dotsEl.style.display='none';
-  const _ctrlB=document.getElementById('ctrl-bar'); if(_ctrlB)_ctrlB.style.display='none';
-  const _exDC=document.getElementById('ex-desc')?.closest('.card'); if(_exDC)_exDC.style.display='none';
-  const _ccEl=document.getElementById('comment-card');
-  const _ctEl=document.getElementById('comment-text');
+  cancelTTS();if(typeof stopEL==='function')stopEL();
+  const _pianoA=document.getElementById('piano-area');if(_pianoA)_pianoA.style.display='none';
+  const _progP=document.querySelector('.pt')?.parentElement;if(_progP)_progP.style.display='none';
+  const _dotsEl=document.getElementById('dots');if(_dotsEl)_dotsEl.style.display='none';
+  const _ctrlB=document.getElementById('ctrl-bar');if(_ctrlB)_ctrlB.style.display='none';
+  const _exDC=document.getElementById('ex-desc')?.closest('.card');if(_exDC)_exDC.style.display='none';
+  const _ccEl=document.getElementById('comment-card');const _ctEl=document.getElementById('comment-text');
   if(_ccEl)_ccEl.style.display='flex';
-  if(_ctEl){
-    const _r=mod.hwComment||mod.comment||mod.desc||'';
-    let _f=_r.split('**').map((s,i)=>i%2===1?'<b style="color:#166634;font-weight:800">'+s+'</b>':s).join('');
-    _f=_f.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-    _ctEl.innerHTML=_f||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';
-  }
+  if(_ctEl){const _r=mod.hwComment||mod.comment||mod.desc||'';let _f=_r.split('**').map((s,i)=>i%2===1?'<b style="color:#166634;font-weight:800">'+s+'</b>':s).join('');_f=_f.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');_ctEl.innerHTML=_f||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';}
   document.getElementById('t-title').textContent=mod.displayLabel||mod.exName||mod.name||mod.label||'훈련';
-  document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
+  document.getElementById('t-sub').textContent='내용 확인 후 완료 버튼을 눌러주세요';
   const _rtts=((mod.hwComment||mod.comment||mod.desc||'').split('**').filter((_,i)=>i%2===0).join('').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스 ')).trim();
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
-  /* noscale-done-btn은 comment-card 안에 있어서 자동으로 표시됨 */
-  /* pp 버튼(ctrl-bar 안)은 숨겨져있으므로 별도 처리 불필요 */
-  const _skipBN=document.getElementById('skip-btn');
-  if(_skipBN) _skipBN.style.display='none';
+  window._savedSch=null;window._pausedSch=null;
   return;
 } else {
-  cancelTTS(); if(typeof stopEL==='function')stopEL();
-  const _pianoB=document.getElementById('piano-area'); if(_pianoB)_pianoB.style.display='';
-  const _cc2=document.getElementById('comment-card'); if(_cc2)_cc2.style.display='none';
-  const _progW=document.querySelector('.pt'); if(_progW)_progW.parentElement.style.display='';
-  const _dots2=document.getElementById('dots'); if(_dots2)_dots2.style.display='flex';
-  const _ctrl2=document.getElementById('ctrl-bar'); if(_ctrl2)_ctrl2.style.display='flex';
-  const _exDC2=document.getElementById('ex-desc')?.closest('.card'); if(_exDC2)_exDC2.style.display='';
-  const _pp2=document.getElementById('pp');
-  if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
-  /* noScale 완료 버튼 숨기기 (comment-card 전체가 숨겨지므로 자동) */
-  /* 건너뛰기 버튼: 김동현만 표시 */
-  const _skipB=document.getElementById('skip-btn');
-  if(_skipB){
-    /* 숙제 모드: 김동현만 표시 / 자유연습: 항상 표시 */
-    if(curStudent){
-      _skipB.style.display=curStudent.name==='김동현'?'':'none';
-    } else {
-      _skipB.style.display='';
-    }
-  }
+  cancelTTS();if(typeof stopEL==='function')stopEL();
+  const _pianoB=document.getElementById('piano-area');if(_pianoB)_pianoB.style.display='';
+  const _cc2=document.getElementById('comment-card');if(_cc2)_cc2.style.display='none';
+  const _progW=document.querySelector('.pt');if(_progW)_progW.parentElement.style.display='';
+  const _dots2=document.getElementById('dots');if(_dots2)_dots2.style.display='flex';
+  const _ctrl2=document.getElementById('ctrl-bar');if(_ctrl2)_ctrl2.style.display='flex';
+  const _exDC2=document.getElementById('ex-desc')?.closest('.card');if(_exDC2)_exDC2.style.display='';
+  const _pp2=document.getElementById('pp');if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
+  window._savedSch=null;window._pausedSch=null;
+  /* 피아노 복원 + 코멘트 카드 숨기기 */
+  const pianoArea=document.getElementById('piano-area');
+  if(pianoArea) pianoArea.style.display='';
+  const commentCard=document.getElementById('comment-card');
+  if(commentCard) commentCard.style.display='none';
+  /* 진행률바 복원 */
+  const progWrap=document.querySelector('.pt');
+  if(progWrap) progWrap.parentElement.style.display='';
+  const pp=document.getElementById('pp');
+  if(pp){ pp.textContent='▶'; pp.onclick=function(){ togglePlay(); }; }
 }
 
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
@@ -5572,30 +5543,16 @@ buildPianoSVG(mod.startNote,mod.endNote);buildDots();
 function togglePlay(){
   if(!curMod) return;
   if(playing){
-    /* ── 일시정지: 현재 위치 저장 ── */
-    window._pausedSch = {s: sch.s, p: sch.p};
+    window._pausedSch={s:sch.s,p:sch.p};
     stopEngine();
   } else {
-    /* ── 재생: 저장된 위치에서 이어가기 ── */
-    const savedPos = window._pausedSch || window._savedSch;
-    if(savedPos && savedPos.s > 0){
-      /* 일시정지 또는 창 이탈 후 복귀 — 예비음 없이 이어가기 */
-      window._pausedSch = null;
-      window._savedSch = null;
-      gCtx();
-      playing = true;
-      document.getElementById('pp').textContent = '⏸';
-      sch.s = savedPos.s;
-      sch.p = 0;
-      sch.nx = 0;
-      _startMetronome(curBpm, function(){
-        if(!playing) return;
-        runLoop();
-      });
-    } else {
-      /* 처음 시작 — 예비음 포함 */
-      startEngine();
-    }
+    const savedPos=window._pausedSch||window._savedSch;
+    if(savedPos&&savedPos.s>0){
+      window._pausedSch=null;window._savedSch=null;
+      gCtx();playing=true;document.getElementById('pp').textContent='⏸';
+      sch.s=savedPos.s;sch.p=0;sch.nx=0;
+      _startMetronome(curBpm,function(){if(!playing)return;runLoop();});
+    } else {startEngine();}
   }
 }
 
@@ -5767,12 +5724,8 @@ showDone('✅','훈련 완료!','수고했습니다!',[
 ]); return;
 }
 if(isSeq&&seqIdx<seqList.length-1){
-/* "다음" 눌러야 완료 체크 + 다음 훈련으로 이동 */
 const _goN=()=>{
-  /* ── 다음 누를 때 완료 체크 ── */
-  if(curStudent && seqList[seqIdx].hwIdx !== undefined){
-    _markHwDone(seqList[seqIdx].hwIdx);
-  }
+  if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
   closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
@@ -5785,17 +5738,12 @@ const _goN=()=>{
     }
   });
 };
-/* 모든 경우 팝업 — "다음" 눌러야 완료 */
 showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
   {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
   {label:'▶ 다음',fn:_goN}
 ]);
 } else {
-/* 마지막 훈련 완료 */
-if(curStudent && seqList[seqIdx].hwIdx !== undefined){
-  _markHwDone(seqList[seqIdx].hwIdx);
-  rndrHw();
-}
+if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
 const _fromStep = scrStack.includes('scr-step');
 const _hasMoreStep = _fromStep && stepIdx < stepItems.length-1;
 showDone('🎉', isSeq?'전체 완주!':'훈련 완료!', isSeq?'모두 완주했습니다! 🎉':'수고했습니다!', [
@@ -5816,24 +5764,11 @@ renderStep();
 : {label: curStudent?'숙제로 돌아가기':'← 목록으로', fn:()=>{
 closeDone();exitTrain();
 if(curStudent){
-  /* 숙제 완료 — 숙제 화면 복원 + Firebase 동기화 후 렌더링 */
+  /* 숙제 완료 — 숙제 화면 복원 */
   setTimeout(()=>{
     const hwScr=document.getElementById('scr-homework');
     if(hwScr){hwScr.classList.remove('hidden','behind');}
     if(!scrStack.includes('scr-homework'))scrStack.push('scr-homework');
-    /* 즉시 렌더링 */
-    rndrHw();_updateHwProgress();
-    /* 백그라운드 Firebase sync */
-    if(curStudent&&_fbReady){
-      _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
-        if(Array.isArray(fbDone)&&fbDone.length>0){
-          const local=_getHwDone();
-          const merged=Array.from(new Set([...local,...fbDone]));
-          _setHwDone(merged);
-          rndrHw();_updateHwProgress();
-        }
-      });
-    }
   },100);
 } else {
   setTimeout(()=>{
@@ -5854,8 +5789,7 @@ document.getElementById('done-modal').classList.add('open');
 }
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
 function doRestart(){
-  window._savedSch = null;
-  window._pausedSch = null; /* 일시정지 상태 초기화 */if(curMod){prepTrain(curMod);startEngine();}}
+  window._savedSch=null;window._pausedSch=null;if(curMod){prepTrain(curMod);startEngine();}}
 function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function buildDots(){const c=document.getElementById('dots');c.innerHTML='';const n=Math.min(allSteps.length,28);for(let i=0;i<n;i++){const d=document.createElement('div');d.className='sd';c.appendChild(d);}}
 function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=allSteps.length;ds.forEach((d,i)=>{const idx=Math.round(i*(tot/ds.length));d.className='sd';if(all||idx<sch.s)d.classList.add('dn');else if(idx===sch.s)d.classList.add('cr');});}
@@ -5865,16 +5799,10 @@ const ntr=document.getElementById('next-train-row');
 if(isSeq&&seqList.length>1){
 bar.style.display='';
 bar.textContent=`${seqIdx+1}/${seqList.length} — ${seqList[seqIdx].label||''}`;
+
 if(ntr){
-  /* 숙제 모드에서는 "다음 훈련으로" 버튼 항상 숨김 — 훈련 완주 후 팝업으로만 이동 */
-  if(curStudent){
-    ntr.style.display='none';
-  } else {
-    ntr.style.display=(seqIdx<seqList.length-1)?'':'none';
-    const btn=ntr.querySelector('button');
-    if(btn&&seqIdx<seqList.length-1)
-      btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;
-  }
+  if(curStudent){ntr.style.display='none';}
+  else{ntr.style.display=(seqIdx<seqList.length-1)?'':'none';const btn=ntr.querySelector('button');if(btn&&seqIdx<seqList.length-1)btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;}
 }
 } else {
 bar.style.display='none';
@@ -5883,14 +5811,12 @@ if(ntr)ntr.style.display='none';
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
-/* 숙제 모드: 이 버튼 사용 안 함 (updSeqBar에서 숨김) */
-if(curStudent) return;
+if(curStudent)return;
 stopEngine();
-/* 완료 체크 (자유연습) */
-if(seqList[seqIdx].hwIdx!==undefined) _markHwDone(seqList[seqIdx].hwIdx);
 seqIdx++;
 updSeqBar();
 prepTrain(seqList[seqIdx]);
+
 const label=seqList[seqIdx].label||seqList[seqIdx].exId||'다음 훈련';
 speakEL(label+' 시작합니다.',()=>{
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
@@ -5982,20 +5908,6 @@ _hwCalMonth++;
 if(_hwCalMonth>11){_hwCalMonth=0;_hwCalYear++;}
 renderHwCalendar();
 }
-function renderHwCalendar(){
-const title=document.getElementById('hw-cal-title');
-if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
-const students=STUDENTS_DB||[];
-if(!_fbReady){_renderAllStudentsCal({});return;}
-let loaded=0;const allData={};
-if(!students.length){_renderAllStudentsCal({});return;}
-students.forEach(s=>{
-  _fbDb.ref('hwDone/'+s.name.replace(/\s/g,'_')).once('value')
-    .then(snap=>{allData[s.name]=snap.val()||{};loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);})
-    .catch(()=>{loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);});
-});
-}
-
 function _renderAllStudentsCal(allData){
 const students=STUDENTS_DB||[],year=_hwCalYear,month=_hwCalMonth;
 const COLORS=['#16a34a','#2563eb','#d97706','#dc2626','#7c3aed','#0891b2'];
@@ -6020,7 +5932,17 @@ for(let d=1;d<=dim;d++){
 }
 const det=document.getElementById('hw-cal-detail');if(det)det.style.display='none';
 }
-
+function renderHwCalendar(){
+const title=document.getElementById('hw-cal-title');
+if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
+const students=STUDENTS_DB||[];
+if(!_fbReady){_renderAllStudentsCal({});return;}
+let loaded=0;const allData={};
+if(!students.length){_renderAllStudentsCal({});return;}
+students.forEach(s=>{
+  _fbDb.ref('hwDone/'+s.name.replace(/\s/g,'_')).once('value').then(snap=>{allData[s.name]=snap.val()||{};loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);}).catch(()=>{loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);});
+});
+}
 
 function _renderHwStatusWithData(fbData){
   /* Firebase 또는 localStorage 데이터로 현황 렌더링 */
@@ -6302,10 +6224,7 @@ const _prev=scrStack[scrStack.length-1];
 if(_prev==='scr-free'||_prev==='scr-homework'){
   document.getElementById(_prev)?.classList.remove('hidden','behind');
 }
-/* 숙제 화면으로 돌아갈 때 즉시 렌더링 */
-if(_prev==='scr-homework'&&curStudent){
-  rndrHw();_updateHwProgress();
-}
+if(_prev==='scr-homework'&&curStudent){rndrHw();_updateHwProgress();}
 }
 
 const ICONS=['💪','🌬️','🎵','🌿','🔥','🚀','✨','🎙️'];
@@ -7447,14 +7366,14 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_19",
-        "exName": "오픈허밍(두성)",
+        "exName": "오픈허밍(두성) 아~",
         "displayLabel": "오픈허밍(두성) 아~",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "오픈허밍(두성) 상태에서 아래로 한번 눌러서 뒤로 보내고 위로 당겨 올라가는 걸 버티면서 위를 든다는 생각으로 '아' 하기",
         "active": true,
-        "label": "오픈허밍(두성)",
-        "name": "오픈허밍(두성)"
+        "label": "오픈허밍(두성) 아~",
+        "name": "오픈허밍(두성) 아~"
       }
     ]
   },
@@ -7541,14 +7460,14 @@ let STUDENTS_DB = [
       },
       {
         "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exName": "후 내려오기",
         "displayLabel": "후 내려오기(5도 하향)",
         "scaleId": "5DN-C",
         "repeat": 1,
         "comment": "호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "label": "후 내려오기",
+        "name": "후 내려오기"
       }
     ]
   },
@@ -7843,20 +7762,21 @@ pop();
 function openHomework(){
 if(!curStudent) return;
 _loadHwList();
+rndrHw();
 document.getElementById('hw-topbar-title').textContent = curStudent.name + '님 숙제';
 document.getElementById('hw-student-name').textContent = curStudent.name + '님 숙제';
 const saved = localStorage.getItem('ev_hw_time_' + curStudent.name);
 document.getElementById('hw-update-time').textContent = saved ? '마지막 저장: ' + saved : '선생님 최신 숙제';
-push('scr-homework');
-/* Firebase에서 오늘 완료 기록 동기화 후 화면 렌더링 */
+/* Firebase에서 오늘 완료 기록 동기화 후 화면 열기 */
 _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
-  if(Array.isArray(fbDone) && fbDone.length > 0){
+  if(fbDone && fbDone.length > 0){
     const local = _getHwDone();
-    const merged = Array.from(new Set([...local, ...fbDone]));
+    const merged = Array.from(new Set([].concat(local, fbDone)));
     _setHwDone(merged);
   }
-  rndrHw();
-  _updateHwProgress();
+  push('scr-homework');
+  rndrHw();_updateHwProgress();
+if(curStudent&&_fbReady){_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){if(Array.isArray(fbDone)&&fbDone.length>0){const local=_getHwDone();const merged=Array.from(new Set([...local,...fbDone]));_setHwDone(merged);rndrHw();_updateHwProgress();}});}
 });
 }
 
@@ -7924,10 +7844,11 @@ const txt=document.getElementById('hw-progress-text');
 if(bar) bar.style.width=pct+'%';
 if(txt) txt.textContent=done.length+' / '+total;
 const resetBtn=document.getElementById('hw-reset-btn');
+/* 김동현은 언제든 초기화 가능 */
+const isDonghyun = curStudent && curStudent.name==='김동현';
 if(total>0 && done.length>=total){
   if(txt){ txt.textContent='🎉 전체 완료!'; txt.style.color='#15803d'; }
   if(bar) bar.style.background='linear-gradient(90deg,#16a34a,#15803d)';
-  /* 전체 완료 시 초기화 버튼 활성화 */
   if(resetBtn){
     resetBtn.style.opacity='1';
     resetBtn.style.pointerEvents='auto';
@@ -7937,14 +7858,26 @@ if(total>0 && done.length>=total){
     resetBtn.textContent='🔄 다시 하기';
   }
 } else {
-  /* 미완료 시 비활성화 */
-  if(resetBtn){
-    resetBtn.style.opacity='0.4';
-    resetBtn.style.pointerEvents='none';
-    resetBtn.style.background='none';
-    resetBtn.style.borderColor='var(--bd)';
-    resetBtn.style.color='var(--mu)';
-    resetBtn.textContent='완료 초기화';
+  if(isDonghyun){
+    /* 김동현: 항상 초기화 버튼 활성화 */
+    if(resetBtn){
+      resetBtn.style.opacity='1';
+      resetBtn.style.pointerEvents='auto';
+      resetBtn.style.background='#fef2f2';
+      resetBtn.style.borderColor='#fca5a5';
+      resetBtn.style.color='#dc2626';
+      resetBtn.textContent='🧪 초기화';
+    }
+  } else {
+    /* 일반 학생: 미완료 시 비활성화 */
+    if(resetBtn){
+      resetBtn.style.opacity='0.4';
+      resetBtn.style.pointerEvents='none';
+      resetBtn.style.background='none';
+      resetBtn.style.borderColor='var(--bd)';
+      resetBtn.style.color='var(--mu)';
+      resetBtn.textContent='완료 초기화';
+    }
   }
 }
 }
@@ -7980,22 +7913,6 @@ return 'ev_hw_done_'+(curStudent?curStudent.name:'')+'_'+dateStr;
 }
 function _getHwDone(){
 try{ return JSON.parse(localStorage.getItem(_hwDoneKey())||'[]'); }catch(e){ return []; }
-}
-/* Firebase에서 오늘 done 불러와서 localStorage와 병합 */
-function _syncHwDoneFromFb(callback){
-  if(!curStudent||!_fbReady){ if(callback)callback(); return; }
-  const sKey=curStudent.name.replace(/\s/g,'_');
-  const dateKey=_fbDateKey();
-  _fbDb.ref('hwDone/'+sKey+'/'+dateKey).once('value').then(function(snap){
-    const fbDone=snap.val()||[];
-    if(Array.isArray(fbDone)&&fbDone.length>0){
-      const localDone=_getHwDone();
-      /* 합집합 */
-      const merged=[...new Set([...localDone,...fbDone])];
-      _setHwDone(merged);
-    }
-    if(callback)callback();
-  }).catch(function(){ if(callback)callback(); });
 }
 function _setHwDone(arr){
 try{ localStorage.setItem(_hwDoneKey(),JSON.stringify(arr)); }catch(e){}
@@ -8072,20 +7989,7 @@ const hwScr=document.getElementById('scr-homework');
 if(hwScr){ hwScr.classList.remove('hidden','behind'); }
 if(!scrStack.includes('scr-homework')) scrStack.push('scr-homework');
 
-/* 즉시 렌더링 (localStorage 기준) */
-rndrHw();_updateHwProgress();
-
-/* 백그라운드에서 Firebase sync 후 재렌더 */
-if(curStudent&&_fbReady){
-  _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
-    if(Array.isArray(fbDone)&&fbDone.length>0){
-      const local=_getHwDone();
-      const merged=Array.from(new Set([...local,...fbDone]));
-      _setHwDone(merged);
-      rndrHw();_updateHwProgress();
-    }
-  });
-}
+rndrHw();
 }
 
 function startHomeworkSeq(){
@@ -8107,15 +8011,14 @@ exName:item.exName||item.name,
 name:item.exName||item.name,
 displayLabel:item.displayLabel||item.exName||item.name,
 noScale:false,
-hwIdx:_hwIdx,  /* 숙제 목록 인덱스 — 완료 체크용 */
+hwIdx:_hwIdx,
 scaleId:item.scaleId,
 label:(item.displayLabel||item.exName||item.name)+' — '+sc.name+' ('+sc.range+')'+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:sc.range, desc:item.comment||'',
 scaleNote:sc.note||'', startNote:sc.startNote, endNote:sc.endNote,
 pattern:sc.pattern, bpm:sc.bpm||60,
 previewType:sc.previewType||'없음', videoId:'',
-hwComment:item.comment||'',
-comment:item.comment||''
+hwComment:item.comment||'',comment:item.comment||''
 });
 } else {
 /* 스케일 없는 항목 — 설명만 표시하고 넘기기 */
@@ -8126,15 +8029,14 @@ exName:item.exName||item.name,
 name:item.exName||item.name,
 displayLabel:item.displayLabel||item.exName||item.name,
 noScale:true,
-hwIdx:_hwIdx,  /* 숙제 목록 인덱스 — 완료 체크용 */
+hwIdx:_hwIdx,
 scaleId:'',
 label:(item.displayLabel||item.exName||item.name)+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:'', desc:item.comment||'',
 scaleNote:'', startNote:0, endNote:0,
 pattern:[], bpm:60,
 previewType:'없음', videoId:'',
-hwComment:item.comment||'',
-comment:item.comment||''
+hwComment:item.comment||'',comment:item.comment||''
 });
 }
 }
@@ -8369,28 +8271,6 @@ function _fbLoadAllToday(callback){
   }catch(e){ callback({}); }
 }
 
-
-function _applyVolScale(){
-  if(mGain) mGain.gain.value=(_volScale/100)*2.5;
-  _saveVolSettings();
-}
-function _applyVolTTS(){ _saveVolSettings(); }
-function _applyVolCoach(){ _saveVolSettings(); }
-function openSettings(){
-  /* 현재 볼륨 값으로 슬라이더 초기화 */
-  const ss=document.getElementById('vol-scale-sl');
-  const ts=document.getElementById('vol-tts-sl');
-  const cs=document.getElementById('vol-coach-sl');
-  if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}
-  if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}
-  if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}
-  const m=document.getElementById('settings-modal');
-  if(m){m.style.display='flex';}
-}
-function closeSettings(){
-  const m=document.getElementById('settings-modal');
-  if(m){m.style.display='none';}
-}
 window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
 
 /* ══ 백그라운드 전환 감지 (핸드폰 홈 버튼 / 앱 전환) ══════
@@ -8402,36 +8282,37 @@ document.addEventListener('visibilitychange', function(){
     cancelTTS();
     stopEL();
     _stopMetronome();
-    if(actx && actx.state === 'running') actx.suspend();
-    /* 훈련 중이었으면 sch 상태 저장 후 정지 */
+    /* 피아노 AudioContext 일시정지 */
+    if(actx && actx.state === 'running'){
+      actx.suspend();
+    }
+    /* 훈련 엔진 정지 */
     if(playing){
-      /* 현재 진행 위치 저장 */
-      window._savedSch = {s: sch.s, p: sch.p};
-      window._pausedSch = null; /* 창 이탈 시 일시정지 상태 초기화 */
-      window._wasPlaying = true;
+      window._savedSch={s:sch.s,p:sch.p};
+      window._wasPlaying=true;
       stopEngine();
     }
   } else {
-    /* 포그라운드 복귀 — AudioContext 재개 */
-    if(actx && actx.state === 'suspended') actx.resume();
+    /* 포그라운드 복귀 — AudioContext 재개 (자동 훈련 재개 X) */
+    if(actx && actx.state === 'suspended'){
+      actx.resume();
+    }
     window._wasPlaying = false;
   }
 });
 
 /* 페이지 언로드 시도 시에도 정리 */
 window.addEventListener('pagehide', function(){
-  cancelTTS();
-  stopEL();
-  if(actx) actx.suspend();
-  /* 앱 종료 시 현재까지 완료된 숙제 Firebase에 저장 */
-  if(curStudent && _fbReady){
-    const done=_getHwDone();
-    if(done.length>0){
-      _fbSaveHwDone(curStudent.name, done);
-      _fbRecordDailyCount(curStudent.name, done.length);
-    }
-  }
-});</script>
+  cancelTTS();stopEL();if(actx)actx.suspend();
+  if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
+});function resetDonghyunHw(){
+if(!confirm('김동현 오늘 숙제 기록을 초기화할까요?'))return;
+const name='김동현',sKey=name.replace(/\s/g,'_'),dateKey=_fbDateKey();
+const lsKey='ev_hw_done_'+name+'_'+dateKey;localStorage.removeItem(lsKey);
+Object.keys(localStorage).filter(k=>k.startsWith('ev_hw_')&&k.includes(name)).forEach(k=>localStorage.removeItem(k));
+if(_fbReady){_fbDb.ref('hwDone/'+sKey+'/'+dateKey).remove().then(function(){_fbDb.ref('hwHistory/'+sKey+'/'+dateKey).remove();alert('✅ 김동현 오늘 숙제 기록이 초기화되었습니다!');refreshHwStatus();}).catch(function(e){alert('Firebase 오류: '+e.message);});}else{alert('✅ localStorage 초기화 완료');refreshHwStatus();}
+}
+</script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
   <div class="modal-box" style="max-width:340px;text-align:center">
