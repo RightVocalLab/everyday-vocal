@@ -7713,27 +7713,8 @@ if(el) el.textContent = '저장됨: ' + now;
 }
 function _loadHwList(){
 if(!curStudent) return;
-try{
-const saved = localStorage.getItem(_hwKey());
-if(saved){
-hwList = JSON.parse(saved);
-
-hwList = hwList.map(item => {
-if(item.scaleId){
-const sc = (DB.scales||[]).find(s=>s.id===item.scaleId);
-if(sc) return Object.assign({}, item, {
-startNote:sc.startNote, endNote:sc.endNote, pattern:sc.pattern,
-bpm:sc.bpm||60, previewType:sc.previewType||'없음',
-rangeLabel:sc.range
-});
-}
-return item;
-});
-} else {
-
+/* 항상 최신 STUDENTS_DB 기준으로 빌드 (localStorage 캐시 무시) */
 hwList = _buildHwFromStudent();
-}
-} catch(e){ hwList = _buildHwFromStudent(); }
 }
 function _buildHwFromStudent(){
 if(!curStudent || !curStudent.homework) return [];
