@@ -3093,6 +3093,55 @@ const INIT_DB={
     "note": ""
   },
   {
+    "id": "3D-D",
+    "name": "3도 스케일",
+    "range": "흉성~두성",
+    "note": "",
+    "startNote": 57,
+    "endNote": 76,
+    "bpm": 190,
+    "previewType": "5도화음",
+    "pattern": [
+      0,
+      2,
+      4,
+      2,
+      0,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      4,
+      5,
+      7,
+      5,
+      4,
+      {
+        "hold": 2
+      },
+      2,
+      4,
+      5,
+      4,
+      2,
+      {
+        "hold": 2
+      },
+      0,
+      2,
+      4,
+      2,
+      0
+    ]
+  },
+  {
     "id": "5D-A",
     "name": "5도 스케일",
     "range": "흉성",
@@ -3360,8 +3409,8 @@ const INIT_DB={
     "id": "5DN-A",
     "name": "5도 하향 스케일",
     "range": "중성~낮은두성",
-    "startNote": 62,
-    "endNote": 72,
+    "startNote": 69,
+    "endNote": 79,
     "bpm": 125,
     "pattern": [
       7,
@@ -3378,8 +3427,8 @@ const INIT_DB={
     "id": "5DN-B",
     "name": "5도 하향 스케일",
     "range": "중성~높은두성",
-    "startNote": 62,
-    "endNote": 76,
+    "startNote": 69,
+    "endNote": 83,
     "bpm": 125,
     "pattern": [
       7,
@@ -3411,29 +3460,11 @@ const INIT_DB={
     "note": "하행 진행 → 반음씩 상행 반복"
   },
   {
-    "id": "5DN-D",
-    "name": "5도 하향 스케일",
-    "range": "고급",
-    "startNote": 64,
-    "endNote": 91,
-    "bpm": 125,
-    "pattern": [
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "하행 진행 → 반음씩 상행 반복"
-  },
-  {
     "id": "9DN-A",
     "name": "9도 하향 스케일",
     "range": "높은두성 시작",
-    "startNote": 69,
-    "endNote": 57,
+    "startNote": 83,
+    "endNote": 71,
     "bpm": 180,
     "pattern": [
       14,
@@ -3454,8 +3485,8 @@ const INIT_DB={
     "id": "9DN-B",
     "name": "9도 하향 스케일",
     "range": "고급",
-    "startNote": 77,
-    "endNote": 57,
+    "startNote": 91,
+    "endNote": 71,
     "bpm": 180,
     "pattern": [
       14,
@@ -4894,7 +4925,7 @@ _withFallback(u,(_ntxt.length/5)*1000);
 }
 
 function _normTTS(txt){
-
+txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
 return txt
 .replace(/Z 브레셔/g, '즈 브레셔')
 .replace(/z 브레셔/g, '즈 브레셔')
@@ -5035,8 +5066,7 @@ if(window._descPlaying){
 }
 const edEl=document.getElementById('ex-desc');
 const rawTxt=(edEl&&edEl.dataset.raw)?edEl.dataset.raw:(edEl?edEl.textContent:'');
-const txt=rawTxt.trim();
-if(!txt||txt==='—'){setCoachTxt('훈련 설명이 없습니다.');return;}
+const txt=rawTxt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').trim();
 cancelTTS();
 window._descPlaying=true;
 if(btn)btn.textContent='설명⏹';
@@ -5431,7 +5461,7 @@ if(mod.noScale){
   if(_ctEl){const _r=mod.hwComment||mod.comment||mod.desc||'';let _f=_r.split('**').map((s,i)=>i%2===1?'<b style="color:#166634;font-weight:800">'+s+'</b>':s).join('');_f=_f.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');_ctEl.innerHTML=_f||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';}
   document.getElementById('t-title').textContent=mod.displayLabel||mod.exName||mod.name||mod.label||'훈련';
   document.getElementById('t-sub').textContent='내용 확인 후 완료 버튼을 눌러주세요';
-  const _rtts=((mod.hwComment||mod.comment||mod.desc||'').split('**').filter((_,i)=>i%2===0).join('').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스 ')).trim();
+  const _rtts=((mod.hwComment||mod.comment||mod.desc||'').replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스')).trim();
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
   window._savedSch=null;window._pausedSch=null;
   window._descPlaying=false;const _dBtn=document.getElementById('desc-play-btn');if(_dBtn)_dBtn.textContent='설명▶';
@@ -5829,9 +5859,11 @@ if(!confirm(name+' 오늘 숙제 기록을 초기화할까요?'))return;
 const sKey=name.replace(/\s/g,'_'),dateKey=_fbDateKey();
 Object.keys(localStorage).filter(k=>k.includes('ev_hw_')&&k.includes(name)).forEach(k=>localStorage.removeItem(k));
 if(_fbReady){
-  _fbDb.ref('hwDone/'+sKey+'/'+dateKey).remove().then(function(){
-    _fbDb.ref('hwHistory/'+sKey+'/'+dateKey).remove();
-    alert('✅ '+name+' 오늘 숙제가 초기화되었습니다!');
+  Promise.all([
+    _fbDb.ref('hwDone/'+sKey+'/'+dateKey).remove(),
+    _fbDb.ref('hwHistory/'+sKey+'/'+dateKey).remove()
+  ]).then(function(){
+    alert('✅ '+name+' 오늘 숙제 기록이 초기화되었습니다!');
     refreshHwStatus();
   }).catch(function(e){alert('오류: '+e.message);});
 }else{alert('✅ localStorage 초기화 완료');refreshHwStatus();}
@@ -5926,30 +5958,49 @@ function _renderHwStatusWithData(fbData,histData){
   if(!list)return;
   list.innerHTML='';
   histData=histData||{};
+  const dateKey=_fbDateKey();
   (STUDENTS_DB||[]).forEach(function(s){
     const sKey=s.name.replace(/\s/g,'_');
     let done=[];
     if(fbData&&fbData[sKey]) done=fbData[sKey];
     else {
-      const today=new Date();
-      const dateStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-      try{ done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateStr)||'[]'); }catch(e){}
+      try{ done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateKey)||'[]'); }catch(e){}
     }
     const total=(s.homework||[]).filter(h=>h.active!==false).length;
     const cnt=done.length;
     const pct=total>0?Math.round(cnt/total*100):0;
     const hist=histData[sKey]||null;
-    let timeInfo='';
+    /* 시작시간 */
+    let startStr='';
+    if(hist&&hist.startedAt){
+      const dt=new Date(hist.startedAt);
+      startStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    }
+    /* 완료시간(마지막 업데이트) */
+    let endStr='';
     if(hist&&hist.updatedAt){
       const dt=new Date(hist.updatedAt);
-      const hh=String(dt.getHours()).padStart(2,'0');
-      const mm=String(dt.getMinutes()).padStart(2,'0');
-      timeInfo+='완료 '+hh+':'+mm;
+      endStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     }
+    /* 총 훈련시간 */
+    let durStr='';
     if(hist&&hist.totalSec&&hist.totalSec>0){
       const ts=Math.round(hist.totalSec);
       const tm=Math.floor(ts/60), ts2=ts%60;
-      timeInfo+=(timeInfo?' · ':'')+tm+'분'+(ts2>0?' '+ts2+'초':'');
+      durStr=tm+'분'+(ts2>0?' '+ts2+'초':'');
+    } else if(hist&&hist.startedAt&&hist.updatedAt){
+      /* startedAt~updatedAt 차이로 계산 */
+      const elapsed=Math.round((new Date(hist.updatedAt)-new Date(hist.startedAt))/1000);
+      if(elapsed>0){const tm=Math.floor(elapsed/60),ts2=elapsed%60;durStr=tm+'분'+(ts2>0?' '+ts2+'초':'');}
+    }
+    /* 시간 정보 라인 */
+    let timeHtml='';
+    if(startStr||endStr||durStr){
+      timeHtml='<div style="font-size:10px;color:var(--mu);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">';
+      if(startStr) timeHtml+='<span>🕐 시작 '+startStr+'</span>';
+      if(endStr&&endStr!==startStr) timeHtml+='<span>✅ 최근 '+endStr+'</span>';
+      if(durStr) timeHtml+='<span>⏱ '+durStr+'</span>';
+      timeHtml+='</div>';
     }
     const bar=document.createElement('div');
     bar.style.cssText='background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px';
@@ -5958,10 +6009,10 @@ function _renderHwStatusWithData(fbData,histData){
         '<span style="font-size:13px;font-weight:800">'+s.name+'</span>'+
         '<span style="font-size:11px;font-weight:700;color:'+(pct>=100?'#16a34a':'var(--or)')+'">'+cnt+'/'+total+' ('+pct+'%)</span>'+
       '</div>'+
-      '<div style="background:#f3f4f6;border-radius:99px;height:7px;margin-bottom:'+(timeInfo?'5px':'0')+'">'+
+      '<div style="background:#f3f4f6;border-radius:99px;height:7px">'+
         '<div style="background:'+(pct>=100?'#16a34a':'var(--or)')+';height:7px;border-radius:99px;width:'+pct+'%;transition:width .3s"></div>'+
       '</div>'+
-      (timeInfo?'<div style="font-size:10px;color:var(--mu);margin-top:3px">⏱ '+timeInfo+'</div>':'');
+      timeHtml;
     list.appendChild(bar);
   });
 }
@@ -6817,7 +6868,13 @@ if(noScaleEx.length){
     const btn=document.createElement('button');
     btn.style.cssText='background:var(--or);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:800;cursor:pointer';
     btn.textContent='+ 추가';
-    (function(e){btn.onclick=function(){freeList.push({id:'free_ns_'+Date.now(),exId:e.id||e.name,exName:e.name,name:e.name,scaleId:'',noScale:true,label:e.name,desc:e.desc||'',hwComment:e.desc||'',comment:e.desc||'',repeat:1});_saveFreeList();rndrFree();};})(ex);
+    (function(e,b){b.onclick=function(){
+  freeList.push({id:'free_ns_'+Date.now(),exId:e.id||e.name,exName:e.name,name:e.name,scaleId:'',noScale:true,label:e.name,desc:e.desc||'',hwComment:e.desc||'',comment:e.desc||'',repeat:1});
+  _saveFreeList();rndrFree();
+  /* 추가 피드백 */
+  b.textContent='✅ 추가됨';b.style.background='#16a34a';
+  setTimeout(function(){b.textContent='+ 추가';b.style.background='var(--or)';},1200);
+};})(ex,btn);
     row.appendChild(nm);row.appendChild(btn);
     pick.appendChild(row);
   });
@@ -8050,7 +8107,20 @@ if(_hwPrev==='scr-homework'){
   document.getElementById('scr-homework')?.classList.add('hidden');
   document.getElementById('scr-homework')?.classList.remove('behind');
 }
-push('scr-train'); updSeqBar(); window._hwStartTime=Date.now(); prepTrain(trainList[0]);
+push('scr-train'); updSeqBar(); window._hwStartTime=Date.now();
+/* 훈련 시작 즉시 Firebase에 startedAt 기록 */
+if(curStudent&&_fbReady){
+  const _sKey=curStudent.name.replace(/\s/g,'_');
+  const _dKey=_fbDateKey();
+  const _total=(curStudent.homework||[]).filter(h=>h.active!==false).length;
+  _fbDb.ref('hwHistory/'+_sKey+'/'+_dKey).transaction(function(cur){
+    if(!cur) cur={};
+    cur.startedAt=new Date().toISOString();
+    cur.total=_total;
+    return cur;
+  }).catch(function(){});
+}
+prepTrain(trainList[0]);
 const msg=trainList[0].label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
@@ -8173,12 +8243,14 @@ function _fbRecordDailyCount(studentName, doneCount){
   const totalCount = total ? (total.homework||[]).filter(h=>h.active!==false).length : 0;
   const path = 'hwHistory/' + sKey + '/' + dateKey;
   const _totalSec=window._hwStartTime?Math.round((Date.now()-window._hwStartTime)/1000):0;
-  _fbDb.ref(path).set({
-    done: doneCount,
-    total: totalCount,
-    pct: totalCount > 0 ? Math.round(doneCount/totalCount*100) : 0,
-    updatedAt: new Date().toISOString(),
-    totalSec: _totalSec
+  _fbDb.ref(path).transaction(function(cur){
+    if(!cur) cur={};
+    cur.done=doneCount;
+    cur.total=totalCount;
+    cur.pct=totalCount>0?Math.round(doneCount/totalCount*100):0;
+    cur.updatedAt=new Date().toISOString();
+    cur.totalSec=_totalSec;
+    return cur;
   }).then(function(){
     /* 3개월(90일) 초과 데이터 정리 */
     _fbCleanOldHistory(sKey);
