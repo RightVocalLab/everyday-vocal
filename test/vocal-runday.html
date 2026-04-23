@@ -5491,7 +5491,8 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
-window._savedSch=null; /* 새 훈련: 이어가기 상태 초기화 */
+window._savedSch=null;
+window._pausedSch=null; /* 새 훈련: 일시정지/이어가기 상태 초기화 */
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
@@ -5571,25 +5572,28 @@ buildPianoSVG(mod.startNote,mod.endNote);buildDots();
 function togglePlay(){
   if(!curMod) return;
   if(playing){
+    /* ── 일시정지: 현재 위치 저장 ── */
+    window._pausedSch = {s: sch.s, p: sch.p};
     stopEngine();
   } else {
-    /* 이전에 창 이탈로 정지된 경우 — 저장된 위치에서 이어가기 */
-    if(window._savedSch && window._savedSch.s > 0){
-      const saved = window._savedSch;
+    /* ── 재생: 저장된 위치에서 이어가기 ── */
+    const savedPos = window._pausedSch || window._savedSch;
+    if(savedPos && savedPos.s > 0){
+      /* 일시정지 또는 창 이탈 후 복귀 — 예비음 없이 이어가기 */
+      window._pausedSch = null;
       window._savedSch = null;
       gCtx();
       playing = true;
       document.getElementById('pp').textContent = '⏸';
-      /* 저장된 스텝에서 바로 재개 (예비음 없음) */
-      sch.s = saved.s;
+      sch.s = savedPos.s;
       sch.p = 0;
       sch.nx = 0;
       _startMetronome(curBpm, function(){
         if(!playing) return;
-        schedCoach(curMod);
         runLoop();
       });
     } else {
+      /* 처음 시작 — 예비음 포함 */
       startEngine();
     }
   }
@@ -5850,7 +5854,8 @@ document.getElementById('done-modal').classList.add('open');
 }
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
 function doRestart(){
-  window._savedSch = null; /* 이어가기 상태 초기화 */if(curMod){prepTrain(curMod);startEngine();}}
+  window._savedSch = null;
+  window._pausedSch = null; /* 일시정지 상태 초기화 */if(curMod){prepTrain(curMod);startEngine();}}
 function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function buildDots(){const c=document.getElementById('dots');c.innerHTML='';const n=Math.min(allSteps.length,28);for(let i=0;i<n;i++){const d=document.createElement('div');d.className='sd';c.appendChild(d);}}
 function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=allSteps.length;ds.forEach((d,i)=>{const idx=Math.round(i*(tot/ds.length));d.className='sd';if(all||idx<sch.s)d.classList.add('dn');else if(idx===sch.s)d.classList.add('cr');});}
@@ -8402,6 +8407,7 @@ document.addEventListener('visibilitychange', function(){
     if(playing){
       /* 현재 진행 위치 저장 */
       window._savedSch = {s: sch.s, p: sch.p};
+      window._pausedSch = null; /* 창 이탈 시 일시정지 상태 초기화 */
       window._wasPlaying = true;
       stopEngine();
     }
