@@ -5427,7 +5427,8 @@ if(mod.noScale){
   /* 7. 제목 (exName 우선) */
   document.getElementById('t-title').textContent=mod.exName||mod.name||mod.label||'훈련';
   document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
-  /* 8. ElevenLabs 자동 읽기 (** 제거, x10→10회 반복) */
+  /* 8. 이전 TTS 취소 후 새로 읽기 */
+  cancelTTS();
   const rawTTS=mod.hwComment||mod.comment||mod.desc||'';
   const ttsText=rawTTS.split('**').filter(function(_,i){return i%2===0;}).join('')
     .replace(/[xX]\s*(\d+)/g,function(_,n){return n+'회 반복';}).trim();
@@ -5447,13 +5448,14 @@ if(mod.noScale){
   const progWrap=document.querySelector('.pt');
   if(progWrap) progWrap.parentElement.style.display='';
   const dotsEl=document.getElementById('dots');
-  if(dotsEl) dotsEl.style.display='';
+  if(dotsEl) dotsEl.style.display='flex';
   const ctrlBar=document.getElementById('ctrl-bar');
-  if(ctrlBar) ctrlBar.style.display='';
+  if(ctrlBar) ctrlBar.style.display='flex';
   const exDescCard=document.getElementById('ex-desc')?.closest('.card');
   if(exDescCard) exDescCard.style.display='';
   const pp=document.getElementById('pp');
   if(pp){pp.textContent='▶';pp.style.fontSize='';pp.style.padding='';pp.onclick=function(){togglePlay();};}
+}
 
 
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
@@ -5481,7 +5483,6 @@ _edEl.dataset.raw = _descFull;
 window._pendingStepGuide = ''; 
 const ytBtn=document.getElementById('yt-btn');ytBtn.style.display=mod.videoId?'flex':'none';
 buildPianoSVG(mod.startNote,mod.endNote);buildDots();
-}
 }
 function togglePlay(){if(!curMod)return;playing?stopEngine():startEngine();}
 
