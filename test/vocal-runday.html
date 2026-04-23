@@ -385,7 +385,10 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -485,6 +488,7 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
+      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -516,7 +520,10 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -561,7 +568,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -1115,7 +1122,10 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -1208,6 +1218,7 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
+      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -1239,7 +1250,10 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -1284,7 +1298,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -1770,7 +1784,10 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -1863,6 +1880,7 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
+      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -1894,7 +1912,10 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -1939,7 +1960,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -2425,7 +2446,10 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
@@ -2518,6 +2542,7 @@ input,select,button,textarea{font-family:inherit;}
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
     <div style="display:flex;gap:5px;align-items:center">
+      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
@@ -2549,7 +2574,10 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
@@ -2594,7 +2622,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -7751,7 +7779,8 @@ _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
     _setHwDone(merged);
   }
   push('scr-homework');
-  rndrHw();
+  /* Firebase에서 오늘 완료 항목 동기화 후 렌더링 */
+  _syncHwDoneFromFb(function(){ rndrHw(); });
 });
 }
 
@@ -7875,6 +7904,22 @@ return 'ev_hw_done_'+(curStudent?curStudent.name:'')+'_'+dateStr;
 }
 function _getHwDone(){
 try{ return JSON.parse(localStorage.getItem(_hwDoneKey())||'[]'); }catch(e){ return []; }
+}
+/* Firebase에서 오늘 done 불러와서 localStorage와 병합 */
+function _syncHwDoneFromFb(callback){
+  if(!curStudent||!_fbReady){ if(callback)callback(); return; }
+  const sKey=curStudent.name.replace(/\s/g,'_');
+  const dateKey=_fbDateKey();
+  _fbDb.ref('hwDone/'+sKey+'/'+dateKey).once('value').then(function(snap){
+    const fbDone=snap.val()||[];
+    if(Array.isArray(fbDone)&&fbDone.length>0){
+      const localDone=_getHwDone();
+      /* 합집합 */
+      const merged=[...new Set([...localDone,...fbDone])];
+      _setHwDone(merged);
+    }
+    if(callback)callback();
+  }).catch(function(){ if(callback)callback(); });
 }
 function _setHwDone(arr){
 try{ localStorage.setItem(_hwDoneKey(),JSON.stringify(arr)); }catch(e){}
@@ -8292,6 +8337,14 @@ window.addEventListener('pagehide', function(){
   cancelTTS();
   stopEL();
   if(actx) actx.suspend();
+  /* 앱 종료 시 현재까지 완료된 숙제 Firebase에 저장 */
+  if(curStudent && _fbReady){
+    const done=_getHwDone();
+    if(done.length>0){
+      _fbSaveHwDone(curStudent.name, done);
+      _fbRecordDailyCount(curStudent.name, done.length);
+    }
+  }
 });</script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
