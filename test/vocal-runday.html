@@ -734,7 +734,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:16px;font-weight:900">🔊 음량 설정</div><button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button></div>
     <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎹 스케일 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-scale-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
-    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">30</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="30" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:16px">변경 즉시 자동 저장됩니다</div>
   </div>
 </div>
@@ -5106,7 +5106,7 @@ ko.map(v=>`${v===ttsV?'★ ':' '}${v.name}`).join('<br>');
 if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(mkUtt('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!'));}
 }
 
-var _volScale=50,_volTTS=50,_volCoach=50;
+var _volScale=50,_volTTS=50,_volCoach=30;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
@@ -5368,12 +5368,23 @@ const patNotes=mod.pattern.filter(p=>typeof p==='number');
 const patMax=patNotes.length?Math.max(...patNotes):0;
 const offset=isDN?-patMax:0;
 const a=[],r=mod.endNote-mod.startNote;
-if(r>=0){
-  for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'up',ps});
-  for(let s=r-1;s>=0;s--)a.push({semi:s+offset,dir:'down',ps});
+if(isDN){
+  /* DN 스케일: 고음(startNote=레8/솔)에서 저음(endNote)으로 하행만 */
+  if(r>=0){
+    /* 5DN: startNote < endNote, 낮은 키부터 높은 키까지 올라감 (각 키는 하행) */
+    for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'down',ps});
+  } else {
+    /* 9DN: startNote > endNote, 높은 레8에서 낮은 레8로 하행만 */
+    for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+  }
 } else {
-  for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
-  for(let s=r+1;s<=0;s++)a.push({semi:s+offset,dir:'up',ps});
+  if(r>=0){
+    for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'up',ps});
+    for(let s=r-1;s>=0;s--)a.push({semi:s+offset,dir:'down',ps});
+  } else {
+    for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+    for(let s=r+1;s<=0;s++)a.push({semi:s+offset,dir:'up',ps});
+  }
 }
 return a;
 }
@@ -5437,6 +5448,14 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
+/* 스킵 버튼 제어 */
+const _skipBtn=document.getElementById('skip-step-btn');
+if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
+const _freeSkipBtn=document.getElementById('free-skip-step-btn');
+const _freeNextBtn=document.getElementById('free-skip-train-btn');
+const _isFree=!curStudent&&isSeq;
+if(_freeSkipBtn)_freeSkipBtn.style.display=_isFree?'':'none';
+if(_freeNextBtn)_freeNextBtn.style.display=(_isFree&&seqIdx<seqList.length-1)?'':'none';
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
@@ -5650,12 +5669,17 @@ const preGap = isDownScale ? spb*2.5 : spb*0.15;
 sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
+/* DN 스케일 예비음: root(도)가 아닌 startNote(레8/솔) 음 사용 */
+const _isDNmod=(curMod.id||'').indexOf('DN')!==-1;
+const _dnPatMax=_isDNmod?(function(){const pn=curMod.pattern.filter(p=>typeof p==='number');return pn.length?Math.max(...pn):0;})():0;
+const previewNr=_isDNmod?nr+_dnPatMax:nr;
+const previewPrevR=_isDNmod?prevRoot+_dnPatMax:prevRoot;
 (function(newR, prevR, schedT){
 const dl=Math.max(0,(schedT-ctx.currentTime)*1000);
 setTimeout(function(){
 if(playing)playPreviewChord(newR,curMod.previewType,curBpm,true,prevR);
 },dl);
-})(nr, prevRoot, sch.nx);
+})(previewNr, previewPrevR, sch.nx);
 /* 예비음 2박 후 다음 스케일 시작 */
 sch.nx+=tspb_wait*2.0;
 } else {
@@ -6058,7 +6082,7 @@ if(_fbReady){
   return;
 }
 /* Firebase 미연결 시 localStorage fallback */
-_renderHwStatusWithData({});
+_renderHwStatusWithData({},{});
 const list=document.getElementById('hw-status-list');
 if(!list)return;
 list.innerHTML='';
@@ -8053,7 +8077,20 @@ if(_hwPrev==='scr-homework'){
   document.getElementById('scr-homework')?.classList.add('hidden');
   document.getElementById('scr-homework')?.classList.remove('behind');
 }
-push('scr-train'); updSeqBar(); window._hwStartTime=Date.now(); prepTrain(trainList[0]);
+push('scr-train'); updSeqBar(); window._hwStartTime=Date.now();
+/* Firebase에 시작시간 즉시 기록 */
+if(curStudent&&_fbReady){
+  const _sKey=curStudent.name.replace(/\s/g,'_');
+  const _dKey=_fbDateKey();
+  const _tot=(curStudent.homework||[]).filter(h=>h.active!==false).length;
+  _fbDb.ref('hwHistory/'+_sKey+'/'+_dKey).transaction(function(cur){
+    if(!cur) cur={};
+    if(!cur.startedAt) cur.startedAt=new Date().toISOString();
+    cur.total=_tot;
+    return cur;
+  }).catch(function(){});
+}
+prepTrain(trainList[0]);
 const msg=trainList[0].label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
@@ -8403,12 +8440,31 @@ document.addEventListener('visibilitychange', function(){
   }
 });
 
-/* 페이지 언로드 시도 시에도 정리 */
-window.addEventListener('pagehide', function(){
-  cancelTTS();
-  stopEL();
-  if(actx) actx.suspend();
-});</script>
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){
+    /* 백그라운드 전환 — 모든 소리 즉시 정지 */
+    cancelTTS();
+    stopEL();
+    _stopMetronome();
+    /* 피아노 AudioContext 일시정지 */
+    if(actx && actx.state === 'running'){
+      actx.suspend();
+    }
+    /* 훈련 엔진 정지 */
+    if(playing){
+      stopEngine();
+      /* 재개 가능하도록 상태 저장 */
+      window._wasPlaying = true;
+    }
+  } else {
+    /* 포그라운드 복귀 — AudioContext 재개 (자동 훈련 재개 X) */
+    if(actx && actx.state === 'suspended'){
+      actx.resume();
+    }
+    window._wasPlaying = false;
+  }
+});
+</script>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
   <div class="modal-box" style="max-width:340px;text-align:center">
