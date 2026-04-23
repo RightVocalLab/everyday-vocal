@@ -5817,17 +5817,18 @@ if(curStudent){
     const hwScr=document.getElementById('scr-homework');
     if(hwScr){hwScr.classList.remove('hidden','behind');}
     if(!scrStack.includes('scr-homework'))scrStack.push('scr-homework');
+    /* 즉시 렌더링 */
+    rndrHw();_updateHwProgress();
+    /* 백그라운드 Firebase sync */
     if(curStudent&&_fbReady){
       _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
         if(Array.isArray(fbDone)&&fbDone.length>0){
           const local=_getHwDone();
           const merged=Array.from(new Set([...local,...fbDone]));
           _setHwDone(merged);
+          rndrHw();_updateHwProgress();
         }
-        rndrHw();_updateHwProgress();
       });
-    } else {
-      rndrHw();_updateHwProgress();
     }
   },100);
 } else {
@@ -6295,6 +6296,10 @@ pop();
 const _prev=scrStack[scrStack.length-1];
 if(_prev==='scr-free'||_prev==='scr-homework'){
   document.getElementById(_prev)?.classList.remove('hidden','behind');
+}
+/* 숙제 화면으로 돌아갈 때 즉시 렌더링 */
+if(_prev==='scr-homework'&&curStudent){
+  rndrHw();_updateHwProgress();
 }
 }
 
@@ -8062,11 +8067,20 @@ const hwScr=document.getElementById('scr-homework');
 if(hwScr){ hwScr.classList.remove('hidden','behind'); }
 if(!scrStack.includes('scr-homework')) scrStack.push('scr-homework');
 
-/* Firebase 동기화 후 렌더링 */
-_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
-  if(Array.isArray(fbDone)&&fbDone.length>0){const local=_getHwDone();const merged=Array.from(new Set([...local,...fbDone]));_setHwDone(merged);}
-  rndrHw();_updateHwProgress();
-});
+/* 즉시 렌더링 (localStorage 기준) */
+rndrHw();_updateHwProgress();
+
+/* 백그라운드에서 Firebase sync 후 재렌더 */
+if(curStudent&&_fbReady){
+  _fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
+    if(Array.isArray(fbDone)&&fbDone.length>0){
+      const local=_getHwDone();
+      const merged=Array.from(new Set([...local,...fbDone]));
+      _setHwDone(merged);
+      rndrHw();_updateHwProgress();
+    }
+  });
+}
 }
 
 function startHomeworkSeq(){
