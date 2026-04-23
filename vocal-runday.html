@@ -517,12 +517,22 @@ input,select,button,textarea{font-family:inherit;}
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
     <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-        <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
+          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+        </div>
+        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
       </div>
-      <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
+      <!-- 진행 상황 바 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
+        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
+      </div>
+      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
+        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+      </div>
     </div>
 
     <!-- 숙제 리스트 -->
@@ -531,7 +541,7 @@ input,select,button,textarea{font-family:inherit;}
         <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
         <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
       </div>
-      <button onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer">완료 초기화</button>
+      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
     </div>
 
     <!-- 전체 훈련 시작 버튼 -->
@@ -1168,12 +1178,22 @@ input,select,button,textarea{font-family:inherit;}
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
     <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-        <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
+          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+        </div>
+        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
       </div>
-      <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
+      <!-- 진행 상황 바 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
+        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
+      </div>
+      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
+        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+      </div>
     </div>
 
     <!-- 숙제 리스트 -->
@@ -1182,7 +1202,7 @@ input,select,button,textarea{font-family:inherit;}
         <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
         <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
       </div>
-      <button onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer">완료 초기화</button>
+      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
     </div>
 
     <!-- 전체 훈련 시작 버튼 -->
@@ -1819,12 +1839,22 @@ input,select,button,textarea{font-family:inherit;}
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
     <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-        <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
+          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+        </div>
+        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
       </div>
-      <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
+      <!-- 진행 상황 바 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
+        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
+      </div>
+      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
+        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+      </div>
     </div>
 
     <!-- 숙제 리스트 -->
@@ -1833,7 +1863,7 @@ input,select,button,textarea{font-family:inherit;}
         <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
         <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
       </div>
-      <button onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer">완료 초기화</button>
+      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
     </div>
 
     <!-- 전체 훈련 시작 버튼 -->
@@ -2470,12 +2500,22 @@ input,select,button,textarea{font-family:inherit;}
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
 
     <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-        <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
+          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+        </div>
+        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
       </div>
-      <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
+      <!-- 진행 상황 바 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
+        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
+      </div>
+      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
+        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+      </div>
     </div>
 
     <!-- 숙제 리스트 -->
@@ -2484,7 +2524,7 @@ input,select,button,textarea{font-family:inherit;}
         <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
         <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
       </div>
-      <button onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer">완료 초기화</button>
+      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
     </div>
 
     <!-- 전체 훈련 시작 버튼 -->
@@ -5586,17 +5626,18 @@ showDone('✅','훈련 완료!','수고했습니다!',[
 ]); return;
 }
 if(isSeq&&seqIdx<seqList.length-1){
+/* 숙제/자유연습 모두: 팝업 + ↺ 다시 / ▶ 다음 버튼 */
 showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
-{label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
-{label:'▶ 다음',fn:()=>{
-closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
-const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
-speakEL(lbl+'. 시작합니다.',function(){
-const ok=scrStack[scrStack.length-1]==='scr-train';
-/* noScale 훈련은 자동 시작 안 함 — 다음 › 버튼으로만 넘김 */
-if(!playing&&ok&&!seqList[seqIdx].noScale)startEngine();
-});
-}},
+  {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
+  {label:'▶ 다음',fn:()=>{
+    closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
+    const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
+    speakEL(lbl+'. 시작합니다.',function(){
+      const ok=scrStack[scrStack.length-1]==='scr-train';
+      /* noScale은 자동시작 안 함 — 다음 버튼으로만 */
+      if(!playing&&ok&&!seqList[seqIdx].noScale)startEngine();
+    });
+  }},
 ]);
 } else {
 
@@ -5770,10 +5811,18 @@ function renderHwCalendar(){
 const sel=document.getElementById('hw-cal-student');
 const studentName=sel?sel.value:'';
 const student=(STUDENTS_DB||[]).find(s=>s.name===studentName);
-/* Firebase에서 월별 데이터 로드 */
+/* Firebase hwHistory에서 전체 기록 로드 */
 if(_fbReady && studentName){
-  _fbLoadStudentMonth(studentName, _hwCalYear, _hwCalMonth, function(fbData){
-    _renderCalWithData(studentName, student, fbData);
+  _fbLoadStudentHistory(studentName, function(history){
+    /* 해당 월 데이터만 필터링 */
+    const monthData={};
+    Object.keys(history).forEach(function(dateKey){
+      const parts=dateKey.split('-');
+      if(parseInt(parts[0])===_hwCalYear && parseInt(parts[1])===(_hwCalMonth+1)){
+        monthData[dateKey]=history[dateKey];
+      }
+    });
+    _renderCalWithHistoryData(studentName, student, monthData);
   });
   return;
 }
@@ -5858,8 +5907,50 @@ function _renderHwStatusWithData(fbData){
   });
 }
 
+function _renderCalWithHistoryData(studentName, student, monthHistory){
+  /* hwHistory 기반 캘린더 — done/total/pct 포함 */
+  const total=student?(student.homework||[]).filter(h=>h.active!==false).length:0;
+  const title=document.getElementById('hw-cal-title');
+  if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
+  const grid=document.getElementById('hw-calendar-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  ['일','월','화','수','목','금','토'].forEach(function(d){
+    const h=document.createElement('div');
+    h.style.cssText='text-align:center;font-size:9px;font-weight:700;color:var(--mu);padding:2px';
+    h.textContent=d; grid.appendChild(h);
+  });
+  const firstDay=new Date(_hwCalYear,_hwCalMonth,1).getDay();
+  const daysInMonth=new Date(_hwCalYear,_hwCalMonth+1,0).getDate();
+  for(let i=0;i<firstDay;i++) grid.appendChild(document.createElement('div'));
+  for(let d=1;d<=daysInMonth;d++){
+    const dateKey=_hwCalYear+'-'+(_hwCalMonth+1)+'-'+d;
+    const rec=monthHistory[dateKey];
+    const done=rec?rec.done:0;
+    const tot=rec?rec.total:total;
+    const pct=tot>0?done/tot:0;
+    const isToday=new Date().getDate()===d&&new Date().getMonth()===_hwCalMonth&&new Date().getFullYear()===_hwCalYear;
+    const cell=document.createElement('div');
+    const bg=pct>=1?'#16a34a':pct>0?'rgba(249,115,22,'+(0.3+pct*0.7)+')':'transparent';
+    const fg=pct>=1?'#fff':pct>0?'#fff':isToday?'var(--or)':'var(--tx)';
+    cell.style.cssText='text-align:center;border-radius:6px;padding:4px 2px;font-size:10px;font-weight:'+(isToday?'800':'600')+';background:'+bg+';color:'+fg+';cursor:'+(done>0?'pointer':'default')+';border:'+(isToday?'1.5px solid var(--or)':'1px solid transparent');
+    cell.textContent=d;
+    if(done>0){
+      (function(dk,dn,dt){cell.onclick=function(){
+        const det=document.getElementById('hw-cal-detail');
+        if(!det)return;
+        det.style.display='';
+        det.innerHTML='<b>'+dk+'</b><br>완료: '+dn+'/'+dt+'개 ('+Math.round(dn/dt*100)+'%)';
+      };})(dateKey,done,tot);
+    }
+    grid.appendChild(cell);
+  }
+  const det=document.getElementById('hw-cal-detail');
+  if(det)det.style.display='none';
+}
+
 function _renderCalWithData(studentName, student, fbMonthData){
-  /* Firebase 월별 데이터로 캘린더 렌더링 */
+  /* Firebase 히스토리 데이터로 캘린더 렌더링 */
   const total=student?(student.homework||[]).filter(h=>h.active!==false).length:0;
   const title=document.getElementById('hw-cal-title');
   if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
@@ -6083,6 +6174,18 @@ const MENU_ITEMS = [
 {key:'hw', label:'숙제', icon:'📚', ids:['menu-hw'], parent:null},
 ];
 
+function _getMenuVisFromFirebase(){
+  /* Firebase에서 관리자 설정 로드 — 앱 시작 시 한번 */
+  if(!_fbReady) return;
+  _fbDb.ref('adminSettings/menuVis').once('value').then(function(snap){
+    const fbVis = snap.val();
+    if(fbVis){
+      try{ localStorage.setItem('ev_menu_vis', JSON.stringify(fbVis)); }catch(e){}
+      _applyMenuVis();
+    }
+  }).catch(function(){});
+}
+
 function _getMenuVis(){
   /* localStorage 설정 우선, 없으면 기본값 사용 */
   const _defaults = {
@@ -6229,6 +6332,10 @@ document.querySelectorAll('#menu-vis-list input[type=checkbox]').forEach(cb=>{
 vis[cb.dataset.key]=cb.checked;
 });
 try{ localStorage.setItem('ev_menu_vis',JSON.stringify(vis)); }catch(e){}
+/* Firebase에도 저장 — 모든 기기에 동기화 */
+if(_fbReady){
+  _fbDb.ref('adminSettings/menuVis').set(vis).catch(function(){});
+}
 /* 홈화면 완전 재빌드 후 visibility 적용 */
 buildHome();
 buildTheoryList();
@@ -6739,6 +6846,8 @@ rndrFree();
 });
 c.appendChild(d);
 });
+/* 진행 바 업데이트 */
+_updateHwProgress();
 }
 
 function changeRepeat(idx, delta){
@@ -7553,6 +7662,40 @@ try{ localStorage.removeItem(_hwDoneKey()); }catch(e){}
 rndrHw();
 }
 
+function _updateHwProgress(){
+const done=_getHwDone();
+const total=(hwList||[]).length;
+const pct=total>0?Math.round(done.length/total*100):0;
+const bar=document.getElementById('hw-progress-bar');
+const txt=document.getElementById('hw-progress-text');
+if(bar) bar.style.width=pct+'%';
+if(txt) txt.textContent=done.length+' / '+total;
+const resetBtn=document.getElementById('hw-reset-btn');
+if(total>0 && done.length>=total){
+  if(txt){ txt.textContent='🎉 전체 완료!'; txt.style.color='#15803d'; }
+  if(bar) bar.style.background='linear-gradient(90deg,#16a34a,#15803d)';
+  /* 전체 완료 시 초기화 버튼 활성화 */
+  if(resetBtn){
+    resetBtn.style.opacity='1';
+    resetBtn.style.pointerEvents='auto';
+    resetBtn.style.background='#f0fdf4';
+    resetBtn.style.borderColor='#86efac';
+    resetBtn.style.color='#16a34a';
+    resetBtn.textContent='🔄 다시 하기';
+  }
+} else {
+  /* 미완료 시 비활성화 */
+  if(resetBtn){
+    resetBtn.style.opacity='0.4';
+    resetBtn.style.pointerEvents='none';
+    resetBtn.style.background='none';
+    resetBtn.style.borderColor='var(--bd)';
+    resetBtn.style.color='var(--mu)';
+    resetBtn.textContent='완료 초기화';
+  }
+}
+}
+
 function rndrHw(){
 const c = document.getElementById('hw-slots');
 if(!c) return;
@@ -7582,13 +7725,14 @@ d.innerHTML=`
   ${isDone?'✓':String((item.num!==undefined?item.num:i)+1)}
 </div>
 <div style="flex:1;min-width:0">
-  <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;opacity:0.5':''}">
+  <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">
     ${item.label||item.name||item.exId||''}
+    ${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':''}
   </div>
   <div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">
     ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}${isDone?' ✓':''}
   </div>
-  ${item.comment?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
+  ${item.comment&&!isDone?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
 </div>`;
 
 c.appendChild(d);
@@ -7617,8 +7761,12 @@ function _markHwDone(i){
 const done=_getHwDone();
 if(!done.includes(i)) done.push(i);
 _setHwDone(done);
-/* Firebase 동기화 */
-if(curStudent) _fbSaveHwDone(curStudent.name, done);
+/* Firebase에 완료 기록 저장 */
+if(curStudent){
+  _fbSaveHwDone(curStudent.name, done);
+  /* 날짜별 완료 카운트 누적 기록 */
+  _fbRecordDailyCount(curStudent.name, done.length);
+}
 }
 
 function startHwItem(i){
@@ -7687,7 +7835,10 @@ rndrHw();
 function startHomeworkSeq(){
 if(!hwList.length){ alert('숙제가 없습니다.'); return; }
 const trainList = [];
-hwList.forEach(item=>{
+const _doneBefore=_getHwDone();
+hwList.forEach((item,_hwIdx)=>{
+/* 이미 완료된 항목은 건너뜀 */
+if(_doneBefore.includes(_hwIdx)) return;
 const sc=(DB.scales||[]).find(s=>s.id===item.scaleId);
 const repeat=item.repeat||1;
 for(let r=0;r<repeat;r++){
@@ -7820,6 +7971,16 @@ let _fbReady = false;
         console.log('✅ Firebase 연결 완료');
         /* 연결 후 관리자 현황 리프레시 */
         if(typeof refreshHwStatus === 'function') setTimeout(refreshHwStatus, 500);
+        /* 관리자 메뉴 설정 동기화 */
+        setTimeout(_getMenuVisFromFirebase, 800);
+        /* 실시간 메뉴 변경 감지 — 관리자가 저장하면 모든 기기 즉시 반영 */
+        _fbDb.ref('adminSettings/menuVis').on('value', function(snap){
+          const fbVis = snap.val();
+          if(fbVis){
+            try{ localStorage.setItem('ev_menu_vis', JSON.stringify(fbVis)); }catch(e){}
+            buildHome(); buildTheoryList(); _applyMenuVis();
+          }
+        });
       }catch(e){ console.warn('Firebase 초기화 실패:', e); }
     };
     document.head.appendChild(script2);
@@ -7828,6 +7989,52 @@ let _fbReady = false;
 })();
 
 /* ── Firebase 저장/로드 함수 ── */
+
+/* 날짜별 완료 카운트 기록 (누적 히스토리) */
+function _fbRecordDailyCount(studentName, doneCount){
+  if(!_fbReady || !studentName) return;
+  const dateKey = _fbDateKey();
+  const sKey = studentName.replace(/\s/g,'_');
+  const total = (STUDENTS_DB||[]).find(s=>s.name===studentName);
+  const totalCount = total ? (total.homework||[]).filter(h=>h.active!==false).length : 0;
+  const path = 'hwHistory/' + sKey + '/' + dateKey;
+  _fbDb.ref(path).set({
+    done: doneCount,
+    total: totalCount,
+    pct: totalCount > 0 ? Math.round(doneCount/totalCount*100) : 0,
+    updatedAt: new Date().toISOString()
+  }).then(function(){
+    /* 3개월(90일) 초과 데이터 정리 */
+    _fbCleanOldHistory(sKey);
+  }).catch(function(){});
+}
+
+/* 3개월 초과 기록 삭제 */
+function _fbCleanOldHistory(sKey){
+  _fbDb.ref('hwHistory/' + sKey).once('value').then(function(snap){
+    const data = snap.val();
+    if(!data) return;
+    const keys = Object.keys(data).sort(); /* 날짜순 정렬 */
+    const MAX_DAYS = 90; /* 3개월 */
+    if(keys.length > MAX_DAYS){
+      /* 가장 오래된 것부터 삭제 */
+      const toDelete = keys.slice(0, keys.length - MAX_DAYS);
+      toDelete.forEach(function(k){
+        _fbDb.ref('hwHistory/' + sKey + '/' + k).remove();
+      });
+      console.log('🗑️ 오래된 기록 삭제:', toDelete.length + '개');
+    }
+  }).catch(function(){});
+}
+
+/* 학생 전체 히스토리 로드 (관리자 캘린더용) */
+function _fbLoadStudentHistory(studentName, callback){
+  if(!_fbReady){ callback({}); return; }
+  const sKey = studentName.replace(/\s/g,'_');
+  _fbDb.ref('hwHistory/' + sKey).once('value').then(function(snap){
+    callback(snap.val() || {});
+  }).catch(function(){ callback({}); });
+}
 
 /* 오늘 날짜 키 */
 function _fbDateKey(){
