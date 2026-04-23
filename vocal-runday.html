@@ -467,7 +467,7 @@ input,select,button,textarea{font-family:inherit;}
     </div>
 
     <!-- 컨트롤 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
+    <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
       <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
@@ -4910,25 +4910,12 @@ return txt
 .replace(/s브레셔/g, '에스 브레셔');
 }
 function _prepTxt(txt){
-
-txt = _normTTS(txt);
-
-return txt
-.split('\n\n')
-.map(function(para){
-return para
-.split('\n')
-.map(function(line){
-line = line.trim();
-if(!line) return '';
-if(!/[.!?。]$/.test(line)) line = line + '.';
-return line;
-})
-.filter(Boolean)
-.join(' ');
-})
-.filter(Boolean)
-.join('\n');
+/* x10 → 10회 반복 변환 */
+txt = txt.replace(/[xX]\s*(\d+)/g, function(_, n){ return n+'회 반복'; });
+/* x10 → 10회 반복 변환 후 TTS 처리 */
+let t = _normTTS(txt);
+t = t.replace(/[xX]\s*(\d+)/g, function(_, n){ return n+'회 반복'; });
+return t.replace(/\s+/g,' ').trim().substring(0,500);
 }
 
 async function _elSpeak(txt,key,vid,onEnd,_stab,_spd){
@@ -5395,49 +5382,59 @@ stopEngine();curMod=mod;
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
-  /* ── 스케일 없는 훈련: 피아노/진행률/dots 전부 숨기고 코멘트만 ── */
-  /* 피아노 영역 숨기기 */
-  ['piano-area'].forEach(function(id){
-    const el=document.getElementById(id);
-    if(el) el.style.display='none';
-  });
-  /* 진행률바 + dots 숨기기 */
-  const progParent=document.querySelector('.pt')?.parentElement;
-  if(progParent) progParent.style.display='none';
-  const dotsEl=document.getElementById('dots');
-  if(dotsEl) dotsEl.style.display='none';
+  /* ══ 스케일 없는 훈련: 훈련 설명 화면 ══ */
+  /* 1. 피아노 영역 완전 숨기기 */
+  const pianoArea = document.getElementById('piano-area');
+  if(pianoArea) pianoArea.style.display = 'none';
+  /* 2. 진행률바 숨기기 */
+  const progParent = document.querySelector('.pt')?.parentElement;
+  if(progParent) progParent.style.display = 'none';
+  /* 3. dots 숨기기 */
+  const dotsEl = document.getElementById('dots');
+  if(dotsEl) dotsEl.style.display = 'none';
+  /* 4. BPM/컨트롤 영역 숨기기 */
+  const ctrlEl = document.getElementById('ctrl-bar');
+  if(ctrlEl) ctrlEl.style.display = 'none';
+  /* 5. seq-bar는 유지 (진행 순서 표시) */
 
-  /* 코멘트 카드 표시 */
-  const commentCard=document.getElementById('comment-card');
-  const commentText=document.getElementById('comment-text');
-  if(commentCard) commentCard.style.display='flex';
+  /* 6. 코멘트 카드 맨 위로 올리기 */
+  const commentCard = document.getElementById('comment-card');
+  const commentText = document.getElementById('comment-text');
+  const inner = document.querySelector('#scr-train .inner');
+  if(commentCard && inner){
+    /* 카드를 inner 첫 번째로 이동 */
+    inner.insertBefore(commentCard, inner.firstChild);
+    commentCard.style.display = 'flex';
+  }
 
+  /* 7. 코멘트 내용 표시 — ** 굵게, 줄바꿈 */
   if(commentText){
     const rawCmt = mod.hwComment || mod.comment || mod.desc || '';
-    /* **굵게** → <b style="color:#166534">굵게</b> 변환 */
     let parts = rawCmt.split('**');
-    let formatted = parts.map(function(s,i){
+    let formatted = parts.map(function(s, i){
       return i%2===1
-        ? '<b style="color:#166534;font-size:14px">'+s+'</b>'
+        ? '<b style="color:#166534;font-weight:800">'+s+'</b>'
         : s;
     }).join('');
-    /* 줄바꿈 → <br><br> (문단 구분) */
-    formatted = formatted.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+    formatted = formatted.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
     commentText.innerHTML = formatted
       || '<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';
   }
 
-  /* 제목 (exName 우선 — Undefined 방지) */
+  /* 8. 제목 */
   const titleText = mod.exName || mod.name || mod.label || '훈련';
   document.getElementById('t-title').textContent = titleText;
   document.getElementById('t-sub').textContent = '내용 확인 후 다음 버튼을 눌러주세요';
 
-  /* ElevenLabs로 읽어주기 (** 제거) */
+  /* 9. ElevenLabs 자동 읽기 (** 제거) */
   const rawTTS = mod.hwComment || mod.comment || mod.desc || '';
-  const ttsText = rawTTS.split('**').filter(function(_,i){return i%2===0;}).join('').trim();
+  const ttsText = rawTTS.split('**').filter(function(_, i){ return i%2===0; }).join('').replace(/[xX]\s*(\d+)/g, function(_, n){ return n+'회 반복'; }).trim();
   if(ttsText) speakEL(ttsText, null, 0.75, 0.80);
 
-  /* 다음 버튼 */
+  /* 10. 화이팅 멘트도 schedCoach 통해 작동 */
+  schedCoach(mod);
+
+  /* 11. 다음 버튼 */
   const pp = document.getElementById('pp');
   if(pp){
     pp.textContent = '다음';
@@ -5447,16 +5444,24 @@ if(mod.noScale){
   }
   return;
 } else {
-  /* 피아노 복원 + 코멘트 카드 숨기기 */
-  const pianoArea=document.getElementById('piano-area');
-  if(pianoArea) pianoArea.style.display='';
-  const commentCard=document.getElementById('comment-card');
-  if(commentCard) commentCard.style.display='none';
-  /* 진행률바 복원 */
-  const progWrap=document.querySelector('.pt');
-  if(progWrap) progWrap.parentElement.style.display='';
-  const pp=document.getElementById('pp');
-  if(pp){ pp.textContent='▶'; pp.onclick=function(){ togglePlay(); }; }
+  /* ══ 스케일 있는 훈련: 피아노/진행률 복원 ══ */
+  const pianoArea = document.getElementById('piano-area');
+  if(pianoArea) pianoArea.style.display = '';
+  const progParent = document.querySelector('.pt')?.parentElement;
+  if(progParent) progParent.style.display = '';
+  const dotsEl = document.getElementById('dots');
+  if(dotsEl) dotsEl.style.display = '';
+  const ctrlEl = document.getElementById('ctrl-bar');
+  if(ctrlEl) ctrlEl.style.display = '';
+  const commentCard = document.getElementById('comment-card');
+  if(commentCard) commentCard.style.display = 'none';
+  const pp = document.getElementById('pp');
+  if(pp){
+    pp.textContent = '▶';
+    pp.style.fontSize = '';
+    pp.style.padding = '';
+    pp.onclick = function(){ togglePlay(); };
+  }
 }
 
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
