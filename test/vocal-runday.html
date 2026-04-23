@@ -246,7 +246,10 @@ input,select,button,textarea{font-family:inherit;}
         <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 3v9a3 3 0 1 0 2 0V6h6V3H7z" fill="#fff"/></svg>
       </div>Everyday Vocal
     </div>
-    <button class="ico" onclick="openAdminPW()">⚙</button>
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="openAdminPW()">⚙</button>
+    </div>
   </div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
     <!-- 이론 및 훈련설명 -->
@@ -382,10 +385,21 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
+    </div>
   </div>
   <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
+    <!-- 스케일 없는 훈련 안내 카드 -->
+    <div id="comment-card" style="display:none;flex-direction:column;gap:12px">
+      <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:22px 18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="background:#16a34a;color:#fff;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:800">📋 훈련 안내</span></div>
+        <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.2;font-weight:500"></div>
+      </div>
+      <button id="noscale-done-btn" onclick="onDone()" style="width:100%;padding:16px;background:var(--or);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">✅ 훈련 완료</button>
+    </div>
     <div>
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
         <span style="font-size:10px;color:var(--mu);font-weight:700">진행률</span>
@@ -454,14 +468,8 @@ input,select,button,textarea{font-family:inherit;}
       <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
       <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
     </div>
-    <!-- 스케일 없는 훈련 — 코멘트 카드 (기본 숨김) -->
-    <div id="comment-card" style="display:none;background:#f0fdf4;border:2px solid #86efac;border-radius:15px;padding:20px 16px">
-      <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:12px;letter-spacing:0.3px">📋 훈련 안내</div>
-      <div id="comment-text" style="font-size:14px;color:#1c4532;line-height:2.0;font-weight:500"></div>
-    </div>
-
     <!-- 컨트롤 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
+    <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
       <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
@@ -557,7 +565,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- ADMIN -->
 <div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
+  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
@@ -704,26 +712,34 @@ input,select,button,textarea{font-family:inherit;}
       </div>
       <!-- 월별 캘린더 -->
       <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
-          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:6px 14px;font-size:16px">‹</button>
+          <div style="font-size:14px;font-weight:800" id="hw-cal-title">—</div>
+          <button class="btn-ghost" onclick="hwCalNext()" style="padding:6px 14px;font-size:16px">›</button>
         </div>
-        <div style="margin-bottom:8px">
-          <select id="hw-cal-student" onchange="renderHwCalendar()"
-            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
-          </select>
-        </div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
-        </div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
-        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px 10px;background:#f9fafb;border-radius:10px" id="hw-cal-legend"></div>
+        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px"></div>
+        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:12px;color:#166534;line-height:1.9"></div>
       </div>
     </div>
 
   </div></div>
 </div>
 
+
+<!-- 설정 모달 -->
+<div class="modal-bg" id="settings-modal" onclick="if(event.target===this)closeSettings()" style="display:none;align-items:flex-end">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;margin:0 auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:900">🔊 음량 설정</div>
+      <button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎹 스케일 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">70</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="70" id="vol-scale-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">80</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="80" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">30</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="30" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:16px">변경 즉시 자동 저장됩니다</div>
+  </div>
+</div>
 <!-- MODALS -->
 <div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
   <div class="modal-box">
@@ -2748,183 +2764,183 @@ onend:null,onerror:null,onstart:null};
 
 const INIT_DB={
   "exercises": [
-    {
-      "id": "ex_1",
-      "name": "발성훈련 셋팅",
-      "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_2",
-      "name": "복흉식호흡",
-      "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_3",
-      "name": "S 브레셔",
-      "desc": "**주먹말고 호흡 훈련.**\n울트라브리드의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n울트라브리드를 잘 잠그고 입에 완전히 짛어 넣어 이빨로 물고 입술로 울트라브리드를 덮습니다.\n울트라 브리드를 더 조이거나 풀어가며 강도를 조절하여 입으로 호흡합니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.\n기구를 통한 훈련으로 더 일관되고 정확하게 호흡훈련이 가능합니다.\n\n**울트라브리드란?**\n호주에서 수영선수의 폐활량증대를 위해 만들어낸 호흡기구 입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_4",
-      "name": "Z 브레셔",
-      "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_5",
-      "name": "허밍",
-      "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_6",
-      "name": "오픈 허밍",
-      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_7",
-      "name": "Press 우",
-      "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_8",
-      "name": "Breath 우",
-      "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_9",
-      "name": "Press 아",
-      "desc": "**아~아~아~.**\n'아' 모음을 사용하여 가슴위치에서 호흡을 대는 연습을 하는 훈련입니다.\n\n**훈련 방법.**\n가슴의 위치에 호흡을 불어낸다(쓸어낸다) 라는 느낌으로, 단 성대음을 내는 느낌보다는 호흡을 앞으로 댄다. 라고 생각하면서 아~아~아~\n\n**주의 사항.**\n성대음을 되도록 사용하지 않고 위치만 느껴봅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_10",
-      "name": "Press 오",
-      "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_11",
-      "name": "호흡훈련",
-      "desc": "**오 두성.**\n공명강을 최대한 연 상태로 가성과 진성 구분없이 두성화 된 감각을 훈련합니다.\n\n**훈련 방법.**\n입을 '오' 모양으로 잘 만들어 둔 뒤, 진성과 가성의 구분을 두지않고 머리통이 울리는 느낌을 갖으며 뒤,위 방향으로 올라갑니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_12",
-      "name": "백프레셔",
-      "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_13",
-      "name": "흉강고정+Press 우(학!우빡!)",
-      "desc": "**소울음소리.**\n흉성에 느낌과 호흡을 가슴에 대는 느낌을 체헙합니다.\n\n**훈련 방법.**\n소 울음소리를 음머어~~ 하고 따라하며 길~게 유지합니다. \n이때 가슴앞으로 소리가 아닌 호흡이 유지된다고 생각하며 유지합니다. \n\n**주의 사항.**\n주의할점은 소리를 내려고 할 필요는 없으며 소리가 코로 올라가는 것을 주의해야합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_14",
-      "name": "Press 후우(후우빡!)",
-      "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_15",
-      "name": "학! 아빡",
-      "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_16",
-      "name": "하아빡",
-      "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_17",
-      "name": "오픈허밍(흉성)",
-      "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_18",
-      "name": "오픈허밍(두성)",
-      "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_19",
-      "name": "오픈허밍(흉성~두성)",
-      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_20",
-      "name": "오픈허밍 마아~(5도쉬고)",
-      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_21",
-      "name": "학!아 5도",
-      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_22",
-      "name": "H어택+아 Press(학!아 하아)",
-      "desc": "**Press 하아(하아 빡!).**\nH어택을 사용하여 '아'모음을 냅니다.\n\n**훈련 방법.**\n'아' 모음을 발화하기 전 H어택을 사용하여 성대의 로우마진을 최소화 시킨 상태로 시작하여 빡! 을 해주며 얇아진 성대의 모양을 유지하며 강한 압력의 '아'를 만듭니다.\n\n**훈련 효과.**\n'아' 모음의 두성화를 만들어냅니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    }
-  ],
+  {
+    "id": "ex_1",
+    "name": "발성훈련 셋팅",
+    "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_2",
+    "name": "복흉식호흡",
+    "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_3",
+    "name": "S 브레셔",
+    "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_4",
+    "name": "Z 브레셔",
+    "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_5",
+    "name": "허밍",
+    "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_6",
+    "name": "오픈 허밍",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_7",
+    "name": "Press 우",
+    "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_8",
+    "name": "Breath 우",
+    "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_9",
+    "name": "Press 아",
+    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_10",
+    "name": "Press 오",
+    "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_11",
+    "name": "호흡훈련",
+    "desc": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": false
+  },
+  {
+    "id": "ex_12",
+    "name": "백프레셔",
+    "desc": "**백 프레셔.**\n두성화된 소리를 만드는 방법의 꽃으로 뱃고동소리를 유지하며 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n양볼을 최대한 빵빵하게 한 뒤 입술은 모아주고 바람을 불어주며 입술 주변근육에 힘부터 만들어줍니다.\n입술 주변근육에 힘이 충분히 생기면 Z브레셔와 같이 성대음을 추가합니다.\n되돌아가는 압력을 통하여 성대음을 가슴 위치까지 내려 뱃고동 소리를 유지해줍니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_13",
+    "name": "흉강고정+Press 우(학!우빡!)",
+    "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_14",
+    "name": "Press 후우(후우빡!)",
+    "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_15",
+    "name": "학! 아빡",
+    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_16",
+    "name": "하아빡",
+    "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_17",
+    "name": "오픈허밍(흉성)",
+    "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_18",
+    "name": "오픈허밍(두성)",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_19",
+    "name": "오픈허밍(흉성~두성)",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_20",
+    "name": "오픈허밍 마아~(5도쉬고)",
+    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_21",
+    "name": "학!아 5도",
+    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  },
+  {
+    "id": "ex_22",
+    "name": "H어택+아 Press(학!아 하아)",
+    "desc": "**Press 하아(하아 빡!).**\nH어택을 사용하여 '아'모음을 냅니다.\n\n**훈련 방법.**\n'아' 모음을 발화하기 전 H어택을 사용하여 성대의 로우마진을 최소화 시킨 상태로 시작하여 빡! 을 해주며 얇아진 성대의 모양을 유지하며 강한 압력의 '아'를 만듭니다.\n\n**훈련 효과.**\n'아' 모음의 두성화를 만들어냅니다.",
+    "videoId": "",
+    "active": true,
+    "hasScale": true
+  }
+],
   "scales": [
   {
     "id": "3D-A",
@@ -4750,7 +4766,7 @@ if(window.speechSynthesis)[100,300,600,1200,2000].forEach(t=>setTimeout(_loadV,t
 function mkUtt(txt,rate=1.08,pitch=0.70){
 if(!window.SpeechSynthesisUtterance)return null;
 const u=new window.SpeechSynthesisUtterance(txt);
-u.lang='ko-KR';u.rate=rate;u.pitch=pitch;u.volume=1.0;
+u.lang='ko-KR';u.rate=rate;u.pitch=pitch;u.volume=_volTTS/100;
 if(ttsV)u.voice=ttsV;return u;
 }
 
@@ -4824,7 +4840,7 @@ stopEL();
 if(window.speechSynthesis)speechSynthesis.cancel();
 }
 
-function speakEL(txt,onEnd,_stab,_spd){
+function speakEL(txt,onEnd,_stab,_spd,_isCoachFlag){
 
 if(!txt){if(onEnd)setTimeout(onEnd,0);return;}
 
@@ -4851,7 +4867,7 @@ if(window.speechSynthesis)speechSynthesis.speak(u);
 if(EL.enabled&&EL.apiKey&&EL.voiceId){
 
 stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
-_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd).catch(err=>{
+_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(err=>{
 if(!_tokenValid(myToken))return;
 const errMsg=err.message||String(err);
 console.warn('EL 실패:',errMsg);
@@ -4890,6 +4906,8 @@ return txt
 .replace(/s브레셔/g, '에스 브레셔');
 }
 function _prepTxt(txt){
+txt=txt.replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복');
+txt=txt.replace(/\+/g,' 플러스 ');
 
 txt = _normTTS(txt);
 
@@ -4911,7 +4929,7 @@ return line;
 .join('\n');
 }
 
-async function _elSpeak(txt,key,vid,onEnd,_stab,_spd){
+async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken,_isCoachFlag){
 const cleanTxt=_prepTxt(txt);
 
 const arrayBuf = await new Promise((resolve, reject)=>{
@@ -4942,9 +4960,12 @@ const ctx=gCtx();
 const audioBuf=await ctx.decodeAudioData(arrayBuf);
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
-src.connect(ctx.destination);
+const _elGain=ctx.createGain();
+const _isCoach=(_isCoachFlag===true)||(_spd===0.95||_spd===0.9);
+_elGain.gain.value=(_isCoach?_volCoach:_volTTS)/100;
+src.connect(_elGain);_elGain.connect(ctx.destination);
 if(window._elSrc){try{window._elSrc.onended=null;window._elSrc.stop();}catch(e){}}
-window._elSrc=src;
+window._elSrc=src;window._elGainNode=_elGain;
 src.onended=()=>{window._elSrc=null;if(onEnd)onEnd();};
 src.start(0);
 }
@@ -5004,17 +5025,25 @@ function toggleCoachAuto(){
 coachAuto=!coachAuto;
 }
 function playTrainDesc(){
-/* 현재 훈련 설명 읽기 버튼 */
-if(!curMod)return;
-const exDesc=(DB.exercises||[]).find(e=>e.name===curMod.exId||e.id===curMod.exId);
-if(!exDesc||!exDesc.desc){
-  setCoachTxt('훈련 설명이 없습니다.');
+if(!curMod) return;
+const btn=document.getElementById('desc-play-btn');
+if(window._descPlaying){
+  cancelTTS();stopEL();
+  window._descPlaying=false;
+  if(btn)btn.textContent='설명▶';
   return;
 }
+const edEl=document.getElementById('ex-desc');
+const rawTxt=(edEl&&edEl.dataset.raw)?edEl.dataset.raw:(edEl?edEl.textContent:'');
+const txt=rawTxt.trim();
+if(!txt||txt==='—'){setCoachTxt('훈련 설명이 없습니다.');return;}
 cancelTTS();
-setCoachTxt(exDesc.desc.substring(0,60)+'...');
-/* stability 0.75 — 더 크고 명확한 목소리, speed 0.80 */
-speakEL(exDesc.desc, null, 0.75, 0.80);
+window._descPlaying=true;
+if(btn)btn.textContent='설명⏹';
+speakEL(txt,function(){
+  window._descPlaying=false;
+  if(btn)btn.textContent='설명▶';
+},0.75,0.80,false);
 }
 
 function toggleCoachDesc(){
@@ -5054,6 +5083,14 @@ ko.map(v=>`${v===ttsV?'★ ':' '}${v.name}`).join('<br>');
 if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(mkUtt('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!'));}
 }
 
+var _volScale=70,_volTTS=80,_volCoach=30;
+(function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
+function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
+function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
+function _applyVolTTS(){_saveVolSettings();}
+function _applyVolCoach(){_saveVolSettings();}
+function openSettings(){var ss=document.getElementById('vol-scale-sl'),ts=document.getElementById('vol-tts-sl'),cs=document.getElementById('vol-coach-sl');if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}var m=document.getElementById('settings-modal');if(m)m.style.display='flex';}
+function closeSettings(){var m=document.getElementById('settings-modal');if(m)m.style.display='none';}
 let actx=null,mGain=null,cmp=null,rv=null;
 function gCtx(){
 if(!actx){
@@ -5061,7 +5098,7 @@ actx=new(window.AudioContext||window.webkitAudioContext)();
 cmp=actx.createDynamicsCompressor();
 cmp.threshold.value=-6;cmp.knee.value=10;cmp.ratio.value=2;
 cmp.attack.value=0.002;cmp.release.value=0.15;cmp.connect(actx.destination);
-mGain=actx.createGain();mGain.gain.value=1.8;mGain.connect(cmp);
+mGain=actx.createGain();mGain.gain.value=(_volScale/100)*2.5;mGain.connect(cmp);
 
 const sr=actx.sampleRate,len=Math.floor(sr*0.9);
 const buf=actx.createBuffer(2,len,sr);
@@ -5283,7 +5320,7 @@ const svg=document.getElementById('piano-svg');if(!svg)return;
 if(activeMidi!==null){const p=svg.querySelector(`[data-midi="${activeMidi}"]`);if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');}
 activeMidi=midi;const cur=svg.querySelector(`[data-midi="${midi}"]`);
 if(cur){cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
-setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},350);}
+const offMs=curBpm>0?Math.min(350,(60/curBpm)*1000*0.80):300;setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},offMs);}
 }
 window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-train').classList.contains('hidden'))setTimeout(()=>buildPianoSVG(curMod.startNote,curMod.endNote),50);});
 
@@ -5319,16 +5356,11 @@ return a;
 }
 function clrCT(){coachT.forEach(t=>clearTimeout(t));coachT=[];}
 
-const _CHEER=[
-'화이팅!','할 수 있어!','잘 하고 있어!','힘내!',
-'좋아, 계속해!','거의 다 왔어!','최고야!','멋지다!',
-'포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!',
-'그렇지, 바로 그거야!','훌륭해!','끝까지 가자!',
-'완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!',
-'조금만 더!','이 느낌 유지해!','완벽해!'
-];
-function _randCheer(exclude){
-const pool=_CHEER.filter(c=>c!==exclude);
+var _CHEER_EARLY=['화이팅!','할 수 있어!','잘 하고 있어!','힘내!','좋아, 계속해!','최고야!','멋지다!','포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!','그렇지, 바로 그거야!','훌륭해!','완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!','이 느낌 유지해!'];
+var _CHEER_LATE=['거의 다 왔어!','조금만 더!','끝까지 가자!','완벽해!'];
+var _CHEER=[..._CHEER_EARLY,..._CHEER_LATE];
+function _randCheer(exclude,isLate){
+var pool=(isLate?[..._CHEER_EARLY,..._CHEER_LATE]:_CHEER_EARLY).filter(c=>c!==exclude);
 return pool[Math.floor(Math.random()*pool.length)];
 }
 
@@ -5370,8 +5402,9 @@ if(totalSec2 > 8){
     (function(t){
       coachT.push(setTimeout(function(){
         if(playing&&cheerAuto){
-          _lastCheer2=_randCheer(_lastCheer2);
-          speakEL(_lastCheer2, null, 0.40, 0.95);
+          const _isLate=(ratio>=0.65);
+          _lastCheer2=_randCheer(_lastCheer2,_isLate);
+          speakEL(_lastCheer2, null, 0.40, 0.95, true);
         }
       }, t*1000));
     })(cSec);
@@ -5384,35 +5417,33 @@ stopEngine();curMod=mod;
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
-  /* 피아노 영역 완전 숨기기 */
-  const pianoArea=document.getElementById('piano-area');
-  if(pianoArea) pianoArea.style.display='none';
-  /* 진행률바 숨기기 */
-  const progParent=document.querySelector('.pt')?.parentElement;
-  if(progParent) progParent.style.display='none';
-  /* 코멘트 카드 표시 — 마크다운 **굵게** 변환 */
-  const commentCard=document.getElementById('comment-card');
-  const commentText=document.getElementById('comment-text');
-  if(commentCard) commentCard.style.display='';
-  if(commentText){
-    const raw=mod.hwComment||mod.desc||'';
-    /* **텍스트** → <b>텍스트</b> 변환 */
-    /* **굵게** → <b>굵게</b>, 줄바꿈 → <br> */
-    let formatted=raw.split('**').map(function(s,i){return i%2===1?'<b>'+s+'</b>':s;}).join('');
-    formatted=formatted.replace(/\n/g,'<br>');
-    commentText.innerHTML=formatted;
-  }
-  document.getElementById('t-title').textContent=mod.label||mod.exId||'—';
-  document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
-  /* 코멘트 읽어주기 */
-  const raw_cmt=mod.hwComment||mod.desc||'';
-  const cmt=raw_cmt.split('**').filter(function(_,i){return i%2===0;}).join('');
-  if(cmt) speakEL(cmt,null,0.75,0.80);
-  /* 다음 버튼 */
-  const pp=document.getElementById('pp');
-  if(pp){ pp.textContent='다음'; pp.style.fontSize='14px'; pp.style.padding='8px 16px'; pp.onclick=function(){ onDone(); }; }
+  cancelTTS();if(typeof stopEL==='function')stopEL();
+  const _pianoA=document.getElementById('piano-area');if(_pianoA)_pianoA.style.display='none';
+  const _progP=document.querySelector('.pt')?.parentElement;if(_progP)_progP.style.display='none';
+  const _dotsEl=document.getElementById('dots');if(_dotsEl)_dotsEl.style.display='none';
+  const _ctrlB=document.getElementById('ctrl-bar');if(_ctrlB)_ctrlB.style.display='none';
+  const _exDC=document.getElementById('ex-desc')?.closest('.card');if(_exDC)_exDC.style.display='none';
+  const _ccEl=document.getElementById('comment-card');const _ctEl=document.getElementById('comment-text');
+  if(_ccEl)_ccEl.style.display='flex';
+  if(_ctEl){const _r=mod.hwComment||mod.comment||mod.desc||'';let _f=_r.split('**').map((s,i)=>i%2===1?'<b style="color:#166634;font-weight:800">'+s+'</b>':s).join('');_f=_f.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');_ctEl.innerHTML=_f||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';}
+  document.getElementById('t-title').textContent=mod.displayLabel||mod.exName||mod.name||mod.label||'훈련';
+  document.getElementById('t-sub').textContent='내용 확인 후 완료 버튼을 눌러주세요';
+  const _rtts=((mod.hwComment||mod.comment||mod.desc||'').split('**').filter((_,i)=>i%2===0).join('').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스 ')).trim();
+  window._pendingNoScaleTTS={text:_rtts,mod:mod};
+  window._savedSch=null;window._pausedSch=null;
+  window._descPlaying=false;const _dBtn=document.getElementById('desc-play-btn');if(_dBtn)_dBtn.textContent='설명▶';
   return;
 } else {
+  cancelTTS();if(typeof stopEL==='function')stopEL();
+  const _pianoB=document.getElementById('piano-area');if(_pianoB)_pianoB.style.display='';
+  const _cc2=document.getElementById('comment-card');if(_cc2)_cc2.style.display='none';
+  const _progW=document.querySelector('.pt');if(_progW)_progW.parentElement.style.display='';
+  const _dots2=document.getElementById('dots');if(_dots2)_dots2.style.display='flex';
+  const _ctrl2=document.getElementById('ctrl-bar');if(_ctrl2)_ctrl2.style.display='flex';
+  const _exDC2=document.getElementById('ex-desc')?.closest('.card');if(_exDC2)_exDC2.style.display='';
+  const _pp2=document.getElementById('pp');if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
+  window._savedSch=null;window._pausedSch=null;
+  window._descPlaying=false;const _dBtn2=document.getElementById('desc-play-btn');if(_dBtn2)_dBtn2.textContent='설명▶';
   /* 피아노 복원 + 코멘트 카드 숨기기 */
   const pianoArea=document.getElementById('piano-area');
   if(pianoArea) pianoArea.style.display='';
@@ -5451,7 +5482,21 @@ window._pendingStepGuide = '';
 const ytBtn=document.getElementById('yt-btn');ytBtn.style.display=mod.videoId?'flex':'none';
 buildPianoSVG(mod.startNote,mod.endNote);buildDots();
 }
-function togglePlay(){if(!curMod)return;playing?stopEngine():startEngine();}
+function togglePlay(){
+  if(!curMod) return;
+  if(playing){
+    window._pausedSch={s:sch.s,p:sch.p};
+    stopEngine();
+  } else {
+    const savedPos=window._pausedSch||window._savedSch;
+    if(savedPos&&savedPos.s>0){
+      window._pausedSch=null;window._savedSch=null;
+      gCtx();playing=true;document.getElementById('pp').textContent='⏸';
+      sch.s=savedPos.s;sch.p=0;sch.nx=0;
+      _startMetronome(curBpm,function(){if(!playing)return;runLoop();});
+    } else {startEngine();}
+  }
+}
 
 let _metroTimer=null;
 let _metroBeat=0;
@@ -5562,7 +5607,7 @@ const nM=root+pstep.semi;
 const nextPstep=ps[sch.p+1];
 const noteDur=(nextPstep&&nextPstep.type==='hold') ? spb*2.5 : spb*0.90;
 (function(m,t,dur){const dl=Math.max(0,(t-ctx.currentTime)*1000);setTimeout(()=>{if(playing)playPiano(m,dur,0.52);},dl);})(nM,sT,noteDur);
-(function(m,si,dir){const dl=Math.max(0,(sT-ctx.currentTime)*1000);setTimeout(()=>{
+(function(m,si,dir){const dl=Math.max(0,(sT-ctx.currentTime)*1000-20);setTimeout(()=>{
 if(!playing)return;litKey(m);const n=m2n(m);
 document.getElementById('cur-n').textContent=n.name;document.getElementById('cur-o').textContent=n.oct;
 document.getElementById('cur-key').textContent=m2n(curMod.startNote+si).full;
@@ -5621,21 +5666,26 @@ showDone('✅','훈련 완료!','수고했습니다!',[
 ]); return;
 }
 if(isSeq&&seqIdx<seqList.length-1){
-/* 숙제/자유연습 모두: 팝업 + ↺ 다시 / ▶ 다음 버튼 */
+const _goN=()=>{
+  if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
+  closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
+  const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
+  speakEL(lbl+'. 시작합니다.',function(){
+    const ok=scrStack[scrStack.length-1]==='scr-train';
+    if(seqList[seqIdx].noScale){
+      const _p=window._pendingNoScaleTTS;
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
+    } else {
+      if(!playing&&ok)startEngine();
+    }
+  });
+};
 showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
   {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
-  {label:'▶ 다음',fn:()=>{
-    closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
-    const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
-    speakEL(lbl+'. 시작합니다.',function(){
-      const ok=scrStack[scrStack.length-1]==='scr-train';
-      /* noScale은 자동시작 안 함 — 다음 버튼으로만 */
-      if(!playing&&ok&&!seqList[seqIdx].noScale)startEngine();
-    });
-  }},
+  {label:'▶ 다음',fn:_goN}
 ]);
 } else {
-
+if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
 const _fromStep = scrStack.includes('scr-step');
 const _hasMoreStep = _fromStep && stepIdx < stepItems.length-1;
 showDone('🎉', isSeq?'전체 완주!':'훈련 완료!', isSeq?'모두 완주했습니다! 🎉':'수고했습니다!', [
@@ -5680,7 +5730,8 @@ btns.forEach(b=>{const btn=document.createElement('button');btn.className='btn '
 document.getElementById('done-modal').classList.add('open');
 }
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
-function doRestart(){if(curMod){prepTrain(curMod);startEngine();}}
+function doRestart(){
+  window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod);startEngine();}}
 function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function buildDots(){const c=document.getElementById('dots');c.innerHTML='';const n=Math.min(allSteps.length,28);for(let i=0;i<n;i++){const d=document.createElement('div');d.className='sd';c.appendChild(d);}}
 function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=allSteps.length;ds.forEach((d,i)=>{const idx=Math.round(i*(tot/ds.length));d.className='sd';if(all||idx<sch.s)d.classList.add('dn');else if(idx===sch.s)d.classList.add('cr');});}
@@ -5692,10 +5743,8 @@ bar.style.display='';
 bar.textContent=`${seqIdx+1}/${seqList.length} — ${seqList[seqIdx].label||''}`;
 
 if(ntr){
-ntr.style.display=(seqIdx<seqList.length-1)?'':'none';
-const btn=ntr.querySelector('button');
-if(btn&&seqIdx<seqList.length-1)
-btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;
+  if(curStudent){ntr.style.display='none';}
+  else{ntr.style.display=(seqIdx<seqList.length-1)?'':'none';const btn=ntr.querySelector('button');if(btn&&seqIdx<seqList.length-1)btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;}
 }
 } else {
 bar.style.display='none';
@@ -5704,6 +5753,7 @@ if(ntr)ntr.style.display='none';
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
+if(curStudent)return;
 stopEngine();
 seqIdx++;
 updSeqBar();
@@ -5733,8 +5783,12 @@ const msg=label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
-/* noScale 훈련은 버튼으로만 넘김 — 자동 시작 안 함 */
-if(!playing&&onTrainScreen&&!list[0].noScale)startEngine();
+if(seqList[0].noScale){
+  const _p=window._pendingNoScaleTTS;
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
+} else {
+  if(!playing&&onTrainScreen)startEngine();
+}
 });
 }
 function openVid(){openVidUrl(curMod?.videoId||'');}
@@ -5815,13 +5869,7 @@ document.getElementById('hw-tab-today').style.color='';
 document.getElementById('hw-tab-cal').style.background='var(--or)';
 document.getElementById('hw-tab-cal').style.color='#fff';
 
-const sel=document.getElementById('hw-cal-student');
-sel.innerHTML='';
-(STUDENTS_DB||[]).forEach(s=>{
-const opt=document.createElement('option');
-opt.value=s.name; opt.textContent=s.name;
-sel.appendChild(opt);
-});
+if(!_hwCalYear){_hwCalYear=new Date().getFullYear();_hwCalMonth=new Date().getMonth();}
 renderHwCalendar();
 }
 function hwCalPrev(){
@@ -5834,79 +5882,40 @@ _hwCalMonth++;
 if(_hwCalMonth>11){_hwCalMonth=0;_hwCalYear++;}
 renderHwCalendar();
 }
+function _renderAllStudentsCal(allData){
+const students=STUDENTS_DB||[],year=_hwCalYear,month=_hwCalMonth;
+const COLORS=['#16a34a','#2563eb','#d97706','#dc2626','#7c3aed','#0891b2'];
+const legend=document.getElementById('hw-cal-legend');
+if(legend){legend.innerHTML='';students.forEach((s,i)=>{const el=document.createElement('div');el.style.cssText='display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#374151';el.innerHTML='<span style="width:11px;height:11px;border-radius:50%;background:'+COLORS[i%COLORS.length]+';display:inline-block;flex-shrink:0"></span>'+s.name;legend.appendChild(el);});}
+const grid=document.getElementById('hw-calendar-grid');if(!grid)return;grid.innerHTML='';
+['일','월','화','수','목','금','토'].forEach((d,i)=>{const h=document.createElement('div');h.style.cssText='text-align:center;font-size:10px;font-weight:800;padding:4px 0;color:'+(i===0?'#dc2626':i===6?'#2563eb':'var(--mu)');h.textContent=d;grid.appendChild(h);});
+const fd=new Date(year,month,1).getDay(),dim=new Date(year,month+1,0).getDate(),today=new Date();
+for(let i=0;i<fd;i++)grid.appendChild(document.createElement('div'));
+for(let d=1;d<=dim;d++){
+  const dk=year+'-'+(month+1)+'-'+d,isToday=today.getDate()===d&&today.getMonth()===month&&today.getFullYear()===year;
+  const ss=students.map((s,si)=>{const sd=allData[s.name]||{};const da=sd[dk]||[];const total=(s.homework||[]).filter(h=>h.active!==false).length;const done=Array.isArray(da)?da.length:0;return{name:s.name,done,total,pct:total>0?done/total:0,color:COLORS[si%COLORS.length]};});
+  const anyDone=ss.some(s=>s.done>0),allFull=ss.every(s=>s.total===0||s.pct>=1);
+  const cell=document.createElement('div');
+  cell.style.cssText='border-radius:8px;padding:4px 2px;cursor:'+(anyDone?'pointer':'default')+';border:'+(isToday?'2px solid var(--or)':'1px solid '+(anyDone?'#e5e7eb':'transparent'))+';background:'+(isToday?'#fff7ed':allFull&&anyDone?'#f0fdf4':'#fff')+';min-height:48px;display:flex;flex-direction:column;align-items:center;gap:3px';
+  const dn=document.createElement('div');dn.style.cssText='font-size:12px;font-weight:'+(isToday?'900':'700')+';color:'+(isToday?'var(--or)':'var(--tx)')+';line-height:1.3;margin-top:2px';dn.textContent=d;cell.appendChild(dn);
+  const dw=document.createElement('div');dw.style.cssText='display:flex;flex-wrap:wrap;gap:2px;justify-content:center;padding:0 2px';
+  ss.forEach(s=>{if(s.total===0)return;const dot=document.createElement('div');dot.style.cssText='width:8px;height:8px;border-radius:50%;background:'+s.color+';opacity:'+(s.pct>=1?1:s.pct>0?0.5:0.15)+';flex-shrink:0';dw.appendChild(dot);});
+  cell.appendChild(dw);
+  if(anyDone){(function(dk2,ss2,dt){cell.onclick=function(){const det=document.getElementById('hw-cal-detail');if(!det)return;det.style.display='';let out='<div style="font-weight:800;font-size:13px;margin-bottom:8px">'+year+'년 '+(month+1)+'월 '+dt+'일</div>';ss2.forEach(s=>{const icon=s.pct>=1?'✅':s.done>0?'🔶':'⬜';out+=icon+' <b>'+s.name+'</b>: '+s.done+'/'+s.total+'개'+(s.pct>=1?' <span style="color:#16a34a;font-weight:700">완료!</span>':s.done>0?' <span style="color:#d97706">('+Math.round(s.pct*100)+'%)</span>':'')+'<br>';});det.innerHTML=out;};})(dk,ss,d);}
+  grid.appendChild(cell);
+}
+const det=document.getElementById('hw-cal-detail');if(det)det.style.display='none';
+}
 function renderHwCalendar(){
-const sel=document.getElementById('hw-cal-student');
-const studentName=sel?sel.value:'';
-const student=(STUDENTS_DB||[]).find(s=>s.name===studentName);
-/* Firebase hwHistory에서 전체 기록 로드 */
-if(_fbReady && studentName){
-  _fbLoadStudentHistory(studentName, function(history){
-    /* 해당 월 데이터만 필터링 */
-    const monthData={};
-    Object.keys(history).forEach(function(dateKey){
-      const parts=dateKey.split('-');
-      if(parseInt(parts[0])===_hwCalYear && parseInt(parts[1])===(_hwCalMonth+1)){
-        monthData[dateKey]=history[dateKey];
-      }
-    });
-    _renderCalWithHistoryData(studentName, student, monthData);
-  });
-  return;
-}
-const total=student?(student.homework||[]).filter(h=>h.scaleId&&h.active!==false).length:0;
-
 const title=document.getElementById('hw-cal-title');
-if(title)title.textContent=`${_hwCalYear}년 ${_hwCalMonth+1}월`;
-
-const grid=document.getElementById('hw-calendar-grid');
-if(!grid)return;
-grid.innerHTML='';
-
-['일','월','화','수','목','금','토'].forEach(d=>{
-const h=document.createElement('div');
-h.style.cssText='text-align:center;font-size:9px;font-weight:700;color:var(--mu);padding:2px';
-h.textContent=d;
-grid.appendChild(h);
+if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
+const students=STUDENTS_DB||[];
+if(!_fbReady){_renderAllStudentsCal({});return;}
+let loaded=0;const allData={};
+if(!students.length){_renderAllStudentsCal({});return;}
+students.forEach(s=>{
+  _fbDb.ref('hwDone/'+s.name.replace(/\s/g,'_')).once('value').then(snap=>{allData[s.name]=snap.val()||{};loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);}).catch(()=>{loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);});
 });
-
-const firstDay=new Date(_hwCalYear,_hwCalMonth,1).getDay();
-const daysInMonth=new Date(_hwCalYear,_hwCalMonth+1,0).getDate();
-
-for(let i=0;i<firstDay;i++){
-grid.appendChild(document.createElement('div'));
-}
-
-for(let d=1;d<=daysInMonth;d++){
-const dateStr=`${_hwCalYear}-${_hwCalMonth+1}-${d}`;
-const key='ev_hw_done_'+(studentName||'')+'_'+dateStr;
-let doneArr=[];
-try{doneArr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
-const done=doneArr.length;
-const pct=total>0?done/total:0;
-const isToday=new Date().getDate()===d&&new Date().getMonth()===_hwCalMonth&&new Date().getFullYear()===_hwCalYear;
-
-const cell=document.createElement('div');
-const bg=pct>=1?'#16a34a':pct>0?`rgba(249,115,22,${0.3+pct*0.7})`:'transparent';
-const fg=pct>=1?'#fff':pct>0?'#fff':isToday?'var(--or)':'var(--tx)';
-cell.style.cssText=`text-align:center;border-radius:6px;padding:4px 2px;font-size:10px;font-weight:${isToday?'800':'600'};background:${bg};color:${fg};cursor:${done>0?'pointer':'default'};border:${isToday?'1.5px solid var(--or)':'1px solid transparent'}`;
-cell.textContent=d;
-if(done>0){
-cell.title=`${d}일: ${done}/${total} 완료`;
-cell.onclick=(function(ds,da,t){return function(){
-const det=document.getElementById('hw-cal-detail');
-if(!det)return;
-const hw=student?student.homework||[]:[];
-const doneItems=hw.filter((_,i)=>da.includes(i));
-det.style.display='';
-det.innerHTML=`<b>${ds} 완료 항목 (${da.length}/${t}개)</b><br>`+
-doneItems.map(h=>`✅ ${h.name}${h.scaleId?' ('+h.scaleId+')':''}`).join('<br>')||'기록 없음';
-};})(dateStr,doneArr,total);
-}
-grid.appendChild(cell);
-}
-
-const det=document.getElementById('hw-cal-detail');
-if(det)det.style.display='none';
 }
 
 function _renderHwStatusWithData(fbData){
@@ -6189,6 +6198,7 @@ const _prev=scrStack[scrStack.length-1];
 if(_prev==='scr-free'||_prev==='scr-homework'){
   document.getElementById(_prev)?.classList.remove('hidden','behind');
 }
+if(_prev==='scr-homework'&&curStudent){rndrHw();_updateHwProgress();}
 }
 
 const ICONS=['💪','🌬️','🎵','🌿','🔥','🚀','✨','🎙️'];
@@ -6713,9 +6723,7 @@ push('scr-free');
 
 function _getScaleExercises(){
 
-const withScale=(DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
-const noScale=(DB.exercises||[]).filter(ex=>ex.hasScale!==true&&ex.active!==false);
-return [...withScale,...noScale];
+return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
 }
 
 function bldFreePick(){
@@ -6771,7 +6779,6 @@ wrap.appendChild(hdr);
 wrap.appendChild(body);
 pick.appendChild(wrap);
 });
-/* 스케일 없는 훈련 */
 const noScaleEx=(DB.exercises||[]).filter(ex=>ex.hasScale!==true&&ex.active!==false);
 if(noScaleEx.length){
   const sec=document.createElement('div');
@@ -6787,10 +6794,7 @@ if(noScaleEx.length){
     const btn=document.createElement('button');
     btn.style.cssText='background:var(--or);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:800;cursor:pointer';
     btn.textContent='+ 추가';
-    (function(e){btn.onclick=function(){
-      freeList.push({id:'free_ns_'+Date.now(),exId:e.id||e.name,exName:e.name,name:e.name,scaleId:'',noScale:true,label:e.name,desc:e.desc||'',hwComment:e.desc||'',comment:e.desc||'',repeat:1});
-      _saveFreeList();rndrFree();
-    };})(ex);
+    (function(e){btn.onclick=function(){freeList.push({id:'free_ns_'+Date.now(),exId:e.id||e.name,exName:e.name,name:e.name,scaleId:'',noScale:true,label:e.name,desc:e.desc||'',hwComment:e.desc||'',comment:e.desc||'',repeat:1});_saveFreeList();rndrFree();};})(ex);
     row.appendChild(nm);row.appendChild(btn);
     pick.appendChild(row);
   });
@@ -7752,20 +7756,19 @@ pop();
 function openHomework(){
 if(!curStudent) return;
 _loadHwList();
+document.getElementById('hw-topbar-title').textContent=curStudent.name+'님 숙제';
+document.getElementById('hw-student-name').textContent=curStudent.name+'님 숙제';
+const saved=localStorage.getItem('ev_hw_time_'+curStudent.name);
+document.getElementById('hw-update-time').textContent=saved?'마지막 저장: '+saved:'선생님 최신 숙제';
+push('scr-homework');
 rndrHw();
-document.getElementById('hw-topbar-title').textContent = curStudent.name + '님 숙제';
-document.getElementById('hw-student-name').textContent = curStudent.name + '님 숙제';
-const saved = localStorage.getItem('ev_hw_time_' + curStudent.name);
-document.getElementById('hw-update-time').textContent = saved ? '마지막 저장: ' + saved : '선생님 최신 숙제';
-/* Firebase에서 오늘 완료 기록 동기화 후 화면 열기 */
-_fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
-  if(fbDone && fbDone.length > 0){
-    const local = _getHwDone();
-    const merged = Array.from(new Set([].concat(local, fbDone)));
+_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){
+  if(Array.isArray(fbDone)&&fbDone.length>0){
+    const local=_getHwDone();
+    const merged=Array.from(new Set([...local,...fbDone]));
     _setHwDone(merged);
+    rndrHw();_updateHwProgress();
   }
-  push('scr-homework');
-  rndrHw();
 });
 }
 
@@ -7782,27 +7785,7 @@ if(el) el.textContent = '저장됨: ' + now;
 }
 function _loadHwList(){
 if(!curStudent) return;
-try{
-const saved = localStorage.getItem(_hwKey());
-if(saved){
-hwList = JSON.parse(saved);
-
-hwList = hwList.map(item => {
-if(item.scaleId){
-const sc = (DB.scales||[]).find(s=>s.id===item.scaleId);
-if(sc) return Object.assign({}, item, {
-startNote:sc.startNote, endNote:sc.endNote, pattern:sc.pattern,
-bpm:sc.bpm||60, previewType:sc.previewType||'없음',
-rangeLabel:sc.range
-});
-}
-return item;
-});
-} else {
-
 hwList = _buildHwFromStudent();
-}
-} catch(e){ hwList = _buildHwFromStudent(); }
 }
 function _buildHwFromStudent(){
 if(!curStudent || !curStudent.homework) return [];
@@ -7815,13 +7798,16 @@ const repeat = h.repeat || 1;
 return {
 id: 'hw_' + i + '_' + Date.now(),
 num: h.num !== undefined ? h.num : i,
-name: h.name || '',
-comment: h.comment || '',
-scaleId: resolvedScaleId || '',
+name: h.exName||h.name||'',
+exName: h.exName||h.name||'',
+displayLabel: h.displayLabel||h.exName||h.name||'',
+hwComment: h.comment||'',
+comment: h.comment||'',
+noScale: !resolvedScaleId,
+scaleId: resolvedScaleId||'',
 repeat: repeat,
-label: h.name + (sc ? ' — ' + sc.name + ' (' + sc.range + ')' : ''),
-
-exId: h.name,
+label: (h.exName||h.name||'')+(sc?' — '+sc.name+' ('+sc.range+')':''),
+exId: h.exId||(h.exName||h.name||''),
 rangeLabel: sc ? sc.range : '',
 desc: h.comment || '',
 scaleNote: sc ? sc.note || '' : '',
@@ -7838,7 +7824,8 @@ function resetHomework(){
 if(!confirm('오늘 완료 기록을 초기화할까요?')) return;
 
 try{ localStorage.removeItem(_hwDoneKey()); }catch(e){}
-rndrHw();
+rndrHw();_updateHwProgress();
+if(curStudent&&_fbReady){_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){if(Array.isArray(fbDone)&&fbDone.length>0){const local=_getHwDone();const merged=Array.from(new Set([...local,...fbDone]));_setHwDone(merged);rndrHw();_updateHwProgress();}});}
 }
 
 function _updateHwProgress(){
@@ -7876,46 +7863,20 @@ if(total>0 && done.length>=total){
 }
 
 function rndrHw(){
-const c = document.getElementById('hw-slots');
-if(!c) return;
-c.innerHTML = '';
-if(!hwList.length){
-c.innerHTML = '<div class="empty" style="padding:16px">숙제가 없습니다</div>';
-return;
-}
+const c=document.getElementById('hw-slots');
+if(!c)return;c.innerHTML='';
+if(!hwList.length){c.innerHTML='<div class="empty" style="padding:16px">숙제가 없습니다</div>';return;}
 const done=_getHwDone();
-hwList.forEach((item, i) => {
-const hasScale = !!item.scaleId && !!(DB.scales||[]).find(s=>s.id===item.scaleId);
-const sc = hasScale ? (DB.scales||[]).find(s=>s.id===item.scaleId) : null;
-const isDone=done.includes(i);
-
-const d = document.createElement('div');
-/* 코스 UI처럼 카드 스타일 */
-d.className='cc';
-d.style.cssText='background:'+(isDone?'#f0fdf4':'#fff')+';border:1.5px solid '+(isDone?'#bbf7d0':'var(--bd)')+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:default';
-
-/* 번호 뱃지 */
-const numBg=isDone?'#16a34a':'var(--or-l)';
-const numFg=isDone?'#fff':'var(--or)';
-const numBorder=isDone?'#16a34a':'var(--or-m)';
-
-d.innerHTML=`
-<div style="width:36px;height:36px;border-radius:10px;background:${numBg};border:1.5px solid ${numBorder};display:flex;align-items:center;justify-content:center;font-size:${isDone?'16px':'12px'};font-weight:800;color:${numFg};flex-shrink:0">
-  ${isDone?'✓':String((item.num!==undefined?item.num:i)+1)}
-</div>
-<div style="flex:1;min-width:0">
-  <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">
-    ${item.label||item.name||item.exId||''}
-    ${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':''}
-  </div>
-  <div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">
-    ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}${isDone?' ✓':''}
-  </div>
-  ${item.comment&&!isDone?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
-</div>`;
-
-c.appendChild(d);
+hwList.forEach((item,i)=>{
+  const sc=item.scaleId?(DB.scales||[]).find(s=>s.id===item.scaleId):null;
+  const isDone=done.includes(i);const d=document.createElement('div');
+  d.style.cssText='background:'+(isDone?'#f0fdf4':'#fff')+';border:1.5px solid '+(isDone?'#bbf7d0':'var(--bd)')+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px';
+  const nBg=isDone?'#16a34a':'var(--or-l)',nFg=isDone?'#fff':'var(--or)',nBdr=isDone?'#16a34a':'var(--or-m)';
+  const sub=sc?sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':''):(item.displayLabel&&item.displayLabel!==item.name?item.displayLabel:'설명만 (스케일 없음)');
+  d.innerHTML='<div style="width:36px;height:36px;border-radius:10px;background:'+nBg+';border:1.5px solid '+nBdr+';display:flex;align-items:center;justify-content:center;font-size:'+(isDone?'16px':'12px')+';font-weight:800;color:'+nFg+';flex-shrink:0">'+(isDone?'✓':String(i+1))+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;'+(isDone?'text-decoration:line-through;color:#16a34a':'')+'">'+  (item.name||item.label||'')+(isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':'')+'</div><div style="font-size:10px;color:'+(isDone?'#16a34a':'var(--mu)')+';margin-top:2px">'+sub+'</div></div>';
+  c.appendChild(d);
 });
+_updateHwProgress();
 }
 
 function moveHw(i, dir){
@@ -8024,27 +7985,34 @@ for(let r=0;r<repeat;r++){
 if(sc){
 /* 스케일 있는 항목 — 피아노 훈련 */
 trainList.push({
-id:item.name+'_'+item.scaleId+'_'+r,
-exId:item.name, scaleId:item.scaleId,
-label:item.name+' — '+sc.name+' ('+sc.range+')'+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
+id:(item.exName||item.name)+'_'+item.scaleId+'_'+r,
+exId:item.exId||(item.exName||item.name),
+exName:item.exName||item.name, name:item.exName||item.name,
+displayLabel:item.displayLabel||item.exName||item.name,
+noScale:false, hwIdx:_hwIdx,
+scaleId:item.scaleId,
+label:(item.displayLabel||item.exName||item.name)+' — '+sc.name+' ('+sc.range+')'+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:sc.range, desc:item.comment||'',
 scaleNote:sc.note||'', startNote:sc.startNote, endNote:sc.endNote,
 pattern:sc.pattern, bpm:sc.bpm||60,
 previewType:sc.previewType||'없음', videoId:'',
-hwComment:item.comment||''
+hwComment:item.comment||'', comment:item.comment||''
 });
 } else {
 /* 스케일 없는 항목 — 설명만 표시하고 넘기기 */
 trainList.push({
-id:item.name+'_noScale_'+r,
-exId:item.name, scaleId:'',
-label:item.name+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
+id:(item.exName||item.name)+'_noScale_'+r,
+exId:item.exId||(item.exName||item.name),
+exName:item.exName||item.name, name:item.exName||item.name,
+displayLabel:item.displayLabel||item.exName||item.name,
+noScale:true, hwIdx:_hwIdx,
+scaleId:'',
+label:(item.displayLabel||item.exName||item.name)+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:'', desc:item.comment||'',
 scaleNote:'', startNote:0, endNote:0,
 pattern:[], bpm:60,
 previewType:'없음', videoId:'',
-hwComment:item.comment||'',
-noScale:true /* 스케일 없음 표시 */
+hwComment:item.comment||'', comment:item.comment||''
 });
 }
 }
@@ -8064,8 +8032,12 @@ const msg=trainList[0].label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
 const ok=scrStack[scrStack.length-1]==='scr-train';
-/* noScale 훈련은 자동 시작 안 함 */
-if(!playing&&ok&&!trainList[0].noScale)startEngine();
+if(seqList[0].noScale){
+  const _p=window._pendingNoScaleTTS;
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
+} else {
+  if(!playing&&ok)startEngine();
+}
 });
 }
 
@@ -8187,6 +8159,129 @@ function _fbRecordDailyCount(studentName, doneCount){
     _fbCleanOldHistory(sKey);
   }).catch(function(){});
 }
+
+/* 3개월 초과 기록 삭제 */
+function _fbCleanOldHistory(sKey){
+  _fbDb.ref('hwHistory/' + sKey).once('value').then(function(snap){
+    const data = snap.val();
+    if(!data) return;
+    const keys = Object.keys(data).sort(); /* 날짜순 정렬 */
+    const MAX_DAYS = 90; /* 3개월 */
+    if(keys.length > MAX_DAYS){
+      /* 가장 오래된 것부터 삭제 */
+      const toDelete = keys.slice(0, keys.length - MAX_DAYS);
+      toDelete.forEach(function(k){
+        _fbDb.ref('hwHistory/' + sKey + '/' + k).remove();
+      });
+      console.log('🗑️ 오래된 기록 삭제:', toDelete.length + '개');
+    }
+  }).catch(function(){});
+}
+
+/* 학생 전체 히스토리 로드 (관리자 캘린더용) */
+function _fbLoadStudentHistory(studentName, callback){
+  if(!_fbReady){ callback({}); return; }
+  const sKey = studentName.replace(/\s/g,'_');
+  _fbDb.ref('hwHistory/' + sKey).once('value').then(function(snap){
+    callback(snap.val() || {});
+  }).catch(function(){ callback({}); });
+}
+
+/* 오늘 날짜 키 */
+function _fbDateKey(){
+  const d = new Date();
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+
+/* 숙제 완료 항목 Firebase에 저장 */
+function _fbSaveHwDone(studentName, doneArr){
+  if(!_fbReady || !studentName) return;
+  const key = _fbDateKey();
+  const path = 'hwDone/' + studentName.replace(/\s/g,'_') + '/' + key;
+  try{
+    _fbDb.ref(path).set(doneArr);
+  }catch(e){ console.warn('Firebase 저장 실패:', e); }
+}
+
+/* Firebase에서 완료 기록 로드 */
+function _fbLoadHwDone(studentName, dateKey, callback){
+  if(!_fbReady || !studentName){ callback([]); return; }
+  const path = 'hwDone/' + studentName.replace(/\s/g,'_') + '/' + dateKey;
+  try{
+    _fbDb.ref(path).once('value').then(function(snap){
+      callback(snap.val() || []);
+    }).catch(function(){ callback([]); });
+  }catch(e){ callback([]); }
+}
+
+/* 특정 학생의 특정 날짜 완료 기록 로드 (관리자용) */
+function _fbLoadStudentMonth(studentName, year, month, callback){
+  if(!_fbReady){ callback({}); return; }
+  const path = 'hwDone/' + studentName.replace(/\s/g,'_');
+  try{
+    _fbDb.ref(path).once('value').then(function(snap){
+      const all = snap.val() || {};
+      /* 해당 연월만 필터 */
+      const filtered = {};
+      Object.keys(all).forEach(function(k){
+        if(k.startsWith(year+'-'+(month+1)+'-')) filtered[k] = all[k];
+      });
+      callback(filtered);
+    }).catch(function(){ callback({}); });
+  }catch(e){ callback({}); }
+}
+
+/* 모든 학생 오늘 완료 기록 로드 (관리자용) */
+function _fbLoadAllToday(callback){
+  if(!_fbReady){ callback({}); return; }
+  const key = _fbDateKey();
+  try{
+    _fbDb.ref('hwDone').once('value').then(function(snap){
+      const all = snap.val() || {};
+      const today = {};
+      Object.keys(all).forEach(function(sName){
+        today[sName] = all[sName][key] || [];
+      });
+      callback(today);
+    }).catch(function(){ callback({}); });
+  }catch(e){ callback({}); }
+}
+
+window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
+
+/* ══ 백그라운드 전환 감지 (핸드폰 홈 버튼 / 앱 전환) ══════
+   Page Visibility API — 화면이 숨겨지면 소리/훈련 정지
+   ══════════════════════════════════════════════════════ */
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){
+    /* 백그라운드 전환 — 모든 소리 즉시 정지 */
+    cancelTTS();
+    stopEL();
+    _stopMetronome();
+    /* 피아노 AudioContext 일시정지 */
+    if(actx && actx.state === 'running'){
+      actx.suspend();
+    }
+    /* 훈련 엔진 정지 */
+    if(playing){
+      window._savedSch={s:sch.s,p:sch.p};
+      window._wasPlaying=true;
+      stopEngine();
+    }
+  } else {
+    /* 포그라운드 복귀 — AudioContext 재개 (자동 훈련 재개 X) */
+    if(actx && actx.state === 'suspended'){
+      actx.resume();
+    }
+    window._wasPlaying = false;
+  }
+});
+
+/* 페이지 언로드 시도 시에도 정리 */
+window.addEventListener('pagehide', function(){
+  cancelTTS();stopEL();if(actx)actx.suspend();
+  if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
+});
 
 /* 3개월 초과 기록 삭제 */
 function _fbCleanOldHistory(sKey){
