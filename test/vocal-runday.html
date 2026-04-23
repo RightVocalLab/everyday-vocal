@@ -734,7 +734,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:16px;font-weight:900">🔊 음량 설정</div><button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button></div>
     <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎹 스케일 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-scale-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
-    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">15</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="15" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">10</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="10" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:16px">변경 즉시 자동 저장됩니다</div>
   </div>
 </div>
@@ -4924,6 +4924,7 @@ _withFallback(u,(_ntxt.length/5)*1000);
 
 function _normTTS(txt){
 txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
+txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
 var _nm={'C':'씨','D':'디','E':'이','F':'에프','G':'쥐','A':'에이','B':'비','c':'씨','d':'디','e':'이','f':'에프','g':'쥐','a':'에이','b':'비'};
 var _om={'0':'제로','1':'원','2':'투','3':'쓰리','4':'풔','5':'파이브','6':'식스','7':'세븐','8':'에잇','9':'나인'};
 txt=txt.replace(/([A-Ga-g])#([0-9])/g,function(_,n,o){return (_nm[n]||n)+'샾'+(_om[o]||o);});
@@ -5063,7 +5064,7 @@ const btn=document.getElementById('desc-play-btn');
 if(window._descPlaying){cancelTTS();stopEL();window._descPlaying=false;if(btn)btn.textContent='설명▶';return;}
 const edEl=document.getElementById('ex-desc');
 const rawTxt=(edEl&&edEl.dataset.raw)?edEl.dataset.raw:(edEl?edEl.textContent:'');
-const txt=rawTxt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').trim();
+const txt=rawTxt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';}).trim();
 if(!txt||txt==='—'){setCoachTxt('훈련 설명이 없습니다.');return;}
 cancelTTS();window._descPlaying=true;if(btn)btn.textContent='설명⏹';
 speakEL(txt,function(){window._descPlaying=false;if(btn)btn.textContent='설명▶';},0.75,0.80,false);
@@ -5106,7 +5107,7 @@ ko.map(v=>`${v===ttsV?'★ ':' '}${v.name}`).join('<br>');
 if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(mkUtt('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!'));}
 }
 
-var _volScale=50,_volTTS=50,_volCoach=15;
+var _volScale=50,_volTTS=50,_volCoach=10;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
