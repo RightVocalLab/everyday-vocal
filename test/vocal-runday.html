@@ -472,7 +472,7 @@ input,select,button,textarea{font-family:inherit;}
     <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" style="font-size:17px" onclick="skipStep()" id="skip-step-btn" title="스텝 건너뛰기" style="display:none">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -3045,7 +3045,7 @@ const INIT_DB={
   {
     "id": "3D-C",
     "name": "3도 스케일",
-    "range": "흉성~중성",
+    "range": "흉성~높은중성",
     "startNote": 57,
     "endNote": 70,
     "bpm": 190,
@@ -3396,8 +3396,8 @@ const INIT_DB={
     "id": "5DN-C",
     "name": "5도 하향 스케일",
     "range": "고급",
-    "startNote": 62,
-    "endNote": 84,
+    "startNote": 69,
+    "endNote": 91,
     "bpm": 125,
     "pattern": [
       7,
@@ -5414,6 +5414,9 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
+/* 스텝건너뛰기: 김동현만 표시 */
+const _skipBtn=document.getElementById('skip-step-btn');
+if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
@@ -5674,7 +5677,7 @@ const _goN=()=>{
     const ok=scrStack[scrStack.length-1]==='scr-train';
     if(seqList[seqIdx].noScale){
       const _p=window._pendingNoScaleTTS;
-      if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
     } else {
       if(!playing&&ok)startEngine();
     }
@@ -5785,7 +5788,7 @@ speakEL(msg,function(){
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
 if(seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
 } else {
   if(!playing&&onTrainScreen)startEngine();
 }
@@ -5918,17 +5921,16 @@ students.forEach(s=>{
 });
 }
 
-function _renderHwStatusWithData(fbData){
-  /* Firebase 또는 localStorage 데이터로 현황 렌더링 */
+function _renderHwStatusWithData(fbData,histData){
   const list=document.getElementById('hw-status-list');
   if(!list)return;
   list.innerHTML='';
+  histData=histData||{};
   (STUDENTS_DB||[]).forEach(function(s){
     const sKey=s.name.replace(/\s/g,'_');
     let done=[];
-    if(fbData && fbData[sKey]) done=fbData[sKey];
+    if(fbData&&fbData[sKey]) done=fbData[sKey];
     else {
-      /* localStorage fallback */
       const today=new Date();
       const dateStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
       try{ done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateStr)||'[]'); }catch(e){}
@@ -5936,9 +5938,30 @@ function _renderHwStatusWithData(fbData){
     const total=(s.homework||[]).filter(h=>h.active!==false).length;
     const cnt=done.length;
     const pct=total>0?Math.round(cnt/total*100):0;
+    const hist=histData[sKey]||null;
+    let timeInfo='';
+    if(hist&&hist.updatedAt){
+      const dt=new Date(hist.updatedAt);
+      const hh=String(dt.getHours()).padStart(2,'0');
+      const mm=String(dt.getMinutes()).padStart(2,'0');
+      timeInfo+='완료 '+hh+':'+mm;
+    }
+    if(hist&&hist.totalSec&&hist.totalSec>0){
+      const ts=Math.round(hist.totalSec);
+      const tm=Math.floor(ts/60), ts2=ts%60;
+      timeInfo+=(timeInfo?' · ':'')+tm+'분'+(ts2>0?' '+ts2+'초':'');
+    }
     const bar=document.createElement('div');
-    bar.style.cssText='margin-bottom:8px';
-    bar.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:700">'+s.name+'</span><span style="font-size:11px;color:var(--mu)">'+cnt+'/'+total+' ('+pct+'%)</span></div><div style="background:#f3f4f6;border-radius:99px;height:8px"><div style="background:'+(pct>=100?'#16a34a':'var(--or)')+';height:8px;border-radius:99px;width:'+pct+'%;transition:width .3s"></div></div>';
+    bar.style.cssText='background:#fff;border:1.5px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px';
+    bar.innerHTML=
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+        '<span style="font-size:13px;font-weight:800">'+s.name+'</span>'+
+        '<span style="font-size:11px;font-weight:700;color:'+(pct>=100?'#16a34a':'var(--or)')+'">'+cnt+'/'+total+' ('+pct+'%)</span>'+
+      '</div>'+
+      '<div style="background:#f3f4f6;border-radius:99px;height:7px;margin-bottom:'+(timeInfo?'5px':'0')+'">'+
+        '<div style="background:'+(pct>=100?'#16a34a':'var(--or)')+';height:7px;border-radius:99px;width:'+pct+'%;transition:width .3s"></div>'+
+      '</div>'+
+      (timeInfo?'<div style="font-size:10px;color:var(--mu);margin-top:3px">⏱ '+timeInfo+'</div>':'');
     list.appendChild(bar);
   });
 }
@@ -6034,8 +6057,8 @@ function _renderCalWithData(studentName, student, fbMonthData){
 function refreshHwStatus(){
 /* Firebase에서 실시간 데이터 로드 */
 if(_fbReady){
-  _fbLoadAllToday(function(fbData){
-    _renderHwStatusWithData(fbData);
+  _fbLoadAllToday(function(fbData,histData){
+    _renderHwStatusWithData(fbData,histData);
   });
   return;
 }
@@ -8027,14 +8050,14 @@ if(_hwPrev==='scr-homework'){
   document.getElementById('scr-homework')?.classList.add('hidden');
   document.getElementById('scr-homework')?.classList.remove('behind');
 }
-push('scr-train'); updSeqBar(); prepTrain(trainList[0]);
+push('scr-train'); updSeqBar(); window._hwStartTime=Date.now(); prepTrain(trainList[0]);
 const msg=trainList[0].label+'. 시작합니다.';
 setCoachTxt(msg);
 speakEL(msg,function(){
 const ok=scrStack[scrStack.length-1]==='scr-train';
 if(seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;speakEL(_p.text,()=>schedCoach(_p.mod),0.75,0.80,false);}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
 } else {
   if(!playing&&ok)startEngine();
 }
@@ -8149,11 +8172,13 @@ function _fbRecordDailyCount(studentName, doneCount){
   const total = (STUDENTS_DB||[]).find(s=>s.name===studentName);
   const totalCount = total ? (total.homework||[]).filter(h=>h.active!==false).length : 0;
   const path = 'hwHistory/' + sKey + '/' + dateKey;
+  const _totalSec=window._hwStartTime?Math.round((Date.now()-window._hwStartTime)/1000):0;
   _fbDb.ref(path).set({
     done: doneCount,
     total: totalCount,
     pct: totalCount > 0 ? Math.round(doneCount/totalCount*100) : 0,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    totalSec: _totalSec
   }).then(function(){
     /* 3개월(90일) 초과 데이터 정리 */
     _fbCleanOldHistory(sKey);
@@ -8233,18 +8258,26 @@ function _fbLoadStudentMonth(studentName, year, month, callback){
 
 /* 모든 학생 오늘 완료 기록 로드 (관리자용) */
 function _fbLoadAllToday(callback){
-  if(!_fbReady){ callback({}); return; }
+  if(!_fbReady){ callback({},{}); return; }
   const key = _fbDateKey();
   try{
-    _fbDb.ref('hwDone').once('value').then(function(snap){
-      const all = snap.val() || {};
+    Promise.all([
+      _fbDb.ref('hwDone').once('value'),
+      _fbDb.ref('hwHistory').once('value')
+    ]).then(function(snaps){
+      const allDone = snaps[0].val() || {};
+      const allHist = snaps[1].val() || {};
       const today = {};
-      Object.keys(all).forEach(function(sName){
-        today[sName] = all[sName][key] || [];
+      const todayHist = {};
+      Object.keys(allDone).forEach(function(sName){
+        today[sName] = allDone[sName][key] || [];
       });
-      callback(today);
-    }).catch(function(){ callback({}); });
-  }catch(e){ callback({}); }
+      Object.keys(allHist).forEach(function(sName){
+        todayHist[sName] = allHist[sName][key] || null;
+      });
+      callback(today, todayHist);
+    }).catch(function(){ callback({},{}); });
+  }catch(e){ callback({},{}); }
 }
 
 window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
@@ -8398,6 +8431,13 @@ document.addEventListener('visibilitychange', function(){
     }
     window._wasPlaying = false;
   }
+});
+
+/* 페이지 언로드 시도 시에도 정리 */
+window.addEventListener('pagehide', function(){
+  cancelTTS();
+  stopEL();
+  if(actx) actx.suspend();
 });
 
 /* 페이지 언로드 시도 시에도 정리 */
