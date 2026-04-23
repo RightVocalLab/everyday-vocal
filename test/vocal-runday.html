@@ -3051,9 +3051,9 @@ const INIT_DB={
   {
     "id": "3D-C",
     "name": "3도 스케일",
-    "range": "흉성~두성",
+    "range": "흉성~중성",
     "startNote": 57,
-    "endNote": 71,
+    "endNote": 70,
     "bpm": 190,
     "pattern": [
       0,
@@ -3101,7 +3101,7 @@ const INIT_DB={
   {
     "id": "3D-D",
     "name": "3도 스케일",
-    "range": "흉성~중성",
+    "range": "흉성~두성",
     "note": "",
     "startNote": 57,
     "endNote": 76,
@@ -3172,7 +3172,7 @@ const INIT_DB={
   {
     "id": "5D-B",
     "name": "5도 스케일",
-    "range": "중성",
+    "range": "중성~낮은두성",
     "startNote": 62,
     "endNote": 72,
     "bpm": 130,
@@ -3194,7 +3194,7 @@ const INIT_DB={
   {
     "id": "5D-C",
     "name": "5도 스케일",
-    "range": "중성~두성",
+    "range": "중성~높은두성",
     "startNote": 62,
     "endNote": 76,
     "bpm": 130,
@@ -3267,7 +3267,7 @@ const INIT_DB={
   {
     "id": "5H-B",
     "name": "5도 쉬고 내려오기",
-    "range": "중성",
+    "range": "중성~낮은두성",
     "startNote": 62,
     "endNote": 72,
     "bpm": 125,
@@ -3296,7 +3296,7 @@ const INIT_DB={
   {
     "id": "5H-C",
     "name": "5도 쉬고 내려오기",
-    "range": "중성~두성",
+    "range": "중성~높은두성",
     "startNote": 62,
     "endNote": 76,
     "bpm": 125,
@@ -3354,9 +3354,9 @@ const INIT_DB={
   {
     "id": "9D-A",
     "name": "9도 스케일",
-    "range": "흉성~두성",
+    "range": "흉성~낮은두성",
     "startNote": 57,
-    "endNote": 64,
+    "endNote": 65,
     "bpm": 180,
     "pattern": [
       0,
@@ -3384,7 +3384,7 @@ const INIT_DB={
   {
     "id": "9D-B",
     "name": "9도 스케일",
-    "range": "고급",
+    "range": "흉성~높은두성",
     "startNote": 57,
     "endNote": 69,
     "bpm": 180,
@@ -3414,9 +3414,9 @@ const INIT_DB={
   {
     "id": "5DN-A",
     "name": "5도 하향 스케일",
-    "range": "흉성",
-    "startNote": 62,
-    "endNote": 72,
+    "range": "중성~낮은두성",
+    "startNote": 69,
+    "endNote": 79,
     "bpm": 125,
     "pattern": [
       7,
@@ -3432,9 +3432,9 @@ const INIT_DB={
   {
     "id": "5DN-B",
     "name": "5도 하향 스케일",
-    "range": "중성",
-    "startNote": 62,
-    "endNote": 76,
+    "range": "중성~높은두성",
+    "startNote": 69,
+    "endNote": 83,
     "bpm": 125,
     "pattern": [
       7,
@@ -3450,9 +3450,9 @@ const INIT_DB={
   {
     "id": "5DN-C",
     "name": "5도 하향 스케일",
-    "range": "두성~흉성",
-    "startNote": 62,
-    "endNote": 84,
+    "range": "고급",
+    "startNote": 69,
+    "endNote": 91,
     "bpm": 125,
     "pattern": [
       7,
@@ -3486,9 +3486,9 @@ const INIT_DB={
   {
     "id": "9DN-A",
     "name": "9도 하향 스케일",
-    "range": "기본",
-    "startNote": 69,
-    "endNote": 57,
+    "range": "높은두성 시작",
+    "startNote": 83,
+    "endNote": 71,
     "bpm": 180,
     "pattern": [
       14,
@@ -3509,8 +3509,8 @@ const INIT_DB={
     "id": "9DN-B",
     "name": "9도 하향 스케일",
     "range": "고급",
-    "startNote": 77,
-    "endNote": 57,
+    "startNote": 91,
+    "endNote": 71,
     "bpm": 180,
     "pattern": [
       14,
@@ -3552,7 +3552,7 @@ const INIT_DB={
   {
     "id": "9D-C",
     "name": "9도 스케일",
-    "range": "고급(A3~F#5)",
+    "range": "고급",
     "startNote": 57,
     "endNote": 77,
     "bpm": 180,
@@ -5436,8 +5436,15 @@ return s;
 };
 const ps=ep(mod.pattern);
 const a=[],r=mod.endNote-mod.startNote;
-for(let s=0;s<=r;s++)a.push({semi:s,dir:'up',ps});
-for(let s=r-1;s>=0;s--)a.push({semi:s,dir:'down',ps});
+if(r>=0){
+  /* 상행 스케일: 낮은음→높은음 키 이동 */
+  for(let s=0;s<=r;s++)a.push({semi:s,dir:'up',ps});
+  for(let s=r-1;s>=0;s--)a.push({semi:s,dir:'down',ps});
+} else {
+  /* 하향 스케일 (9DN 등): 높은음→낮은음 키 이동 (r<0) */
+  for(let s=0;s>=r;s--)a.push({semi:s,dir:'down',ps});
+  for(let s=r+1;s<=0;s++)a.push({semi:s,dir:'up',ps});
+}
 return a;
 }
 function clrCT(){coachT.forEach(t=>clearTimeout(t));coachT=[];}
