@@ -7804,7 +7804,7 @@ d.innerHTML=`
   <div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">
     ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}${isDone?' ✓':''}
   </div>
-  ${item.comment&&!isDone?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
+
 </div>`;
 
 c.appendChild(d);
