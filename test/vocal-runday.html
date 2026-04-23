@@ -471,7 +471,7 @@ input,select,button,textarea{font-family:inherit;}
     <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -1201,7 +1201,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -1863,7 +1863,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -2525,7 +2525,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
       <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
+      <button class="ico" id="skip-btn" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -5486,6 +5486,7 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
+window._savedSch=null; /* 새 훈련: 이어가기 상태 초기화 */
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
@@ -5510,6 +5511,9 @@ if(mod.noScale){
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
   const _ppEl=document.getElementById('pp');
   if(_ppEl){_ppEl.textContent='다음';_ppEl.style.fontSize='14px';_ppEl.style.padding='8px 22px';_ppEl.onclick=()=>onDone();}
+  /* noScale 훈련에서는 skip 버튼 항상 숨김 */
+  const _skipBN=document.getElementById('skip-btn');
+  if(_skipBN) _skipBN.style.display='none';
   return;
 } else {
   cancelTTS(); if(typeof stopEL==='function')stopEL();
@@ -5521,6 +5525,16 @@ if(mod.noScale){
   const _exDC2=document.getElementById('ex-desc')?.closest('.card'); if(_exDC2)_exDC2.style.display='';
   const _pp2=document.getElementById('pp');
   if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
+  /* 건너뛰기 버튼: 김동현만 표시 */
+  const _skipB=document.getElementById('skip-btn');
+  if(_skipB){
+    /* 숙제 모드: 김동현만 표시 / 자유연습: 항상 표시 */
+    if(curStudent){
+      _skipB.style.display=curStudent.name==='김동현'?'':'none';
+    } else {
+      _skipB.style.display='';
+    }
+  }
 }
 
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
@@ -5549,7 +5563,32 @@ window._pendingStepGuide = '';
 const ytBtn=document.getElementById('yt-btn');ytBtn.style.display=mod.videoId?'flex':'none';
 buildPianoSVG(mod.startNote,mod.endNote);buildDots();
 }
-function togglePlay(){if(!curMod)return;playing?stopEngine():startEngine();}
+function togglePlay(){
+  if(!curMod) return;
+  if(playing){
+    stopEngine();
+  } else {
+    /* 이전에 창 이탈로 정지된 경우 — 저장된 위치에서 이어가기 */
+    if(window._savedSch && window._savedSch.s > 0){
+      const saved = window._savedSch;
+      window._savedSch = null;
+      gCtx();
+      playing = true;
+      document.getElementById('pp').textContent = '⏸';
+      /* 저장된 스텝에서 바로 재개 (예비음 없음) */
+      sch.s = saved.s;
+      sch.p = 0;
+      sch.nx = 0;
+      _startMetronome(curBpm, function(){
+        if(!playing) return;
+        schedCoach(curMod);
+        runLoop();
+      });
+    } else {
+      startEngine();
+    }
+  }
+}
 
 let _metroTimer=null;
 let _metroBeat=0;
@@ -5719,11 +5758,12 @@ showDone('✅','훈련 완료!','수고했습니다!',[
 ]); return;
 }
 if(isSeq&&seqIdx<seqList.length-1){
-/* ── 현재 훈련 완료 체크 (noScale/scale 모두) ── */
-if(curStudent && seqList[seqIdx].hwIdx !== undefined){
-  _markHwDone(seqList[seqIdx].hwIdx);
-}
+/* "다음" 눌러야 완료 체크 + 다음 훈련으로 이동 */
 const _goN=()=>{
+  /* ── 다음 누를 때 완료 체크 ── */
+  if(curStudent && seqList[seqIdx].hwIdx !== undefined){
+    _markHwDone(seqList[seqIdx].hwIdx);
+  }
   closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
@@ -5736,15 +5776,11 @@ const _goN=()=>{
     }
   });
 };
-/* 숙제+스케일: 자동 다음 / noScale 또는 자유연습: 팝업 */
-if(curStudent && !seqList[seqIdx].noScale){
-  _goN();
-} else {
-  showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
-    {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
-    {label:'▶ 다음',fn:_goN}
-  ]);
-}
+/* 모든 경우 팝업 — "다음" 눌러야 완료 */
+showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
+  {label:'↺ 다시',ol:true,fn:()=>{closeDone();doRestart();}},
+  {label:'▶ 다음',fn:_goN}
+]);
 } else {
 /* 마지막 훈련 완료 */
 if(curStudent && seqList[seqIdx].hwIdx !== undefined){
@@ -5807,7 +5843,8 @@ btns.forEach(b=>{const btn=document.createElement('button');btn.className='btn '
 document.getElementById('done-modal').classList.add('open');
 }
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
-function doRestart(){if(curMod){prepTrain(curMod);startEngine();}}
+function doRestart(){
+  window._savedSch = null; /* 이어가기 상태 초기화 */if(curMod){prepTrain(curMod);startEngine();}}
 function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function buildDots(){const c=document.getElementById('dots');c.innerHTML='';const n=Math.min(allSteps.length,28);for(let i=0;i<n;i++){const d=document.createElement('div');d.className='sd';c.appendChild(d);}}
 function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=allSteps.length;ds.forEach((d,i)=>{const idx=Math.round(i*(tot/ds.length));d.className='sd';if(all||idx<sch.s)d.classList.add('dn');else if(idx===sch.s)d.classList.add('cr');});}
@@ -8334,21 +8371,17 @@ document.addEventListener('visibilitychange', function(){
     cancelTTS();
     stopEL();
     _stopMetronome();
-    /* 피아노 AudioContext 일시정지 */
-    if(actx && actx.state === 'running'){
-      actx.suspend();
-    }
-    /* 훈련 엔진 정지 */
+    if(actx && actx.state === 'running') actx.suspend();
+    /* 훈련 중이었으면 sch 상태 저장 후 정지 */
     if(playing){
-      stopEngine();
-      /* 재개 가능하도록 상태 저장 */
+      /* 현재 진행 위치 저장 */
+      window._savedSch = {s: sch.s, p: sch.p};
       window._wasPlaying = true;
+      stopEngine();
     }
   } else {
-    /* 포그라운드 복귀 — AudioContext 재개 (자동 훈련 재개 X) */
-    if(actx && actx.state === 'suspended'){
-      actx.resume();
-    }
+    /* 포그라운드 복귀 — AudioContext 재개 */
+    if(actx && actx.state === 'suspended') actx.resume();
     window._wasPlaying = false;
   }
 });
