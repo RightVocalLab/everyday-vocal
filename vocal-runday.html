@@ -4871,7 +4871,7 @@ if(window.speechSynthesis)speechSynthesis.speak(u);
 if(EL.enabled&&EL.apiKey&&EL.voiceId){
 
 stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
-_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd).catch(err=>{
+_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken).catch(err=>{
 if(!_tokenValid(myToken))return;
 const errMsg=err.message||String(err);
 console.warn('EL 실패:',errMsg);
@@ -4911,6 +4911,7 @@ return txt
 }
 function _prepTxt(txt){
 txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'회 반복';});
+txt=txt.replace(/\+/g,' 플러스 ');
 
 txt = _normTTS(txt);
 
@@ -4932,7 +4933,7 @@ return line;
 .join('\n');
 }
 
-async function _elSpeak(txt,key,vid,onEnd,_stab,_spd){
+async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken){
 const cleanTxt=_prepTxt(txt);
 
 const arrayBuf = await new Promise((resolve, reject)=>{
@@ -4961,6 +4962,8 @@ speed: (_spd!==undefined?_spd:EL.speed)||0.80
 });
 const ctx=gCtx();
 const audioBuf=await ctx.decodeAudioData(arrayBuf);
+/* ★ 토큰 체크: cancelTTS()가 호출됐으면 재생하지 않음 */
+if(_callToken!==undefined && !_tokenValid(_callToken)) return;
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
 src.connect(ctx.destination);
@@ -5427,13 +5430,15 @@ if(mod.noScale){
     commentText.innerHTML=fmt||'<span style="color:var(--mu);font-style:italic">훈련 설명이 없습니다.</span>';
   }
   /* 7. 제목 (exName 우선) */
-  document.getElementById('t-title').textContent=mod.exName||mod.name||mod.label||'훈련';
+  /* 제목은 displayLabel(엑셀 원문) 우선 사용 */
+  document.getElementById('t-title').textContent=mod.displayLabel||mod.exName||mod.name||mod.label||'훈련';
   document.getElementById('t-sub').textContent='내용 확인 후 다음 버튼을 눌러주세요';
   /* 8. 이전 TTS 취소 후 새로 읽기 */
   cancelTTS();
   const rawTTS=mod.hwComment||mod.comment||mod.desc||'';
   const ttsText=rawTTS.split('**').filter(function(_,i){return i%2===0;}).join('')
-    .replace(/[xX]\s*(\d+)/g,function(_,n){return n+'회 반복';}).trim();
+    .replace(/[xX]\s*(\d+)/g,function(_,n){return n+'회 반복';})
+    .replace(/\+/g,' 플러스 ').trim();
   if(ttsText) speakEL(ttsText,null,0.75,0.80);
   /* 9. 화이팅 멘트 */
   schedCoach(mod);
@@ -7999,10 +8004,11 @@ trainList.push({
 id:(item.exName||item.name||'hw')+'_noScale_'+r,
 exId:item.exId||(item.exName||item.name||''),
 exName:item.exName||item.name||'',
+displayLabel:(item.displayLabel||item.exName||item.name||'')+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 name:item.exName||item.name||'',
 noScale:true,
 scaleId:'',
-label:(item.exName||item.name||item.label||'')+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
+label:(item.displayLabel||item.exName||item.name||item.label||'')+(repeat>1?' ('+(r+1)+'/'+repeat+')':''),
 rangeLabel:'', desc:item.comment||'',
 hwComment:item.comment||'',
 comment:item.comment||'',
