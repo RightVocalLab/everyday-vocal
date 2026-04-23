@@ -5397,6 +5397,8 @@ stopEngine();curMod=mod;
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
   /* ── 스케일 없는 훈련: 피아노/진행률/dots/BPM 전부 숨기고 훈련안내만 표시 ── */
+  /* 0. 이전 TTS/EL 즉시 중단 */
+  cancelTTS(); if(typeof stopEL==='function') stopEL();
   /* 1. 피아노 숨기기 */
   const pianoArea=document.getElementById('piano-area');
   if(pianoArea) pianoArea.style.display='none';
@@ -5441,6 +5443,8 @@ if(mod.noScale){
   return;
 } else {
   /* ── 스케일 있는 훈련: 모든 요소 복원 ── */
+  /* 이전 TTS 즉시 중단 */
+  cancelTTS(); if(typeof stopEL==='function') stopEL();
   const pianoArea=document.getElementById('piano-area');
   if(pianoArea) pianoArea.style.display='';
   const commentCard=document.getElementById('comment-card');
