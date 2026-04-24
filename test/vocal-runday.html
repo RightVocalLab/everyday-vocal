@@ -6972,10 +6972,8 @@ push('scr-free');
 }
 
 function _getScaleExercises(){
-
-const withScale=(DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
-const noScale=(DB.exercises||[]).filter(ex=>ex.hasScale!==true&&ex.active!==false);
-return [...withScale,...noScale];
+/* 스케일 있는 훈련만 반환 - 스케일 없는 훈련은 bldFreePick에서 별도 섹션으로 표시 */
+return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
 }
 
 function bldFreePick(){
