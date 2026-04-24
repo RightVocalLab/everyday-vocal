@@ -5909,6 +5909,12 @@ function _debugFirebase(){
       out+=k+':\n';
       dates.forEach(function(d){ out+='  ['+d+']: '+JSON.stringify(allHist[k][d])+'\n'; });
     });
+    out+='\n=== localStorage hwDone ===\n';
+    (STUDENTS_DB||[]).forEach(function(s){
+      const lsKey=_hwDoneKey?'ev_hw_done_'+s.name+'_'+today:'N/A';
+      const lsVal=localStorage.getItem(lsKey);
+      out+=s.name+': '+(lsVal||'없음')+'\n';
+    });
     out+='\n=== 오늘('+today+') 매핑 확인 ===\n';
     (STUDENTS_DB||[]).forEach(function(s){
       const sKey=s.name.replace(/\s/g,'_');
@@ -8100,6 +8106,7 @@ function _setHwDone(arr){
 try{ localStorage.setItem(_hwDoneKey(),JSON.stringify(arr)); }catch(e){}
 }
 function _markHwDone(i){
+console.log('[HW] _markHwDone called - idx:', i, 'curStudent:', curStudent?curStudent.name:'없음');
 const done=_getHwDone();
 if(!done.includes(i)) done.push(i);
 _setHwDone(done);
@@ -8219,6 +8226,7 @@ if(_hwPrev==='scr-homework'){
   document.getElementById('scr-homework')?.classList.remove('behind');
 }
 push('scr-train'); updSeqBar(); window._hwStartTime=Date.now();
+console.log('[HW] startHomeworkSeq - curStudent:', curStudent?curStudent.name:'없음', '_fbReady:', _fbReady);
 /* Firebase에 시작시간 즉시 기록 */
 if(curStudent&&_fbReady){
   const _sKey=curStudent.name.replace(/\s/g,'_');
@@ -8399,6 +8407,7 @@ function _fbDateKey(){
 
 /* 숙제 완료 항목 Firebase에 저장 */
 function _fbSaveHwDone(studentName, doneArr){
+console.log('[HW] _fbSaveHwDone - name:', studentName, 'done:', doneArr);
   if(!_fbReady || !studentName) return;
   const key = _fbDateKey();
   const path = 'hwDone/' + studentName.replace(/\s/g,'_') + '/' + key;
@@ -8467,6 +8476,7 @@ document.addEventListener('visibilitychange', function(){
 /* 페이지 언로드 시도 시에도 정리 */
 window.addEventListener('pagehide', function(){
   cancelTTS();stopEL();if(actx)actx.suspend();
+  console.log('[HW] pagehide - curStudent:', curStudent?curStudent.name:'없음', 'hwDone:', _getHwDone());
   if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
 });
 </script>
