@@ -704,6 +704,7 @@ input,select,button,textarea{font-family:inherit;}
         <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
         <div style="display:flex;gap:7px">
           <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
+          <button class="btn-ghost" onclick="_debugFirebase()" style="flex:1;font-size:12px;padding:9px">🔍 DB확인</button>
           <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
         </div>
         <div style="margin-top:10px;padding:10px 12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px">
@@ -5882,6 +5883,37 @@ if(_fbReady){
   .then(function(){alert('✅ '+name+' 오늘 숙제가 초기화되었습니다!');refreshHwStatus();})
   .catch(function(e){alert('오류: '+e.message);});
 }else{alert('✅ localStorage 초기화 완료');refreshHwStatus();}
+}
+
+function _debugFirebase(){
+  if(!_fbReady){alert('Firebase 미연결');return;}
+  const today=_fbDateKey();
+  Promise.all([
+    _fbDb.ref('hwDone').once('value'),
+    _fbDb.ref('hwHistory').once('value')
+  ]).then(function(snaps){
+    const allDone=snaps[0].val()||{};
+    const allHist=snaps[1].val()||{};
+    let out='📅 오늘 날짜 key: '+today+'\n\n';
+    out+='=== hwDone keys ===\n';
+    Object.keys(allDone).forEach(function(k){
+      const todayData=allDone[k][today];
+      out+=k+': '+(todayData?JSON.stringify(todayData):'없음')+'\n';
+    });
+    out+='\n=== hwHistory keys ===\n';
+    Object.keys(allHist).forEach(function(k){
+      const todayHist=allHist[k][today];
+      out+=k+': '+(todayHist?JSON.stringify(todayHist):'없음')+'\n';
+    });
+    out+='\n=== 매핑 확인 ===\n';
+    (STUDENTS_DB||[]).forEach(function(s){
+      const sKey=s.name.replace(/\s/g,'_');
+      const hasDone=!!(allDone[sKey]&&allDone[sKey][today]);
+      const hasHist=!!(allHist[sKey]&&allHist[sKey][today]);
+      out+=s.name+' (key:'+sKey+'): done='+hasDone+', hist='+hasHist+'\n';
+    });
+    alert(out);
+  }).catch(function(e){alert('오류: '+e.message);});
 }
 function renderAdminResetBtns(){
 const c=document.getElementById('admin-reset-btns');if(!c)return;c.innerHTML='';
