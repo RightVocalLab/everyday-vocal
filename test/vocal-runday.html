@@ -5912,7 +5912,34 @@ function _debugFirebase(){
       const hasHist=!!(allHist[sKey]&&allHist[sKey][today]);
       out+=s.name+' (key:'+sKey+'): done='+hasDone+', hist='+hasHist+'\n';
     });
-    alert(out);
+    /* 화면에 표시 */
+    var existing=document.getElementById('_dbg_overlay');
+    if(existing)existing.remove();
+    var ov=document.createElement('div');
+    ov.id='_dbg_overlay';
+    ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;flex-direction:column;padding:16px;gap:10px';
+    var header=document.createElement('div');
+    header.style.cssText='display:flex;align-items:center;justify-content:space-between';
+    var title=document.createElement('div');
+    title.style.cssText='color:#fff;font-size:14px;font-weight:800';
+    title.textContent='🔍 Firebase DB 확인';
+    var btns=document.createElement('div');
+    btns.style.cssText='display:flex;gap:8px';
+    var copyBtn=document.createElement('button');
+    copyBtn.style.cssText='background:#16a34a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer';
+    copyBtn.textContent='📋 복사';
+    copyBtn.onclick=function(){navigator.clipboard.writeText(out).then(function(){copyBtn.textContent='✅ 복사됨!';setTimeout(function(){copyBtn.textContent='📋 복사';},2000);});};
+    var closeBtn=document.createElement('button');
+    closeBtn.style.cssText='background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer';
+    closeBtn.textContent='✕ 닫기';
+    closeBtn.onclick=function(){ov.remove();};
+    btns.appendChild(copyBtn);btns.appendChild(closeBtn);
+    header.appendChild(title);header.appendChild(btns);
+    var pre=document.createElement('pre');
+    pre.style.cssText='background:#1e1e1e;color:#d4d4d4;border-radius:10px;padding:14px;font-size:11px;line-height:1.7;overflow:auto;flex:1;white-space:pre-wrap;word-break:break-all;font-family:monospace';
+    pre.textContent=out;
+    ov.appendChild(header);ov.appendChild(pre);
+    document.body.appendChild(ov);
   }).catch(function(e){alert('오류: '+e.message);});
 }
 function renderAdminResetBtns(){
