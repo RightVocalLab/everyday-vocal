@@ -5910,6 +5910,8 @@ if(_fbReady){
     Object.keys(allHist).forEach(function(sName){todayHist[sName]=allHist[sName][key]||null;});
     _renderHwStatusWithData(today,todayHist);
   }).catch(function(){_renderHwStatusWithData({},{});});
+} else {
+  refreshHwStatus();
 }
 document.getElementById('hw-today-view').style.display='';
 document.getElementById('hw-cal-view').style.display='none';
@@ -5917,7 +5919,6 @@ document.getElementById('hw-tab-today').style.background='var(--or)';
 document.getElementById('hw-tab-today').style.color='#fff';
 document.getElementById('hw-tab-cal').style.background='';
 document.getElementById('hw-tab-cal').style.color='';
-refreshHwStatus();
 }
 function showHwCalendar(){
 document.getElementById('hw-today-view').style.display='none';
