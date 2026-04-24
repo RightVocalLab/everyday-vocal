@@ -5897,6 +5897,20 @@ const c=document.getElementById('admin-reset-btns');if(!c)return;c.innerHTML='';
 }
 function showHwToday(){
 renderAdminResetBtns();
+/* 항상 Firebase에서 최신 데이터 로드 */
+if(_fbReady){
+  const key=_fbDateKey();
+  Promise.all([
+    _fbDb.ref('hwDone').once('value'),
+    _fbDb.ref('hwHistory').once('value')
+  ]).then(function(snaps){
+    const allDone=snaps[0].val()||{},allHist=snaps[1].val()||{};
+    const today={},todayHist={};
+    Object.keys(allDone).forEach(function(sName){today[sName]=allDone[sName][key]||[];});
+    Object.keys(allHist).forEach(function(sName){todayHist[sName]=allHist[sName][key]||null;});
+    _renderHwStatusWithData(today,todayHist);
+  }).catch(function(){_renderHwStatusWithData({},{});});
+}
 document.getElementById('hw-today-view').style.display='';
 document.getElementById('hw-cal-view').style.display='none';
 document.getElementById('hw-tab-today').style.background='var(--or)';
@@ -5926,7 +5940,8 @@ _hwCalMonth++;
 if(_hwCalMonth>11){_hwCalMonth=0;_hwCalYear++;}
 renderHwCalendar();
 }
-function _renderAllStudentsCal(allData){
+function _renderAllStudentsCal(allData,allHist){
+allHist=allHist||{};
 const students=STUDENTS_DB||[],year=_hwCalYear,month=_hwCalMonth;
 const COLORS=['#16a34a','#2563eb','#d97706','#dc2626','#7c3aed','#0891b2'];
 const legend=document.getElementById('hw-cal-legend');
@@ -5937,7 +5952,15 @@ const fd=new Date(year,month,1).getDay(),dim=new Date(year,month+1,0).getDate(),
 for(let i=0;i<fd;i++)grid.appendChild(document.createElement('div'));
 for(let d=1;d<=dim;d++){
   const dk=year+'-'+(month+1)+'-'+d,isToday=today.getDate()===d&&today.getMonth()===month&&today.getFullYear()===year;
-  const ss=students.map((s,si)=>{const sd=allData[s.name]||{};const da=sd[dk]||[];const total=(s.homework||[]).filter(h=>h.active!==false).length;const done=Array.isArray(da)?da.length:0;return{name:s.name,done,total,pct:total>0?done/total:0,color:COLORS[si%COLORS.length]};});
+  const ss=students.map((s,si)=>{
+    const sd=allData[s.name]||{};
+    const sh=allHist[s.name]||{};
+    const da=sd[dk]||[];
+    const hist=sh[dk]||null;
+    const total=(s.homework||[]).filter(h=>h.active!==false).length;
+    const done=Array.isArray(da)?da.length:0;
+    return{name:s.name,done,total,pct:total>0?done/total:0,color:COLORS[si%COLORS.length],hist:hist};
+  });
   const anyDone=ss.some(s=>s.done>0),allFull=ss.every(s=>s.total===0||s.pct>=1);
   const cell=document.createElement('div');
   cell.style.cssText='border-radius:8px;padding:4px 2px;cursor:'+(anyDone?'pointer':'default')+';border:'+(isToday?'2px solid var(--or)':'1px solid '+(anyDone?'#e5e7eb':'transparent'))+';background:'+(isToday?'#fff7ed':allFull&&anyDone?'#f0fdf4':'#fff')+';min-height:48px;display:flex;flex-direction:column;align-items:center;gap:3px';
@@ -5945,7 +5968,47 @@ for(let d=1;d<=dim;d++){
   const dw=document.createElement('div');dw.style.cssText='display:flex;flex-wrap:wrap;gap:2px;justify-content:center;padding:0 2px';
   ss.forEach(s=>{if(s.total===0)return;const dot=document.createElement('div');dot.style.cssText='width:8px;height:8px;border-radius:50%;background:'+s.color+';opacity:'+(s.pct>=1?1:s.pct>0?0.5:0.15)+';flex-shrink:0';dw.appendChild(dot);});
   cell.appendChild(dw);
-  if(anyDone){(function(dk2,ss2,dt){cell.onclick=function(){const det=document.getElementById('hw-cal-detail');if(!det)return;det.style.display='';let out='<div style="font-weight:800;font-size:13px;margin-bottom:8px">'+year+'년 '+(month+1)+'월 '+dt+'일</div>';ss2.forEach(s=>{const icon=s.pct>=1?'✅':s.done>0?'🔶':'⬜';out+=icon+' <b>'+s.name+'</b>: '+s.done+'/'+s.total+'개'+(s.pct>=1?' <span style="color:#16a34a;font-weight:700">완료!</span>':s.done>0?' <span style="color:#d97706">('+Math.round(s.pct*100)+'%)</span>':'')+'<br>';});det.innerHTML=out;};})(dk,ss,d);}
+  if(anyDone){
+    (function(dk2,ss2,dt){
+      cell.onclick=function(){
+        const det=document.getElementById('hw-cal-detail');
+        if(!det)return;
+        det.style.display='';
+        let out='<div style="font-weight:900;font-size:13px;margin-bottom:10px;color:var(--tx)">'+year+'년 '+(month+1)+'월 '+dt+'일</div>';
+        ss2.forEach(s=>{
+          if(s.done===0&&!s.hist) return;
+          const icon=s.pct>=1?'✅':s.done>0?'🔶':'⬜';
+          out+='<div style="margin-bottom:8px;padding:8px 10px;background:#fff;border:1.5px solid #e5e7eb;border-radius:10px">';
+          out+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
+          out+='<span style="font-size:12px;font-weight:800">'+icon+' '+s.name+'</span>';
+          out+='<span style="font-size:11px;font-weight:700;color:'+(s.pct>=1?'#16a34a':'#d97706')+'">'+s.done+'/'+s.total+'개 ('+Math.round(s.pct*100)+'%)</span>';
+          out+='</div>';
+          if(s.hist){
+            let timeRow='';
+            if(s.hist.startedAt){
+              const dt2=new Date(s.hist.startedAt);
+              timeRow+='<span style="margin-right:8px">🕐 '+String(dt2.getHours()).padStart(2,'0')+':'+String(dt2.getMinutes()).padStart(2,'0')+'</span>';
+            }
+            if(s.hist.updatedAt&&s.hist.updatedAt!==s.hist.startedAt){
+              const dt3=new Date(s.hist.updatedAt);
+              timeRow+='<span style="margin-right:8px">✅ '+String(dt3.getHours()).padStart(2,'0')+':'+String(dt3.getMinutes()).padStart(2,'0')+'</span>';
+            }
+            if(s.hist.totalSec&&s.hist.totalSec>0){
+              const ts=Math.round(s.hist.totalSec);
+              const tm=Math.floor(ts/60),ts2=ts%60;
+              timeRow+='<span>⏱ '+tm+'분'+(ts2>0?' '+ts2+'초':'')+'</span>';
+            } else if(s.hist.startedAt&&s.hist.updatedAt){
+              const el=Math.round((new Date(s.hist.updatedAt)-new Date(s.hist.startedAt))/1000);
+              if(el>0){const tm=Math.floor(el/60),ts2=el%60;timeRow+='<span>⏱ '+tm+'분'+(ts2>0?' '+ts2+'초':'')+'</span>';}
+            }
+            if(timeRow) out+='<div style="font-size:10px;color:var(--mu);display:flex;flex-wrap:wrap;gap:4px">'+timeRow+'</div>';
+          }
+          out+='</div>';
+        });
+        det.innerHTML=out;
+      };
+    })(dk,ss,d);
+  }
   grid.appendChild(cell);
 }
 const det=document.getElementById('hw-cal-detail');if(det)det.style.display='none';
@@ -5953,10 +6016,22 @@ const det=document.getElementById('hw-cal-detail');if(det)det.style.display='non
 function renderHwCalendar(){
 const title=document.getElementById('hw-cal-title');
 if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
-if(!_fbReady){_renderAllStudentsCal({});return;}
-const students=STUDENTS_DB||[];let loaded=0;const allData={};
-if(!students.length){_renderAllStudentsCal({});return;}
-students.forEach(s=>{_fbDb.ref('hwDone/'+s.name.replace(/\s/g,'_')).once('value').then(snap=>{allData[s.name]=snap.val()||{};loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);}).catch(()=>{loaded++;if(loaded===students.length)_renderAllStudentsCal(allData);});});
+if(!_fbReady){_renderAllStudentsCal({},{});return;}
+const students=STUDENTS_DB||[];
+if(!students.length){_renderAllStudentsCal({},{});return;}
+Promise.all([
+  _fbDb.ref('hwDone').once('value'),
+  _fbDb.ref('hwHistory').once('value')
+]).then(function(snaps){
+  const allDoneRaw=snaps[0].val()||{},allHistRaw=snaps[1].val()||{};
+  const allData={},allHist={};
+  students.forEach(s=>{
+    const sKey=s.name.replace(/\s/g,'_');
+    allData[s.name]=allDoneRaw[sKey]||{};
+    allHist[s.name]=allHistRaw[sKey]||{};
+  });
+  _renderAllStudentsCal(allData,allHist);
+}).catch(function(){_renderAllStudentsCal({},{});});
 }
 
 function _renderHwStatusWithData(fbData,histData){
