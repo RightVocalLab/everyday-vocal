@@ -5894,18 +5894,22 @@ function _debugFirebase(){
   ]).then(function(snaps){
     const allDone=snaps[0].val()||{};
     const allHist=snaps[1].val()||{};
-    let out='📅 오늘 날짜 key: '+today+'\n\n';
-    out+='=== hwDone keys ===\n';
+    let out='📅 오늘 날짜 key: '+today+'\n';
+    out+='🕐 현재시간: '+new Date().toLocaleString('ko-KR')+'\n\n';
+    out+='=== hwDone 전체 (최근날짜) ===\n';
     Object.keys(allDone).forEach(function(k){
-      const todayData=allDone[k][today];
-      out+=k+': '+(todayData?JSON.stringify(todayData):'없음')+'\n';
+      const dates=Object.keys(allDone[k]).sort().reverse().slice(0,5);
+      out+=k+': ';
+      dates.forEach(function(d){ out+='['+d+']='+JSON.stringify(allDone[k][d])+' '; });
+      out+='\n';
     });
-    out+='\n=== hwHistory keys ===\n';
+    out+='\n=== hwHistory 전체 (최근날짜) ===\n';
     Object.keys(allHist).forEach(function(k){
-      const todayHist=allHist[k][today];
-      out+=k+': '+(todayHist?JSON.stringify(todayHist):'없음')+'\n';
+      const dates=Object.keys(allHist[k]).sort().reverse().slice(0,5);
+      out+=k+':\n';
+      dates.forEach(function(d){ out+='  ['+d+']: '+JSON.stringify(allHist[k][d])+'\n'; });
     });
-    out+='\n=== 매핑 확인 ===\n';
+    out+='\n=== 오늘('+today+') 매핑 확인 ===\n';
     (STUDENTS_DB||[]).forEach(function(s){
       const sKey=s.name.replace(/\s/g,'_');
       const hasDone=!!(allDone[sKey]&&allDone[sKey][today]);
