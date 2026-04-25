@@ -3554,13 +3554,23 @@ h+=`<rect data-midi="${nx}" x="${bx.toFixed(1)}" y="4" width="${bkW.toFixed(1)}"
 });
 svg.setAttribute('viewBox',`0 0 ${W} 88`);svg.innerHTML=h;
 }
+let _litToken=0;
 function litKey(midi){
 const svg=document.getElementById('piano-svg');if(!svg)return;
 
 if(activeMidi!==null){const p=svg.querySelector(`[data-midi="${activeMidi}"]`);if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');}
-activeMidi=midi;const cur=svg.querySelector(`[data-midi="${midi}"]`);
+activeMidi=midi;
+const myToken=++_litToken;
+const cur=svg.querySelector(`[data-midi="${midi}"]`);
 if(cur){cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
-const offMs=curBpm>0?Math.min(350,(60/curBpm)*1000*0.80):300;setTimeout(()=>{if(cur&&activeMidi===midi){cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');activeMidi=null;}},offMs);}
+const offMs=curBpm>0?Math.min(350,(60/curBpm)*1000*0.80):300;
+setTimeout(()=>{
+  /* 자기 토큰이 최신일 때만 끔 - 같은 midi가 연속 호출되어도 안전 */
+  if(myToken===_litToken){
+    if(cur)cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');
+    activeMidi=null;
+  }
+},offMs);}
 }
 window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-train').classList.contains('hidden'))setTimeout(()=>buildPianoSVG(curMod.startNote,curMod.endNote),50);});
 
@@ -3586,13 +3596,24 @@ const patMax=patNotes.length?Math.max(...patNotes):0;
 const offset=isDN?-patMax:0;
 const a=[],r=mod.endNote-mod.startNote;
 if(isDN){
-  /* DN 스케일: 고음(startNote=레8/솔)에서 저음(endNote)으로 하행만 */
-  if(r>=0){
-    /* 5DN: startNote < endNote, 낮은 키부터 높은 키까지 올라감 (각 키는 하행) */
-    for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'down',ps});
+  /* DN 스케일: 각 키에서 하행 패턴 재생 */
+  const is5DN=(mod.id||'').indexOf('5DN')===0;
+  if(is5DN){
+    /* 5DN: 키가 올라갔다가 다시 내려옴 (각 키는 하행) */
+    if(r>=0){
+      for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'down',ps});
+      for(let s=r-1;s>=0;s--)a.push({semi:s+offset,dir:'down',ps});
+    } else {
+      for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+      for(let s=r+1;s<=0;s++)a.push({semi:s+offset,dir:'down',ps});
+    }
   } else {
-    /* 9DN: startNote > endNote, 높은 레8에서 낮은 레8로 하행만 */
-    for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+    /* 9DN: 키가 한 방향만 진행 (각 키는 하행) */
+    if(r>=0){
+      for(let s=0;s<=r;s++)a.push({semi:s+offset,dir:'down',ps});
+    } else {
+      for(let s=0;s>=r;s--)a.push({semi:s+offset,dir:'down',ps});
+    }
   }
 } else {
   if(r>=0){
