@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Everyday Vocal</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --or:#f97316;--or-d:#c2410c;--or-l:#fff7f0;--or-m:#fed7aa;--or-b:#fb923c;
@@ -190,7 +189,8 @@ input,select,button,textarea{font-family:inherit;}
         음성사용자들을 위해<br>
         바른발성연구소가 배우고 공부하고<br>
         티칭하며 검증한 발성 훈련법을<br>
-        바탕으로 개발한 전문 트레이닝 앱입니다.</div>
+        바른발성연구소만의 방식으로 적용하여<br>
+        개발한 전문 트레이닝 앱입니다.</div>
 
       <!-- 구분선 -->
       <div style="width:40px;height:2px;background:var(--or-m);border-radius:99px;margin:0 auto 18px"></div>
@@ -568,21 +568,6 @@ input,select,button,textarea{font-family:inherit;}
 <div id="scr-admin" class="scr hidden">
   <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">수정한 .xlsx 파일을 업로드하면 전체 데이터가 업데이트됩니다.</div>
-      <div id="xl-drop" style="border:2px dashed var(--or-m);border-radius:11px;padding:18px;text-align:center;cursor:pointer"
-        onclick="document.getElementById('xl-file').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--or)'"
-        ondragleave="this.style.borderColor=''"
-        ondrop="handleXlDrop(event)">
-        <div style="font-size:26px;margin-bottom:5px">📂</div>
-        <div style="font-size:12px;font-weight:700;color:var(--or)">클릭 또는 드래그</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:2px">.xlsx 파일만 지원</div>
-      </div>
-      <input type="file" id="xl-file" accept=".xlsx" style="display:none" onchange="handleXlFile(event)">
-      <div id="xl-status" style="margin-top:8px;font-size:12px;text-align:center;white-space:pre-line"></div>
-    </div>
     <div class="card" id="el-card">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
       <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
@@ -904,1844 +889,45 @@ input,select,button,textarea{font-family:inherit;}
   80%{transform:translateX(5px);}
 }
 </style>
-</head>
-<body>
-
-<!-- SPLASH -->
-<div id="scr-splash" class="scr">
-  <div style="padding:28px 22px;width:100%;max-width:440px;margin:0 auto">
-    <div style="width:82px;height:82px;border-radius:22px;background:var(--or);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(249,115,22,.36)">
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M16 8v20a6.5 6.5 0 1 0 4.5 0V14h12V8H16z" fill="#fff"/></svg>
-    </div>
-    <div id="splash-title" style="font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Everyday Vocal</div>
-    <div id="splash-subtitle" style="font-size:11px;color:var(--or);font-weight:700;letter-spacing:1.2px;margin-bottom:22px">PROFESSIONAL VOCAL TRAINING</div>
-    <div style="font-size:13px;color:var(--mu);line-height:1.8;max-width:300px;margin:0 auto 30px">
-      안녕하세요.<br>가수, 뮤지컬배우, 성악가, 전공생 등<br>음성직업군의 성대기능을 훈련시키기 위한<br>훈련프로그램 'Everyday Vocal'입니다.
-    </div>
-    <button class="btn btn-or" onclick="goIntro()" style="width:100%;padding:15px;font-size:16px;border-radius:14px">시작하기  →</button>
-    <div id="splash-footer" style="margin-top:12px;font-size:11px;color:var(--mu2)">by Right Vocal Lab</div>
-  </div>
-</div>
-
-<!-- HOME -->
-<div id="scr-home" class="scr hidden">
-  <div class="topbar">
-    <div style="width:38px"></div>
-    <div class="tb" style="display:flex;align-items:center;justify-content:center;gap:7px">
-      <div style="width:22px;height:22px;border-radius:6px;background:var(--or);display:flex;align-items:center;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 3v9a3 3 0 1 0 2 0V6h6V3H7z" fill="#fff"/></svg>
-      </div>Everyday Vocal
-    </div>
-    <button class="ico" onclick="openAdminPW()">⚙</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <!-- 이론 및 훈련설명 -->
-    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
-      <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
-      <div style="color:var(--mu2);font-size:17px">›</div>
-    </div>
-    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
-    <!-- 훈련 코스 — 기본 접힘 -->
-    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
-      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
-        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
-        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
-      </div>
-      <div id="course-list-wrap" style="display:none;overflow:hidden">
-        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
-      </div>
-    </div>
-    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
-    <!-- 자유 연습 -->
-    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
-      <div class="menu-ico" style="background:#fff3e8">🎯</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
-      <div style="color:var(--or);font-size:17px">›</div>
-    </div>
-    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
-      <div class="menu-ico" style="background:#dcfce7">📚</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800">숙제</div>
-        <div style="font-size:11px;color:var(--mu)" id="hw-menu-sub">학생 코드로 로그인하여 숙제 확인</div>
-      </div>
-      <div style="color:#16a34a;font-size:17px">›</div>
-    </div>
-    <div style="height:12px"></div>
-  </div></div>
-</div>
-
-<!-- THEORY LIST -->
-<div id="scr-theory-list" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">이론 및 훈련설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px" id="theory-list"></div></div>
-</div>
-
-<!-- THEORY DETAIL -->
-<div id="scr-theory-detail" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="th-title">—</div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="th-tts-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px;display:none">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner">
-<div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
-    <div style="height:28px"></div>
-  </div></div>
-</div>
-
-<!-- COURSE STAGE SELECT -->
-<div id="scr-course-diff" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="cd-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner"><div style="display:flex;flex-direction:column;gap:9px" id="diff-list"></div></div></div>
-</div>
-
-<!-- DAY SELECT (일차 그리드) -->
-<div id="scr-day-select" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="ds-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner">
-    <div style="font-size:12px;color:var(--mu);margin-bottom:14px" id="ds-info"></div>
-    <div id="ds-grid"></div>
-  </div></div>
-</div>
-
-<!-- STEP PLAYER (안내멘트 + 다음 버튼) -->
-<div id="scr-step" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="closeStep()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 4px">
-      <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="step-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="step-counter">—</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="step-tts-topbar-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="step-tts-btn" onclick="toggleStepTTS()" title="읽기/정지" style="font-size:13px">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="step-prog-bar"><div class="step-prog-fill" id="step-prog" style="width:0%"></div></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px">
-
-    <!-- 훈련 이름 -->
-    <div style="text-align:center;padding:18px 0 10px">
-      <div style="font-size:11px;color:var(--mu);font-weight:700;margin-bottom:6px">현재 훈련</div>
-      <div style="font-size:20px;font-weight:900;color:var(--or-d)" id="step-ex-name">—</div>
-      <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
-    </div>
-
-    <!-- 안내 멘트 박스 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:800;color:#166534">📋 안내 멘트</div>
-        <button id="step-auto-btn" class="btn-ghost on" onclick="toggleStepAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">자동읽기 ON</button>
-      </div>
-      <div id="step-tts-notice" style="font-size:10px;color:#6b7280;margin-bottom:8px">⏳ 2~3초 후 자동으로 음성이 나옵니다</div>
-      <div style="font-size:14px;color:#1c1917;line-height:1.75" id="step-guide">—</div>
-    </div>
-
-    <!-- 버튼 영역 -->
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" id="step-piano-btn" onclick="startStepPiano()" style="flex:1;padding:13px;font-size:13px;display:none">
-        🎹 피아노 훈련 시작
-      </button>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" onclick="prevStep()" id="step-prev-btn" style="flex:1;padding:13px;font-size:13px" disabled>← 이전</button>
-      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="flex:1;padding:13px;font-size:14px">다음 →</button>
-    </div>
-  </div></div>
-</div>
-
-<!-- TRAINING (피아노 실행) -->
-<div id="scr-train" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="exitTrain()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 5px">
-      <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
-    </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-  </div>
-  <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
-    <div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:10px;color:var(--mu);font-weight:700">진행률</span>
-        <span style="font-size:11px;font-weight:800;color:var(--or)" id="pct">0%</span>
-      </div>
-      <div class="pt"><div class="pf" id="prog" style="width:0%"></div></div>
-      <div id="dots" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px"></div>
-    </div>
-    <!-- 현재 음 + 피아노 -->
-    <div style="background:var(--or-l);border:2px solid var(--or);border-radius:15px;padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-        <div>
-          <div style="font-size:10px;color:var(--mu);font-weight:700">지금 연주 중</div>
-          <div style="display:flex;align-items:baseline;gap:3px">
-            <span style="font-size:46px;font-weight:900;color:var(--or);line-height:1.05" id="cur-n">—</span>
-            <span style="font-size:18px;color:var(--mu)" id="cur-o"></span>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--mu);font-weight:700;margin-bottom:4px">현재 키</div>
-          <div class="nb" id="cur-key">—</div>
-          <div style="font-size:11px;color:var(--mu);margin-top:4px" id="dir-l">↑ 상행</div>
-        </div>
-      </div>
-      <div class="piano-wrap">
-        <div class="piano-hd">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div class="nb" style="font-size:11px" id="rng-f">—</div>
-            <span style="color:var(--mu);font-size:11px">~</span>
-            <div class="nb" style="font-size:11px" id="rng-t">—</div>
-          </div>
-          <div style="font-size:11px;color:var(--mu)" id="dir-l2">↑</div>
-        </div>
-        <svg id="piano-svg" height="88" style="display:block;width:100%"><rect width="100%" height="100%" fill="#d8d2cb"/></svg>
-      </div>
-    </div>
-    <!-- BPM 인라인 -->
-    <div class="bpm-row">
-      <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
-      <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
-      <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
-      <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
-      <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
-      <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
-    </div>
-    <!-- 훈련 설명 + 코칭 통합 카드 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <!-- 화이팅 멘트 ON/OFF -->
-          <!-- 훈련설명 버튼 + 화이팅멘트 ON/OFF -->
-          <div style="display:flex;align-items:center;gap:4px">
-            <button id="desc-play-btn" onclick="playTrainDesc()"
-              style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:99px;padding:2px 9px;font-size:10px;font-weight:700;color:#1e40af;cursor:pointer">설명▶</button>
-            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
-              style="padding:2px 8px;font-size:10px;border-radius:99px">화이팅ON</button>
-          </div>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
-            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
-        </div>
-      </div>
-      <!-- 훈련 설명 본문 -->
-      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
-      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
-      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
-    </div>
-    <!-- 컨트롤 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
-      <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
-      <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
-    </div>
-    <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
-    <div id="next-train-row" style="display:none;padding:0 0 6px">
-      <button class="btn btn-ol" onclick="goNextTrain()" style="width:100%;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">
-        다음 훈련으로 ›
-      </button>
-    </div>
-  </div></div>
-</div>
-
-<!-- FREE -->
-<div id="scr-free" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb">자유 연습</div>
-    <div style="display:flex;gap:5px;align-items:center">
-      <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 내 프로그램 (리스트) -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">내 프로그램</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button onclick="clearFreeList()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid #fecaca;border-radius:8px;color:#dc2626;cursor:pointer">전체 삭제</button>
-    </div>
-    <div id="free-slots" style="display:flex;flex-direction:column;gap:6px;min-height:52px;margin-bottom:12px"></div>
-
-    <div style="height:1px;background:var(--line);margin-bottom:12px"></div>
-
-    <!-- 훈련 추가하기 (아코디언) -->
-    <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
-    <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
-
-  </div></div>
-</div>
-
-<!-- HOMEWORK -->
-<div id="scr-homework" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
-        </div>
-        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
-      </div>
-      <!-- 진행 상황 바 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
-        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
-      </div>
-      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
-        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
-      </div>
-    </div>
-
-    <!-- 숙제 리스트 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
-    </div>
-
-    <!-- 전체 훈련 시작 버튼 -->
-    <button onclick="startHomeworkSeq()"
-      style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(22,163,74,.35)">
-      ▶ 전체 훈련 시작
-    </button>
-
-    <div id="hw-slots" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
-
-  </div></div>
-</div>
-
-<!-- ADMIN -->
-<div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">수정한 .xlsx 파일을 업로드하면 전체 데이터가 업데이트됩니다.</div>
-      <div id="xl-drop" style="border:2px dashed var(--or-m);border-radius:11px;padding:18px;text-align:center;cursor:pointer"
-        onclick="document.getElementById('xl-file').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--or)'"
-        ondragleave="this.style.borderColor=''"
-        ondrop="handleXlDrop(event)">
-        <div style="font-size:26px;margin-bottom:5px">📂</div>
-        <div style="font-size:12px;font-weight:700;color:var(--or)">클릭 또는 드래그</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:2px">.xlsx 파일만 지원</div>
-      </div>
-      <input type="file" id="xl-file" accept=".xlsx" style="display:none" onchange="handleXlFile(event)">
-      <div id="xl-status" style="margin-top:8px;font-size:12px;text-align:center;white-space:pre-line"></div>
-    </div>
-    <div class="card" id="el-card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
-        실제 남성 성우 AI 목소리를 사용합니다.<br>
-        API 키와 Voice ID를 입력하면 즉시 적용됩니다.
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">API 키</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-key-input" type="password" placeholder="●●●●●●●●●●●●●●●●"
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:12px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default" readonly>
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534">
-            ✅ API 키 내장됨 — 별도 입력 없이 자동 작동합니다.
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">
-            Voice ID
-            <span style="font-weight:400;color:var(--mu2)"> — 어떤 목소리로 읽을지 지정</span>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-vid-input" type="text" value="Mny3tJezAvDLdb8JlyUs" readonly
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:11px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default">
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534;line-height:1.5">
-            ✅ 고정 목소리 사용 중 — 어떤 기기에서 열어도 항상 같은 목소리로 출력됩니다.
-          </div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:7px;margin-bottom:10px">
-        <button class="btn btn-or" onclick="saveElSettings()" style="flex:1;padding:10px;font-size:13px" id="el-save-btn">🔊 연결 확인</button>
-        <button class="btn-ghost" onclick="testElTTS()" style="padding:9px 14px;font-size:12px">🔊 테스트</button>
-      </div>
-
-      <!-- 목소리 상세 설정 -->
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
-        <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-          🎛 목소리 안정성 (템포 불안정 시 높이세요)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:10px;color:var(--mu);white-space:nowrap">안정성</span>
-          <input type="range" id="el-stability" min="0" max="100" value="95" disabled
-            style="flex:1;accent-color:#86efac;opacity:0.7">
-          <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:34px;text-align:right" id="el-stab-val">95%</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-bottom:2px">
-          <span>낮음 (감정 풍부, 불안정)</span><span>높음 (일정한 템포)</span>
-        </div>
-        <div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;padding:5px 8px;margin-top:6px">
-          클론 목소리 권장: <strong>80~95%</strong> (style은 0 고정)
-        </div>
-        <!-- 속도 슬라이더 -->
-        <div style="margin-top:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-            🐢 말하기 속도
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:10px;color:var(--mu);white-space:nowrap">속도</span>
-            <input type="range" id="el-speed" min="70" max="120" value="80" step="5" disabled
-              style="flex:1;accent-color:#86efac;opacity:0.7">
-            <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:38px;text-align:right" id="el-speed-val">0.80x</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2)">
-            <span>0.70x (느림)</span><span>1.00x (보통)</span><span>1.20x (빠름)</span>
-          </div>
-          <div style="margin-top:5px;font-size:10px;color:#16a34a">✅ 속도 고정됨 (변경 불가)</div>
-        </div>
-      </div>
-      <div id="el-status" style="font-size:11px;text-align:center;min-height:16px;margin-top:8px"></div>
-
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:11px;color:var(--mu)">ElevenLabs 사용</div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <div id="el-dot" style="width:8px;height:8px;border-radius:50%;background:#e5e7eb"></div>
-          <span id="el-mode-label" style="font-size:11px;color:var(--mu2)">미설정 (브라우저 TTS)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎙 목소리 진단 & 안내</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.6">
-        브라우저 TTS는 기기·OS·브라우저에 따라 제공 목소리가 다릅니다.<br>
-        <strong>Android Chrome</strong>: 설정 → 접근성 → TTS → 엔진 변경<br>
-        <strong>iOS Safari</strong>: 설정 → 손쉬운 사용 → 말하기 → 목소리<br>
-        <strong>Mac/PC</strong>: 시스템 설정 → 손쉬운 사용 → 말하기 → 시스템 음성<br>
-        남성 음성이 없다면 <strong>Google Cloud TTS / ElevenLabs</strong> 연동을 추천합니다.
-      </div>
-      <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
-      <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
-    </div>
-
-    <!-- 메뉴 노출 설정 -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
-      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
-      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
-    </div>
-
-    <!-- 숙제 완료 현황 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
-        <div style="display:flex;gap:5px">
-          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
-          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
-        </div>
-      </div>
-      <!-- 오늘 현황 -->
-      <div id="hw-today-view">
-        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:7px">
-          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
-        </div>
-      </div>
-      <!-- 월별 캘린더 -->
-      <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
-          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
-        </div>
-        <div style="margin-bottom:8px">
-          <select id="hw-cal-student" onchange="renderHwCalendar()"
-            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
-          </select>
-        </div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
-        </div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
-        </div>
-      </div>
-    </div>
-
-  </div></div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
-  <div class="modal-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:14px;font-weight:800">▶ 예시 영상</span>
-      <button onclick="closeVidM(null)" style="background:none;border:none;font-size:20px;color:var(--mu);cursor:pointer">✕</button>
-    </div>
-    <div style="position:relative;padding-bottom:56.25%;border-radius:9px;overflow:hidden;background:#000">
-      <iframe id="yt" style="position:absolute;inset:0;width:100%;height:100%" frameborder="0" allowfullscreen></iframe>
+<!-- 학생 로그인 모달 -->
+<div class="modal-bg" id="student-login-modal">
+  <div class="modal-box" style="max-width:340px;text-align:center">
+    <div style="font-size:32px;margin-bottom:8px">📚</div>
+    <div style="font-size:16px;font-weight:900;margin-bottom:4px">숙제 로그인</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:18px">선생님께 받은 이름과 비밀번호를 입력하세요</div>
+    <input id="student-name-input" type="text" placeholder="이름 (예: 김동현)"
+      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:10px 14px;font-size:14px;text-align:center;margin-bottom:8px"
+      oninput="clearStudentErr()">
+    <input id="student-pw-input" type="password" placeholder="비밀번호"
+      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:10px 14px;font-size:14px;text-align:center;margin-bottom:8px;letter-spacing:2px"
+      onkeydown="if(event.key==='Enter')doStudentLogin()">
+    <div id="student-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ol" onclick="closeStudentLogin()" style="flex:1;padding:11px">취소</button>
+      <button class="btn" onclick="doStudentLogin()" style="flex:1;padding:11px;background:#16a34a;border:none;color:#fff;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
     </div>
   </div>
 </div>
-<div class="modal-bg" id="done-modal">
-  <div class="modal-box" style="text-align:center;max-width:320px">
-    <div style="font-size:46px;margin-bottom:7px" id="done-ico">🎉</div>
-    <div style="font-size:19px;font-weight:900;margin-bottom:5px" id="done-head">완료!</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="done-txt"></div>
-    <div style="display:flex;gap:8px;justify-content:center" id="done-btns"></div>
-  </div>
-</div>
 
-<style>
-:root{
-  --or:#f97316;--or-d:#c2410c;--or-l:#fff7f0;--or-m:#fed7aa;--or-b:#fb923c;
-  --tx:#1c1917;--mu:#78716c;--mu2:#a8a29e;--bd:#fed7aa;--bd2:#fde8d0;--line:#f1ede8;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{background:#fff;color:var(--tx);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
-input,select,button,textarea{font-family:inherit;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--or-m);border-radius:99px;}
-
-/* ── SCREENS ── */
-.scr{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff;
-  transition:transform .30s cubic-bezier(.4,0,.2,1),opacity .26s;}
-.scr.hidden{transform:translateX(100%);pointer-events:none;}
-.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;}
-
-/* ── TOPBAR ── */
-.topbar{background:#fff;border-bottom:2px solid var(--or-b);padding:0 14px;height:54px;
-  flex-shrink:0;display:flex;align-items:center;gap:8px;z-index:10;}
-.tb{font-size:14px;font-weight:800;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ico{width:38px;height:38px;border-radius:50%;background:#fff;border:1.5px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;
-  transition:all .11s;color:var(--mu);flex-shrink:0;}
-.ico:hover{border-color:var(--or);color:var(--or);background:var(--or-l);}
-.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.inner{max-width:680px;margin:0 auto;padding:16px 14px;}
-
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:50px;
-  padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .11s;}
-.btn-or{background:var(--or);color:#fff;box-shadow:0 3px 12px rgba(249,115,22,.28);}
-.btn-or:hover{background:var(--or-d);}.btn-or:active{transform:scale(.97);}
-.btn-ol{background:#fff;color:var(--or);border:2px solid var(--or);}.btn-ol:hover{background:var(--or-l);}
-.btn-sm{padding:7px 14px;font-size:12px;}
-.btn-ghost{background:transparent;color:var(--mu);border:1.5px solid var(--bd2);border-radius:8px;
-  padding:5px 10px;font-size:12px;cursor:pointer;transition:all .11s;}
-.btn-ghost:hover{border-color:var(--or);color:var(--or);}
-.btn-ghost.on{background:var(--or);color:#fff;border-color:var(--or);}
-.play-btn{width:66px;height:66px;border-radius:50%;background:var(--or);color:#fff;border:none;
-  font-size:24px;cursor:pointer;transition:all .11s;box-shadow:0 4px 18px rgba(249,115,22,.40);
-  display:flex;align-items:center;justify-content:center;}
-.play-btn:hover{background:var(--or-d);transform:scale(1.05);}
-
-/* ── CARDS ── */
-.card{background:#fff;border:1.5px solid var(--bd2);border-radius:14px;padding:14px;}
-.tap{cursor:pointer;transition:border-color .12s,transform .10s,box-shadow .12s;}
-.tap:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.09);}
-.tap:active{transform:scale(.99);}
-
-/* ── PROGRESS ── */
-.pt{background:var(--or-m);border-radius:99px;height:6px;overflow:hidden;}
-.pf{background:var(--or);height:100%;border-radius:99px;transition:width .28s ease;}
-.sd{width:5px;height:5px;border-radius:50%;background:var(--or-m);transition:background .14s,transform .14s;}
-.sd.dn{background:var(--or);}.sd.cr{background:var(--or-d);transform:scale(1.7);}
-.nb{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--or);
-  color:var(--or-d);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;}
-
-/* ── PIANO ── */
-.piano-wrap{background:#d8d2cb;border:1.5px solid #c0b8b0;border-radius:12px;overflow:hidden;
-  box-shadow:0 3px 10px rgba(0,0,0,.13);}
-.piano-hd{background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:8px 12px;
-  display:flex;align-items:center;justify-content:space-between;}
-#piano-svg{width:100%;display:block;}
-
-/* ── BPM ROW ── */
-.bpm-row{background:#fff;border:1.5px solid var(--bd2);border-radius:12px;padding:10px 14px;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.bpm-row input[type=range]{flex:1;min-width:80px;accent-color:var(--or);}
-
-/* ── COACH ── */
-.coach-box{background:var(--or-l);border:1.5px solid var(--bd);border-radius:13px;padding:12px 14px;}
-.coach-txt{font-size:13px;color:var(--tx);line-height:1.65;min-height:36px;transition:opacity .2s;}
-
-/* ── HOME MENU ── */
-.menu-row{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:14px;padding:13px;cursor:pointer;transition:all .12s;}
-.menu-row:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.08);}
-.menu-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.cc{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:12px;padding:12px 13px;cursor:pointer;transition:all .11s;}
-.cc:hover{border-color:var(--or);transform:translateY(-1px);}
-
-/* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
-.day-cell{
-  aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .13s;gap:2px;
-}
-.day-cell:hover:not(.rest-c):not(.future-c){border-color:var(--or);background:var(--or-l);}
-.day-cell .dc-num{font-size:26px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:600;}
-.day-cell.rest-c{background:#f5f5f4;border-color:#e5e5e4;cursor:default;}
-.day-cell.rest-c .dc-num{color:var(--mu2);}
-.day-cell.future-c{opacity:.45;}
-.day-cell.done-c{background:#f0fdf4;border-color:#86efac;}
-.day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#16a34a;font-weight:700;}
-
-/* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
-.step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
-.step-screen.hidden{transform:translateX(100%);pointer-events:none;}
-.step-prog-bar{height:4px;background:var(--or-m);flex-shrink:0;}
-.step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
-
-/* ── THEORY ── */
-.th-item{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:12px;padding:12px;cursor:pointer;transition:all .11s;}
-.th-item:hover{border-color:var(--or);}
-
-/* ── TRAIN ITEM ── */
-.train-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:11px;padding:11px 13px;cursor:pointer;transition:all .11s;}
-.train-row:hover{border-color:var(--or);}
-
-/* ── FREE DRAG ── */
-.wod-slot{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:11px;padding:10px 12px;cursor:grab;transition:border-color .12s,opacity .12s;user-select:none;}
-.wod-slot.drag-over{border-color:var(--or);box-shadow:0 0 0 3px rgba(249,115,22,.12);}
-.wod-slot.dragging{opacity:.38;}
-.wnum{width:22px;height:22px;border-radius:50%;background:var(--or);color:#fff;font-size:10px;
-  font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-
-/* ── MODALS ── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.54);z-index:400;
-  align-items:center;justify-content:center;padding:14px;}
-.modal-bg.open{display:flex;}
-.modal-box{background:#fff;border:2px solid var(--or);border-radius:18px;padding:22px;
-  width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(249,115,22,.14);}
-
-#scr-splash{background:linear-gradient(155deg,#fff7f0 0%,#fff 65%);justify-content:center;align-items:center;text-align:center;}
-.div{height:1px;background:var(--line);margin:12px 0;}
-.empty{text-align:center;padding:26px 14px;color:var(--mu2);}
-@keyframes shake{
-  0%,100%{transform:translateX(0);}
-  20%{transform:translateX(-8px);}
-  40%{transform:translateX(8px);}
-  60%{transform:translateX(-5px);}
-  80%{transform:translateX(5px);}
-}
-</style>
-</head>
-<body>
-
-<!-- SPLASH -->
-<div id="scr-splash" class="scr">
-  <div style="padding:28px 22px;width:100%;max-width:440px;margin:0 auto">
-    <div style="width:82px;height:82px;border-radius:22px;background:var(--or);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(249,115,22,.36)">
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M16 8v20a6.5 6.5 0 1 0 4.5 0V14h12V8H16z" fill="#fff"/></svg>
-    </div>
-    <div id="splash-title" style="font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Everyday Vocal</div>
-    <div id="splash-subtitle" style="font-size:11px;color:var(--or);font-weight:700;letter-spacing:1.2px;margin-bottom:22px">PROFESSIONAL VOCAL TRAINING</div>
-    <div style="font-size:13px;color:var(--mu);line-height:1.8;max-width:300px;margin:0 auto 30px">
-      안녕하세요.<br>가수, 뮤지컬배우, 성악가, 전공생 등<br>음성직업군의 성대기능을 훈련시키기 위한<br>훈련프로그램 'Everyday Vocal'입니다.
-    </div>
-    <button class="btn btn-or" onclick="goIntro()" style="width:100%;padding:15px;font-size:16px;border-radius:14px">시작하기  →</button>
-    <div id="splash-footer" style="margin-top:12px;font-size:11px;color:var(--mu2)">by Right Vocal Lab</div>
-  </div>
-</div>
-
-<!-- HOME -->
-<div id="scr-home" class="scr hidden">
-  <div class="topbar">
-    <div style="width:38px"></div>
-    <div class="tb" style="display:flex;align-items:center;justify-content:center;gap:7px">
-      <div style="width:22px;height:22px;border-radius:6px;background:var(--or);display:flex;align-items:center;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 3v9a3 3 0 1 0 2 0V6h6V3H7z" fill="#fff"/></svg>
-      </div>Everyday Vocal
-    </div>
-    <button class="ico" onclick="openAdminPW()">⚙</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <!-- 이론 및 훈련설명 -->
-    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
-      <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
-      <div style="color:var(--mu2);font-size:17px">›</div>
-    </div>
-    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
-    <!-- 훈련 코스 — 기본 접힘 -->
-    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
-      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
-        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
-        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
-      </div>
-      <div id="course-list-wrap" style="display:none;overflow:hidden">
-        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
-      </div>
-    </div>
-    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
-    <!-- 자유 연습 -->
-    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
-      <div class="menu-ico" style="background:#fff3e8">🎯</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
-      <div style="color:var(--or);font-size:17px">›</div>
-    </div>
-    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
-      <div class="menu-ico" style="background:#dcfce7">📚</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800">숙제</div>
-        <div style="font-size:11px;color:var(--mu)" id="hw-menu-sub">학생 코드로 로그인하여 숙제 확인</div>
-      </div>
-      <div style="color:#16a34a;font-size:17px">›</div>
-    </div>
-    <div style="height:12px"></div>
-  </div></div>
-</div>
-
-<!-- THEORY LIST -->
-<div id="scr-theory-list" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">이론 및 훈련설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px" id="theory-list"></div></div>
-</div>
-
-<!-- THEORY DETAIL -->
-<div id="scr-theory-detail" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="th-title">—</div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="th-tts-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px;display:none">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner">
-<div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
-    <div style="height:28px"></div>
-  </div></div>
-</div>
-
-<!-- COURSE STAGE SELECT -->
-<div id="scr-course-diff" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="cd-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner"><div style="display:flex;flex-direction:column;gap:9px" id="diff-list"></div></div></div>
-</div>
-
-<!-- DAY SELECT (일차 그리드) -->
-<div id="scr-day-select" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="ds-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner">
-    <div style="font-size:12px;color:var(--mu);margin-bottom:14px" id="ds-info"></div>
-    <div id="ds-grid"></div>
-  </div></div>
-</div>
-
-<!-- STEP PLAYER (안내멘트 + 다음 버튼) -->
-<div id="scr-step" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="closeStep()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 4px">
-      <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="step-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="step-counter">—</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="step-tts-topbar-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="step-tts-btn" onclick="toggleStepTTS()" title="읽기/정지" style="font-size:13px">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="step-prog-bar"><div class="step-prog-fill" id="step-prog" style="width:0%"></div></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px">
-
-    <!-- 훈련 이름 -->
-    <div style="text-align:center;padding:18px 0 10px">
-      <div style="font-size:11px;color:var(--mu);font-weight:700;margin-bottom:6px">현재 훈련</div>
-      <div style="font-size:20px;font-weight:900;color:var(--or-d)" id="step-ex-name">—</div>
-      <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
-    </div>
-
-    <!-- 안내 멘트 박스 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:800;color:#166534">📋 안내 멘트</div>
-        <button id="step-auto-btn" class="btn-ghost on" onclick="toggleStepAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">자동읽기 ON</button>
-      </div>
-      <div id="step-tts-notice" style="font-size:10px;color:#6b7280;margin-bottom:8px">⏳ 2~3초 후 자동으로 음성이 나옵니다</div>
-      <div style="font-size:14px;color:#1c1917;line-height:1.75" id="step-guide">—</div>
-    </div>
-
-    <!-- 버튼 영역 -->
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" id="step-piano-btn" onclick="startStepPiano()" style="flex:1;padding:13px;font-size:13px;display:none">
-        🎹 피아노 훈련 시작
-      </button>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" onclick="prevStep()" id="step-prev-btn" style="flex:1;padding:13px;font-size:13px" disabled>← 이전</button>
-      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="flex:1;padding:13px;font-size:14px">다음 →</button>
-    </div>
-  </div></div>
-</div>
-
-<!-- TRAINING (피아노 실행) -->
-<div id="scr-train" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="exitTrain()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 5px">
-      <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
-    </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-  </div>
-  <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
-    <div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:10px;color:var(--mu);font-weight:700">진행률</span>
-        <span style="font-size:11px;font-weight:800;color:var(--or)" id="pct">0%</span>
-      </div>
-      <div class="pt"><div class="pf" id="prog" style="width:0%"></div></div>
-      <div id="dots" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px"></div>
-    </div>
-    <!-- 현재 음 + 피아노 -->
-    <div style="background:var(--or-l);border:2px solid var(--or);border-radius:15px;padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-        <div>
-          <div style="font-size:10px;color:var(--mu);font-weight:700">지금 연주 중</div>
-          <div style="display:flex;align-items:baseline;gap:3px">
-            <span style="font-size:46px;font-weight:900;color:var(--or);line-height:1.05" id="cur-n">—</span>
-            <span style="font-size:18px;color:var(--mu)" id="cur-o"></span>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--mu);font-weight:700;margin-bottom:4px">현재 키</div>
-          <div class="nb" id="cur-key">—</div>
-          <div style="font-size:11px;color:var(--mu);margin-top:4px" id="dir-l">↑ 상행</div>
-        </div>
-      </div>
-      <div class="piano-wrap">
-        <div class="piano-hd">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div class="nb" style="font-size:11px" id="rng-f">—</div>
-            <span style="color:var(--mu);font-size:11px">~</span>
-            <div class="nb" style="font-size:11px" id="rng-t">—</div>
-          </div>
-          <div style="font-size:11px;color:var(--mu)" id="dir-l2">↑</div>
-        </div>
-        <svg id="piano-svg" height="88" style="display:block;width:100%"><rect width="100%" height="100%" fill="#d8d2cb"/></svg>
-      </div>
-    </div>
-    <!-- BPM 인라인 -->
-    <div class="bpm-row">
-      <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
-      <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
-      <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
-      <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
-      <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
-      <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
-    </div>
-    <!-- 훈련 설명 + 코칭 통합 카드 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <!-- 화이팅 멘트 ON/OFF -->
-          <!-- 훈련설명 버튼 + 화이팅멘트 ON/OFF -->
-          <div style="display:flex;align-items:center;gap:4px">
-            <button id="desc-play-btn" onclick="playTrainDesc()"
-              style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:99px;padding:2px 9px;font-size:10px;font-weight:700;color:#1e40af;cursor:pointer">설명▶</button>
-            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
-              style="padding:2px 8px;font-size:10px;border-radius:99px">화이팅ON</button>
-          </div>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
-            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
-        </div>
-      </div>
-      <!-- 훈련 설명 본문 -->
-      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
-      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
-      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
-    </div>
-    <!-- 컨트롤 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
-      <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
-      <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
-    </div>
-    <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
-    <div id="next-train-row" style="display:none;padding:0 0 6px">
-      <button class="btn btn-ol" onclick="goNextTrain()" style="width:100%;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">
-        다음 훈련으로 ›
-      </button>
-    </div>
-  </div></div>
-</div>
-
-<!-- FREE -->
-<div id="scr-free" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb">자유 연습</div>
-    <div style="display:flex;gap:5px;align-items:center">
-      <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 내 프로그램 (리스트) -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">내 프로그램</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button onclick="clearFreeList()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid #fecaca;border-radius:8px;color:#dc2626;cursor:pointer">전체 삭제</button>
-    </div>
-    <div id="free-slots" style="display:flex;flex-direction:column;gap:6px;min-height:52px;margin-bottom:12px"></div>
-
-    <div style="height:1px;background:var(--line);margin-bottom:12px"></div>
-
-    <!-- 훈련 추가하기 (아코디언) -->
-    <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
-    <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
-
-  </div></div>
-</div>
-
-<!-- HOMEWORK -->
-<div id="scr-homework" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
-        </div>
-        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
-      </div>
-      <!-- 진행 상황 바 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
-        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
-      </div>
-      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
-        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
-      </div>
-    </div>
-
-    <!-- 숙제 리스트 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
-    </div>
-
-    <!-- 전체 훈련 시작 버튼 -->
-    <button onclick="startHomeworkSeq()"
-      style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(22,163,74,.35)">
-      ▶ 전체 훈련 시작
-    </button>
-
-    <div id="hw-slots" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
-
-  </div></div>
-</div>
-
-<!-- ADMIN -->
-<div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">수정한 .xlsx 파일을 업로드하면 전체 데이터가 업데이트됩니다.</div>
-      <div id="xl-drop" style="border:2px dashed var(--or-m);border-radius:11px;padding:18px;text-align:center;cursor:pointer"
-        onclick="document.getElementById('xl-file').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--or)'"
-        ondragleave="this.style.borderColor=''"
-        ondrop="handleXlDrop(event)">
-        <div style="font-size:26px;margin-bottom:5px">📂</div>
-        <div style="font-size:12px;font-weight:700;color:var(--or)">클릭 또는 드래그</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:2px">.xlsx 파일만 지원</div>
-      </div>
-      <input type="file" id="xl-file" accept=".xlsx" style="display:none" onchange="handleXlFile(event)">
-      <div id="xl-status" style="margin-top:8px;font-size:12px;text-align:center;white-space:pre-line"></div>
-    </div>
-    <div class="card" id="el-card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
-        실제 남성 성우 AI 목소리를 사용합니다.<br>
-        API 키와 Voice ID를 입력하면 즉시 적용됩니다.
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">API 키</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-key-input" type="password" placeholder="●●●●●●●●●●●●●●●●"
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:12px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default" readonly>
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534">
-            ✅ API 키 내장됨 — 별도 입력 없이 자동 작동합니다.
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">
-            Voice ID
-            <span style="font-weight:400;color:var(--mu2)"> — 어떤 목소리로 읽을지 지정</span>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-vid-input" type="text" value="Mny3tJezAvDLdb8JlyUs" readonly
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:11px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default">
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534;line-height:1.5">
-            ✅ 고정 목소리 사용 중 — 어떤 기기에서 열어도 항상 같은 목소리로 출력됩니다.
-          </div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:7px;margin-bottom:10px">
-        <button class="btn btn-or" onclick="saveElSettings()" style="flex:1;padding:10px;font-size:13px" id="el-save-btn">🔊 연결 확인</button>
-        <button class="btn-ghost" onclick="testElTTS()" style="padding:9px 14px;font-size:12px">🔊 테스트</button>
-      </div>
-
-      <!-- 목소리 상세 설정 -->
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
-        <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-          🎛 목소리 안정성 (템포 불안정 시 높이세요)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:10px;color:var(--mu);white-space:nowrap">안정성</span>
-          <input type="range" id="el-stability" min="0" max="100" value="95" disabled
-            style="flex:1;accent-color:#86efac;opacity:0.7">
-          <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:34px;text-align:right" id="el-stab-val">95%</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-bottom:2px">
-          <span>낮음 (감정 풍부, 불안정)</span><span>높음 (일정한 템포)</span>
-        </div>
-        <div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;padding:5px 8px;margin-top:6px">
-          클론 목소리 권장: <strong>80~95%</strong> (style은 0 고정)
-        </div>
-        <!-- 속도 슬라이더 -->
-        <div style="margin-top:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-            🐢 말하기 속도
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:10px;color:var(--mu);white-space:nowrap">속도</span>
-            <input type="range" id="el-speed" min="70" max="120" value="80" step="5" disabled
-              style="flex:1;accent-color:#86efac;opacity:0.7">
-            <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:38px;text-align:right" id="el-speed-val">0.80x</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2)">
-            <span>0.70x (느림)</span><span>1.00x (보통)</span><span>1.20x (빠름)</span>
-          </div>
-          <div style="margin-top:5px;font-size:10px;color:#16a34a">✅ 속도 고정됨 (변경 불가)</div>
-        </div>
-      </div>
-      <div id="el-status" style="font-size:11px;text-align:center;min-height:16px;margin-top:8px"></div>
-
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:11px;color:var(--mu)">ElevenLabs 사용</div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <div id="el-dot" style="width:8px;height:8px;border-radius:50%;background:#e5e7eb"></div>
-          <span id="el-mode-label" style="font-size:11px;color:var(--mu2)">미설정 (브라우저 TTS)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎙 목소리 진단 & 안내</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.6">
-        브라우저 TTS는 기기·OS·브라우저에 따라 제공 목소리가 다릅니다.<br>
-        <strong>Android Chrome</strong>: 설정 → 접근성 → TTS → 엔진 변경<br>
-        <strong>iOS Safari</strong>: 설정 → 손쉬운 사용 → 말하기 → 목소리<br>
-        <strong>Mac/PC</strong>: 시스템 설정 → 손쉬운 사용 → 말하기 → 시스템 음성<br>
-        남성 음성이 없다면 <strong>Google Cloud TTS / ElevenLabs</strong> 연동을 추천합니다.
-      </div>
-      <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
-      <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
-    </div>
-
-    <!-- 메뉴 노출 설정 -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
-      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
-      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
-    </div>
-
-    <!-- 숙제 완료 현황 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
-        <div style="display:flex;gap:5px">
-          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
-          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
-        </div>
-      </div>
-      <!-- 오늘 현황 -->
-      <div id="hw-today-view">
-        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:7px">
-          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
-        </div>
-      </div>
-      <!-- 월별 캘린더 -->
-      <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
-          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
-        </div>
-        <div style="margin-bottom:8px">
-          <select id="hw-cal-student" onchange="renderHwCalendar()"
-            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
-          </select>
-        </div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
-        </div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
-        </div>
-      </div>
-    </div>
-
-  </div></div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
-  <div class="modal-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:14px;font-weight:800">▶ 예시 영상</span>
-      <button onclick="closeVidM(null)" style="background:none;border:none;font-size:20px;color:var(--mu);cursor:pointer">✕</button>
-    </div>
-    <div style="position:relative;padding-bottom:56.25%;border-radius:9px;overflow:hidden;background:#000">
-      <iframe id="yt" style="position:absolute;inset:0;width:100%;height:100%" frameborder="0" allowfullscreen></iframe>
+<!-- 관리자 비밀번호 모달 -->
+<div class="modal-bg" id="pw-modal">
+  <div class="modal-box" style="max-width:320px;text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">🔐</div>
+    <div style="font-size:16px;font-weight:900;margin-bottom:4px">관리자 접근</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:18px">비밀번호를 입력하세요</div>
+    <input id="pw-input" type="password" placeholder="비밀번호"
+      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 14px;
+        font-size:14px;text-align:center;margin-bottom:8px;letter-spacing:2px"
+      onkeydown="if(event.key===\'Enter\')checkPW()">
+    <div id="pw-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ol" onclick="closePWModal()" style="flex:1;padding:11px">취소</button>
+      <button class="btn btn-or" onclick="checkPW()" style="flex:1;padding:11px">확인</button>
     </div>
   </div>
 </div>
-<div class="modal-bg" id="done-modal">
-  <div class="modal-box" style="text-align:center;max-width:320px">
-    <div style="font-size:46px;margin-bottom:7px" id="done-ico">🎉</div>
-    <div style="font-size:19px;font-weight:900;margin-bottom:5px" id="done-head">완료!</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="done-txt"></div>
-    <div style="display:flex;gap:8px;justify-content:center" id="done-btns"></div>
-  </div>
-</div>
 
-<style>
-:root{
-  --or:#f97316;--or-d:#c2410c;--or-l:#fff7f0;--or-m:#fed7aa;--or-b:#fb923c;
-  --tx:#1c1917;--mu:#78716c;--mu2:#a8a29e;--bd:#fed7aa;--bd2:#fde8d0;--line:#f1ede8;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{background:#fff;color:var(--tx);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
-input,select,button,textarea{font-family:inherit;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--or-m);border-radius:99px;}
 
-/* ── SCREENS ── */
-.scr{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff;
-  transition:transform .30s cubic-bezier(.4,0,.2,1),opacity .26s;}
-.scr.hidden{transform:translateX(100%);pointer-events:none;}
-.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;}
-
-/* ── TOPBAR ── */
-.topbar{background:#fff;border-bottom:2px solid var(--or-b);padding:0 14px;height:54px;
-  flex-shrink:0;display:flex;align-items:center;gap:8px;z-index:10;}
-.tb{font-size:14px;font-weight:800;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ico{width:38px;height:38px;border-radius:50%;background:#fff;border:1.5px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;
-  transition:all .11s;color:var(--mu);flex-shrink:0;}
-.ico:hover{border-color:var(--or);color:var(--or);background:var(--or-l);}
-.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.inner{max-width:680px;margin:0 auto;padding:16px 14px;}
-
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:50px;
-  padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .11s;}
-.btn-or{background:var(--or);color:#fff;box-shadow:0 3px 12px rgba(249,115,22,.28);}
-.btn-or:hover{background:var(--or-d);}.btn-or:active{transform:scale(.97);}
-.btn-ol{background:#fff;color:var(--or);border:2px solid var(--or);}.btn-ol:hover{background:var(--or-l);}
-.btn-sm{padding:7px 14px;font-size:12px;}
-.btn-ghost{background:transparent;color:var(--mu);border:1.5px solid var(--bd2);border-radius:8px;
-  padding:5px 10px;font-size:12px;cursor:pointer;transition:all .11s;}
-.btn-ghost:hover{border-color:var(--or);color:var(--or);}
-.btn-ghost.on{background:var(--or);color:#fff;border-color:var(--or);}
-.play-btn{width:66px;height:66px;border-radius:50%;background:var(--or);color:#fff;border:none;
-  font-size:24px;cursor:pointer;transition:all .11s;box-shadow:0 4px 18px rgba(249,115,22,.40);
-  display:flex;align-items:center;justify-content:center;}
-.play-btn:hover{background:var(--or-d);transform:scale(1.05);}
-
-/* ── CARDS ── */
-.card{background:#fff;border:1.5px solid var(--bd2);border-radius:14px;padding:14px;}
-.tap{cursor:pointer;transition:border-color .12s,transform .10s,box-shadow .12s;}
-.tap:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.09);}
-.tap:active{transform:scale(.99);}
-
-/* ── PROGRESS ── */
-.pt{background:var(--or-m);border-radius:99px;height:6px;overflow:hidden;}
-.pf{background:var(--or);height:100%;border-radius:99px;transition:width .28s ease;}
-.sd{width:5px;height:5px;border-radius:50%;background:var(--or-m);transition:background .14s,transform .14s;}
-.sd.dn{background:var(--or);}.sd.cr{background:var(--or-d);transform:scale(1.7);}
-.nb{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--or);
-  color:var(--or-d);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;}
-
-/* ── PIANO ── */
-.piano-wrap{background:#d8d2cb;border:1.5px solid #c0b8b0;border-radius:12px;overflow:hidden;
-  box-shadow:0 3px 10px rgba(0,0,0,.13);}
-.piano-hd{background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:8px 12px;
-  display:flex;align-items:center;justify-content:space-between;}
-#piano-svg{width:100%;display:block;}
-
-/* ── BPM ROW ── */
-.bpm-row{background:#fff;border:1.5px solid var(--bd2);border-radius:12px;padding:10px 14px;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.bpm-row input[type=range]{flex:1;min-width:80px;accent-color:var(--or);}
-
-/* ── COACH ── */
-.coach-box{background:var(--or-l);border:1.5px solid var(--bd);border-radius:13px;padding:12px 14px;}
-.coach-txt{font-size:13px;color:var(--tx);line-height:1.65;min-height:36px;transition:opacity .2s;}
-
-/* ── HOME MENU ── */
-.menu-row{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:14px;padding:13px;cursor:pointer;transition:all .12s;}
-.menu-row:hover{border-color:var(--or);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.08);}
-.menu-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.cc{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:12px;padding:12px 13px;cursor:pointer;transition:all .11s;}
-.cc:hover{border-color:var(--or);transform:translateY(-1px);}
-
-/* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
-.day-cell{
-  aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .13s;gap:2px;
-}
-.day-cell:hover:not(.rest-c):not(.future-c){border-color:var(--or);background:var(--or-l);}
-.day-cell .dc-num{font-size:26px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:600;}
-.day-cell.rest-c{background:#f5f5f4;border-color:#e5e5e4;cursor:default;}
-.day-cell.rest-c .dc-num{color:var(--mu2);}
-.day-cell.future-c{opacity:.45;}
-.day-cell.done-c{background:#f0fdf4;border-color:#86efac;}
-.day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#16a34a;font-weight:700;}
-
-/* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
-.step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
-.step-screen.hidden{transform:translateX(100%);pointer-events:none;}
-.step-prog-bar{height:4px;background:var(--or-m);flex-shrink:0;}
-.step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
-
-/* ── THEORY ── */
-.th-item{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:12px;padding:12px;cursor:pointer;transition:all .11s;}
-.th-item:hover{border-color:var(--or);}
-
-/* ── TRAIN ITEM ── */
-.train-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:11px;padding:11px 13px;cursor:pointer;transition:all .11s;}
-.train-row:hover{border-color:var(--or);}
-
-/* ── FREE DRAG ── */
-.wod-slot{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--bd2);
-  border-radius:11px;padding:10px 12px;cursor:grab;transition:border-color .12s,opacity .12s;user-select:none;}
-.wod-slot.drag-over{border-color:var(--or);box-shadow:0 0 0 3px rgba(249,115,22,.12);}
-.wod-slot.dragging{opacity:.38;}
-.wnum{width:22px;height:22px;border-radius:50%;background:var(--or);color:#fff;font-size:10px;
-  font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-
-/* ── MODALS ── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.54);z-index:400;
-  align-items:center;justify-content:center;padding:14px;}
-.modal-bg.open{display:flex;}
-.modal-box{background:#fff;border:2px solid var(--or);border-radius:18px;padding:22px;
-  width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(249,115,22,.14);}
-
-#scr-splash{background:linear-gradient(155deg,#fff7f0 0%,#fff 65%);justify-content:center;align-items:center;text-align:center;}
-.div{height:1px;background:var(--line);margin:12px 0;}
-.empty{text-align:center;padding:26px 14px;color:var(--mu2);}
-@keyframes shake{
-  0%,100%{transform:translateX(0);}
-  20%{transform:translateX(-8px);}
-  40%{transform:translateX(8px);}
-  60%{transform:translateX(-5px);}
-  80%{transform:translateX(5px);}
-}
-</style>
-</head>
-<body>
-
-<!-- SPLASH -->
-<div id="scr-splash" class="scr">
-  <div style="padding:28px 22px;width:100%;max-width:440px;margin:0 auto">
-    <div style="width:82px;height:82px;border-radius:22px;background:var(--or);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(249,115,22,.36)">
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M16 8v20a6.5 6.5 0 1 0 4.5 0V14h12V8H16z" fill="#fff"/></svg>
-    </div>
-    <div id="splash-title" style="font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">Everyday Vocal</div>
-    <div id="splash-subtitle" style="font-size:11px;color:var(--or);font-weight:700;letter-spacing:1.2px;margin-bottom:22px">PROFESSIONAL VOCAL TRAINING</div>
-    <div style="font-size:13px;color:var(--mu);line-height:1.8;max-width:300px;margin:0 auto 30px">
-      안녕하세요.<br>가수, 뮤지컬배우, 성악가, 전공생 등<br>음성직업군의 성대기능을 훈련시키기 위한<br>훈련프로그램 'Everyday Vocal'입니다.
-    </div>
-    <button class="btn btn-or" onclick="goIntro()" style="width:100%;padding:15px;font-size:16px;border-radius:14px">시작하기  →</button>
-    <div id="splash-footer" style="margin-top:12px;font-size:11px;color:var(--mu2)">by Right Vocal Lab</div>
-  </div>
-</div>
-
-<!-- HOME -->
-<div id="scr-home" class="scr hidden">
-  <div class="topbar">
-    <div style="width:38px"></div>
-    <div class="tb" style="display:flex;align-items:center;justify-content:center;gap:7px">
-      <div style="width:22px;height:22px;border-radius:6px;background:var(--or);display:flex;align-items:center;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M7 3v9a3 3 0 1 0 2 0V6h6V3H7z" fill="#fff"/></svg>
-      </div>Everyday Vocal
-    </div>
-    <button class="ico" onclick="openAdminPW()">⚙</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:9px">
-    <!-- 이론 및 훈련설명 -->
-    <div id="menu-theory" class="menu-row" onclick="push('scr-theory-list');buildTheoryList()">
-      <div class="menu-ico" style="background:#eff6ff;font-size:14px">🎤📚</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">이론 및 훈련설명</div><div style="font-size:11px;color:var(--mu)">훈련 설명 🎤 · 발성 이론 📚</div></div>
-      <div style="color:var(--mu2);font-size:17px">›</div>
-    </div>
-    <div id="menu-theory-div" class="div" style="margin:4px 0"></div>
-    <!-- 훈련 코스 — 기본 접힘 -->
-    <div id="menu-course" style="display:flex;flex-direction:column;gap:0">
-      <div onclick="toggleCourseList()" style="display:flex;align-items:center;cursor:pointer;padding:4px 0;margin-bottom:2px">
-        <div style="font-size:15px;font-weight:800;flex:1">훈련 코스</div>
-        <div id="course-arrow" style="font-size:13px;color:var(--mu);transition:transform .25s">▼</div>
-      </div>
-      <div id="course-list-wrap" style="display:none;overflow:hidden">
-        <div id="course-list" style="display:flex;flex-direction:column;gap:8px;padding-bottom:4px"></div>
-      </div>
-    </div>
-    <div id="menu-course-div" class="div" style="margin:4px 0"></div>
-    <!-- 자유 연습 -->
-    <div id="menu-free" class="menu-row" onclick="openFree()" style="background:var(--or-l);border-color:var(--or-m)">
-      <div class="menu-ico" style="background:#fff3e8">🎯</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:800">자유 연습</div><div style="font-size:11px;color:var(--mu)">훈련을 직접 골라 나만의 프로그램 구성</div></div>
-      <div style="color:var(--or);font-size:17px">›</div>
-    </div>
-    <div id="menu-hw" class="menu-row" onclick="openStudentLogin()" style="background:#f0fdf4;border-color:#86efac">
-      <div class="menu-ico" style="background:#dcfce7">📚</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800">숙제</div>
-        <div style="font-size:11px;color:var(--mu)" id="hw-menu-sub">학생 코드로 로그인하여 숙제 확인</div>
-      </div>
-      <div style="color:#16a34a;font-size:17px">›</div>
-    </div>
-    <div style="height:12px"></div>
-  </div></div>
-</div>
-
-<!-- THEORY LIST -->
-<div id="scr-theory-list" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">이론 및 훈련설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px" id="theory-list"></div></div>
-</div>
-
-<!-- THEORY DETAIL -->
-<div id="scr-theory-detail" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="th-title">—</div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="th-tts-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px;display:none">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner">
-<div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
-    <div style="height:28px"></div>
-  </div></div>
-</div>
-
-<!-- COURSE STAGE SELECT -->
-<div id="scr-course-diff" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="cd-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner"><div style="display:flex;flex-direction:column;gap:9px" id="diff-list"></div></div></div>
-</div>
-
-<!-- DAY SELECT (일차 그리드) -->
-<div id="scr-day-select" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="ds-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner">
-    <div style="font-size:12px;color:var(--mu);margin-bottom:14px" id="ds-info"></div>
-    <div id="ds-grid"></div>
-  </div></div>
-</div>
-
-<!-- STEP PLAYER (안내멘트 + 다음 버튼) -->
-<div id="scr-step" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="closeStep()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 4px">
-      <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="step-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="step-counter">—</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="step-tts-topbar-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="step-tts-btn" onclick="toggleStepTTS()" title="읽기/정지" style="font-size:13px">⏹</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="step-prog-bar"><div class="step-prog-fill" id="step-prog" style="width:0%"></div></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px">
-
-    <!-- 훈련 이름 -->
-    <div style="text-align:center;padding:18px 0 10px">
-      <div style="font-size:11px;color:var(--mu);font-weight:700;margin-bottom:6px">현재 훈련</div>
-      <div style="font-size:20px;font-weight:900;color:var(--or-d)" id="step-ex-name">—</div>
-      <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
-    </div>
-
-    <!-- 안내 멘트 박스 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:800;color:#166534">📋 안내 멘트</div>
-        <button id="step-auto-btn" class="btn-ghost on" onclick="toggleStepAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">자동읽기 ON</button>
-      </div>
-      <div id="step-tts-notice" style="font-size:10px;color:#6b7280;margin-bottom:8px">⏳ 2~3초 후 자동으로 음성이 나옵니다</div>
-      <div style="font-size:14px;color:#1c1917;line-height:1.75" id="step-guide">—</div>
-    </div>
-
-    <!-- 버튼 영역 -->
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" id="step-piano-btn" onclick="startStepPiano()" style="flex:1;padding:13px;font-size:13px;display:none">
-        🎹 피아노 훈련 시작
-      </button>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" onclick="prevStep()" id="step-prev-btn" style="flex:1;padding:13px;font-size:13px" disabled>← 이전</button>
-      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="flex:1;padding:13px;font-size:14px">다음 →</button>
-    </div>
-  </div></div>
-</div>
-
-<!-- TRAINING (피아노 실행) -->
-<div id="scr-train" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="exitTrain()">←</button>
-    <div style="flex:1;text-align:center;min-width:0;padding:0 5px">
-      <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="t-title">—</div>
-      <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
-    </div>
-    <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
-  </div>
-  <div id="seq-bar" style="display:none;background:var(--or-l);border-bottom:1.5px solid var(--bd);padding:5px 14px;text-align:center;font-size:11px;color:var(--or-d);font-weight:700;flex-shrink:0"></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:11px;padding-bottom:18px">
-    <div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:10px;color:var(--mu);font-weight:700">진행률</span>
-        <span style="font-size:11px;font-weight:800;color:var(--or)" id="pct">0%</span>
-      </div>
-      <div class="pt"><div class="pf" id="prog" style="width:0%"></div></div>
-      <div id="dots" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px"></div>
-    </div>
-    <!-- 현재 음 + 피아노 -->
-    <div style="background:var(--or-l);border:2px solid var(--or);border-radius:15px;padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-        <div>
-          <div style="font-size:10px;color:var(--mu);font-weight:700">지금 연주 중</div>
-          <div style="display:flex;align-items:baseline;gap:3px">
-            <span style="font-size:46px;font-weight:900;color:var(--or);line-height:1.05" id="cur-n">—</span>
-            <span style="font-size:18px;color:var(--mu)" id="cur-o"></span>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--mu);font-weight:700;margin-bottom:4px">현재 키</div>
-          <div class="nb" id="cur-key">—</div>
-          <div style="font-size:11px;color:var(--mu);margin-top:4px" id="dir-l">↑ 상행</div>
-        </div>
-      </div>
-      <div class="piano-wrap">
-        <div class="piano-hd">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div class="nb" style="font-size:11px" id="rng-f">—</div>
-            <span style="color:var(--mu);font-size:11px">~</span>
-            <div class="nb" style="font-size:11px" id="rng-t">—</div>
-          </div>
-          <div style="font-size:11px;color:var(--mu)" id="dir-l2">↑</div>
-        </div>
-        <svg id="piano-svg" height="88" style="display:block;width:100%"><rect width="100%" height="100%" fill="#d8d2cb"/></svg>
-      </div>
-    </div>
-    <!-- BPM 인라인 -->
-    <div class="bpm-row">
-      <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
-      <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
-      <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
-      <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
-      <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
-      <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
-    </div>
-    <!-- 훈련 설명 + 코칭 통합 카드 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--or);font-weight:800">📋 훈련 설명</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <!-- 화이팅 멘트 ON/OFF -->
-          <!-- 훈련설명 버튼 + 화이팅멘트 ON/OFF -->
-          <div style="display:flex;align-items:center;gap:4px">
-            <button id="desc-play-btn" onclick="playTrainDesc()"
-              style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:99px;padding:2px 9px;font-size:10px;font-weight:700;color:#1e40af;cursor:pointer">설명▶</button>
-            <button id="coach-cheer-toggle" class="btn-ghost on" onclick="toggleCoachCheer()"
-              style="padding:2px 8px;font-size:10px;border-radius:99px">화이팅ON</button>
-          </div>
-          <button class="btn-ghost" id="yt-btn" onclick="openVid()"
-            style="display:none;align-items:center;gap:4px;font-size:11px">▶ 영상</button>
-        </div>
-      </div>
-      <!-- 훈련 설명 본문 -->
-      <div style="font-size:13px;color:var(--tx);line-height:1.75;margin-bottom:8px" id="ex-desc">—</div>
-      <!-- 코칭 멘트 텍스트 (화이팅 등 실시간 표시) -->
-      <div class="coach-txt" id="coach" style="border-top:1px solid var(--bd2);padding-top:7px;margin-top:2px;min-height:24px;display:none"></div>
-    </div>
-    <!-- 컨트롤 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
-      <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
-      <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" title="스텝 건너뛰기">⏭</button>
-    </div>
-    <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
-    <div id="next-train-row" style="display:none;padding:0 0 6px">
-      <button class="btn btn-ol" onclick="goNextTrain()" style="width:100%;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">
-        다음 훈련으로 ›
-      </button>
-    </div>
-  </div></div>
-</div>
-
-<!-- FREE -->
-<div id="scr-free" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb">자유 연습</div>
-    <div style="display:flex;gap:5px;align-items:center">
-      <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 내 프로그램 (리스트) -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">내 프로그램</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button onclick="clearFreeList()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid #fecaca;border-radius:8px;color:#dc2626;cursor:pointer">전체 삭제</button>
-    </div>
-    <div id="free-slots" style="display:flex;flex-direction:column;gap:6px;min-height:52px;margin-bottom:12px"></div>
-
-    <div style="height:1px;background:var(--line);margin-bottom:12px"></div>
-
-    <!-- 훈련 추가하기 (아코디언) -->
-    <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 가능한 훈련만 표시됩니다</div>
-    <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
-
-  </div></div>
-</div>
-
-<!-- HOMEWORK -->
-<div id="scr-homework" class="scr hidden">
-  <div class="topbar">
-    <button class="ico" onclick="cancelTTS();pop()">←</button>
-    <div class="tb" id="hw-topbar-title">숙제</div>
-    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-  </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
-
-    <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
-        </div>
-        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
-      </div>
-      <!-- 진행 상황 바 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
-        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
-      </div>
-      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
-        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
-      </div>
-    </div>
-
-    <!-- 숙제 리스트 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
-    </div>
-
-    <!-- 전체 훈련 시작 버튼 -->
-    <button onclick="startHomeworkSeq()"
-      style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(22,163,74,.35)">
-      ▶ 전체 훈련 시작
-    </button>
-
-    <div id="hw-slots" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
-
-  </div></div>
-</div>
-
-<!-- ADMIN -->
-<div id="scr-admin" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">데이터 업로드</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">수정한 .xlsx 파일을 업로드하면 전체 데이터가 업데이트됩니다.</div>
-      <div id="xl-drop" style="border:2px dashed var(--or-m);border-radius:11px;padding:18px;text-align:center;cursor:pointer"
-        onclick="document.getElementById('xl-file').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--or)'"
-        ondragleave="this.style.borderColor=''"
-        ondrop="handleXlDrop(event)">
-        <div style="font-size:26px;margin-bottom:5px">📂</div>
-        <div style="font-size:12px;font-weight:700;color:var(--or)">클릭 또는 드래그</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:2px">.xlsx 파일만 지원</div>
-      </div>
-      <input type="file" id="xl-file" accept=".xlsx" style="display:none" onchange="handleXlFile(event)">
-      <div id="xl-status" style="margin-top:8px;font-size:12px;text-align:center;white-space:pre-line"></div>
-    </div>
-    <div class="card" id="el-card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
-        실제 남성 성우 AI 목소리를 사용합니다.<br>
-        API 키와 Voice ID를 입력하면 즉시 적용됩니다.
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">API 키</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-key-input" type="password" placeholder="●●●●●●●●●●●●●●●●"
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:12px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default" readonly>
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534">
-            ✅ API 키 내장됨 — 별도 입력 없이 자동 작동합니다.
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px">
-            Voice ID
-            <span style="font-weight:400;color:var(--mu2)"> — 어떤 목소리로 읽을지 지정</span>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="el-vid-input" type="text" value="Mny3tJezAvDLdb8JlyUs" readonly
-              style="flex:1;border:1.5px solid #86efac;border-radius:8px;padding:8px 11px;font-size:11px;background:#f0fdf4;color:#166534;font-family:monospace;cursor:default">
-          </div>
-          <div style="margin-top:5px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:10px;color:#166534;line-height:1.5">
-            ✅ 고정 목소리 사용 중 — 어떤 기기에서 열어도 항상 같은 목소리로 출력됩니다.
-          </div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:7px;margin-bottom:10px">
-        <button class="btn btn-or" onclick="saveElSettings()" style="flex:1;padding:10px;font-size:13px" id="el-save-btn">🔊 연결 확인</button>
-        <button class="btn-ghost" onclick="testElTTS()" style="padding:9px 14px;font-size:12px">🔊 테스트</button>
-      </div>
-
-      <!-- 목소리 상세 설정 -->
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
-        <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-          🎛 목소리 안정성 (템포 불안정 시 높이세요)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:10px;color:var(--mu);white-space:nowrap">안정성</span>
-          <input type="range" id="el-stability" min="0" max="100" value="95" disabled
-            style="flex:1;accent-color:#86efac;opacity:0.7">
-          <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:34px;text-align:right" id="el-stab-val">95%</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-bottom:2px">
-          <span>낮음 (감정 풍부, 불안정)</span><span>높음 (일정한 템포)</span>
-        </div>
-        <div style="font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;padding:5px 8px;margin-top:6px">
-          클론 목소리 권장: <strong>80~95%</strong> (style은 0 고정)
-        </div>
-        <!-- 속도 슬라이더 -->
-        <div style="margin-top:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--mu);margin-bottom:8px">
-            🐢 말하기 속도
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:10px;color:var(--mu);white-space:nowrap">속도</span>
-            <input type="range" id="el-speed" min="70" max="120" value="80" step="5" disabled
-              style="flex:1;accent-color:#86efac;opacity:0.7">
-            <span style="font-size:11px;font-weight:700;color:#16a34a;min-width:38px;text-align:right" id="el-speed-val">0.80x</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2)">
-            <span>0.70x (느림)</span><span>1.00x (보통)</span><span>1.20x (빠름)</span>
-          </div>
-          <div style="margin-top:5px;font-size:10px;color:#16a34a">✅ 속도 고정됨 (변경 불가)</div>
-        </div>
-      </div>
-      <div id="el-status" style="font-size:11px;text-align:center;min-height:16px;margin-top:8px"></div>
-
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:11px;color:var(--mu)">ElevenLabs 사용</div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <div id="el-dot" style="width:8px;height:8px;border-radius:50%;background:#e5e7eb"></div>
-          <span id="el-mode-label" style="font-size:11px;color:var(--mu2)">미설정 (브라우저 TTS)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎙 목소리 진단 & 안내</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.6">
-        브라우저 TTS는 기기·OS·브라우저에 따라 제공 목소리가 다릅니다.<br>
-        <strong>Android Chrome</strong>: 설정 → 접근성 → TTS → 엔진 변경<br>
-        <strong>iOS Safari</strong>: 설정 → 손쉬운 사용 → 말하기 → 목소리<br>
-        <strong>Mac/PC</strong>: 시스템 설정 → 손쉬운 사용 → 말하기 → 시스템 음성<br>
-        남성 음성이 없다면 <strong>Google Cloud TTS / ElevenLabs</strong> 연동을 추천합니다.
-      </div>
-      <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
-      <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
-    </div>
-
-    <!-- 메뉴 노출 설정 -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
-      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
-      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
-    </div>
-
-    <!-- 숙제 완료 현황 -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
-        <div style="display:flex;gap:5px">
-          <button class="btn-ghost" onclick="showHwToday()" id="hw-tab-today"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">오늘</button>
-          <button class="btn-ghost" onclick="showHwCalendar()" id="hw-tab-cal"
-            style="font-size:10px;padding:4px 9px;border-radius:99px">월별</button>
-        </div>
-      </div>
-      <!-- 오늘 현황 -->
-      <div id="hw-today-view">
-        <div id="hw-status-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:7px">
-          <button class="btn-ghost" onclick="refreshHwStatus()" style="flex:1;font-size:12px;padding:9px">🔄 새로고침</button>
-          <button class="btn btn-or" onclick="shareHwStatus()" style="flex:1;font-size:12px;padding:9px">💬 카카오톡 공유</button>
-        </div>
-      </div>
-      <!-- 월별 캘린더 -->
-      <div id="hw-cal-view" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <button class="btn-ghost" onclick="hwCalPrev()" style="padding:4px 10px;font-size:13px">‹</button>
-          <div style="font-size:12px;font-weight:800" id="hw-cal-title">—</div>
-          <button class="btn-ghost" onclick="hwCalNext()" style="padding:4px 10px;font-size:13px">›</button>
-        </div>
-        <div style="margin-bottom:8px">
-          <select id="hw-cal-student" onchange="renderHwCalendar()"
-            style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px">
-          </select>
-        </div>
-        <div id="hw-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
-        </div>
-        <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border-radius:10px;padding:10px;font-size:11px;color:#166534;line-height:1.7">
-        </div>
-      </div>
-    </div>
-
-  </div></div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-bg" id="vid-modal" onclick="closeVidM(event)">
-  <div class="modal-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:14px;font-weight:800">▶ 예시 영상</span>
-      <button onclick="closeVidM(null)" style="background:none;border:none;font-size:20px;color:var(--mu);cursor:pointer">✕</button>
-    </div>
-    <div style="position:relative;padding-bottom:56.25%;border-radius:9px;overflow:hidden;background:#000">
-      <iframe id="yt" style="position:absolute;inset:0;width:100%;height:100%" frameborder="0" allowfullscreen></iframe>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="done-modal">
-  <div class="modal-box" style="text-align:center;max-width:320px">
-    <div style="font-size:46px;margin-bottom:7px" id="done-ico">🎉</div>
-    <div style="font-size:19px;font-weight:900;margin-bottom:5px" id="done-head">완료!</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="done-txt"></div>
-    <div style="display:flex;gap:8px;justify-content:center" id="done-btns"></div>
-  </div>
-</div>
 <script>if(typeof speechSynthesis === 'undefined'){
 window.speechSynthesis = {
 speak:function(){},
@@ -2763,853 +949,795 @@ onend:null,onerror:null,onstart:null};
 
 const INIT_DB={
   "exercises": [
-  {
-    "id": "ex_1",
-    "name": "발성훈련 셋팅",
-    "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
-    "videoId": "",
-    "active": true,
-    "hasScale": false
-  },
-  {
-    "id": "ex_2",
-    "name": "복흉식호흡",
-    "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": false
-  },
-  {
-    "id": "ex_3",
-    "name": "S 브레셔",
-    "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": false
-  },
-  {
-    "id": "ex_4",
-    "name": "Z 브레셔",
-    "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_5",
-    "name": "허밍",
-    "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_6",
-    "name": "오픈 허밍",
-    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_7",
-    "name": "Press 우",
-    "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_8",
-    "name": "Breath 우",
-    "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_9",
-    "name": "Press 아",
-    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_10",
-    "name": "Press 오",
-    "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_11",
-    "name": "호흡훈련",
-    "desc": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": false
-  },
-  {
-    "id": "ex_12",
-    "name": "백프레셔",
-    "desc": "**백 프레셔.**\n두성화된 소리를 만드는 방법의 꽃으로 뱃고동소리를 유지하며 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n양볼을 최대한 빵빵하게 한 뒤 입술은 모아주고 바람을 불어주며 입술 주변근육에 힘부터 만들어줍니다.\n입술 주변근육에 힘이 충분히 생기면 Z브레셔와 같이 성대음을 추가합니다.\n되돌아가는 압력을 통하여 성대음을 가슴 위치까지 내려 뱃고동 소리를 유지해줍니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_13",
-    "name": "흉강고정+Press 우(학!우빡!)",
-    "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_14",
-    "name": "Press 후우(후우빡!)",
-    "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_15",
-    "name": "학! 아빡",
-    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_16",
-    "name": "하아빡",
-    "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_17",
-    "name": "오픈허밍(흉성)",
-    "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_18",
-    "name": "오픈허밍(두성)",
-    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_19",
-    "name": "오픈허밍(흉성~두성)",
-    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_20",
-    "name": "오픈허밍 마아~(5도쉬고)",
-    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_21",
-    "name": "학!아 5도",
-    "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_22",
-    "name": "H어택+아 Press(학!아 하아)",
-    "desc": "**Press 하아(하아 빡!).**\nH어택을 사용하여 '아'모음을 냅니다.\n\n**훈련 방법.**\n'아' 모음을 발화하기 전 H어택을 사용하여 성대의 로우마진을 최소화 시킨 상태로 시작하여 빡! 을 해주며 얇아진 성대의 모양을 유지하며 강한 압력의 '아'를 만듭니다.\n\n**훈련 효과.**\n'아' 모음의 두성화를 만들어냅니다.",
-    "videoId": "",
-    "active": true,
-    "hasScale": true
-  },
-  {
-    "id": "ex_23",
-    "name": "립트릴",
-    "hasScale": true,
-    "active": true,
-    "desc": "**립 트릴**\n입술을 떨어주며 소리를 내는 훈련방식입니다.\n\n**훈련 방법**\n아예 초보자의 경우 양쪽 입꼬리 끝에 양손가락을 대고 살짝 서포트해주고 음정을 내줍니다.\n위 방법이 편해지면 손가락의 서포트 없이 훈련을 진행합니다.\n\n**훈련 효과**\n입술에서 공기의 흐름이 한 차례 막히면서 입안에 역압(Back Pressure)가 형성됩니다.\n이 역압이 성대 위쪽에서 성대를 가볍게 눌러주어, 성대가 과하게 부딪히지 않고 효율적으로 진동할 수 있게 돕습니다.\n\n외에도 호흡 조절 능력 향상과 성구 전환의 유연성을 만들어 줍니다."
-  },
-  {
-    "id": "ex_24",
-    "name": "S 브레셔 스타카토",
-    "hasScale": false,
-    "active": true,
-    "desc": "**S 브레셔 스타카토.**\nS를 끊어서 내보내보며 횡격막의 움직임을 느껴보는 훈련.\n\n**훈련 방법.**\n코로 저항을 걸어 호흡을 마신 뒤 상복부를 살짝 집어넣었다가 밖으로 팽창시키며 S 브레셔를 실시 합니다.\n\n**훈련 효과.**\n 횡격막의 느낌을 직접적으로 느껴보는 훈련입니다."
-  },
-  {
-    "id": "ex_25",
-    "name": "Z 브레셔 스타카토",
-    "hasScale": false,
-    "active": true,
-    "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다."
-  },
-  {
-    "id": "ex_26",
-    "name": "소울음소리",
-    "hasScale": false,
-    "active": true,
-    "desc": "**소울음소리.**\n흉성에 느낌과 호흡을 가슴에 대는 느낌을 체헙합니다.\n\n**훈련 방법.**\n소 울음소리를 음머어~~ 하고 따라하며 길~게 유지합니다. \n이때 가슴앞으로 소리가 아닌 호흡이 유지된다고 생각하며 유지합니다. \n\n**주의 사항.**\n주의할점은 소리를 내려고 할 필요는 없으며 소리가 코로 올라가는 것을 주의해야합니다."
-  },
-  {
-    "id": "ex_27",
-    "name": "우~우~우~",
-    "hasScale": false,
-    "active": true,
-    "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다."
-  },
-  {
-    "id": "ex_28",
-    "name": "학! 우~우~우~",
-    "hasScale": false,
-    "active": true,
-    "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다."
-  },
-  {
-    "id": "ex_29",
-    "name": "아~아~아~",
-    "hasScale": false,
-    "active": true,
-    "desc": "**아~아~아~.**\n'아' 모음을 사용하여 가슴위치에서 호흡을 대는 연습을 하는 훈련입니다.\n\n**훈련 방법.**\n가슴의 위치에 호흡을 불어낸다(쓸어낸다) 라는 느낌으로, 단 성대음을 내는 느낌보다는 호흡을 앞으로 댄다. 라고 생각하면서 아~아~아~\n\n**주의 사항.**\n성대음을 되도록 사용하지 않고 위치만 느껴봅니다."
-  },
-  {
-    "id": "ex_30",
-    "name": "학! 아~아~아~",
-    "hasScale": false,
-    "active": true,
-    "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다."
-  },
-  {
-    "id": "ex_31",
-    "name": "오픈허밍 아~",
-    "hasScale": true,
-    "active": true,
-    "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다."
-  }
-],
+    {
+      "id": "ex_1",
+      "name": "발성훈련 셋팅",
+      "desc": "**발성훈련 셋팅.**\n최대값의 발성훈련을 이끌어 내기 위한 기본 자세를 배웁니다.\n\n**올바른 셋팅 자세.**\n머리와 엉덩이, 등을 벽에 붙인 상태로 한 발짝 앞으로 나가서 무릎을 살짝 굽힙니다.\n기마자세가 아닌, 하체가 자연스럽게 내 몸과 머리를 벽으로 밀어준다는 느낌으로 살짝만 내려가면 됩니다.\n\n**셋팅이 중요한 이유.**\n올바른 자세는 호흡근의 최대 활용을 가능하게 하고, 성대에 불필요한 긴장을 없애줍니다.\n발성훈련의 효과를 2배 이상 높이는 기초 중의 기초입니다.\n\n**체크리스트.**\n머리가 벽에 닿아있는가. 등이 곧게 펴져있는가. 무릎이 살짝 구부러져 있는가. 상복부가 자유롭게 움직일 수 있는가.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_2",
+      "name": "복흉식호흡",
+      "desc": "**복흉식 호흡.**\n호흡근의 90% 이상을 차지하는 횡격막 근육을 집중적으로 훈련시키며 보조 호흡근들도 함께 훈련하는 호흡법입니다.\n\n**3단계 호흡 방법.**\n1단계, 상복부 팽창입니다. 코로 저항을 걸며 횡격막을 아래로 내리면서 상복부가 밖으로 나오게 합니다.\n2단계, 가슴 확장입니다. 상복부가 팽창된 상태에서 갈비뼈를 양 옆으로 확장합니다.\n3단계, 호흡 지지입니다. 팽창된 상태를 유지하면서 천천히 내쉽니다.\n\n**코로 마시는 이유.**\n성대점막이 마르지 않도록 보호합니다. 온습도를 조절하고 이물질을 걸러줍니다. 호흡근을 강하게 단련시킵니다.\n\n**연습 팁.**\n처음에는 누워서 배 위에 무거운 책을 올려놓고 연습하면 횡격막의 움직임을 쉽게 느낄 수 있습니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_3",
+      "name": "주먹말고 호흡훈련",
+      "desc": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_4",
+      "name": "울트라브리드 호흡훈련",
+      "desc": "**주먹말고 호흡 훈련.**\n울트라브리드의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n울트라브리드를 잘 잠그고 입에 완전히 짛어 넣어 이빨로 물고 입술로 울트라브리드를 덮습니다.\n울트라 브리드를 더 조이거나 풀어가며 강도를 조절하여 입으로 호흡합니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.\n기구를 통한 훈련으로 더 일관되고 정확하게 호흡훈련이 가능합니다.\n\n**울트라브리드란?**\n호주에서 수영선수의 폐활량증대를 위해 만들어낸 호흡기구 입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_5",
+      "name": "립트릴",
+      "desc": "**립 트릴**\n입술을 떨어주며 소리를 내는 훈련방식입니다.\n\n**훈련 방법**\n아예 초보자의 경우 양쪽 입꼬리 끝에 양손가락을 대고 살짝 서포트해주고 음정을 내줍니다.\n위 방법이 편해지면 손가락의 서포트 없이 훈련을 진행합니다.\n\n**훈련 효과**\n입술에서 공기의 흐름이 한 차례 막히면서 입안에 역압(Back Pressure)가 형성됩니다.\n이 역압이 성대 위쪽에서 성대를 가볍게 눌러주어, 성대가 과하게 부딪히지 않고 효율적으로 진동할 수 있게 돕습니다.\n\n외에도 호흡 조절 능력 향상과 성구 전환의 유연성을 만들어 줍니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_6",
+      "name": "S 브레셔",
+      "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_7",
+      "name": "S 브레셔 스타카토",
+      "desc": "**S 브레셔 스타카토.**\nS를 끊어서 내보내보며 횡격막의 움직임을 느껴보는 훈련.\n\n**훈련 방법.**\n코로 저항을 걸어 호흡을 마신 뒤 상복부를 살짝 집어넣었다가 밖으로 팽창시키며 S 브레셔를 실시 합니다.\n\n**훈련 효과.**\n 횡격막의 느낌을 직접적으로 느껴보는 훈련입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_8",
+      "name": "Z 브레셔",
+      "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_9",
+      "name": "Z 브레셔 스타카토",
+      "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_10",
+      "name": "허밍",
+      "desc": "**허밍.**\n입을 다물고 비강위치 즈음 에서 음mmm 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n입술을 가볍게 닫고 좋은 향기를 맡는 듯이 으음mmm 소리를 냅니다.\n소리가 코와 머리 쪽으로 울리는 느낌을 찾습니다.\n억지로 힘을 주지 말고 자연스럽게 진동이 느껴지도록 합니다.\n\n\n**허밍이 중요한 이유.**\n성대에 부담을 주지 않으면서 발성할 수 있습니다.\n공명이 어디에 있는지 위치를 찾는 데 가장 효과적인 훈련입니다.\n성대 이완과 워밍업에 탁월합니다.\n\n**오픈 허밍과의 차이.**\n일반 허밍은 입을 닫고, 오픈 허밍은 NG 발음을 사용하여 입을 살짝 열고 합니다.\n오픈 허밍은 허밍에서 모음 발성으로 전환하는 중간 단계입니다.\n\n**주의 사항.**\n본인의 실력과 타겟하는 방향에 따라서 힘이나 방향을 바꾸어줘야 합니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_11",
+      "name": "오픈 허밍",
+      "desc": "**오픈 허밍.**\n입을 열고 NG 발음을 사용하여 허밍하는 훈련입니다.\n\n**훈련 방법.**\n영어의 NG 발음(연구개를 사용하는 소리)으로 허밍합니다.\n입을 살짝 열고 소리가 코와 머리 쪽으로 울리는 느낌을 유지합니다.\n이 자세에서 점차 모음(아, 에, 이, 오, 우)으로 전환해 봅니다.\n\n**효과.**\n허밍의 공명 감각을 유지하면서 실제 발성으로 연결하는 능력을 키웁니다.\n비성을 없애고 깨끗한 모음 발성을 만드는 데 효과적입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_12",
+      "name": "오픈허밍 아~",
+      "desc": "",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_13",
+      "name": "오픈허밍 마아~",
+      "desc": "",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_14",
+      "name": "소울음소리",
+      "desc": "**소울음소리.**\n흉성에 느낌과 호흡을 가슴에 대는 느낌을 체헙합니다.\n\n**훈련 방법.**\n소 울음소리를 음머어~~ 하고 따라하며 길~게 유지합니다. \n이때 가슴앞으로 소리가 아닌 호흡이 유지된다고 생각하며 유지합니다. \n\n**주의 사항.**\n주의할점은 소리를 내려고 할 필요는 없으며 소리가 코로 올라가는 것을 주의해야합니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_15",
+      "name": "우~우~우~",
+      "desc": "**우~우~우~.**\n깊은 모음인 '우'를 활용해 가슴의 위치를 느껴봅니다.\n\n**훈련 방법.**\n깊은모음인 '우' 모음을 사용해 성대를 붙이지 않은 상태에서 가슴위치로 호흡을 불어내며 흉성에서의 소리와 호흡을 붙혀야 할 위치에 대한 감각을 만들고 직접적으로 소리를 내봅니다.\n주의할 점은 아직 성문을 완전히 폐쇄하여 성대가 붙어있는 상태가 되면 안됩니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_16",
+      "name": "학! 우~우~우~",
+      "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_17",
+      "name": "Press 우(학! 우빡!)",
+      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_18",
+      "name": "Press 후우(후우 빡!)",
+      "desc": "",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_19",
+      "name": "Breath 우",
+      "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_20",
+      "name": "아~아~아~",
+      "desc": "**아~아~아~.**\n'아' 모음을 사용하여 가슴위치에서 호흡을 대는 연습을 하는 훈련입니다.\n\n**훈련 방법.**\n가슴의 위치에 호흡을 불어낸다(쓸어낸다) 라는 느낌으로, 단 성대음을 내는 느낌보다는 호흡을 앞으로 댄다. 라고 생각하면서 아~아~아~\n\n**주의 사항.**\n성대음을 되도록 사용하지 않고 위치만 느껴봅니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_21",
+      "name": "학! 아~아~아~",
+      "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": false
+    },
+    {
+      "id": "ex_22",
+      "name": "Press 아(학! 아빡!)",
+      "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입을 크게 벌리고 강하게 아 발음을 유지하면서 스케일을 따라갑니다.\n소리가 목 뒤쪽으로 열리는 느낌을 유지합니다.\n고음으로 갈수록 입을 더 세로로 크게 벌립니다.\n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 흉성의 울림을 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_23",
+      "name": "Press 하아(하아 빡!)",
+      "desc": "",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_24",
+      "name": "아 모음 성구전환",
+      "desc": "",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_25",
+      "name": "Press 오(오 빡!)",
+      "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_26",
+      "name": "오 두성",
+      "desc": "**오 두성.**\n공명강을 최대한 연 상태로 가성과 진성 구분없이 두성화 된 감각을 훈련합니다.\n\n**훈련 방법.**\n입을 '오' 모양으로 잘 만들어 둔 뒤, 진성과 가성의 구분을 두지않고 머리통이 울리는 느낌을 갖으며 뒤,위 방향으로 올라갑니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_27",
+      "name": "백프레셔",
+      "desc": "**백 프레셔.**\n두성화된 소리를 만드는 방법의 꽃으로 뱃고동소리를 유지하며 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n양볼을 최대한 빵빵하게 한 뒤 입술은 모아주고 바람을 불어주며 입술 주변근육에 힘부터 만들어줍니다.\n입술 주변근육에 힘이 충분히 생기면 Z브레셔와 같이 성대음을 추가합니다.\n되돌아가는 압력을 통하여 성대음을 가슴 위치까지 내려 뱃고동 소리를 유지해줍니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    },
+    {
+      "id": "ex_28",
+      "name": "후 내려오기",
+      "desc": "**후 내려오기.**\n'후' 라는 발음을 활용하여 호흡의압력과 소리를 뒤로 당겨주기위한 훈련입니다.\n\n**훈련 방법.**\n'후' 라는 발음을 뒤로 위로 향하게 당겨줍니다.\n처음엔 가성으로 시작하여 가볍게 고음의 길부터 만들어 줍니다.\n본격적으로 가슴소리를 추가하여 두성화 시킨 소리를 내줍니다.\n이 때 뒷통수에 마치 진공청소기를 댄 듯한 느낌으로 훈련해주면 도움이 됩니다.",
+      "videoId": "",
+      "active": true,
+      "hasScale": true
+    }
+  ],
   "scales": [
-  {
-    "id": "3D-A",
-    "name": "3도 스케일",
-    "range": "흉성",
-    "startNote": 57,
-    "endNote": 61,
-    "bpm": 190,
-    "pattern": [
-      0,
-      2,
-      4,
-      2,
-      0,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      4,
-      5,
-      7,
-      5,
-      4,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      0,
-      2,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "3D-B",
-    "name": "3도 스케일",
-    "range": "중성",
-    "startNote": 62,
-    "endNote": 67,
-    "bpm": 190,
-    "pattern": [
-      0,
-      2,
-      4,
-      2,
-      0,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      4,
-      5,
-      7,
-      5,
-      4,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      0,
-      2,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "3D-C",
-    "name": "3도 스케일",
-    "range": "흉성~높은중성",
-    "startNote": 57,
-    "endNote": 70,
-    "bpm": 190,
-    "pattern": [
-      0,
-      2,
-      4,
-      2,
-      0,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      4,
-      5,
-      7,
-      5,
-      4,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      0,
-      2,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "3D-D",
-    "name": "3도 스케일",
-    "range": "흉성~두성",
-    "note": "",
-    "startNote": 57,
-    "endNote": 76,
-    "bpm": 190,
-    "previewType": "5도화음",
-    "pattern": [
-      0,
-      2,
-      4,
-      2,
-      0,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      4,
-      5,
-      7,
-      5,
-      4,
-      {
-        "hold": 2
-      },
-      2,
-      4,
-      5,
-      4,
-      2,
-      {
-        "hold": 2
-      },
-      0,
-      2,
-      4,
-      2,
-      0
-    ]
-  },
-  {
-    "id": "5D-A",
-    "name": "5도 스케일",
-    "range": "흉성",
-    "startNote": 57,
-    "endNote": 61,
-    "bpm": 130,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "5D-B",
-    "name": "5도 스케일",
-    "range": "중성~낮은두성",
-    "startNote": 62,
-    "endNote": 72,
-    "bpm": 130,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "5D-C",
-    "name": "5도 스케일",
-    "range": "중성~높은두성",
-    "startNote": 62,
-    "endNote": 76,
-    "bpm": 130,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "5D-D",
-    "name": "5도 스케일",
-    "range": "고급",
-    "startNote": 62,
-    "endNote": 84,
-    "bpm": 130,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "5H-A",
-    "name": "5도 쉬고 내려오기",
-    "range": "흉성",
-    "startNote": 57,
-    "endNote": 61,
-    "bpm": 125,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      {
-        "hold": 3
-      },
-      7,
-      {
-        "hold": 1
-      },
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-  },
-  {
-    "id": "5H-B",
-    "name": "5도 쉬고 내려오기",
-    "range": "중성~낮은두성",
-    "startNote": 62,
-    "endNote": 72,
-    "bpm": 125,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      {
-        "hold": 3
-      },
-      7,
-      {
-        "hold": 1
-      },
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-  },
-  {
-    "id": "5H-C",
-    "name": "5도 쉬고 내려오기",
-    "range": "중성~높은두성",
-    "startNote": 62,
-    "endNote": 76,
-    "bpm": 125,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      {
-        "hold": 3
-      },
-      7,
-      {
-        "hold": 1
-      },
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-  },
-  {
-    "id": "5H-D",
-    "name": "5도 쉬고 내려오기",
-    "range": "고급",
-    "startNote": 62,
-    "endNote": 84,
-    "bpm": 125,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      {
-        "hold": 3
-      },
-      7,
-      {
-        "hold": 1
-      },
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": "솔 4박 홀드 → 솔 치고 3박 홀드 → 파미레도 하행"
-  },
-  {
-    "id": "9D-A",
-    "name": "9도 스케일",
-    "range": "흉성~낮은두성",
-    "startNote": 57,
-    "endNote": 65,
-    "bpm": 180,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      9,
-      11,
-      12,
-      14,
-      12,
-      11,
-      9,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "9D-B",
-    "name": "9도 스케일",
-    "range": "흉성~높은두성",
-    "startNote": 57,
-    "endNote": 69,
-    "bpm": 180,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      9,
-      11,
-      12,
-      14,
-      12,
-      11,
-      9,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": ""
-  },
-  {
-    "id": "5DN-A",
-    "name": "5도 하향 스케일",
-    "range": "중성~낮은두성",
-    "startNote": 69,
-    "endNote": 79,
-    "bpm": 125,
-    "pattern": [
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "하행 진행 → 반음씩 상행 반복"
-  },
-  {
-    "id": "5DN-B",
-    "name": "5도 하향 스케일",
-    "range": "중성~높은두성",
-    "startNote": 69,
-    "endNote": 83,
-    "bpm": 125,
-    "pattern": [
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "하행 진행 → 반음씩 상행 반복"
-  },
-  {
-    "id": "5DN-C",
-    "name": "5도 하향 스케일",
-    "range": "고급",
-    "startNote": 69,
-    "endNote": 91,
-    "bpm": 125,
-    "pattern": [
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "하행 진행 → 반음씩 상행 반복"
-  },
-  {
-    "id": "9DN-A",
-    "name": "9도 하향 스케일",
-    "range": "높은두성 시작",
-    "startNote": 83,
-    "endNote": 71,
-    "bpm": 180,
-    "pattern": [
-      14,
-      12,
-      11,
-      9,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "높은레(9) 3박 홀드 ~도(1) 하행"
-  },
-  {
-    "id": "9DN-B",
-    "name": "9도 하향 스케일",
-    "range": "고급",
-    "startNote": 91,
-    "endNote": 71,
-    "bpm": 180,
-    "pattern": [
-      14,
-      12,
-      11,
-      9,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "높은레(9) 3박 홀드 ~도(1) 하행"
-  },
-  {
-    "id": "9DN-C",
-    "name": "9도 하향 스케일(하향만)",
-    "range": "두성",
-    "startNote": 83,
-    "endNote": 88,
-    "bpm": 180,
-    "pattern": [
-      14,
-      12,
-      11,
-      9,
-      7,
-      5,
-      4,
-      2,
-      0
-    ],
-    "previewType": "첫음단음",
-    "previewBeats": 4,
-    "note": "높은레(9) 3박 홀드 ~도(1) 하행"
-  },
-  {
-    "id": "9D-C",
-    "name": "9도 스케일",
-    "range": "고급",
-    "startNote": 57,
-    "endNote": 77,
-    "bpm": 180,
-    "pattern": [
-      0,
-      2,
-      4,
-      5,
-      7,
-      9,
-      11,
-      12,
-      14
-    ],
-    "previewType": "5도화음",
-    "previewBeats": 4,
-    "note": "9도 고급 스케일 A3~F#5. 4번 스케일"
-  }
-],
+    {
+      "id": "3D-A",
+      "name": "3도 스케일",
+      "range": "흉성",
+      "startNote": 57,
+      "endNote": 61,
+      "bpm": 190,
+      "pattern": [
+        0,
+        2,
+        4,
+        2,
+        0,
+        2,
+        4,
+        5,
+        4,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        4,
+        5,
+        4,
+        2,
+        0,
+        2,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "3D-B",
+      "name": "3도 스케일",
+      "range": "중성",
+      "startNote": 62,
+      "endNote": 67,
+      "bpm": 190,
+      "pattern": [
+        0,
+        2,
+        4,
+        2,
+        0,
+        2,
+        4,
+        5,
+        4,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        4,
+        5,
+        4,
+        2,
+        0,
+        2,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "3D-C",
+      "name": "3도 스케일",
+      "range": "흉성~높은중성",
+      "startNote": 57,
+      "endNote": 70,
+      "bpm": 190,
+      "pattern": [
+        0,
+        2,
+        4,
+        2,
+        0,
+        2,
+        4,
+        5,
+        4,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        4,
+        5,
+        4,
+        2,
+        0,
+        2,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "3D-D",
+      "name": "3도 스케일",
+      "range": "흉성~두성",
+      "startNote": 57,
+      "endNote": 76,
+      "bpm": 190,
+      "pattern": [
+        0,
+        2,
+        4,
+        2,
+        0,
+        2,
+        4,
+        5,
+        4,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        4,
+        5,
+        4,
+        2,
+        0,
+        2,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "5D-A",
+      "name": "5도 스케일",
+      "range": "흉성",
+      "startNote": 57,
+      "endNote": 61,
+      "bpm": 130,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "5D-B",
+      "name": "5도 스케일",
+      "range": "중성~낮은두성",
+      "startNote": 62,
+      "endNote": 72,
+      "bpm": 130,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "5D-C",
+      "name": "5도 스케일",
+      "range": "중성~높은두성",
+      "startNote": 62,
+      "endNote": 76,
+      "bpm": 130,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "5D-D",
+      "name": "5도 스케일",
+      "range": "고급",
+      "startNote": 62,
+      "endNote": 84,
+      "bpm": 130,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "5H-A",
+      "name": "5도 쉬고 내려오기",
+      "range": "흉성",
+      "startNote": 57,
+      "endNote": 61,
+      "bpm": 125,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        {
+          "hold": 4
+        },
+        7,
+        {
+          "hold": 3
+        },
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": "솔 5박 홀드 → 솔 치고 4박 홀드 → 파미레도 하행"
+    },
+    {
+      "id": "5H-B",
+      "name": "5도 쉬고 내려오기",
+      "range": "중성~낮은두성",
+      "startNote": 62,
+      "endNote": 72,
+      "bpm": 125,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        {
+          "hold": 4
+        },
+        7,
+        {
+          "hold": 3
+        },
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": "솔 5박 홀드 → 솔 치고 4박 홀드 → 파미레도 하행"
+    },
+    {
+      "id": "5H-C",
+      "name": "5도 쉬고 내려오기",
+      "range": "중성~높은두성",
+      "startNote": 62,
+      "endNote": 76,
+      "bpm": 125,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        {
+          "hold": 4
+        },
+        7,
+        {
+          "hold": 3
+        },
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": "솔 5박 홀드 → 솔 치고 4박 홀드 → 파미레도 하행"
+    },
+    {
+      "id": "5H-D",
+      "name": "5도 쉬고 내려오기",
+      "range": "고급",
+      "startNote": 62,
+      "endNote": 84,
+      "bpm": 125,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        {
+          "hold": 4
+        },
+        7,
+        {
+          "hold": 3
+        },
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": "솔 5박 홀드 → 솔 치고 4박 홀드 → 파미레도 하행"
+    },
+    {
+      "id": "9D-A",
+      "name": "9도 스케일",
+      "range": "흉성~낮은두성",
+      "startNote": 57,
+      "endNote": 65,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "9D-B",
+      "name": "9도 스케일",
+      "range": "흉성~높은두성",
+      "startNote": 57,
+      "endNote": 69,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "9D-C",
+      "name": "9도 스케일",
+      "range": "고급",
+      "startNote": 57,
+      "endNote": 77,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "5DN-A",
+      "name": "5도 하향 스케일",
+      "range": "중성~낮은두성",
+      "startNote": 69,
+      "endNote": 79,
+      "bpm": 125,
+      "pattern": [
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "하행 진행 → 반음씩 상행 반복"
+    },
+    {
+      "id": "5DN-B",
+      "name": "5도 하향 스케일",
+      "range": "중성~높은두성",
+      "startNote": 69,
+      "endNote": 83,
+      "bpm": 125,
+      "pattern": [
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "하행 진행 → 반음씩 상행 반복"
+    },
+    {
+      "id": "5DN-C",
+      "name": "5도 하향 스케일",
+      "range": "고급",
+      "startNote": 69,
+      "endNote": 91,
+      "bpm": 125,
+      "pattern": [
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "하행 진행 → 반음씩 상행 반복"
+    },
+    {
+      "id": "9DN-A",
+      "name": "9도 하향 스케일",
+      "range": "높은두성 시작",
+      "startNote": 83,
+      "endNote": 71,
+      "bpm": 180,
+      "pattern": [
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+    },
+    {
+      "id": "9DN-B",
+      "name": "9도 하향 스케일",
+      "range": "고급",
+      "startNote": 91,
+      "endNote": 71,
+      "bpm": 180,
+      "pattern": [
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "높은레(9) 3박 홀드 ~도(1) 하행"
+    },
+    {
+      "id": "9DN-C",
+      "name": "9도 하향 스케일(하향만)",
+      "range": "두성",
+      "startNote": 83,
+      "endNote": 88,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": ""
+    }
+  ],
   "courses": [
     {
       "id": "c_1",
@@ -3722,7 +1850,7 @@ const INIT_DB={
           "isRest": false,
           "exId": "코에 저항걸어서 호흡 마시기 x10",
           "scaleId": "",
-          "guide": "올바른 셋팅 자세에서 복식으로 호흡이 잘 들어온다면 다음단계로 코에 저항을 걸어서 두카운트로 호흡을 마셔봅니다.\n코에 저항을 걸어주는 이유는 3가지가 있는데, 첫번째는 성대점막이 마르지 않게 하기 위함입니다. 발성훈련하는 내내 상당히 많은 횟수의 호흡을 하게 되는데 입으로 계속 마신다면 당신의 성대가 말라비틀어질거에요!\n두번째는 온습도의 조절과 이물질을 걸러주기 떄문입니다. 우리몸에 나비굴이라는 곳과 비갑개라는 기관에서 바깥의 먼지를 걸러주고 온,습도를 내몸에 알맞게 맞춰주어 기관지에 무리를 덜 주게 됩니다.\n세번째는 호흡근을 강하게 단련시키기 위해서 입니다. 모든 근육은 점진적과부하에 의해 성장을 하게되는 원리를 가지고 있습니다. 평생 숨을 쉬면서 살았지만 호흡근이 발달하지 않았던 이유이기도 하지요! 호흡을 마실때 부하를 걸어줘 호흡근들이 계속해서 저항을 느끼게 되고 발달하게 됩니다.\n\n뱉을때는 편하게 뱉도록 합니다.",
+          "guide": "올바른 셋팅 자세에서 복식으로 호흡이 잘 들어온다면 다음단계로 코에 저항을 걸어서  두카운트로 호흡을 마셔봅니다.\n코에 저항을 걸어주는 이유는 3가지가 있는데, 첫번째는 성대점막이 마르지 않게 하기 위함입니다. 발성훈련하는 내내 상당히 많은 횟수의 호흡을 하게 되는데 입으로 계속 마신다면 당신의 성대가 말라비틀어질거에요!\n두번째는 온습도의 조절과 이물질을 걸러주기 떄문입니다. 우리몸에 나비굴이라는 곳과 비갑개라는 기관에서 바깥의 먼지를 걸러주고 온,습도를 내몸에 알맞게 맞춰주어 기관지에 무리를 덜 주게 됩니다.\n세번째는 호흡근을 강하게 단련시키기 위해서 입니다. 모든 근육은 점진적과부하에 의해 성장을 하게되는 원리를 가지고 있습니다. 평생 숨을 쉬면서 살았지만 호흡근이 발달하지 않았던 이유이기도 하지요! 호흡을 마실때 부하를 걸어줘 호흡근들이 계속해서 저항을 느끼게 되고 발달하게 됩니다.\n\n뱉을때는 편하게 뱉도록 합니다.",
           "videoId": "",
           "exLabel": "코에 저항걸어서 호흡 마시기 x10"
         },
@@ -4439,43 +2567,7 @@ const INIT_DB={
       "totalDays": 3
     }
   ],
-  "coachings": [
-    {
-      "exId": "Z브레셔",
-      "scaleId": "3D-A",
-      "sec": 120,
-      "msg": "소리가 가슴위치에서 뜨지않게 주의하세요!",
-      "rate": 1.0
-    },
-    {
-      "exId": "Z브레셔",
-      "scaleId": "3D-A",
-      "sec": 180,
-      "msg": "끝났습니다! 꾸준히 훈련하세요!",
-      "rate": 1.0
-    },
-    {
-      "exId": "허밍",
-      "scaleId": "5D-A",
-      "sec": 0,
-      "msg": "코로 공명시키면서 따라와!",
-      "rate": 1.0
-    },
-    {
-      "exId": "허밍",
-      "scaleId": "5D-A",
-      "sec": 90,
-      "msg": "공명이 살아있어! 계속!",
-      "rate": 1.0
-    },
-    {
-      "exId": "허밍",
-      "scaleId": "5D-A",
-      "sec": 200,
-      "msg": "5도 허밍 완료! 최고다!",
-      "rate": 1.0
-    }
-  ],
+  "coachings": [],
   "theories": [
     {
       "id": "t_ex1",
@@ -7204,124 +5296,124 @@ let STUDENTS_DB = [
     "pw": "jueun24",
     "homework": [
       {
-        "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
+        "exName": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "displayLabel": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "num": 0,
+        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
       },
       {
-        "exId": "ex_3",
-        "exName": "S 브레셔",
+        "exId": "S 브레셔 x10",
+        "exName": "S 브레셔 x10",
         "displayLabel": "S 브레셔 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
         "active": true,
-        "label": "S 브레셔",
-        "name": "S 브레셔"
+        "num": 1,
+        "name": "S 브레셔 x10"
       },
       {
-        "exId": "ex_2",
+        "exId": "립트릴",
         "exName": "립트릴",
         "displayLabel": "립트릴",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "올라갈때 앞을타고 위로가서 뒤로가고 내려올때 삼각형 다 버텨보기",
         "active": true,
-        "label": "립트릴",
+        "num": 2,
         "name": "립트릴"
       },
       {
-        "exId": "ex_13",
+        "exId": "흉강고정+Press 우(학!우빡!)",
         "exName": "흉강고정+Press 우(학!우빡!)",
         "displayLabel": "흉강고정+Press 우(학!우빡!)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에 좁히면 안되 주은아! 밖으로 아래로 공간에 성대의 힘을 밀어 넣는다고 생각하면서!",
         "active": true,
-        "label": "흉강고정+Press 우(학!우빡!)",
+        "num": 3,
         "name": "흉강고정+Press 우(학!우빡!)"
       },
       {
-        "exId": "ex_14",
+        "exId": "Press 후우(후우빡!)",
         "exName": "Press 후우(후우빡!)",
         "displayLabel": "Press 후우(후우빡!)",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "이제부터 후 는 위치를 올리는 서비스 이고 계속 가슴에 우빡을 잘 버티려고 해야 되!",
         "active": true,
-        "label": "Press 후우(후우빡!)",
+        "num": 4,
         "name": "Press 후우(후우빡!)"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "가슴까지 닿은 소리를 창문열고 나간다 생각하면서 앞으로 꺼내기!\n뚜껑 닫기!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 5,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_15",
+        "exId": "학! 아빡",
         "exName": "학! 아빡",
         "displayLabel": "학! 아빡",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에 좁히지말고 버티기! 힘들어지는 음정부터 앞에밑으로 꺽이며 누른다 생각하기!",
         "active": true,
-        "label": "학! 아빡",
+        "num": 6,
         "name": "학! 아빡"
       },
       {
-        "exId": "ex_16",
+        "exId": "하아빡",
         "exName": "하아빡",
         "displayLabel": "하아빡",
         "scaleId": "3D-B",
         "repeat": 2,
         "comment": "피아노에 턱 대고 한번(가슴열어 대기), 벽에 붙어서 한번(가슴열어 대기)",
         "active": true,
-        "label": "하아빡",
+        "num": 7,
         "name": "하아빡"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "후두를 턱으로 완전 박아서 가슴앞에 공을 상상하며 열 것!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 8,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_18",
+        "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
         "displayLabel": "오픈허밍(두성)",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "피치만 생각하면서, 가볍게 뒤로위로 당겨가기",
         "active": true,
-        "label": "오픈허밍(두성)",
+        "num": 9,
         "name": "오픈허밍(두성)"
       },
       {
-        "exId": "ex_19",
+        "exId": "오픈허밍(흉성~두성)",
         "exName": "오픈허밍(흉성~두성)",
         "displayLabel": "오픈허밍(흉성~두성)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "앞에 잘 버틴거 생각하면서 위로, 뒤로 연결해서 지나가기!\n잘 되면 뒤에도 내리기",
         "active": true,
-        "label": "오픈허밍(흉성~두성)",
+        "num": 10,
         "name": "오픈허밍(흉성~두성)"
       }
     ]
@@ -7331,168 +5423,168 @@ let STUDENTS_DB = [
     "pw": "donghyun24",
     "homework": [
       {
-        "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exId": "호흡훈련 주먹말고 서서x10, 숙여서 x10",
+        "exName": "호흡훈련 주먹말고 서서x10, 숙여서 x10",
         "displayLabel": "호흡훈련 주먹말고 서서x10, 숙여서 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "num": 0,
+        "name": "호흡훈련 주먹말고 서서x10, 숙여서 x10"
       },
       {
-        "exId": "ex_12",
+        "exId": "백프레셔",
         "exName": "백프레셔",
         "displayLabel": "백프레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴에 진동이 최대한 많아지게 강하게! 대신 바람이 사라지면 안됨",
         "active": true,
-        "label": "백프레셔",
+        "num": 1,
         "name": "백프레셔"
       },
       {
-        "exId": "ex_12",
+        "exId": "백프레셔",
         "exName": "백프레셔",
         "displayLabel": "백프레셔",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "1번을 미친듯이 버티는 걸 좀 살살해야 돼!",
         "active": true,
-        "label": "백프레셔",
+        "num": 2,
         "name": "백프레셔"
       },
       {
-        "exId": "ex_13",
+        "exId": "흉강고정+Press 우(학!우빡!)",
         "exName": "흉강고정+Press 우(학!우빡!)",
         "displayLabel": "흉강고정+Press 우(학!우빡!)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "호흡만 뱉으면 안 돼! 성대음을 순간 내고 멈추는 거야!",
         "active": true,
-        "label": "흉강고정+Press 우(학!우빡!)",
+        "num": 3,
         "name": "흉강고정+Press 우(학!우빡!)"
       },
       {
-        "exId": "ex_14",
+        "exId": "Press 후우(후우빡!)",
         "exName": "Press 후우(후우빡!)",
         "displayLabel": "Press 후우(후우빡!)",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "하나씩 연습해보고 안 되면 벽 밀면서!",
         "active": true,
-        "label": "Press 후우(후우빡!)",
+        "num": 4,
         "name": "Press 후우(후우빡!)"
       },
       {
-        "exId": "ex_5",
+        "exId": "허밍",
         "exName": "허밍",
         "displayLabel": "허밍",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "목 상태 확인용! 편하게 잘 되면 그때 하나씩 압력 추가해봐!",
         "active": true,
-        "label": "허밍",
+        "num": 5,
         "name": "허밍"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴압력 열기! 조여지지 않고 압력 유지해서 소리 버티기!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 6,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_15",
+        "exId": "학! 아빡",
         "exName": "학! 아빡",
         "displayLabel": "학! 아빡",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "학! 잘하고 있어!",
         "active": true,
-        "label": "학! 아빡",
+        "num": 7,
         "name": "학! 아빡"
       },
       {
-        "exId": "ex_16",
+        "exId": "하아빡",
         "exName": "하아빡",
         "displayLabel": "하아빡",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "가슴 위치로 소리 당기면서! (무거운 거 들면서)",
         "active": true,
-        "label": "하아빡",
+        "num": 8,
         "name": "하아빡"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "후두를 턱으로 완전 박아서 열 것!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 9,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_18",
+        "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
         "displayLabel": "오픈허밍(두성)",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "하앙~ 응 잘 하고 가볍게 뒤로위로!",
         "active": true,
-        "label": "오픈허밍(두성)",
+        "num": 10,
         "name": "오픈허밍(두성)"
       },
       {
-        "exId": "ex_19",
+        "exId": "오픈허밍(흉성~두성)",
         "exName": "오픈허밍(흉성~두성)",
         "displayLabel": "오픈허밍(흉성~두성)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "뇌한테 틈 주지 말고 턱으로 후두 고정! 조여지지 않게!",
         "active": true,
-        "label": "오픈허밍(흉성~두성)",
+        "num": 11,
         "name": "오픈허밍(흉성~두성)"
       },
       {
-        "exId": "ex_20",
+        "exId": "오픈허밍 마아~(5도쉬고)",
         "exName": "오픈허밍 마아~(5도쉬고)",
         "displayLabel": "오픈허밍 마아~(5도쉬고)",
         "scaleId": "5H-A",
         "repeat": 1,
         "comment": "마아에서 이제 가슴에도 소리 대보기!",
         "active": true,
-        "label": "오픈허밍 마아~(5도쉬고)",
+        "num": 12,
         "name": "오픈허밍 마아~(5도쉬고)"
       },
       {
-        "exId": "ex_21",
+        "exId": "학!아 5도",
         "exName": "학!아 5도",
         "displayLabel": "학!아 5도",
         "scaleId": "5D-A",
         "repeat": 1,
         "comment": "엄지 잘 대고 학! 아아아아 완전 놨다가 내려올 때 가슴압력 풀리지 않게!",
         "active": true,
-        "label": "학!아 5도",
+        "num": 13,
         "name": "학!아 5도"
       },
       {
-        "exId": "ex_22",
+        "exId": "H어택+아 Press(학!아 하아)",
         "exName": "H어택+아 Press(학!아 하아)",
         "displayLabel": "H어택+아 Press(학!아 하아)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "내려올 때 가슴 앞쪽으로 호흡 버틴다는 생각!",
         "active": true,
-        "label": "H어택+아 Press(학!아 하아)",
+        "num": 14,
         "name": "H어택+아 Press(학!아 하아)"
       }
     ]
@@ -7502,124 +5594,124 @@ let STUDENTS_DB = [
     "pw": "seojin24",
     "homework": [
       {
-        "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
+        "exName": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "displayLabel": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "num": 0,
+        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
       },
       {
-        "exId": "ex_3",
-        "exName": "S 브레셔",
+        "exId": "S 브레셔 x10",
+        "exName": "S 브레셔 x10",
         "displayLabel": "S 브레셔 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "29초 호흡낭비 심해! 바늘구멍만큼 더 얇고 작게 뚫어서 멀리멀리 보내준다고 생각!",
         "active": true,
-        "label": "S 브레셔",
-        "name": "S 브레셔"
+        "num": 1,
+        "name": "S 브레셔 x10"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "벽에 붙어서. 맨 첫음에서 너무 넓게 하려고 하지말고 더 한 점으로 모은다고 생각!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 2,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "내가 할 수 있는만큼 가슴에 창문 열어서 대주고,\n힘들면 그 구간부터 자연스럽게 가슴에호흡을 꿰서 뒤로위로 멀리멀리 올라가기!, 모든구간에서 다 가슴에 창문 열수있게!\n잘 되서 밴딩으로 넘어갔어! \n밴딩했을때 처음에는 D#5부터안났었는데 한번 붙기시작하니까 G5까지 났는데! G#5부터 더 얇게 안만들어지는거야! \n근데 여기는 밑애 G5랑 같은 느낌이라고 생각하면 절대 못올라가! \n더 얆아진게 다시 가슴으로 붙는다고 생각해야되!\n그래도 안되면 방법 2가지 번갈아가면서 해보기! \n1번은 가슴에 압력을 확보하되 안되는음정은 상상! \n내려올때 붙혀보기(음정을 내려고 해보기), \n2번은 가성으로 빼도 되는데 그럼 더 오래걸리니까 가성이라고 상상하고 더 멀리보내기!(조금 조여지지만 그래도 나기시작하거든? 그럼또 반대로 나기시작한음에서 점점 열어간다 생각하면되!)",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 3,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_15",
+        "exId": "학! 아빡",
         "exName": "학! 아빡",
         "displayLabel": "학! 아빡",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "무거운 거 들면서. 벽에 붙어서 가슴위치에서만! 앞으로 나가면서 밝은 아를 자랑한다고 생각! 맨처음 수업들 기억하기! 후두하강해서 누르며 버티는 힘 기르기!",
         "active": true,
-        "label": "학! 아빡",
+        "num": 4,
         "name": "학! 아빡"
       },
       {
-        "exId": "ex_5",
+        "exId": "허밍",
         "exName": "허밍",
         "displayLabel": "허밍",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "내려올 때 호흡의 단수를 절대 낮추면 안 돼! 콧구멍으로 호흡을 빼면 안 돼!",
         "active": true,
-        "label": "허밍",
+        "num": 5,
         "name": "허밍"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "처음에는 앞에만 사용해서!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 6,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "3,4번 방향으로 ㅅ자 모양으로 버텨진다고 생각! \n앞에 압력이 뒤로 따라가지 않게 주의!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 7,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_18",
+        "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
         "displayLabel": "오픈허밍(두성)",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "뒤로위로 소리를 보냈다가 앞으로 보내면서 내려오기!",
         "active": true,
-        "label": "오픈허밍(두성)",
+        "num": 8,
         "name": "오픈허밍(두성)"
       },
       {
-        "exId": "ex_19",
+        "exId": "오픈허밍(흉성~두성)",
         "exName": "오픈허밍(흉성~두성)",
         "displayLabel": "오픈허밍(흉성~두성)",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "4개는 흉성, 5개째부터 두성으로 훅 띄워서 내고 내려올 때는 두성으로!",
         "active": true,
-        "label": "오픈허밍(흉성~두성)",
+        "num": 9,
         "name": "오픈허밍(흉성~두성)"
       },
       {
-        "exId": "ex_19",
+        "exId": "오픈허밍(두성) 아~",
         "exName": "오픈허밍(두성) 아~",
         "displayLabel": "오픈허밍(두성) 아~",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "오픈허밍(두성) 상태에서 아래로 한번 눌러서 뒤로 보내고 위로 당겨 올라가는 걸 버티면서 위를 든다는 생각으로 '아' 하기",
         "active": true,
-        "label": "오픈허밍(두성) 아~",
+        "num": 10,
         "name": "오픈허밍(두성) 아~"
       }
     ]
@@ -7629,92 +5721,92 @@ let STUDENTS_DB = [
     "pw": "suyeon24",
     "homework": [
       {
-        "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
+        "exName": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "displayLabel": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "num": 0,
+        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
       },
       {
-        "exId": "ex_3",
-        "exName": "S 브레셔",
+        "exId": "S 브레셔 x10",
+        "exName": "S 브레셔 x10",
         "displayLabel": "S 브레셔 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
         "active": true,
-        "label": "S 브레셔",
-        "name": "S 브레셔"
+        "num": 1,
+        "name": "S 브레셔 x10"
       },
       {
-        "exId": "ex_4",
-        "exName": "Z 브레셔",
+        "exId": "Z 브레셔(흉성)",
+        "exName": "Z 브레셔(흉성)",
         "displayLabel": "Z 브레셔(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴앞에 소리 잘 붙혀서 유지하고 음정 올라가면 뒤에 잘 당겨쓰고! 가슴소리가 너무 없으면 안 돼!(중요)",
         "active": true,
-        "label": "Z 브레셔",
-        "name": "Z 브레셔"
+        "num": 2,
+        "name": "Z 브레셔(흉성)"
       },
       {
-        "exId": "ex_4",
-        "exName": "Z 브레셔",
+        "exId": "Z 브레셔(흉성~두성)",
+        "exName": "Z 브레셔(흉성~두성)",
         "displayLabel": "Z 브레셔(흉성~두성)",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "벽에 붙어서. 앞에 바람 잘 버티면서! 두성구쯤 올라가면 뒤에서 아래로 눌리는 상압이 생긴다고 상상!",
         "active": true,
-        "label": "Z 브레셔",
-        "name": "Z 브레셔"
+        "num": 3,
+        "name": "Z 브레셔(흉성~두성)"
       },
       {
-        "exId": "ex_5",
+        "exId": "허밍",
         "exName": "허밍",
         "displayLabel": "허밍",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "입닫고 뒤로위로 내려올 때 앞으로!",
         "active": true,
-        "label": "허밍",
+        "num": 4,
         "name": "허밍"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에만 신경써서! 수연이는 밑에를 더 많이 밖으로 꺼낸다 생각!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 5,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "3번 4번 위치에서 수평으로만 움직일 것! G4, G#4 되면 뒤에 한칸씩 더 있다고 생각하면서!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 6,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_11",
-        "exName": "후 내려오기",
+        "exId": "후 내려오기(5도 하향)",
+        "exName": "후 내려오기(5도 하향)",
         "displayLabel": "후 내려오기(5도 하향)",
         "scaleId": "5DN-C",
         "repeat": 1,
         "comment": "호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!",
         "active": true,
-        "label": "후 내려오기",
-        "name": "후 내려오기"
+        "num": 7,
+        "name": "후 내려오기(5도 하향)"
       }
     ]
   },
@@ -7723,80 +5815,80 @@ let STUDENTS_DB = [
     "pw": "jiyu24",
     "homework": [
       {
-        "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
+        "exName": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "displayLabel": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "num": 0,
+        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
       },
       {
-        "exId": "ex_3",
-        "exName": "S 브레셔",
+        "exId": "S 브레셔 x10",
+        "exName": "S 브레셔 x10",
         "displayLabel": "S 브레셔 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "길게~ 들어가는 호흡이 컨트롤해준다 생각하면서 더 얇게, 길게~!",
         "active": true,
-        "label": "S 브레셔",
-        "name": "S 브레셔"
+        "num": 1,
+        "name": "S 브레셔 x10"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 벽에 붙어서. 상복부 더 생각하고 집중하면서!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 2,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). D5부터 뒤가 안 돼. 뒤로꿰서만 가면 D6까지도 가능! 내려올 때는 가슴에 계속 집어넣으려고 하다가!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 3,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_5",
+        "exId": "허밍",
         "exName": "허밍",
         "displayLabel": "허밍",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "7번(5도중성). 1번방식 연습. 처음 시작할 때 코로 뱉지마!! 꽃향기를 맡는다 생각!",
         "active": true,
-        "label": "허밍",
+        "num": 4,
         "name": "허밍"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 처음엔 가슴앞에만 열기! 공이 앞에만 있어! 축구공이야!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 5,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 요번엔 앞뒤로! 럭비공이야! 가슴 앞뒤로 럭비공이 들어있는데 공기를 채우고 계속 늘려나가야 돼!",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 6,
         "name": "오픈허밍(흉성)"
       }
     ]
@@ -7806,113 +5898,113 @@ let STUDENTS_DB = [
     "pw": "yura24",
     "homework": [
       {
-        "exId": "ex_11",
-        "exName": "호흡훈련",
+        "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
+        "exName": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "displayLabel": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
         "active": true,
-        "label": "호흡훈련",
-        "name": "호흡훈련"
+        "num": 0,
+        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
       },
       {
-        "exId": "ex_3",
-        "exName": "S 브레셔",
+        "exId": "S 브레셔 x10",
+        "exName": "S 브레셔 x10",
         "displayLabel": "S 브레셔 x10",
         "scaleId": "",
         "repeat": 1,
         "comment": "입에 바늘로 작은구멍을 뚫어서 압력이 생긴 바람이 실처럼 쭉쭉쭉 나간다고 생각! 입 근처에서 퍼지면 안 돼!",
         "active": true,
-        "label": "S 브레셔",
-        "name": "S 브레셔"
+        "num": 1,
+        "name": "S 브레셔 x10"
       },
       {
-        "exId": "ex_2",
+        "exId": "립트릴",
         "exName": "립트릴",
         "displayLabel": "립트릴",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "5번(9도흉성~두성). 가슴위치에서 뒷통수 뒤로위로 갔다오기! 목 푼다 생각!",
         "active": true,
-        "label": "립트릴",
+        "num": 2,
         "name": "립트릴"
       },
       {
-        "exId": "ex_2",
+        "exId": "립트릴",
         "exName": "립트릴",
         "displayLabel": "립트릴",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "5번(9도흉성~두성). 내려올 때 가슴위치에 호흡(소리) 더 대보기!",
         "active": true,
-        "label": "립트릴",
+        "num": 3,
         "name": "립트릴"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 뒤에를 애매하게 안쓰고 그냥 뒤를 써! 제일 마지막 위에음에서 한번 놨다가 빠르게 다시 훅 불기!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 4,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). 밴딩해서! 되는 음정까지 가슴채워보고 안되는 데부터는 다 꿰서 가면 돼!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 5,
         "name": "Z 브레셔"
       },
       {
-        "exId": "ex_5",
+        "exId": "허밍",
         "exName": "허밍",
         "displayLabel": "허밍",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "8번(5도쉬고중성). 아주~~! 잘했어! 음정이 올라가서 성구가 바뀔 때마다 뒤가 벌어지는데 더 한줄로 모아주려고!",
         "active": true,
-        "label": "허밍",
+        "num": 6,
         "name": "허밍"
       },
       {
-        "exId": "ex_17",
+        "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
         "displayLabel": "오픈허밍(흉성)",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 앞에만! 앞에 주먹만한 공기공이 튀어나온다고 생각하고! 음정 올라갈 때 집어먹지말고 더 늘려꺼낸 생각",
         "active": true,
-        "label": "오픈허밍(흉성)",
+        "num": 7,
         "name": "오픈허밍(흉성)"
       },
       {
-        "exId": "ex_18",
+        "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
         "displayLabel": "오픈허밍(두성)",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "8번(5도쉬고중성). G#5에만 힘이 조금 있음! 수업시간에 여기 사용해서 늘려도 괜찮을 듯!",
         "active": true,
-        "label": "오픈허밍(두성)",
+        "num": 8,
         "name": "오픈허밍(두성)"
       },
       {
-        "exId": "ex_4",
+        "exId": "Z 브레셔",
         "exName": "Z 브레셔",
         "displayLabel": "Z 브레셔",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "주먹말아쥐고, 3번(3도흉성~두성). 주먹을 꽉 잘 말아쥐고 가슴에서 호흡압이 나간다 느낌! 소리가 오히려 펴진다고 생각!",
         "active": true,
-        "label": "Z 브레셔",
+        "num": 9,
         "name": "Z 브레셔"
       }
     ]
@@ -8312,47 +6404,6 @@ if(seqList[0]&&seqList[0].noScale){
 });
 }
 
-function handleXlFile(e){const f=e.target.files[0];if(!f)return;rdXl(f);e.target.value='';}
-function handleXlDrop(e){
-e.preventDefault();document.getElementById('xl-drop').style.borderColor='';
-const f=e.dataTransfer.files[0];
-if(!f||!f.name.endsWith('.xlsx')){setXlSt('❌ .xlsx 파일만 지원합니다.',true);return;}rdXl(f);
-}
-function rdXl(file){
-setXlSt('⏳ 읽는 중...',false);
-const r=new FileReader();
-r.onload=e=>{
-try{
-const wb=XLSX.read(e.target.result,{type:'binary'});
-const nd={exercises:[],scales:[],courses:[],coachings:[],theories:[]};
-const NM={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
-const nm2=s=>{s=String(s||'').trim().toUpperCase().replace('♯','#');if(!s||!NM[s[0]])return null;const sh=s.includes('#');const oc=parseInt(s.replace('#','').slice(1));if(isNaN(oc))return null;return(oc+1)*12+NM[s[0]]+(sh?1:0);};
-const SM={'도':0,'레':2,'미':4,'파':5,'솔':7,'라':9,'시':11,'도8':12,'레8':14,'도#':1,'레#':3,'파#':6,'솔#':8,'라#':10};
-const pp2=str=>{const res=[];for(const p of String(str||'').split(',').map(s=>s.trim())){if(/^\[hold\d+\]$/.test(p)){res.push({hold:parseInt(p.match(/\d+/)[0])});continue;}if(p in SM){res.push(SM[p]);continue;}if(/^-?\d+$/.test(p)){res.push(parseInt(p));continue;}}return res.length>=2?res:null;};
-if(wb.Sheets['훈련 목록']){XLSX.utils.sheet_to_json(wb.Sheets['훈련 목록'],{header:1,defval:''}).slice(3).forEach((r,ri)=>{const nm=String(r[1]||'').trim();if(!nm)return;nd.exercises.push({id:`ex_${ri}`,name:nm,desc:String(r[2]||'').trim(),videoId:String(r[4]||'').trim(),active:String(r[5]||'Y').toUpperCase()!=='N'});});}
-if(wb.Sheets['스케일 목록']){XLSX.utils.sheet_to_json(wb.Sheets['스케일 목록'],{header:1,defval:''}).slice(3).forEach(r=>{const id=String(r[0]||'').trim(),nm=String(r[1]||'').trim();if(!id||!nm)return;const sM=nm2(r[3]),eM=nm2(r[4]);if(!sM||!eM||eM<=sM)return;const pat=pp2(r[6]);nd.scales.push({id,name:nm,range:String(r[2]||'').trim(),startNote:sM,endNote:eM,bpm:parseInt(r[5])||60,pattern:pat||[0,2,4,2,0],previewType:String(r[7]||'5도화음').trim(),previewBeats:4,note:String(r[8]||'').trim()});});}
-if(wb.Sheets['코스 배치']){
-const cm={};
-XLSX.utils.sheet_to_json(wb.Sheets['코스 배치'],{header:1,defval:''}).slice(3).forEach(row=>{
-const v=row.map(x=>String(x||'').trim());const cn=v[1];
-if(!cn||cn.startsWith('▶')||cn.startsWith('※'))return;
-const mode=v[2]==='단계'?'stage':'day',num=v[3],sn=v[4],ef=v[5],ir=v[6].toUpperCase()==='Y',gd=v[7],vid=v[8]||'';
-if(!cm[cn])cm[cn]={id:`c_${Object.keys(cm).length}`,name:cn,mode,items:[]};
-const dn=parseInt(num)||1;const pts=ef.split(',').map(s=>s.trim()).filter(Boolean);
-if(!pts.length&&ir){cm[cn].items.push({dayNum:dn,stageNum:dn,stageName:sn,isRest:true,exId:'',scaleId:'',guide:gd,videoId:vid,exLabel:''});return;}
-pts.forEach(part=>{const[ei,si]=part.includes('+')?part.split('+',2).map(s=>s.trim()):[part,''];cm[cn].items.push({dayNum:dn,stageNum:dn,stageName:sn,isRest:false,exId:ei,scaleId:si||'',guide:gd,videoId:vid,exLabel:part.trim()});});
-});
-nd.courses=Object.values(cm).map(c=>{const days=c.items.map(x=>x.dayNum);c.totalDays=days.length?Math.max(...days):1;return c;});
-}
-if(wb.Sheets['코칭 멘트']){XLSX.utils.sheet_to_json(wb.Sheets['코칭 멘트'],{header:1,defval:''}).slice(3).forEach(r=>{const msg=String(r[3]||'').trim();if(!msg)return;const sec=parseInt(r[2]);if(isNaN(sec))return;nd.coachings.push({exId:String(r[0]||'').trim(),scaleId:String(r[1]||'').trim(),sec,msg,rate:parseFloat(r[4])||1.08});});}
-if(wb.Sheets['이론 및 훈련설명']){XLSX.utils.sheet_to_json(wb.Sheets['이론 및 훈련설명'],{header:1,defval:''}).slice(3).forEach(r=>{if(!r[1])return;nd.theories.push({id:String(r[0]||'t'+Date.now()).trim(),title:String(r[1]||'').trim(),summary:String(r[2]||'').trim(),body:String(r[3]||'').trim(),videoId:String(r[4]||'').trim()});});}
-DB=nd;saveDB();buildHome();buildTheoryList();bldFreePick();
-setXlSt(`✅ 훈련 ${nd.exercises.length}개 · 스케일 ${nd.scales.length}개 · 코스 ${nd.courses.length}개 로드 완료!`,false);
-}catch(err){setXlSt('❌ 오류: '+err.message,true);console.error(err);}
-};r.readAsBinaryString(file);
-}
-function setXlSt(m,err){const el=document.getElementById('xl-status');el.textContent=m;el.style.color=err?'#dc2626':'#16a34a';}
-
 
 /* ══ Firebase Realtime DB 연동 ═══════════════════════════════
    숙제 완료 기록을 클라우드에 저장/동기화
@@ -8541,43 +6592,6 @@ window.addEventListener('pagehide', function(){
   if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
 });
 </script>
-<!-- 학생 로그인 모달 -->
-<div class="modal-bg" id="student-login-modal">
-  <div class="modal-box" style="max-width:340px;text-align:center">
-    <div style="font-size:32px;margin-bottom:8px">📚</div>
-    <div style="font-size:16px;font-weight:900;margin-bottom:4px">숙제 로그인</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:18px">선생님께 받은 이름과 비밀번호를 입력하세요</div>
-    <input id="student-name-input" type="text" placeholder="이름 (예: 김동현)"
-      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:10px 14px;font-size:14px;text-align:center;margin-bottom:8px"
-      oninput="clearStudentErr()">
-    <input id="student-pw-input" type="password" placeholder="비밀번호"
-      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:10px 14px;font-size:14px;text-align:center;margin-bottom:8px;letter-spacing:2px"
-      onkeydown="if(event.key==='Enter')doStudentLogin()">
-    <div id="student-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ol" onclick="closeStudentLogin()" style="flex:1;padding:11px">취소</button>
-      <button class="btn" onclick="doStudentLogin()" style="flex:1;padding:11px;background:#16a34a;border:none;color:#fff;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
-    </div>
-  </div>
-</div>
-
-<!-- 관리자 비밀번호 모달 -->
-<div class="modal-bg" id="pw-modal">
-  <div class="modal-box" style="max-width:320px;text-align:center">
-    <div style="font-size:32px;margin-bottom:10px">🔐</div>
-    <div style="font-size:16px;font-weight:900;margin-bottom:4px">관리자 접근</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:18px">비밀번호를 입력하세요</div>
-    <input id="pw-input" type="password" placeholder="비밀번호"
-      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 14px;
-        font-size:14px;text-align:center;margin-bottom:8px;letter-spacing:2px"
-      onkeydown="if(event.key===\'Enter\')checkPW()">
-    <div id="pw-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ol" onclick="closePWModal()" style="flex:1;padding:11px">취소</button>
-      <button class="btn btn-or" onclick="checkPW()" style="flex:1;padding:11px">확인</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
