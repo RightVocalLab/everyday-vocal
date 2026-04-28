@@ -3210,8 +3210,10 @@ async function _uploadToCacheAsync(originalText, arrayBuf){
     const blobCopy = new Blob([arrayBuf], {type: 'audio/mpeg'});
     
     /* Firebase Storage 업로드 (REST API 직접 호출, gs:// 형태 우회) */
-    const uploadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
-                     + encodeURIComponent('tts-cache/' + hash + '.mp3');
+    /* 업로드 + 자동 public 권한 부여 (predefinedAcl=publicRead) */
+    const uploadUrl = 'https://storage.googleapis.com/upload/storage/v1/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
+                     + encodeURIComponent('tts-cache/' + hash + '.mp3')
+                     + '&predefinedAcl=publicRead';
     
     const resp = await fetch(uploadUrl, {
       method: 'POST',
