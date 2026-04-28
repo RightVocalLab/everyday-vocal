@@ -3190,13 +3190,86 @@ async function _ttsHashText(text){
 }
 
 /* 캐시된 mp3 재생. Promise<bool> 반환 (true=재생 시작 성공, false=캐시 미스) */
+
+/* === 동적 캐싱 업로드 — ElevenLabs 응답을 Firebase Storage에 자동 저장 === */
+const _uploadInProgress = {}; /* 동시 중복 업로드 방지 (해시별 lock) */
+
+async function _uploadToCacheAsync(originalText, arrayBuf){
+  /* 정규화된 텍스트의 해시로 파일명 결정 */
+  const hash = await _ttsHashText(originalText);
+  
+  /* 이미 매니페스트에 있으면 스킵 */
+  if (TTS_MANIFEST[hash]) return;
+  
+  /* 동시 중복 업로드 방지 */
+  if (_uploadInProgress[hash]) return;
+  _uploadInProgress[hash] = true;
+  
+  try {
+    /* arrayBuffer 복사 (이미 호출 측에서 한 번 사용했을 수 있음) */
+    const blobCopy = new Blob([arrayBuf], {type: 'audio/mpeg'});
+    
+    /* Firebase Storage 업로드 (REST API 직접 호출, gs:// 형태 우회) */
+    const uploadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
+                     + encodeURIComponent('tts-cache/' + hash + '.mp3');
+    
+    const resp = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'audio/mpeg'},
+      body: blobCopy
+    });
+    
+    if (!resp.ok) {
+      throw new Error('업로드 실패: ' + resp.status);
+    }
+    
+    /* 메모리 매니페스트 갱신 - 다음 호출 시 즉시 캐시 히트 */
+    TTS_MANIFEST[hash] = {
+      url: TTS_CACHE_BASE_URL + hash + '.mp3',
+      dynamic: true,
+      uploaded_at: new Date().toISOString()
+    };
+    /* HEAD 캐시도 갱신 */
+    _ttsHeadCheckCache[hash] = true;
+    
+    console.log('✅ 동적 캐싱 완료:', originalText.substring(0, 40), '→', hash);
+  } catch(e) {
+    console.warn('업로드 오류:', e.message);
+  } finally {
+    delete _uploadInProgress[hash];
+  }
+}
+
+const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.firebasestorage.app/tts-cache/';
+const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
+
 async function _playFromCache(text, onEnd, callToken){
   if (!TTS_MANIFEST_LOADED) return false;
   
   try {
     const hash = await _ttsHashText(text);
-    const entry = TTS_MANIFEST[hash];
-    if (!entry || !entry.url) return false;
+    let entry = TTS_MANIFEST[hash];
+    
+    /* 매니페스트 미스 → HEAD 요청으로 Storage 직접 확인 (동적 캐싱 결과 활용) */
+    if (!entry || !entry.url) {
+      /* 같은 해시 HEAD 요청 결과 세션 내 재사용 */
+      if (_ttsHeadCheckCache[hash] === false) return false;
+      
+      if (_ttsHeadCheckCache[hash] === undefined) {
+        try {
+          const headResp = await fetch(TTS_CACHE_BASE_URL + hash + '.mp3', {method: 'HEAD'});
+          _ttsHeadCheckCache[hash] = headResp.ok;
+          if (!headResp.ok) return false;
+        } catch(e) {
+          _ttsHeadCheckCache[hash] = false;
+          return false;
+        }
+      }
+      
+      /* HEAD 성공 → 메모리 매니페스트에 추가 */
+      entry = {url: TTS_CACHE_BASE_URL + hash + '.mp3', dynamic: true};
+      TTS_MANIFEST[hash] = entry;
+    }
     
     /* 토큰이 이미 무효화됐으면 재생 안 함 */
     if (callToken !== undefined && !_tokenValid(callToken)) return false;
@@ -3405,7 +3478,15 @@ speed: (_spd!==undefined?_spd:EL.speed)||0.80
 }));
 });
 const ctx=gCtx();
-const audioBuf=await ctx.decodeAudioData(arrayBuf);
+/* 동적 캐싱: ElevenLabs 응답 mp3를 Firebase Storage에 백그라운드 업로드 */
+/* (재생을 막지 않도록 비동기, 실패해도 무시) */
+_uploadToCacheAsync(txt, arrayBuf).catch(function(e){
+  console.warn('동적 캐싱 업로드 실패(무시):', e);
+});
+
+/* decodeAudioData는 buffer를 detach 시키므로 복사본 사용 */
+const arrayBufCopy = arrayBuf.slice(0);
+const audioBuf=await ctx.decodeAudioData(arrayBufCopy);
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
 const _elGain=ctx.createGain();
