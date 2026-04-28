@@ -3609,22 +3609,74 @@ h+=`<rect data-midi="${nx}" x="${bx.toFixed(1)}" y="4" width="${bkW.toFixed(1)}"
 svg.setAttribute('viewBox',`0 0 ${W} 88`);svg.innerHTML=h;
 }
 let _litToken=0;
+let _scheduledNotes=[];
+let _displayRafId=null;
+let _lastDisplayedSIdx=-1;
+
+function _displayLoop(){
+  if(!playing){_displayRafId=null;return;}
+  const ctx=gCtx();const now=ctx.currentTime;
+  
+  /* 현재 시점에 재생 중인(또는 직전에 시작된) 음 찾기 */
+  /* sT가 now 이하인 것 중 가장 최근 것 */
+  let curIdx=-1;
+  for(let i=0;i<_scheduledNotes.length;i++){
+    if(_scheduledNotes[i].sT<=now)curIdx=i;
+    else break;
+  }
+  
+  if(curIdx>=0){
+    const note=_scheduledNotes[curIdx];
+    /* 이전과 다른 음일 때만 DOM 업데이트 (불필요한 갱신 방지) */
+    if(activeMidi!==note.m||_lastDisplayedSIdx!==note.sIdx){
+      litKey(note.m);
+      const n=m2n(note.m);
+      document.getElementById('cur-n').textContent=n.name;
+      document.getElementById('cur-o').textContent=n.oct;
+      if(curMod){
+        document.getElementById('cur-key').textContent=m2n(curMod.startNote+note.si).full;
+      }
+      const dt=note.dir==='up'?'↑ 상행':'↓ 하행';
+      document.getElementById('dir-l').textContent=dt;
+      document.getElementById('dir-l2').textContent=note.dir==='up'?'↑':'↓';
+      const p=Math.round((note.sIdx/note.total)*100);
+      document.getElementById('prog').style.width=p+'%';
+      document.getElementById('pct').textContent=p+'%';
+      updDots();
+      _lastDisplayedSIdx=note.sIdx;
+    }
+    
+    /* 지나간 음들 제거 (현재 음은 유지) */
+    if(curIdx>0){
+      _scheduledNotes.splice(0,curIdx);
+    }
+  }
+  
+  _displayRafId=requestAnimationFrame(_displayLoop);
+}
+
 function litKey(midi){
 const svg=document.getElementById('piano-svg');if(!svg)return;
 
-if(activeMidi!==null){const p=svg.querySelector(`[data-midi="${activeMidi}"]`);if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');}
+/* 이전 빛 끄기 */
+if(activeMidi!==null&&activeMidi!==midi){
+  const p=svg.querySelector(`[data-midi="${activeMidi}"]`);
+  if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');
+}
 activeMidi=midi;
-const myToken=++_litToken;
 const cur=svg.querySelector(`[data-midi="${midi}"]`);
-if(cur){cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
-const offMs=curBpm>0?Math.min(350,(60/curBpm)*1000*0.80):300;
-setTimeout(()=>{
-  /* 자기 토큰이 최신일 때만 끔 - 같은 midi가 연속 호출되어도 안전 */
-  if(myToken===_litToken){
-    if(cur)cur.setAttribute('fill',isBlack(midi)?'#2a2520':'#fefefe');
+if(cur){
+  cur.setAttribute('fill',isBlack(midi)?'#c2410c':'#f97316');
+}
+}
+
+function _clearLitKey(){
+  const svg=document.getElementById('piano-svg');if(!svg)return;
+  if(activeMidi!==null){
+    const p=svg.querySelector(`[data-midi="${activeMidi}"]`);
+    if(p)p.setAttribute('fill',isBlack(activeMidi)?'#2a2520':'#fefefe');
     activeMidi=null;
   }
-},offMs);}
 }
 window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-train').classList.contains('hidden'))setTimeout(()=>buildPianoSVG(curMod.startNote,curMod.endNote),50);});
 
@@ -3820,7 +3872,12 @@ function togglePlay(){
   if(!curMod) return;
   if(playing){window._pausedSch={s:sch.s,p:sch.p};stopEngine();}
   else{const sv=window._pausedSch||window._savedSch;
-  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;document.getElementById('pp').textContent='⏸';sch.s=sv.s;sch.p=0;sch.nx=0;_startMetronome(curBpm,function(){if(!playing)return;runLoop();});}
+  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;document.getElementById('pp').textContent='⏸';sch.s=sv.s;sch.p=0;sch.nx=0;
+/* 일시정지 후 재개 시 polling 재시작 */
+_scheduledNotes=[];_lastDisplayedSIdx=-1;
+if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
+_displayRafId=requestAnimationFrame(_displayLoop);
+_startMetronome(curBpm,function(){if(!playing)return;runLoop();});}
   else{startEngine();}}
 }
 
@@ -3881,6 +3938,11 @@ function startEngine(){
 gCtx();playing=true;document.getElementById('pp').textContent='⏸';
 const pt=curMod.previewType;
 
+/* 빛 polling 시스템 초기화 */
+_scheduledNotes=[];_lastDisplayedSIdx=-1;
+if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
+_displayRafId=requestAnimationFrame(_displayLoop);
+
 if(!_samplesReady){
 _loadPianoSamples();
 _startMetronome(curBpm, function(){
@@ -3910,6 +3972,10 @@ setTimeout(()=>{if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs);
 function stopEngine(){
 playing=false;if(loopT)clearTimeout(loopT);clrCT();
 _stopMetronome();
+/* 빛 polling 정지 + 빛 정리 */
+if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
+_scheduledNotes=[];_lastDisplayedSIdx=-1;
+_clearLitKey();
 document.getElementById('pp').textContent='▶';
 if(coachAuto&&window.speechSynthesis)speechSynthesis.cancel();
 }
@@ -3934,16 +4000,7 @@ const nM=root+pstep.semi;
 const nextPstep=ps[sch.p+1];
 const noteDur=(nextPstep&&nextPstep.type==='hold') ? spb*2.5 : spb*0.90;
 (function(m,t,dur){const dl=Math.max(0,(t-ctx.currentTime)*1000);setTimeout(()=>{if(playing)playPiano(m,dur,0.52);},dl);})(nM,sT,noteDur);
-(function(m,si,dir){const dl=Math.max(0,(sT-ctx.currentTime)*1000-20);setTimeout(()=>{
-if(!playing)return;litKey(m);const n=m2n(m);
-document.getElementById('cur-n').textContent=n.name;document.getElementById('cur-o').textContent=n.oct;
-document.getElementById('cur-key').textContent=m2n(curMod.startNote+si).full;
-const dt=dir==='up'?'↑ 상행':'↓ 하행';
-document.getElementById('dir-l').textContent=dt;document.getElementById('dir-l2').textContent=dir==='up'?'↑':'↓';
-const p=Math.round((sch.s/allSteps.length)*100);
-document.getElementById('prog').style.width=p+'%';document.getElementById('pct').textContent=p+'%';
-updDots();
-},dl);})(nM,step.semi,step.dir);
+_scheduledNotes.push({sT:sT, m:nM, si:step.semi, dir:step.dir, sIdx:sch.s, total:allSteps.length});
 }
 sch.nx+=spb;sch.p++;
 if(sch.p>=ps.length){
