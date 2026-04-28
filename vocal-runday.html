@@ -438,7 +438,7 @@ input,select,button,textarea{font-family:inherit;}
     <!-- BPM 인라인 -->
     <div class="bpm-row">
       <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="200" value="60" oninput="onBpmChg(this.value)">
+      <input type="range" id="bpm-sl" min="30" max="250" value="60" oninput="onBpmChg(this.value)">
       <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
       <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
       <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
@@ -3758,7 +3758,7 @@ clrCT();
 const hwComment = mod.hwComment || '';
 if(hwComment && curStudent){
   const steps_hw = allSteps.length;
-  const spb_hw = 60 / (mod.bpm || 60);
+  const spb_hw = 60 / (curBpm || mod.bpm || 60);
   const patLen_hw = (mod.pattern||[]).filter(p=>typeof p==='number').length || 1;
   const totalSec_hw = steps_hw * patLen_hw * spb_hw * 1.05;
   /* 20%, 50%, 80% 구간에 균등 배분 */
@@ -3771,7 +3771,7 @@ if(hwComment && curStudent){
 /* 화이팅 멘트 — cheerAuto ON일 때만, 전체 구간 균등 배분 */
 if(!cheerAuto)return;
 const steps2 = allSteps.length;
-const spb2 = 60 / (mod.bpm || 60);
+const spb2 = 60 / (curBpm || mod.bpm || 60);
 const patLen2 = (mod.pattern||[]).filter(p=>typeof p==='number').length || 1;
 const totalSec2 = steps2 * patLen2 * spb2 * 1.05;
 if(totalSec2 > 8){
