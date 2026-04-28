@@ -3132,7 +3132,192 @@ window._elSrc=null;
 function cancelTTS(){
 _ttsToken++;
 stopEL();
+if(typeof _stopCacheAudio==='function')_stopCacheAudio();
 if(window.speechSynthesis)speechSynthesis.cancel();
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   TTS 캐시 시스템 (mp3 사전 생성 + Firebase Storage 호스팅)
+   - 멘트 텍스트 → SHA-256 해시 → manifest에서 mp3 URL 조회
+   - 캐시 적중 시: mp3 재생 (ElevenLabs 호출 X)
+   - 캐시 미스 시: 기존 ElevenLabs 로직 폴백
+   ══════════════════════════════════════════════════════════ */
+
+const TTS_MANIFEST_URL = 'https://storage.googleapis.com/everyday-vocal.firebasestorage.app/tts-cache/manifest.json';
+let TTS_MANIFEST = {};
+let TTS_MANIFEST_LOADED = false;
+let _ttsCacheAudio = null; /* 현재 재생 중인 audio element (중지용) */
+
+/* 매니페스트 자동 로드 */
+async function _loadTTSManifest(){
+  try {
+    const resp = await fetch(TTS_MANIFEST_URL + '?t=' + Date.now()); /* 캐시 무시 */
+    if (resp.ok) {
+      TTS_MANIFEST = await resp.json();
+      TTS_MANIFEST_LOADED = true;
+      console.log('✅ TTS 매니페스트 로드 완료:', Object.keys(TTS_MANIFEST).length + '개 항목');
+    }
+  } catch (e) {
+    console.warn('TTS 매니페스트 로드 실패 (실시간 ElevenLabs로 폴백):', e);
+  }
+}
+/* DOM 로드 후 매니페스트 가져오기 */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _loadTTSManifest);
+} else {
+  _loadTTSManifest();
+}
+
+/* 멘트 정규화 (cache_tts.py와 동일 로직) */
+function _ttsNormalizeText(text){
+  if (!text) return '';
+  let t = String(text).trim();
+  t = t.replace(/\s+/g, ' ');
+  t = t.replace(/[.!?。 ]+$/, '');
+  return t;
+}
+
+/* SHA-256 해시 (앞 16자) - cache_tts.py의 hash_text와 동일 */
+async function _ttsHashText(text){
+  const norm = _ttsNormalizeText(text);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(norm);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex.substring(0, 16);
+}
+
+/* 캐시된 mp3 재생. Promise<bool> 반환 (true=재생 시작 성공, false=캐시 미스) */
+
+/* === 동적 캐싱 업로드 — ElevenLabs 응답을 Firebase Storage에 자동 저장 === */
+const _uploadInProgress = {}; /* 동시 중복 업로드 방지 (해시별 lock) */
+
+async function _uploadToCacheAsync(originalText, arrayBuf){
+  /* 정규화된 텍스트의 해시로 파일명 결정 */
+  const hash = await _ttsHashText(originalText);
+  
+  /* 이미 매니페스트에 있으면 스킵 */
+  if (TTS_MANIFEST[hash]) return;
+  
+  /* 동시 중복 업로드 방지 */
+  if (_uploadInProgress[hash]) return;
+  _uploadInProgress[hash] = true;
+  
+  try {
+    /* arrayBuffer 복사 (이미 호출 측에서 한 번 사용했을 수 있음) */
+    const blobCopy = new Blob([arrayBuf], {type: 'audio/mpeg'});
+    
+    /* Firebase Storage 업로드 (REST API 직접 호출, gs:// 형태 우회) */
+    const uploadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
+                     + encodeURIComponent('tts-cache/' + hash + '.mp3');
+    
+    const resp = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'audio/mpeg'},
+      body: blobCopy
+    });
+    
+    if (!resp.ok) {
+      throw new Error('업로드 실패: ' + resp.status);
+    }
+    
+    /* 메모리 매니페스트 갱신 - 다음 호출 시 즉시 캐시 히트 */
+    TTS_MANIFEST[hash] = {
+      url: TTS_CACHE_BASE_URL + hash + '.mp3',
+      dynamic: true,
+      uploaded_at: new Date().toISOString()
+    };
+    /* HEAD 캐시도 갱신 */
+    _ttsHeadCheckCache[hash] = true;
+    
+    console.log('✅ 동적 캐싱 완료:', originalText.substring(0, 40), '→', hash);
+  } catch(e) {
+    console.warn('업로드 오류:', e.message);
+  } finally {
+    delete _uploadInProgress[hash];
+  }
+}
+
+const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.firebasestorage.app/tts-cache/';
+const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
+
+async function _playFromCache(text, onEnd, callToken){
+  if (!TTS_MANIFEST_LOADED) return false;
+  
+  try {
+    const hash = await _ttsHashText(text);
+    let entry = TTS_MANIFEST[hash];
+    
+    /* 매니페스트 미스 → HEAD 요청으로 Storage 직접 확인 (동적 캐싱 결과 활용) */
+    if (!entry || !entry.url) {
+      /* 같은 해시 HEAD 요청 결과 세션 내 재사용 */
+      if (_ttsHeadCheckCache[hash] === false) return false;
+      
+      if (_ttsHeadCheckCache[hash] === undefined) {
+        try {
+          const headResp = await fetch(TTS_CACHE_BASE_URL + hash + '.mp3', {method: 'HEAD'});
+          _ttsHeadCheckCache[hash] = headResp.ok;
+          if (!headResp.ok) return false;
+        } catch(e) {
+          _ttsHeadCheckCache[hash] = false;
+          return false;
+        }
+      }
+      
+      /* HEAD 성공 → 메모리 매니페스트에 추가 */
+      entry = {url: TTS_CACHE_BASE_URL + hash + '.mp3', dynamic: true};
+      TTS_MANIFEST[hash] = entry;
+    }
+    
+    /* 토큰이 이미 무효화됐으면 재생 안 함 */
+    if (callToken !== undefined && !_tokenValid(callToken)) return false;
+    
+    /* 이전 캐시 audio 정지 */
+    if (_ttsCacheAudio) {
+      try { _ttsCacheAudio.pause(); } catch(e){}
+      _ttsCacheAudio = null;
+    }
+    
+    const audio = new Audio(entry.url);
+    _ttsCacheAudio = audio;
+    audio.onended = function(){
+      if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
+      if (callToken !== undefined && !_tokenValid(callToken)) return;
+      if (onEnd) onEnd();
+    };
+    /* 재생 실패 시 onEnd 호출하여 시퀀스 진행 보장 */
+    let errored = false;
+    audio.onerror = function(e){
+      if (errored) return;
+      errored = true;
+      console.warn('캐시 mp3 재생 실패:', e);
+      if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
+      if (callToken !== undefined && !_tokenValid(callToken)) return;
+      if (onEnd) onEnd(); /* 시퀀스 멈추지 않게 onEnd 호출 */
+    };
+    
+    try {
+      await audio.play();
+    } catch(playErr) {
+      console.warn('audio.play() 실패:', playErr);
+      if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
+      return false; /* 외부에서 ElevenLabs 폴백 */
+    }
+    return true;
+  } catch (e) {
+    console.warn('캐시 재생 오류:', e);
+    return false;
+  }
+}
+
+/* 캐시 audio 정지 (cancelTTS 등에서 호출) */
+function _stopCacheAudio(){
+  if (_ttsCacheAudio) {
+    try { _ttsCacheAudio.pause(); _ttsCacheAudio.currentTime = 0; } catch(e){}
+    _ttsCacheAudio = null;
+  }
 }
 
 function speakEL(txt,onEnd,_stab,_spd,_isCoachFlag){
@@ -3157,6 +3342,37 @@ u.onend=_fire;
 u.onerror=_fire;
 if(onEnd) setTimeout(_fire, estimatedMs*1.5+600);
 if(window.speechSynthesis)speechSynthesis.speak(u);
+}
+
+/* === 1순위: 캐시된 mp3 재생 (ElevenLabs 호출 절약) === */
+if(TTS_MANIFEST_LOADED){
+  /* 다른 음성 정지 */
+  stopEL();
+  _stopCacheAudio();
+  if(window.speechSynthesis)speechSynthesis.cancel();
+  
+  _playFromCache(txt, _safeEnd, myToken).then(function(played){
+    if(played) return; /* 재생 성공 - 끝 */
+    /* 캐시 미스 → 기존 ElevenLabs 로직 폴백 */
+    if(EL.enabled&&EL.apiKey&&EL.voiceId){
+      _elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(function(err){
+        if(!_tokenValid(myToken))return;
+        console.warn('EL 폴백도 실패:', err);
+        const _ntxt=_normTTS(txt);
+        if(window.speechSynthesis&&window.SpeechSynthesisUtterance){
+          const u=mkUtt(_ntxt,0.90);
+          _withFallback(u,(_ntxt.length/5)*1000);
+        } else if(onEnd) setTimeout(_safeEnd,(txt.length/5)*1000+500);
+      });
+    } else if(window.speechSynthesis&&window.SpeechSynthesisUtterance){
+      const _ntxt=_normTTS(txt);
+      const u=mkUtt(_ntxt,0.90);
+      _withFallback(u,(_ntxt.length/5)*1000);
+    } else {
+      if(onEnd) setTimeout(_safeEnd,(txt.length/5)*1000+500);
+    }
+  });
+  return;
 }
 
 if(EL.enabled&&EL.apiKey&&EL.voiceId){
@@ -3262,7 +3478,15 @@ speed: (_spd!==undefined?_spd:EL.speed)||0.80
 }));
 });
 const ctx=gCtx();
-const audioBuf=await ctx.decodeAudioData(arrayBuf);
+/* 동적 캐싱: ElevenLabs 응답 mp3를 Firebase Storage에 백그라운드 업로드 */
+/* (재생을 막지 않도록 비동기, 실패해도 무시) */
+_uploadToCacheAsync(txt, arrayBuf).catch(function(e){
+  console.warn('동적 캐싱 업로드 실패(무시):', e);
+});
+
+/* decodeAudioData는 buffer를 detach 시키므로 복사본 사용 */
+const arrayBufCopy = arrayBuf.slice(0);
+const audioBuf=await ctx.decodeAudioData(arrayBufCopy);
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
 const _elGain=ctx.createGain();
@@ -7659,7 +7883,85 @@ window.addEventListener('pagehide', function(){
   cancelTTS();stopEL();if(actx)actx.suspend();
   if(curStudent&&_fbReady){const done=_getHwDone();if(done.length>0){_fbSaveHwDone(curStudent.name,done);_fbRecordDailyCount(curStudent.name,done.length);}}
 });
+
+/* ══════════════════════════════════════════════════════════
+   iOS Safari 무음 모드 안내 시스템
+   - User Agent로 iOS Safari 감지
+   - 첫 진입 시 모달 자동 표시 (localStorage로 1회만)
+   - 그 후엔 우측 상단 ⓘ 버튼만 (탭하면 다시 모달)
+   ══════════════════════════════════════════════════════════ */
+
+function _isIosSafari(){
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  /* iPad는 데스크톱 모드일 수 있어 추가 체크 */
+  const isIpadOS = navigator.maxTouchPoints > 1 && /Macintosh/.test(ua);
+  return (isIOS || isIpadOS) && isSafari;
+}
+
+function openIosSilentModal(){
+  const m = document.getElementById('ios-silent-modal');
+  if (m) m.classList.remove('hidden');
+}
+
+function closeIosSilentModal(){
+  const m = document.getElementById('ios-silent-modal');
+  if (m) m.classList.add('hidden');
+  /* 본 적 있음 표시 */
+  try { localStorage.setItem('ios_silent_seen', '1'); } catch(e) {}
+}
+
+/* DOM 준비 후 iOS Safari 감지 + 안내 표시 */
+function _initIosSilentNotice(){
+  if (!_isIosSafari()) return;
+  
+  /* 우측 상단 floating 버튼 표시 */
+  const fab = document.getElementById('ios-silent-fab');
+  if (fab) fab.style.display = 'flex';
+  
+  /* 첫 진입 시 모달 자동 표시 */
+  let seen = false;
+  try { seen = localStorage.getItem('ios_silent_seen') === '1'; } catch(e) {}
+  if (!seen) {
+    /* 약간 지연시켜서 화면 로드 후 표시 */
+    setTimeout(openIosSilentModal, 1200);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initIosSilentNotice);
+} else {
+  _initIosSilentNotice();
+}
+
 </script>
+
+<!-- iOS Safari 무음 모드 안내 모달 -->
+<div id="ios-silent-modal" class="modal hidden" style="z-index:10001">
+  <div class="modal-bg" onclick="closeIosSilentModal()"></div>
+  <div class="modal-c" style="max-width:340px">
+    <div style="padding:24px 22px">
+      <div style="font-size:36px;text-align:center;margin-bottom:8px">🍎 🔇</div>
+      <div style="font-size:17px;font-weight:800;text-align:center;margin-bottom:14px;color:var(--or-d)">아이폰 사파리 사용 안내</div>
+      <div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px">
+        <strong>아이폰 사파리에서 소리가 안 들리시나요?</strong>
+        <br><br>
+        아이폰 왼쪽 옆면의 <strong>무음 스위치</strong>를 확인해주세요. <span style="color:#ea580c;font-weight:700">주황색 줄</span>이 보이면 무음 모드예요. <strong>위로 올려서 벨소리 모드</strong>로 변경하시면 소리가 잘 들립니다.
+        <br><br>
+        <span style="color:var(--mu);font-size:12px">(이어폰 연결 시엔 자동으로 들려요)</span>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:18px">
+        <button class="btn btn-or" onclick="closeIosSilentModal()" style="padding:11px 28px;font-size:14px">알겠어요</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- iOS Safari 안내 floating 버튼 (우측 상단, iOS 사파리에서만 표시) -->
+<button id="ios-silent-fab" onclick="openIosSilentModal()" 
+  style="display:none;position:fixed;top:8px;right:8px;z-index:9999;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--or);background:rgba(255,255,255,0.95);color:var(--or);font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:0;display:none;align-items:center;justify-content:center"
+  title="아이폰 사파리 안내">ⓘ</button>
 
 </body>
 </html>
