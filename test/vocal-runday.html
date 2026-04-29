@@ -3210,10 +3210,9 @@ async function _uploadToCacheAsync(originalText, arrayBuf){
     const blobCopy = new Blob([arrayBuf], {type: 'audio/mpeg'});
     
     /* Firebase Storage 업로드 (REST API 직접 호출, gs:// 형태 우회) */
-    /* 업로드 + 자동 public 권한 부여 (predefinedAcl=publicRead) */
-    const uploadUrl = 'https://storage.googleapis.com/upload/storage/v1/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
-                     + encodeURIComponent('tts-cache/' + hash + '.mp3')
-                     + '&predefinedAcl=publicRead';
+    /* Firebase Storage 업로드 - 응답에서 downloadToken 받아 토큰 URL 사용 */
+    const uploadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
+                     + encodeURIComponent('tts-cache/' + hash + '.mp3');
     
     const resp = await fetch(uploadUrl, {
       method: 'POST',
@@ -3225,9 +3224,14 @@ async function _uploadToCacheAsync(originalText, arrayBuf){
       throw new Error('업로드 실패: ' + resp.status);
     }
     
+    /* alt=media URL (보안 규칙으로 public 읽기 허용 → 토큰 불필요) */
+    const downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'
+                       + encodeURIComponent('tts-cache/' + hash + '.mp3')
+                       + '?alt=media';
+    
     /* 메모리 매니페스트 갱신 - 다음 호출 시 즉시 캐시 히트 */
     TTS_MANIFEST[hash] = {
-      url: TTS_CACHE_BASE_URL + hash + '.mp3',
+      url: downloadUrl,
       dynamic: true,
       uploaded_at: new Date().toISOString()
     };
@@ -3243,6 +3247,7 @@ async function _uploadToCacheAsync(originalText, arrayBuf){
 }
 
 const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.firebasestorage.app/tts-cache/';
+const TTS_CACHE_ALT_URL = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/tts-cache%2F'; /* alt=media URL prefix */
 const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
 
 async function _playFromCache(text, onEnd, callToken){
@@ -3259,18 +3264,23 @@ async function _playFromCache(text, onEnd, callToken){
       
       if (_ttsHeadCheckCache[hash] === undefined) {
         try {
-          const headResp = await fetch(TTS_CACHE_BASE_URL + hash + '.mp3', {method: 'HEAD'});
+          /* alt=media URL로 HEAD - 토큰 없이도 (public read 규칙) 접근 가능 */
+          const altUrl = TTS_CACHE_ALT_URL + hash + '.mp3?alt=media';
+          const headResp = await fetch(altUrl, {method: 'HEAD'});
           _ttsHeadCheckCache[hash] = headResp.ok;
           if (!headResp.ok) return false;
+          /* HEAD 성공 → 메모리 매니페스트에 추가 (alt=media URL 저장) */
+          entry = {url: altUrl, dynamic: true};
+          TTS_MANIFEST[hash] = entry;
         } catch(e) {
           _ttsHeadCheckCache[hash] = false;
           return false;
         }
+      } else if (_ttsHeadCheckCache[hash] === true) {
+        /* 이전에 HEAD 확인됐으면 매니페스트 복원 */
+        entry = {url: TTS_CACHE_ALT_URL + hash + '.mp3?alt=media', dynamic: true};
+        TTS_MANIFEST[hash] = entry;
       }
-      
-      /* HEAD 성공 → 메모리 매니페스트에 추가 */
-      entry = {url: TTS_CACHE_BASE_URL + hash + '.mp3', dynamic: true};
-      TTS_MANIFEST[hash] = entry;
     }
     
     /* 토큰이 이미 무효화됐으면 재생 안 함 */
