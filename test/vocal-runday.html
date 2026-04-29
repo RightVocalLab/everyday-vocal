@@ -7793,12 +7793,12 @@ function _isIosSafari(){
 
 function openIosSilentModal(){
   const m = document.getElementById('ios-silent-modal');
-  if (m) m.classList.remove('hidden');
+  if (m) m.style.display = 'flex';
 }
 
 function closeIosSilentModal(){
   const m = document.getElementById('ios-silent-modal');
-  if (m) m.classList.add('hidden');
+  if (m) m.style.display = 'none';
   /* 본 적 있음 표시 */
   try { localStorage.setItem('ios_silent_seen', '1'); } catch(e) {}
 }
@@ -7829,7 +7829,7 @@ if (document.readyState === 'loading') {
 </script>
 
 <!-- iOS Safari 무음 모드 안내 모달 -->
-<div id="ios-silent-modal" class="modal hidden" style="z-index:10001">
+<div id="ios-silent-modal" class="modal hidden" style="display:none;z-index:10001;position:fixed;inset:0;background:rgba(0,0,0,0.54);align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
   <div class="modal-bg" onclick="closeIosSilentModal()"></div>
   <div class="modal-c" style="max-width:340px">
     <div style="padding:24px 22px">
@@ -7851,7 +7851,7 @@ if (document.readyState === 'loading') {
 
 <!-- iOS Safari 안내 floating 버튼 (우측 상단, iOS 사파리에서만 표시) -->
 <button id="ios-silent-fab" onclick="openIosSilentModal()" 
-  style="display:none;position:fixed;top:8px;right:8px;z-index:9999;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--or);background:rgba(255,255,255,0.95);color:var(--or);font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:0;display:none;align-items:center;justify-content:center"
+  style="display:none;position:fixed;top:8px;right:8px;z-index:9999;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--or);background:rgba(255,255,255,0.95);color:var(--or);font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:0;align-items:center;justify-content:center"
   title="아이폰 사파리 안내">ⓘ</button>
 
 </body>
