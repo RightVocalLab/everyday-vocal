@@ -1728,6 +1728,117 @@ const INIT_DB={
       "note": ""
     },
     {
+      "id": "9H-A",
+      "name": "9도 쉬고 내려오기",
+      "range": "흉성~낮은두성",
+      "startNote": 57,
+      "endNote": 65,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        14,
+        {
+          "hold": 3
+        },
+        14,
+        {
+          "hold": 1
+        },
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "9H-B",
+      "name": "9도 쉬고 내려오기",
+      "range": "흉성~높은두성",
+      "startNote": 57,
+      "endNote": 69,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        14,
+        {
+          "hold": 3
+        },
+        14,
+        {
+          "hold": 1
+        },
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
+      "id": "9H-C",
+      "name": "9도 쉬고 내려오기",
+      "range": "고급",
+      "startNote": 57,
+      "endNote": 77,
+      "bpm": 180,
+      "pattern": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        14,
+        {
+          "hold": 3
+        },
+        14,
+        {
+          "hold": 1
+        },
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": ""
+    },
+    {
       "id": "5DN-A",
       "name": "5도 하향 스케일",
       "range": "중성~낮은두성",
@@ -6836,26 +6947,37 @@ let STUDENTS_DB = [
         "name": "S브레셔 x10"
       },
       {
-        "exId": "립트릴 5도 흉성~두성",
-        "exName": "립트릴 5도 흉성~두성",
-        "displayLabel": "립트릴 5도 흉성~두성",
-        "scaleId": "5D-B",
-        "repeat": 1,
-        "comment": "가슴에서 뒤로위로 올라갔다가 내려올 수 있게!",
-        "active": true,
-        "num": 1,
-        "name": "립트릴 5도 흉성~두성"
-      },
-      {
-        "exId": "립트릴 9도 흉성~높은두성",
-        "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "exId": "1단계 립트릴 9도 흉성~높은두성",
+        "exName": "1단계 립트릴 9도 흉성~높은두성",
+        "displayLabel": "1단계 립트릴 9도 흉성~높은두성",
         "scaleId": "9D-B",
         "repeat": 1,
-        "comment": "잘 되서 올라갈때는 똑같은데 내려올때는 뒤에위에 버틴채로 가슴쪽으로 계속 호흡(압력)보내서 힘추가하면서 내려와보기!",
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
+        "active": true,
+        "num": 1,
+        "name": "1단계 립트릴 9도 흉성~높은두성"
+      },
+      {
+        "exId": "2단계 립트릴 9도 흉성~높은두성",
+        "exName": "2단계 립트릴 9도 흉성~높은두성",
+        "displayLabel": "2단계 립트릴 9도 흉성~높은두성",
+        "scaleId": "9H-B",
+        "repeat": 1,
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
         "active": true,
         "num": 2,
-        "name": "립트릴 9도 흉성~높은두성"
+        "name": "2단계 립트릴 9도 흉성~높은두성"
+      },
+      {
+        "exId": "3단계 립트릴 9도 흉성~높은두성",
+        "exName": "3단계 립트릴 9도 흉성~높은두성",
+        "displayLabel": "3단계 립트릴 9도 흉성~높은두성",
+        "scaleId": "9H-B",
+        "repeat": 1,
+        "comment": "올라갈때는 똑같은데 내려올때는 뒤에위에 버틴채로 가슴쪽으로 계속 호흡(압력)보내서 힘추가하면서 내려와보기!",
+        "active": true,
+        "num": 3,
+        "name": "3단계 립트릴 9도 흉성~높은두성"
       },
       {
         "exId": "후 내려오기 5도 하향 중성~낮은두성",
@@ -6865,7 +6987,7 @@ let STUDENTS_DB = [
         "repeat": 1,
         "comment": "결절이 좋아졌는지 괜찮게 올라갔음! 아직 두성구에서 상압을 만드는 감각은 없어서 B5는 잘 안나오지만 그래도 두성패턴으로 잘 올라갔다 옴!",
         "active": true,
-        "num": 3,
+        "num": 4,
         "name": "후 내려오기 5도 하향 중성~낮은두성"
       },
       {
@@ -6876,7 +6998,7 @@ let STUDENTS_DB = [
         "repeat": 1,
         "comment": "다시 앞으로 채우기! 결절을 펴주기위해 뒤로 당겼었는데 앞에 힘이 너무 사라졌어!",
         "active": true,
-        "num": 4,
+        "num": 5,
         "name": "Z브레셔 3도 흉성 - 벽에붙어서"
       }
     ]
@@ -6885,17 +7007,6 @@ let STUDENTS_DB = [
     "name": "최은채",
     "pw": "ec24",
     "homework": [
-      {
-        "exId": "S브레셔 하다가 가슴에 소리 붙히기!",
-        "exName": "S브레셔 하다가 가슴에 소리 붙히기!",
-        "displayLabel": "S브레셔 하다가 가슴에 소리 붙히기!",
-        "scaleId": "",
-        "repeat": 1,
-        "comment": "",
-        "active": true,
-        "num": 0,
-        "name": "S브레셔 하다가 가슴에 소리 붙히기!"
-      },
       {
         "exId": "주먹말고 호흡훈련 서서 x10 숙여서 x10",
         "exName": "주먹말고 호흡훈련 서서 x10 숙여서 x10",
@@ -6908,6 +7019,39 @@ let STUDENTS_DB = [
         "name": "주먹말고 호흡훈련 서서 x10 숙여서 x10"
       },
       {
+        "exId": "립트릴",
+        "exName": "립트릴",
+        "displayLabel": "립트릴",
+        "scaleId": "9D-B",
+        "repeat": 1,
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
+        "active": true,
+        "num": 2,
+        "name": "립트릴"
+      },
+      {
+        "exId": "립트릴",
+        "exName": "립트릴",
+        "displayLabel": "립트릴",
+        "scaleId": "9H-B",
+        "repeat": 1,
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
+        "active": true,
+        "num": 3,
+        "name": "립트릴"
+      },
+      {
+        "exId": "립트릴",
+        "exName": "립트릴",
+        "displayLabel": "립트릴",
+        "scaleId": "9D-B",
+        "repeat": 1,
+        "comment": "처음부터 원래 음정의 위치를 따라가기(앞에서 위로 위에서 뒤로 뒤에서 위로 다시 같은길로 내려오기)",
+        "active": true,
+        "num": 4,
+        "name": "립트릴"
+      },
+      {
         "exId": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서",
         "exName": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서",
         "displayLabel": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서",
@@ -6915,63 +7059,8 @@ let STUDENTS_DB = [
         "repeat": 1,
         "comment": "파이팅 은채야 할 수 있어!! 소리를 계속 가슴으로 끌어 당기고 바람을 계속 집어넣어!",
         "active": true,
-        "num": 2,
-        "name": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서"
-      },
-      {
-        "exId": "허밍 5도 쉬고 중성~높은두성",
-        "exName": "허밍 5도 쉬고 중성~높은두성",
-        "displayLabel": "허밍 5도 쉬고 중성~높은두성",
-        "scaleId": "5H-C",
-        "repeat": 1,
-        "comment": "가성으로 올라가서 마지막음에서 소리를만들고 버티면서 내려오기!",
-        "active": true,
-        "num": 3,
-        "name": "허밍 5도 쉬고 중성~높은두성"
-      },
-      {
-        "exId": "허밍 아~ 5도 쉬고 중성~낮은두성",
-        "exName": "허밍 아~ 5도 쉬고 중성~낮은두성",
-        "displayLabel": "허밍 아~ 5도 쉬고 중성~낮은두성",
-        "scaleId": "5H-B",
-        "repeat": 1,
-        "comment": "허밍 가슴으로 버티는거까지 됐으면 5번을 넘어가서 가슴버티고 피치위치부터 밑으로 당겨 온다는 느낌으로 아 해서 내려갈 것!",
-        "active": true,
-        "num": 4,
-        "name": "허밍 아~ 5도 쉬고 중성~낮은두성"
-      },
-      {
-        "exId": "후 9도스케일 흉성~높은두성",
-        "exName": "후 9도스케일 흉성~높은두성",
-        "displayLabel": "후 9도스케일 흉성~높은두성",
-        "scaleId": "9D-B",
-        "repeat": 1,
-        "comment": "그냥 앞에밑에랑 뒤에위에가 서로 그냥 늘어난다 느낌으로 하기! 목소리를 너무 내려고 하지말고!",
-        "active": true,
         "num": 5,
-        "name": "후 9도스케일 흉성~높은두성"
-      },
-      {
-        "exId": "NG 3도 흉성",
-        "exName": "NG 3도 흉성",
-        "displayLabel": "NG 3도 흉성",
-        "scaleId": "3D-A",
-        "repeat": 1,
-        "comment": "뒤에는 신경쓰지말고 앞으로만 버티는 거 한번!",
-        "active": true,
-        "num": 6,
-        "name": "NG 3도 흉성"
-      },
-      {
-        "exId": "NG 3도 흉성",
-        "exName": "NG 3도 흉성",
-        "displayLabel": "NG 3도 흉성",
-        "scaleId": "3D-A",
-        "repeat": 1,
-        "comment": "뒤에 신경쓰면서 한번! 대신 앞으로 놓으면안되!",
-        "active": true,
-        "num": 7,
-        "name": "NG 3도 흉성"
+        "name": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서"
       }
     ]
   },
