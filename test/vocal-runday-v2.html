@@ -337,18 +337,10 @@ input,select,button,textarea{font-family:inherit;}
         <div class="v2-section-title">발성 이론</div>
         <div class="v2-section-more" onclick="push('scr-theory-list');buildTheoryList()">전체보기 ›</div>
       </div>
-      <div id="theory-hscroll" class="v2-hscroll"></div>
-    </div>
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- 섹션 4: 훈련 설명 (학생 로그인 시에만 - 숨김) -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="menu-exdesc-section" style="display:none">
-      <div class="v2-section-header">
-        <div class="v2-section-title">훈련 설명 <span class="v2-locked-badge">🔒 학생 전용</span></div>
-        <div class="v2-section-more" onclick="push('scr-theory-list');buildTheoryList('ex')">전체보기 ›</div>
+      <div class="v2-th-pager-wrap">
+        <div class="v2-th-pager-track" id="theory-hscroll"></div>
+        <div class="v2-th-pager-dots" id="theory-pager-dots"></div>
       </div>
-      <div id="exdesc-hscroll" class="v2-hscroll"></div>
     </div>
 
   </div></div>
@@ -365,17 +357,25 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb" id="th-title">—</div>
-    <div style="display:flex;align-items:center;gap:5px">
-      <div id="th-tts-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px;display:none">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">⏹</button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="v2-th-tts-btn" id="tts-btn" onclick="toggleTTS()" title="읽기/정지">
+        <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg" id="tts-btn-icon">
+          <rect x="3" y="3" width="8" height="8" rx="1"/>
+        </svg>
+      </button>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
   </div>
-  <div class="body"><div class="inner">
-<div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
-    <div style="height:28px"></div>
+  <div class="body"><div class="inner" style="padding-bottom:24px">
+    <!-- TTS 음성 시작 안내 -->
+    <div class="v2-th-tts-notice" id="th-tts-notice">
+      <div class="v2-th-tts-pulse"></div>
+      <div>잠시 후 음성 안내가 시작됩니다...</div>
+    </div>
+    <!-- 본문 카드 -->
+    <div class="v2-th-body-card">
+      <div class="v2-th-body" id="th-body"></div>
+    </div>
   </div></div>
 </div>
 
@@ -611,6 +611,13 @@ input,select,button,textarea{font-family:inherit;}
         <div id="hw-progress-bar" class="v2-hw-progress-bar"></div>
       </div>
     </div>
+
+    <!-- 훈련 설명 보기 버튼 -->
+    <button class="v2-hw-theory-link" onclick="_goHwTheoryList()">
+      <span class="v2-hw-theory-link-icon">📖</span>
+      <span class="v2-hw-theory-link-text">훈련 설명 보기</span>
+      <span class="v2-hw-theory-link-arrow">›</span>
+    </button>
 
     <!-- 숙제 리스트 -->
     <div class="v2-section-header">
@@ -1623,6 +1630,235 @@ input,select,button,textarea{font-family:inherit;}
 }
 .v2-hw-reset-btn:hover{background:#fef3c7;border-color:#f59e0b;color:#92400e;}
 .v2-hw-reset-btn:disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+
+
+
+/* ═══════════════════════════════════════════
+   v2 이론 상세 화면
+   ═══════════════════════════════════════════ */
+
+/* 본문 카드 */
+.v2-th-body-card{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:18px;
+  padding:24px 22px;
+  margin-bottom:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.03);
+}
+
+.v2-th-body{
+  font-size:15px;
+  line-height:1.95;
+  color:var(--tx);
+  letter-spacing:-0.2px;
+}
+
+/* 본문 안의 마크다운 스타일 */
+.v2-th-body strong{
+  color:var(--or-d);
+  font-weight:800;
+}
+.v2-th-body p{
+  margin:0 0 14px 0;
+}
+.v2-th-body p:last-child{margin-bottom:0;}
+
+/* TTS 안내 */
+.v2-th-tts-notice{
+  display:none;
+  background:#fff7f0;
+  border:1.5px solid var(--or-m);
+  border-radius:12px;
+  padding:10px 14px;
+  margin-bottom:14px;
+  font-size:12px;
+  color:var(--or-d);
+  font-weight:600;
+}
+.v2-th-tts-notice.active{display:flex;align-items:center;gap:8px;}
+
+/* 듣고 있을 때 표시 */
+.v2-th-tts-pulse{
+  width:10px;
+  height:10px;
+  background:var(--or);
+  border-radius:50%;
+  animation:tts-pulse 1.2s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes tts-pulse{
+  0%, 100%{transform:scale(0.8);opacity:0.5;}
+  50%{transform:scale(1.2);opacity:1;}
+}
+
+/* TTS 토글 버튼 */
+.v2-th-tts-btn{
+  background:var(--or);
+  border:none;
+  border-radius:50%;
+  width:38px;
+  height:38px;
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 2px 8px rgba(249,115,22,0.3);
+  transition:all 0.2s;
+  padding:0;
+}
+.v2-th-tts-btn:hover{transform:scale(1.05);background:var(--or-d);}
+.v2-th-tts-btn:active{transform:scale(0.95);}
+.v2-th-tts-btn svg{width:14px;height:14px;display:block;}
+
+
+
+/* 숙제 카드 안 훈련 설명 보기 버튼 */
+.v2-hw-theory-btn{
+  margin-top:8px;
+  padding:7px 12px;
+  background:#fff7f0;
+  border:1.5px solid var(--or-m);
+  border-radius:99px;
+  color:var(--or-d);
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.v2-hw-theory-btn:hover{
+  background:var(--or);
+  color:#fff;
+  border-color:var(--or);
+}
+.v2-hw-theory-btn:active{transform:scale(0.96);}
+
+
+
+/* ═══════════════════════════════════════════
+   v2 발성 이론 페이지 슬라이드 (4개씩)
+   ═══════════════════════════════════════════ */
+
+.v2-th-pager-wrap{
+  position:relative;
+  margin:8px 0 4px;
+  overflow:hidden;
+  border-radius:14px;
+}
+
+.v2-th-pager-track{
+  display:flex;
+  transition:transform 0.4s ease;
+  touch-action:pan-y pinch-zoom;
+  user-select:none;
+}
+
+.v2-th-page{
+  flex:0 0 100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:4px;
+  box-sizing:border-box;
+}
+
+/* 각 페이지의 카드 (큰 카드 형식) */
+.v2-th-page-card{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:14px;
+  padding:14px 12px;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  min-height:110px;
+}
+.v2-th-page-card:hover{border-color:var(--or);transform:translateY(-2px);box-shadow:0 4px 12px rgba(249,115,22,0.1);}
+.v2-th-page-card:active{transform:scale(0.98);}
+
+.v2-th-page-illust{
+  width:42px;
+  height:42px;
+  margin-bottom:8px;
+}
+.v2-th-page-illust svg{width:100%;height:100%;}
+
+.v2-th-page-title{
+  font-size:12px;
+  font-weight:800;
+  color:var(--tx);
+  line-height:1.35;
+  letter-spacing:-0.2px;
+}
+
+/* 슬라이드 인디케이터 */
+.v2-th-pager-dots{
+  display:flex;
+  justify-content:center;
+  gap:5px;
+  margin-top:10px;
+}
+.v2-th-pager-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:rgba(0,0,0,0.2);
+  transition:all 0.3s;
+  cursor:pointer;
+}
+.v2-th-pager-dot.active{
+  background:var(--or);
+  width:18px;
+  border-radius:99px;
+}
+
+
+
+/* 숙제 화면 상단 - 훈련 설명 보기 버튼 */
+.v2-hw-theory-link{
+  width:100%;
+  background:linear-gradient(135deg,#fff7f0 0%,#ffedd5 100%);
+  border:1.5px solid var(--or-m);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition:all 0.2s;
+  font-family:inherit;
+}
+.v2-hw-theory-link:hover{
+  border-color:var(--or);
+  transform:translateY(-2px);
+  box-shadow:0 4px 14px rgba(249,115,22,0.15);
+}
+.v2-hw-theory-link:active{transform:scale(0.98);}
+.v2-hw-theory-link-icon{
+  font-size:22px;
+  flex-shrink:0;
+}
+.v2-hw-theory-link-text{
+  flex:1;
+  text-align:left;
+  font-size:14px;
+  font-weight:800;
+  color:var(--or-d);
+}
+.v2-hw-theory-link-arrow{
+  font-size:18px;
+  color:var(--or);
+  flex-shrink:0;
+}
 
 </style>
 <!-- 학생 로그인 모달 -->
@@ -4350,20 +4586,34 @@ el.style.opacity=0;setTimeout(()=>{el.textContent=t;el.style.opacity=1;},180);
 function stopTTS(){
 cancelTTS(); 
 ttsOn=false;descReading=false;
-const b=document.getElementById('tts-btn');if(b)b.textContent='▶';
+const b=document.getElementById('tts-btn');if(b)_setTtsIcon('stopped');
 }
+
+/* TTS 버튼 아이콘 변경 (SVG) */
+function _setTtsIcon(state){
+  const btn = document.getElementById('tts-btn');
+  if(!btn) return;
+  if(state === 'playing'){
+    /* 정지 아이콘 (사각형) */
+    btn.innerHTML = '<svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="8" height="8" rx="1"/></svg>';
+  } else {
+    /* 재생 아이콘 (삼각형) */
+    btn.innerHTML = '<svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg"><polygon points="3,2 12,7 3,12"/></svg>';
+  }
+}
+
 function toggleTTS(){
 if(ttsOn){
 stopTTS();stopEL();
 const n=document.getElementById('th-tts-notice');if(n)n.style.display='none';
 } else {
 const txt=document.getElementById('th-body').dataset.raw||document.getElementById('th-body').textContent;
-ttsOn=true;document.getElementById('tts-btn').textContent='⏹';
+ttsOn=true;_setTtsIcon('playing');
 const n=document.getElementById('th-tts-notice');
 if(n)n.style.display='block';
 speakEL(txt,()=>{
 ttsOn=false;
-const b=document.getElementById('tts-btn');if(b)b.textContent='▶';
+const b=document.getElementById('tts-btn');if(b)_setTtsIcon('stopped');
 const n2=document.getElementById('th-tts-notice');if(n2)n2.style.display='none';
 });
 }
@@ -5808,15 +6058,36 @@ function _getMenuVisFromFirebase(){
 }
 
 function _getMenuVis(){
+  /* v2 마이그레이션: 옛 설정에서 발성 이론이 숨김됐던 거 자동 정리 */
+  try{
+    const stored = JSON.parse(localStorage.getItem('ev_menu_vis') || '{}');
+    let migrated = false;
+    /* theory_t_th* 가 false인 항목들 → 삭제 (기본값 true 따르도록) */
+    Object.keys(stored).forEach(function(k){
+      if(k.startsWith('theory_t_th') && stored[k] === false){
+        delete stored[k];
+        migrated = true;
+      }
+    });
+    /* theory_group_th도 false면 정리 */
+    if(stored.theory_group_th === false){
+      delete stored.theory_group_th;
+      migrated = true;
+    }
+    if(migrated){
+      localStorage.setItem('ev_menu_vis', JSON.stringify(stored));
+    }
+  }catch(e){}
+  
   /* localStorage 설정 우선, 없으면 기본값 사용 */
   const _defaults = {
     "theory": true,
     "theory_group_ex": true,
-    "theory_group_th": false,
-    "theory_t_th1": false,"theory_t_th2": false,"theory_t_th3": false,
-    "theory_t_th4": false,"theory_t_th5": false,"theory_t_th6": false,
-    "theory_t_th7": false,"theory_t_th8": false,"theory_t_th9": false,
-    "theory_t_th10": false,
+    "theory_group_th": true,
+    "theory_t_th1": true,"theory_t_th2": true,"theory_t_th3": true,
+    "theory_t_th4": true,"theory_t_th5": true,"theory_t_th6": true,
+    "theory_t_th7": true,"theory_t_th8": true,"theory_t_th9": true,
+    "theory_t_th10": true,
     "course": false,
     "course_c_1": false,"course_c_2": false,"course_c_3": false,
     "free": true,
@@ -6018,73 +6289,72 @@ if(courseEl){
   }
 }
 
-/* 2. 발성 이론 가로 스크롤 (t_th* - 누구나) */
+/* 2. 발성 이론 페이지 슬라이드 (t_th* - 누구나, 4개씩) */
 const thScroll = document.getElementById('theory-hscroll');
+const dotsEl = document.getElementById('theory-pager-dots');
 if(thScroll){
   thScroll.innerHTML='';
+  if(dotsEl) dotsEl.innerHTML='';
   const thItems = (DB.theories||[]).filter(t => t.id.startsWith('t_th') && vis['theory_'+t.id] !== false);
-  thItems.slice(0, 10).forEach(t => {
-    const el = document.createElement('div');
-    el.className = 'v2-hscroll-card';
-    /* 책 일러스트 (펼친 책) */
-    el.innerHTML = `
-      <div class="v2-hscroll-illust">
-        <svg viewBox="0 0 36 36" fill="none">
-          <path d="M5 9 L5 28 L17 26 L17 7 Z" fill="#fef3c7" stroke="#92400e" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M17 7 L17 26 L29 28 L29 9 Z" fill="#fde68a" stroke="#92400e" stroke-width="1.5" stroke-linejoin="round"/>
-          <line x1="8" y1="13" x2="14" y2="12" stroke="#92400e" stroke-width="0.8" opacity="0.6"/>
-          <line x1="8" y1="17" x2="14" y2="16" stroke="#92400e" stroke-width="0.8" opacity="0.6"/>
-          <line x1="20" y1="12" x2="26" y2="13" stroke="#92400e" stroke-width="0.8" opacity="0.6"/>
-          <line x1="20" y1="16" x2="26" y2="17" stroke="#92400e" stroke-width="0.8" opacity="0.6"/>
-        </svg>
-      </div>
-      <div class="v2-hscroll-title">${t.title}</div>`;
-    el.onclick = () => {
-      push('scr-theory-detail');
-      openTheoryDetail(t.id);
-    };
-    thScroll.appendChild(el);
-  });
+  
   if(thItems.length === 0){
-    thScroll.innerHTML = '<div style="color:var(--mu);font-size:12px;padding:12px">발성 이론이 준비되어 있지 않습니다.</div>';
-  }
-}
-
-/* 3. 훈련 설명 (t_ex* - 학생 로그인 시에만 표시) */
-const exdescSection = document.getElementById('menu-exdesc-section');
-const exdescScroll = document.getElementById('exdesc-hscroll');
-const isStudentLoggedIn = (typeof curStudent !== 'undefined' && curStudent && curStudent.name);
-if(exdescSection){
-  if(isStudentLoggedIn){
-    exdescSection.style.display = 'block';
-    if(exdescScroll){
-      exdescScroll.innerHTML='';
-      const exItems = (DB.theories||[]).filter(t => t.id.startsWith('t_ex') && vis['theory_'+t.id] !== false);
-      exItems.slice(0, 10).forEach(t => {
-        const el = document.createElement('div');
-        el.className = 'v2-hscroll-card';
-        /* 마이크 일러스트 */
-        el.innerHTML = `
-          <div class="v2-hscroll-illust">
-            <svg viewBox="0 0 36 36" fill="none">
-              <rect x="14" y="6" width="8" height="14" rx="4" fill="#fed7aa" stroke="#c2410c" stroke-width="1.5"/>
-              <line x1="18" y1="22" x2="18" y2="30" stroke="#c2410c" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="13" y1="30" x2="23" y2="30" stroke="#c2410c" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M11 16 Q11 22 18 22 Q25 22 25 16" stroke="#c2410c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="v2-hscroll-title">${t.title}</div>`;
-        el.onclick = () => {
+    thScroll.innerHTML = '<div style="color:var(--mu);font-size:12px;padding:12px;flex:0 0 100%;text-align:center">발성 이론이 준비되어 있지 않습니다.</div>';
+  } else {
+    /* 책 일러스트 SVG */
+    const bookSvg = `<svg viewBox="0 0 42 42" fill="none">
+      <path d="M6 11 L6 32 L20 30 L20 9 Z" fill="#fef3c7" stroke="#92400e" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M20 9 L20 30 L34 32 L34 11 Z" fill="#fde68a" stroke="#92400e" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="9" y1="16" x2="17" y2="14.5" stroke="#92400e" stroke-width="0.9" opacity="0.6"/>
+      <line x1="9" y1="20" x2="17" y2="18.5" stroke="#92400e" stroke-width="0.9" opacity="0.6"/>
+      <line x1="9" y1="24" x2="14" y2="23" stroke="#92400e" stroke-width="0.9" opacity="0.6"/>
+      <line x1="23" y1="14.5" x2="31" y2="16" stroke="#92400e" stroke-width="0.9" opacity="0.6"/>
+      <line x1="23" y1="18.5" x2="31" y2="20" stroke="#92400e" stroke-width="0.9" opacity="0.6"/>
+      <line x1="23" y1="22.5" x2="28" y2="23.5" stroke="#92400e" stroke-width="0.9" opacity="0.6"/>
+    </svg>`;
+    
+    /* 4개씩 묶어서 페이지 생성 */
+    const pageSize = 4;
+    const totalPages = Math.ceil(thItems.length / pageSize);
+    
+    for(let p = 0; p < totalPages; p++){
+      const page = document.createElement('div');
+      page.className = 'v2-th-page';
+      
+      const start = p * pageSize;
+      const end = Math.min(start + pageSize, thItems.length);
+      
+      for(let i = start; i < end; i++){
+        const t = thItems[i];
+        const card = document.createElement('div');
+        card.className = 'v2-th-page-card';
+        card.innerHTML = `
+          <div class="v2-th-page-illust">${bookSvg}</div>
+          <div class="v2-th-page-title">${t.title}</div>`;
+        card.onclick = () => {
           push('scr-theory-detail');
           openTheoryDetail(t.id);
         };
-        exdescScroll.appendChild(el);
-      });
+        page.appendChild(card);
+      }
+      thScroll.appendChild(page);
     }
-  } else {
-    exdescSection.style.display = 'none';
+    
+    /* 인디케이터 점 생성 (페이지 2개 이상일 때만) */
+    if(totalPages > 1 && dotsEl){
+      for(let p = 0; p < totalPages; p++){
+        const d = document.createElement('div');
+        d.className = 'v2-th-pager-dot' + (p === 0 ? ' active' : '');
+        d.onclick = () => _thPagerGoTo(p);
+        dotsEl.appendChild(d);
+      }
+    }
+    
+    /* 페이저 초기화 */
+    _thPagerInit(totalPages);
   }
 }
+
+/* 훈련 설명 섹션은 v2에서 제거됨 - 숙제 카드에서 직접 진입 */
 
 /* 메뉴 가시성 적용 */
 if(typeof _applyMenuVis === 'function') _applyMenuVis();
@@ -6092,6 +6362,9 @@ if(typeof _applyMenuVis === 'function') _applyMenuVis();
 
 function buildTheoryList(){
 const list=document.getElementById('theory-list');list.innerHTML='';
+/* 상단 타이틀 복구 */
+const topbar=document.querySelector('#scr-theory-list .tb');
+if(topbar)topbar.textContent='발성 이론';
 if(!(DB.theories||[]).length){list.innerHTML='<div class="empty" style="padding:24px;text-align:center;color:var(--mu)">이론 내용이 없습니다.</div>';return;}
 
 const exItems=DB.theories.filter(t=>t.id&&t.id.startsWith('t_ex'));
@@ -6128,15 +6401,15 @@ function _openTheoryDetail(t){
   _thEl.innerHTML=_md2html(t.body||'');
   _thEl.dataset.raw=t.body||'';
   ttsOn=true;
-  document.getElementById('tts-btn').textContent='⏹';
+  _setTtsIcon('playing');
   const nn=document.getElementById('th-tts-notice');
-  if(nn)nn.style.display='block';
+  if(nn)nn.classList.add('active');
   speakEL(t.body||'',function(){
     ttsOn=false;
     const b=document.getElementById('tts-btn');
-    if(b)b.textContent='▶';
+    if(b)_setTtsIcon('stopped');
     const nn2=document.getElementById('th-tts-notice');
-    if(nn2)nn2.style.display='none';
+    if(nn2)nn2.classList.remove('active');
   });
   push('scr-theory-detail');
 }
@@ -6172,22 +6445,7 @@ if(thItems.length){
   list.appendChild(grid);
 }
 
-/* === 훈련 설명 섹션 (학생 로그인 시에만) === */
-if(exItems.length && isStudentLoggedIn){
-  const sectionTitle = document.createElement('div');
-  sectionTitle.className = 'v2-section-header';
-  sectionTitle.style.marginTop = '24px';
-  sectionTitle.innerHTML = `<div class="v2-section-title">훈련 설명 <span class="v2-locked-badge">🔒 학생 전용</span></div>`;
-  list.appendChild(sectionTitle);
-  
-  const grid = document.createElement('div');
-  grid.className = 'v2-card-grid';
-  exItems.forEach(function(t){
-    if(_getMenuVis()['theory_'+t.id] === false) return;
-    grid.appendChild(_mkBigCard(t, micIllust, 'v2-card-or'));
-  });
-  list.appendChild(grid);
-}
+/* 훈련 설명 섹션은 v2에서 제거됨 - 숙제 화면에서 별도 진입 */
 
 /* === 기타 섹션 === */
 if(etcItems.length){
@@ -6208,6 +6466,74 @@ if(etcItems.length){
 /* 메뉴 노출 설정 적용 */
 if(typeof _applyMenuVis === 'function') _applyMenuVis();
 }
+
+/* 숙제 화면 → 훈련 설명 목록으로 이동 */
+function _goHwTheoryList(){
+  /* TTS 정리 */
+  cancelTTS();
+  /* 화면 전환 - scr-theory-list로 push (단, 이미 위에 있으면 buildTheoryListEx만) */
+  if(scrStack[scrStack.length-1] !== 'scr-theory-list'){
+    push('scr-theory-list');
+  }
+  /* 이전 화면(숙제)을 hidden 처리 - 겹침 방지 */
+  const hwScr = document.getElementById('scr-homework');
+  if(hwScr){
+    hwScr.classList.add('hidden');
+    hwScr.classList.remove('behind');
+  }
+  buildTheoryListEx(); /* 훈련 설명만 표시 */
+}
+
+/* 훈련 설명 전용 목록 (학생용) */
+function buildTheoryListEx(){
+  const list = document.getElementById('theory-list');
+  if(!list) return;
+  list.innerHTML = '';
+  
+  /* 상단 타이틀 변경 */
+  const topbar = document.querySelector('#scr-theory-list .tb');
+  if(topbar) topbar.textContent = '훈련 설명';
+  
+  const exItems = (DB.theories||[]).filter(t => t.id && t.id.startsWith('t_ex'));
+  
+  if(exItems.length === 0){
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--mu)">훈련 설명이 준비되어 있지 않습니다.</div>';
+    return;
+  }
+  
+  /* 마이크 일러스트 */
+  const micIllust = `<svg viewBox="0 0 64 64" fill="none">
+    <rect x="26" y="14" width="12" height="22" rx="6" fill="#fed7aa" stroke="#c2410c" stroke-width="2"/>
+    <line x1="32" y1="40" x2="32" y2="52" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="22" y1="52" x2="42" y2="52" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M20 28 Q20 38 32 38 Q44 38 44 28" stroke="#c2410c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+  
+  /* 헤더 */
+  const sectionTitle = document.createElement('div');
+  sectionTitle.className = 'v2-section-header';
+  sectionTitle.style.marginTop = '8px';
+  sectionTitle.innerHTML = `<div class="v2-section-title">훈련 설명</div>`;
+  list.appendChild(sectionTitle);
+  
+  /* 큰 카드 그리드 */
+  const grid = document.createElement('div');
+  grid.className = 'v2-card-grid';
+  
+  exItems.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'v2-card v2-card-or';
+    el.innerHTML = `
+      <div class="v2-card-illust">${micIllust}</div>
+      <div class="v2-card-title">${t.title}</div>
+      <div class="v2-card-desc">${t.summary || ''}</div>
+      <div class="v2-card-arrow">›</div>`;
+    el.onclick = function(){ _openHwTheory(t.id); };
+    grid.appendChild(el);
+  });
+  list.appendChild(grid);
+}
+
 
 let curCourse=null;
 function openCourse(id){
@@ -8402,6 +8728,27 @@ c.appendChild(d);
 });
 }
 
+/* 숙제 카드에서 훈련 설명 열기 */
+function _openHwTheory(theoryId){
+  const t = (DB.theories||[]).find(x => x.id === theoryId);
+  if(!t) return;
+  document.getElementById('th-title').textContent = t.title;
+  const _thEl = document.getElementById('th-body');
+  _thEl.innerHTML = _md2html(t.body||'');
+  _thEl.dataset.raw = t.body || '';
+  ttsOn = true;
+  if(typeof _setTtsIcon === 'function') _setTtsIcon('playing');
+  const nn = document.getElementById('th-tts-notice');
+  if(nn) nn.classList.add('active');
+  speakEL(t.body || '', function(){
+    ttsOn = false;
+    if(typeof _setTtsIcon === 'function') _setTtsIcon('stopped');
+    const nn2 = document.getElementById('th-tts-notice');
+    if(nn2) nn2.classList.remove('active');
+  });
+  push('scr-theory-detail');
+}
+
 function moveHw(i, dir){
 const j = i+dir;
 if(j<0||j>=hwList.length) return;
@@ -8971,6 +9318,79 @@ if(document.readyState === 'loading'){
 } else {
   setTimeout(_heroInit, 100);
 }
+
+
+
+/* ═══════════════════════════════════════════
+   v2 발성 이론 페이저 (스와이프 동작)
+   ═══════════════════════════════════════════ */
+
+let _thPagerIdx = 0;
+let _thPagerTotal = 0;
+let _thPagerTouchStartX = 0;
+let _thPagerTouchEndX = 0;
+let _thPagerInited = false;
+
+function _thPagerInit(total){
+  _thPagerIdx = 0;
+  _thPagerTotal = total;
+  if(total <= 1) return;
+  
+  const track = document.getElementById('theory-hscroll');
+  if(!track || _thPagerInited) return;
+  _thPagerInited = true;
+  
+  /* 터치 스와이프 */
+  track.addEventListener('touchstart', (e) => {
+    _thPagerTouchStartX = e.changedTouches[0].screenX;
+  }, {passive: true});
+  
+  track.addEventListener('touchend', (e) => {
+    _thPagerTouchEndX = e.changedTouches[0].screenX;
+    _thPagerHandleSwipe();
+  }, {passive: true});
+  
+  /* 마우스 드래그 */
+  let mouseDown = false;
+  let mouseStartX = 0;
+  track.addEventListener('mousedown', (e) => {
+    mouseDown = true;
+    mouseStartX = e.clientX;
+  });
+  track.addEventListener('mouseup', (e) => {
+    if(!mouseDown) return;
+    mouseDown = false;
+    const diff = mouseStartX - e.clientX;
+    if(Math.abs(diff) > 50){
+      if(diff > 0) _thPagerNext();
+      else _thPagerPrev();
+    }
+  });
+  track.addEventListener('mouseleave', () => { mouseDown = false; });
+}
+
+function _thPagerHandleSwipe(){
+  const diff = _thPagerTouchStartX - _thPagerTouchEndX;
+  if(Math.abs(diff) < 50) return;
+  if(diff > 0) _thPagerNext();
+  else _thPagerPrev();
+}
+
+function _thPagerGoTo(idx){
+  if(_thPagerTotal <= 1) return;
+  _thPagerIdx = ((idx % _thPagerTotal) + _thPagerTotal) % _thPagerTotal;
+  const track = document.getElementById('theory-hscroll');
+  const dotsEl = document.getElementById('theory-pager-dots');
+  if(track) track.style.transform = `translateX(-${_thPagerIdx * 100}%)`;
+  if(dotsEl){
+    dotsEl.querySelectorAll('.v2-th-pager-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === _thPagerIdx);
+    });
+  }
+}
+
+function _thPagerNext(){ _thPagerGoTo(_thPagerIdx + 1); }
+function _thPagerPrev(){ _thPagerGoTo(_thPagerIdx - 1); }
 
 </script>
 
