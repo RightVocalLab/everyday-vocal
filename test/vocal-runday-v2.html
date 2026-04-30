@@ -46,7 +46,8 @@ input,select,button,textarea{font-family:inherit;}
 .btn-ghost.on{background:var(--or);color:#fff;border-color:var(--or);}
 .play-btn{width:66px;height:66px;border-radius:50%;background:var(--or);color:#fff;border:none;
   font-size:24px;cursor:pointer;transition:all .11s;box-shadow:0 4px 18px rgba(249,115,22,.40);
-  display:flex;align-items:center;justify-content:center;}
+  display:flex;align-items:center;justify-content:center;padding:0;}
+.play-btn svg{width:28px;height:28px;display:block;}
 .play-btn:hover{background:var(--or-d);transform:scale(1.05);}
 
 /* ── CARDS ── */
@@ -535,10 +536,9 @@ input,select,button,textarea{font-family:inherit;}
     <!-- 컨트롤 -->
     <div id="ctrl-bar" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0 8px">
       <button class="ico" style="font-size:17px" onclick="doRestart()" title="다시 시작">↺</button>
-      <button class="play-btn" id="pp" onclick="togglePlay()">▶</button>
-      <button class="ico" style="font-size:17px" onclick="skipStep()" id="skip-step-btn" title="스텝 건너뛰기" style="display:none">⏭</button>
-      <button class="ico" style="font-size:17px;display:none" onclick="freeSkipStep()" id="free-skip-step-btn" title="스텝 건너뛰기">⏭</button>
-      <button class="ico" style="font-size:17px;display:none" onclick="freeSkipTrain()" id="free-skip-train-btn" title="다음 훈련으로">⏩</button>
+      <button class="play-btn" id="pp" onclick="togglePlay()"><svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg" id="pp-icon"><polygon points="7,5 19,12 7,19"/></svg></button>
+      <button class="ico" onclick="skipStep()" id="skip-step-btn" title="스텝 건너뛰기" style="display:none"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,5 15,12 5,19"/><rect x="16" y="5" width="3" height="14" rx="0.5"/></svg></button>
+      <button class="ico" style="display:none" onclick="freeSkipStep()" id="free-skip-step-btn" title="스텝 건너뛰기"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,5 15,12 5,19"/><rect x="16" y="5" width="3" height="14" rx="0.5"/></svg></button>
     </div>
     <!-- 다음 훈련 버튼 (시퀀스일 때만 표시) -->
     <div id="next-train-row" style="display:none;padding:0 0 6px">
@@ -554,31 +554,34 @@ input,select,button,textarea{font-family:inherit;}
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
     <div class="tb">자유 연습</div>
-    <div style="display:flex;gap:5px;align-items:center">
-      <button class="btn btn-or btn-sm" onclick="startFreeSeq()">▶ 시작</button>
-      <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
-    </div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
+  <div class="body"><div class="inner" style="padding-bottom:80px">
 
-    <!-- 내 프로그램 (리스트) -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">내 프로그램</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button onclick="clearFreeList()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid #fecaca;border-radius:8px;color:#dc2626;cursor:pointer">전체 삭제</button>
+    <!-- 섹션 1: 내 프로그램 -->
+    <div class="v2-section-header" style="margin-top:12px">
+      <div class="v2-section-title">내 프로그램</div>
+      <div class="v2-section-more" onclick="clearFreeList()" style="color:#dc2626">전체 삭제</div>
     </div>
-    <div id="free-slots" style="display:flex;flex-direction:column;gap:6px;min-height:52px;margin-bottom:12px"></div>
+    <div style="font-size:11px;color:var(--mu);margin:-6px 4px 10px 4px">드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
+    <div id="free-slots" style="display:flex;flex-direction:column;gap:8px;min-height:52px;margin-bottom:24px"></div>
 
-    <div style="height:1px;background:var(--line);margin-bottom:12px"></div>
-
-    <!-- 훈련 추가하기 (아코디언) -->
-    <div style="font-size:13px;font-weight:800;margin-bottom:8px">훈련 추가하기</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px">스케일 훈련 및 설명 훈련을 추가할 수 있습니다</div>
-    <div id="free-pick" style="display:flex;flex-direction:column;gap:6px"></div>
+    <!-- 섹션 2: 훈련 추가하기 -->
+    <div class="v2-section-header">
+      <div class="v2-section-title">훈련 추가하기</div>
+    </div>
+    <div style="font-size:11px;color:var(--mu);margin:-6px 4px 10px 4px">스케일 훈련 및 설명 훈련을 추가할 수 있습니다</div>
+    <div id="free-pick" style="display:flex;flex-direction:column;gap:0"></div>
 
   </div></div>
+  
+  <!-- 시작 버튼 (플로팅) -->
+  <button class="v2-start-fab" onclick="startFreeSeq()" id="v2-free-start-fab">
+    <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="3,2 12,7 3,12"/>
+    </svg>
+    <span>시작하기</span>
+  </button>
 </div>
 
 <!-- HOMEWORK -->
@@ -588,45 +591,43 @@ input,select,button,textarea{font-family:inherit;}
     <div class="tb" id="hw-topbar-title">숙제</div>
     <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
   </div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:0;padding-bottom:24px">
+  <div class="body"><div class="inner" style="padding-bottom:80px">
 
-    <!-- 학생 정보 바 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:13px;font-weight:800;color:#166534" id="hw-student-name">—</div>
-          <div style="font-size:10px;color:#16a34a;margin-top:1px" id="hw-update-time">—</div>
+    <!-- 학생 정보 카드 -->
+    <div class="v2-hw-student-card">
+      <div class="v2-hw-student-row">
+        <div class="v2-hw-student-info">
+          <div class="v2-hw-student-name" id="hw-student-name">—</div>
+          <div class="v2-hw-student-time" id="hw-update-time">—</div>
         </div>
-        <button onclick="logoutStudent()" style="font-size:11px;padding:5px 10px;background:none;border:1.5px solid #86efac;border-radius:8px;color:#16a34a;cursor:pointer">로그아웃</button>
+        <button onclick="logoutStudent()" class="v2-hw-logout-btn">로그아웃</button>
       </div>
       <!-- 진행 상황 바 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:11px;font-weight:700;color:#166534">오늘 진행 현황</span>
-        <span id="hw-progress-text" style="font-size:11px;font-weight:800;color:#16a34a">0 / 0</span>
+      <div class="v2-hw-progress-row">
+        <span class="v2-hw-progress-label">오늘 진행 현황</span>
+        <span id="hw-progress-text" class="v2-hw-progress-text">0 / 0</span>
       </div>
-      <div style="background:#bbf7d0;border-radius:99px;height:10px;overflow:hidden">
-        <div id="hw-progress-bar" style="background:#16a34a;height:10px;border-radius:99px;width:0%;transition:width .4s ease"></div>
+      <div class="v2-hw-progress-bar-wrap">
+        <div id="hw-progress-bar" class="v2-hw-progress-bar"></div>
       </div>
     </div>
 
     <!-- 숙제 리스트 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;font-weight:800">📋 내 숙제</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px">⠿ 드래그 또는 ↑↓ 버튼으로 순서 변경 · 자동 저장됨</div>
-      </div>
-      <button id="hw-reset-btn" onclick="resetHomework()" style="font-size:10px;padding:4px 9px;background:none;border:1.5px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer;opacity:0.4;pointer-events:none">완료 초기화</button>
+    <div class="v2-section-header">
+      <div class="v2-section-title">내 숙제</div>
+      <button id="hw-reset-btn" onclick="resetHomework()" class="v2-hw-reset-btn" disabled>완료 초기화</button>
     </div>
-
-    <!-- 전체 훈련 시작 버튼 -->
-    <button onclick="startHomeworkSeq()"
-      style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(22,163,74,.35)">
-      ▶ 전체 훈련 시작
-    </button>
-
-    <div id="hw-slots" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
+    <div id="hw-slots" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
 
   </div></div>
+  
+  <!-- 전체 훈련 시작 플로팅 버튼 -->
+  <button class="v2-hw-start-fab" onclick="startHomeworkSeq()" id="v2-hw-start-fab">
+    <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="3,2 12,7 3,12"/>
+    </svg>
+    <span>전체 훈련 시작</span>
+  </button>
 </div>
 
 <!-- ADMIN -->
@@ -852,7 +853,8 @@ input,select,button,textarea{font-family:inherit;}
 .btn-ghost.on{background:var(--or);color:#fff;border-color:var(--or);}
 .play-btn{width:66px;height:66px;border-radius:50%;background:var(--or);color:#fff;border:none;
   font-size:24px;cursor:pointer;transition:all .11s;box-shadow:0 4px 18px rgba(249,115,22,.40);
-  display:flex;align-items:center;justify-content:center;}
+  display:flex;align-items:center;justify-content:center;padding:0;}
+.play-btn svg{width:28px;height:28px;display:block;}
 .play-btn:hover{background:var(--or-d);transform:scale(1.05);}
 
 /* ── CARDS ── */
@@ -1169,6 +1171,459 @@ input,select,button,textarea{font-family:inherit;}
 }
 .v2-hscroll-illust svg{width:100%;height:100%;}
 
+
+
+/* ═══════════════════════════════════════════
+   v2 자유 연습 화면
+   ═══════════════════════════════════════════ */
+
+/* 내 프로그램 슬롯 */
+.v2-free-slot{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:14px;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  transition:all 0.2s;
+}
+.v2-free-slot.dragging{opacity:0.5;}
+.v2-free-slot.drag-over{border-color:var(--or);background:#fff7f0;}
+
+.v2-free-slot-num{
+  width:26px;
+  height:26px;
+  border-radius:8px;
+  background:var(--or);
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+
+.v2-free-slot-info{flex:1;min-width:0;}
+.v2-free-slot-title{
+  font-size:13px;
+  font-weight:700;
+  color:var(--tx);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.v2-free-slot-meta{
+  font-size:10px;
+  color:var(--mu);
+  margin-top:2px;
+}
+
+/* 카운터 + 컨트롤 */
+.v2-free-rep-box{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex-shrink:0;
+}
+.v2-free-rep-btn{
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  border:1px solid var(--bd2);
+  background:#fff;
+  font-size:13px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--mu);
+}
+.v2-free-rep-num{
+  font-size:11px;
+  font-weight:800;
+  color:var(--or);
+  min-width:24px;
+  text-align:center;
+}
+
+.v2-free-move-box{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  flex-shrink:0;
+}
+.v2-free-move-btn{
+  width:24px;
+  height:24px;
+  border-radius:6px;
+  border:1px solid var(--bd2);
+  background:#fff;
+  font-size:11px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.v2-free-move-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+.v2-free-del-btn{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:#fff;
+  border:1.5px solid #fecaca;
+  color:#dc2626;
+  font-size:11px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+
+/* 훈련 추가 - 아코디언 카드 */
+.v2-pick-wrap{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:10px;
+  transition:all 0.2s;
+}
+.v2-pick-wrap:hover{border-color:var(--or);}
+
+.v2-pick-hdr{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 16px;
+  cursor:pointer;
+  user-select:none;
+}
+.v2-pick-illust{
+  width:40px;
+  height:40px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.v2-pick-illust svg{width:100%;height:100%;}
+
+.v2-pick-info{flex:1;min-width:0;}
+.v2-pick-title{
+  font-size:14px;
+  font-weight:800;
+  color:var(--tx);
+}
+.v2-pick-desc{
+  font-size:11px;
+  color:var(--mu);
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.v2-pick-arrow{
+  font-size:14px;
+  color:var(--or);
+  transition:transform 0.2s;
+  flex-shrink:0;
+}
+
+/* 아코디언 내부 (스케일 리스트) */
+.v2-pick-body{
+  border-top:1px solid var(--line);
+  padding:0;
+}
+.v2-scale-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 16px 11px 20px;
+  border-bottom:1px solid var(--line);
+}
+.v2-scale-row:last-child{border-bottom:none;}
+
+.v2-scale-info{flex:1;min-width:0;}
+.v2-scale-name{
+  font-size:12px;
+  font-weight:700;
+  color:var(--tx);
+}
+.v2-scale-range{
+  font-size:10px;
+  font-weight:400;
+  color:var(--mu);
+}
+.v2-scale-meta{
+  font-size:10px;
+  color:var(--mu2);
+  margin-top:1px;
+}
+
+.v2-add-btn{
+  background:var(--or);
+  border:none;
+  border-radius:50%;
+  width:30px;
+  height:30px;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  line-height:1;
+  box-shadow:0 2px 6px rgba(249,115,22,0.3);
+  transition:all 0.2s;
+}
+.v2-add-btn:hover{transform:scale(1.1);}
+.v2-add-btn:active{transform:scale(0.95);}
+
+/* 시작 버튼 (큰 플로팅) */
+.v2-start-fab{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--or);
+  color:#fff;
+  border:none;
+  border-radius:99px;
+  padding:14px 32px;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(249,115,22,0.4);
+  z-index:100;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:all 0.2s;
+}
+.v2-start-fab:hover{transform:translateX(-50%) translateY(-2px);box-shadow:0 8px 24px rgba(249,115,22,0.5);}
+.v2-start-fab:active{transform:translateX(-50%) scale(0.95);}
+/* 시작 버튼 안 SVG 삼각형 (가운데 정확히 정렬) */
+.v2-start-fab svg{
+  width:14px;
+  height:14px;
+  display:block;
+  flex-shrink:0;
+}
+
+
+
+/* .ico 버튼 안 SVG 정확히 정렬 */
+.ico svg{
+  width:18px;
+  height:18px;
+  display:block;
+}
+
+
+
+/* ═══════════════════════════════════════════
+   v2 숙제 화면
+   ═══════════════════════════════════════════ */
+
+/* 학생 정보 카드 */
+.v2-hw-student-card{
+  background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);
+  border:1.5px solid #86efac;
+  border-radius:18px;
+  padding:18px 20px;
+  margin-bottom:16px;
+}
+
+.v2-hw-student-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+
+.v2-hw-student-info{flex:1;}
+.v2-hw-student-name{
+  font-size:16px;
+  font-weight:800;
+  color:#166534;
+  letter-spacing:-0.3px;
+}
+.v2-hw-student-time{
+  font-size:11px;
+  color:#16a34a;
+  margin-top:2px;
+}
+
+.v2-hw-logout-btn{
+  font-size:11px;
+  padding:7px 13px;
+  background:#fff;
+  border:1.5px solid #86efac;
+  border-radius:99px;
+  color:#16a34a;
+  cursor:pointer;
+  font-weight:700;
+  transition:all 0.2s;
+}
+.v2-hw-logout-btn:hover{background:#16a34a;color:#fff;}
+
+.v2-hw-progress-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.v2-hw-progress-label{
+  font-size:12px;
+  font-weight:700;
+  color:#166534;
+}
+.v2-hw-progress-text{
+  font-size:13px;
+  font-weight:800;
+  color:#16a34a;
+}
+
+.v2-hw-progress-bar-wrap{
+  background:rgba(187,247,208,0.6);
+  border-radius:99px;
+  height:12px;
+  overflow:hidden;
+}
+.v2-hw-progress-bar{
+  background:linear-gradient(90deg,#16a34a,#22c55e);
+  height:12px;
+  border-radius:99px;
+  width:0%;
+  transition:width 0.6s ease;
+  box-shadow:0 1px 3px rgba(22,163,74,0.3);
+}
+
+/* 숙제 카드 */
+.v2-hw-slot{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:16px;
+  padding:14px 16px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  transition:all 0.2s;
+}
+.v2-hw-slot.done{
+  background:#f0fdf4;
+  border-color:#bbf7d0;
+}
+
+.v2-hw-num-badge{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  background:var(--or-l);
+  border:1.5px solid var(--or-m);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:800;
+  color:var(--or);
+  flex-shrink:0;
+}
+.v2-hw-num-badge.done{
+  background:#16a34a;
+  border-color:#16a34a;
+  color:#fff;
+  font-size:18px;
+}
+
+.v2-hw-slot-info{flex:1;min-width:0;}
+.v2-hw-slot-title{
+  font-size:14px;
+  font-weight:800;
+  color:var(--tx);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.v2-hw-slot-title.done{
+  text-decoration:line-through;
+  color:#16a34a;
+}
+.v2-hw-done-badge{
+  font-size:10px;
+  background:#16a34a;
+  color:#fff;
+  border-radius:99px;
+  padding:2px 8px;
+  font-weight:700;
+}
+.v2-hw-slot-meta{
+  font-size:11px;
+  color:var(--mu);
+  margin-top:3px;
+}
+.v2-hw-slot-meta.done{
+  color:#16a34a;
+}
+.v2-hw-slot-comment{
+  font-size:11px;
+  color:#166534;
+  margin-top:8px;
+  line-height:1.5;
+  background:#f0fdf4;
+  border-left:3px solid #86efac;
+  padding:7px 10px;
+  border-radius:0 8px 8px 0;
+}
+
+/* 시작하기 플로팅 버튼 (숙제용 - 초록색) */
+.v2-hw-start-fab{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:#fff;
+  border:none;
+  border-radius:99px;
+  padding:14px 32px;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(22,163,74,0.4);
+  z-index:100;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:all 0.2s;
+}
+.v2-hw-start-fab:hover{transform:translateX(-50%) translateY(-2px);box-shadow:0 8px 24px rgba(22,163,74,0.5);}
+.v2-hw-start-fab:active{transform:translateX(-50%) scale(0.95);}
+.v2-hw-start-fab svg{width:14px;height:14px;display:block;}
+
+/* 완료 초기화 버튼 */
+.v2-hw-reset-btn{
+  font-size:11px;
+  padding:6px 12px;
+  background:#fff;
+  border:1.5px solid var(--bd);
+  border-radius:99px;
+  color:var(--mu);
+  cursor:pointer;
+  font-weight:600;
+  transition:all 0.2s;
+}
+.v2-hw-reset-btn:hover{background:#fef3c7;border-color:#f59e0b;color:#92400e;}
+.v2-hw-reset-btn:disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+
 </style>
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
@@ -1232,7 +1687,7 @@ const INIT_DB={
   "exercises": [
     {
       "id": "ex_1",
-      "name": "Z 브레셔",
+      "name": "가슴 소리 만들기",
       "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**훈련 효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
       "videoId": "",
       "active": true,
@@ -1240,7 +1695,7 @@ const INIT_DB={
     },
     {
       "id": "ex_2",
-      "name": "Z 브레셔",
+      "name": "가슴 소리 만들기",
       "desc": "**Z 브레셔.**\n영어 제트(Z, 즈) 발음을 사용하여 성대를 진동시키는 훈련입니다.\n\n**훈련 방법.**\n올바른 자세에서 즈(Z) 소리를 내면서 소리를 가슴 위치까지 내려보냅니다.\n가슴에서 뱃고동 소리가 울리는 느낌이 날 때까지 유지합니다.\n소리가 코로 올라가지 않도록 주의합니다.\n\n**Z 브레셔의 핵심.**\n진동체를 두 개(성대 + 가슴)로 만들어 소리를 직접 체험하는 훈련입니다.\n처음에는 소울음 소리(음머어~)처럼 낮은 소리를 내보며 흉성의 위치를 찾는 연습부터 시작합니다.\n\n**훈련 효과.**\n백프레셔 효과로 목구멍의 공간을 열어주고 그 상태에서 성대접촉을 강하게 시도하게 되어, 성대음이 약한 사람에게 효과적입니다.\n\n**주의 사항.**\n이미 성대를 강하게 조여 성대음을 강하게 내는 타입은 반대로 열어주고 성대를 두성화 시키는 훈련이 필요합니다.(백 프레셔 훈련)",
       "videoId": "",
       "active": true,
@@ -1264,7 +1719,7 @@ const INIT_DB={
     },
     {
       "id": "ex_5",
-      "name": "주먹말고 호흡훈련",
+      "name": "주먹쥐고 호흡",
       "desc": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
       "videoId": "",
       "active": true,
@@ -1272,7 +1727,7 @@ const INIT_DB={
     },
     {
       "id": "ex_6",
-      "name": "울트라브리드 호흡훈련",
+      "name": "호흡 저항 도구 훈련",
       "desc": "**울트라브리드 호흡 훈련.**\n울트라브리드의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n울트라브리드를 잘 잠그고 입에 완전히 짛어 넣어 이빨로 물고 입술로 울트라브리드를 덮습니다.\n울트라 브리드를 더 조이거나 풀어가며 강도를 조절하여 입으로 호흡합니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.\n기구를 통한 훈련으로 더 일관되고 정확하게 호흡훈련이 가능합니다.\n\n**울트라브리드란?**\n호주에서 수영선수의 폐활량증대를 위해 만들어낸 호흡기구 입니다.",
       "videoId": "",
       "active": true,
@@ -1288,7 +1743,7 @@ const INIT_DB={
     },
     {
       "id": "ex_8",
-      "name": "S 브레셔",
+      "name": "S로 호흡 뱉기",
       "desc": "**S 브레셔.**\n영어 에스(S) 발음을 사용하여 호흡을 조절하는 훈련입니다.\n\n**훈련 방법.**\n올바른 발성 자세에서 코로 저항을 걸어 복흉식으로 호흡을 들이마십니다.\n상복부가 팽창된 상태를 유지하면서 에스(S) 소리로 천천히 내뱉습니다.\n마지막에는 상복부를 안쪽으로 밀어넣어 호흡을 완전히 뱉어냅니다.\n10회 실시하는 동안 중간에 쉬지않고 바로 이어서 코로 저항을 걸어서 호흡을 마십니다.(중요)\n\n**목표 시간.**\n처음에는 10~15초 → 25초 → 30초 → 40초 → 50초 순서로 점진적으로 늘려갑니다.\n\n**훈련 효과.**\n노래할 때 호흡이 과하게 터져나가지 않도록 조절하는 능력을 키웁니다. 지구력이 향상됩니다.",
       "videoId": "",
       "active": true,
@@ -1296,7 +1751,7 @@ const INIT_DB={
     },
     {
       "id": "ex_9",
-      "name": "S 브레셔 스타카토",
+      "name": "S로 스타카토 호흡뱉기",
       "desc": "**S 브레셔 스타카토.**\nS를 끊어서 내보내보며 횡격막의 움직임을 느껴보는 훈련.\n\n**훈련 방법.**\n코로 저항을 걸어 호흡을 마신 뒤 상복부를 살짝 집어넣었다가 밖으로 팽창시키며 S 브레셔를 실시 합니다.\n\n**훈련 효과.**\n 횡격막의 느낌을 직접적으로 느껴보는 훈련입니다.",
       "videoId": "",
       "active": true,
@@ -1304,7 +1759,7 @@ const INIT_DB={
     },
     {
       "id": "ex_10",
-      "name": "Z 브레셔 스타카토",
+      "name": "Z 스타카토 소리내기",
       "desc": "**Z 브레셔 스타카토.**\nZ브레셔를 가슴 위치까지 내리기 위해 하는 훈련입니다.\n\n**훈련 방법.**\n상복부의 압력을 강하게 작용시키며(횡격막의 하강) Z를 가슴위치까지 내리기 위해 끊어서 발성 합니다.\n\n**훈련 효과.**\n호흡과 횡격막의 강한 작용과 열린 목구멍을 사용하기 용이해 집니다.",
       "videoId": "",
       "active": true,
@@ -1360,31 +1815,31 @@ const INIT_DB={
     },
     {
       "id": "ex_17",
-      "name": "학! 우~우~우~",
-      "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.",
+      "name": "가슴에 호흡 대기",
+      "desc": "**학!(Press) 우~우~우~.**\n'우' 모음에서 성대음을 붙혀보기 시작합니다.\n\n**훈련 방법.**\n흉강고정기법인 학! 을 사용하여 흉강을 고정 한 후 가슴에 성대와 입술이 있다고 생각하며,\n성대가 풀리지 않게 유지하며 우~를 3번 냅니다.\n\n※ 아 또는 우 모음으로 진행하세요.",
       "videoId": "",
       "active": true,
       "hasScale": false
     },
     {
       "id": "ex_18",
-      "name": "Press 우(학! 우빡!)",
-      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.",
+      "name": "강한 성대음 만들기 (흉성)",
+      "desc": "**Press 우.**\n강한 우 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n입술을 앞으로 모으고 가슴쪽으로 소리를 끓어 당겨낸다 라는 생각으로 소리를 냅니다.\n소리가 가슴에 닿아있는 느낌을 유지하며 뒷쪽(3번 포지션)을 당겨줍니다.\n\n**우 모음의 특성.**\n우 모음은 가장 깊은 모음 중 하나로 써, 압축 된 소리가 가슴에 대어지는 훈련을 하는데 효과적입니다.\n\n**Breath 우와의 차이.**\nPress 우는 성대 장력을 높이는 훈련이고, Breath 우는 호흡으로 성대 주변의 긴장을 풀어주는 훈련입니다.\n\n※ 모음 아, 오, 우 등을 이용해 훈련한다.",
       "videoId": "",
       "active": true,
       "hasScale": true
     },
     {
       "id": "ex_19",
-      "name": "Press 후우(후우 빡!)",
-      "desc": "**Press 후우(후우 빡!).**\nH어택으로 우빡을 시작해 성대의 상연이 붙을 수 있는 상태가 되도록 유도하여 중성~두성까지 두성화 된 성대를 강하게 버텨주는 훈련\n\n**훈련 방법.**\n우빡의 처음에 후~ 를 집어넣어 공기의 흐름을 빠르게 해준 뒤 우빡을 이어 붙입니다! 잘 안될때는 뒤의 위의 방향을 생각해보고 잘 되기 시작하면 점점 가슴에 소리를 붙일 수 있게 실시 합니다.\n\n초심자 단계에서는 '후우우우우 후우우우우 후우우우우 후우우우우 후우우우우' 이렇게 모든 마디의 시작마다 H어택을 넣습니다.\n\n원하는 음정의 높이만큼 피치가 잘 만들어졌다면 맨 첫음에서만 H어택을 사용하고 올라갔다 올 수 있게 목표로 훈련합니다. \n\n**훈련 효과.**\n두성화된 소리를 강하게 버티는 훈련이 됩니다.",
+      "name": "강한 성대음 만들기 (중성)",
+      "desc": "**Press 후우(후우 빡!).**\nH어택으로 우빡을 시작해 성대의 상연이 붙을 수 있는 상태가 되도록 유도하여 중성~두성까지 두성화 된 성대를 강하게 버텨주는 훈련\n\n**훈련 방법.**\n우빡의 처음에 후~ 를 집어넣어 공기의 흐름을 빠르게 해준 뒤 우빡을 이어 붙입니다! 잘 안될때는 뒤의 위의 방향을 생각해보고 잘 되기 시작하면 점점 가슴에 소리를 붙일 수 있게 실시 합니다.\n\n초심자 단계에서는 '후우우우우 후우우우우 후우우우우 후우우우우 후우우우우' 이렇게 모든 마디의 시작마다 H어택을 넣습니다.\n\n원하는 음정의 높이만큼 피치가 잘 만들어졌다면 맨 첫음에서만 H어택을 사용하고 올라갔다 올 수 있게 목표로 훈련합니다. \n\n**훈련 효과.**\n두성화된 소리를 강하게 버티는 훈련이 됩니다.\n\n※ 모음 아, 오, 우 등을 이용해 훈련한다.",
       "videoId": "",
       "active": true,
       "hasScale": true
     },
     {
       "id": "ex_20",
-      "name": "Breath 우",
+      "name": "호흡 섞은 우 소리내기",
       "desc": "**Breath 우.**\n우 모음에서 호흡을 강하게 가슴으로 불어내어 성대 주변의 긴장을 풀어내는 훈련입니다.\n\n**훈련 방법.**\n가슴에 '우' 모음과 호흡을 강하게 불어내줍니다.\n음정이 올라가며 힘들어지기 시작하면 더 강하게 호흡을 내뱉어 주어 성대의 로우마진을 자연스럽게 떼어 냅니다.\n\n**훈련 효과.**\n'우' 모음에서의 성대주변의 과도한 긴장을 풀어주고 로우마진을 떼어내며 성대를 두성화 시켜줍니다.\n'Press 우' 훈련에서 고음으로의 접근이 힘들 때 해주면 효과적입니다.",
       "videoId": "",
       "active": true,
@@ -1399,48 +1854,16 @@ const INIT_DB={
       "hasScale": false
     },
     {
-      "id": "ex_22",
-      "name": "학! 아~아~아~",
-      "desc": "**학!아~아~아~.**\n흉강고정기법을 추가하여 가슴에서 '아' 모음을 내보는 훈련입니다.\n\n**훈련 방법.**\n학!으로 흉강을 가슴위치에 고정한 뒤 성대와 입이 고정된 위치에 있다고 생각하며 성대를 벌리지 않으면서 '아' 모음을 강하게 3번 불어냅니다.\n\n**훈련 효과.**\n가슴에 호흡과 소리를 함께 대보는 훈련을 합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": false
-    },
-    {
-      "id": "ex_23",
-      "name": "Press 아(학! 아빡!)",
-      "desc": "**Press 아.**\n강한 아 모음으로 성대의 강한 장력을 만드는 훈련입니다.\n\n**훈련 방법.**\n흉강고정기을 실시하기위해 학! 해준 후 '아'모음을 내 줍니다.\n처음에는 학! 했을때 느껴지는 가슴의 위치에 입과 성대가 있다고 생각하며 성대가 벌어지지 않게 주의하며 소리를 내 줍니다.\n\n앞이 잘 버텨진다면 조금 더 깊고 울림이 강한소리를 만들기 위해 후두를 내리고 성도를 길게 확장하여 뒷쪽으로도 힘을 버틴다는 느낌으로 훈련합니다. \n\n**아 모음의 특성.**\n아 모음은 구강을 가장 넓게 열어 흉성과 두성을 연결하는 혼합음 훈련에 최적입니다.\n고음에서도 가슴에 댄소리를 유지하면서 두성으로 자연스럽게 넘어가는 연습에 탁월합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_24",
-      "name": "Press 하아(하아 빡!)",
-      "desc": "**Press 하아(하아 빡!).**\nH어택으로 아빡을 시작해 성대의 상연이 붙을 수 있는 상태가 되도록 유도하여 중성~두성까지 두성화 된 성대를 강하게 버텨주는 훈련\n\n**훈련 방법.**\n아빡의 처음에 하~ 를 집어넣어 공기의 흐름을 빠르게 해준 뒤 아빡을 이어 붙입니다! 잘 안될때는 뒤의 위의 방향을 생각해보고 잘 되기 시작하면 점점 가슴에 소리를 붙일 수 있게 실시 합니다.\n\n초심자 단계에서는 '하아아아아 하아아아아 하아아아아 하아아아아 하아아아아' 이렇게 모든 마디의 시작마다 H어택을 넣습니다.\n\n원하는 음정의 높이만큼 피치가 잘 만들어졌다면 맨 첫음에서만 H어택을 사용하고 올라갔다 올 수 있게 목표로 훈련합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
       "id": "ex_25",
-      "name": "아 모음 성구전환",
-      "desc": "**아 모음 성구전환.**\n아 모음을 통해 9도스케일로 훈련하여 실제적인 성구전환을 해봅니다.\n\n**훈련 방법.**\n9도스케일을 선택 후 아 모음으로 시작하여 소리를 시작하고 5번째 음정에서 H어택을 실시해 성대의 모양을 두성에 유리하게 바꿔주어 올라갑니다.\n\n조금 더 강한소리의 훈련을 원한다면 첫 음에서 흉강고정을 실시합니다.\n\n**훈련 효과.**\n노래를 부를때 실제적으로 소리를 내는 방법과 성구전환에 대해 인지합니다.",
-      "videoId": "",
-      "active": true,
-      "hasScale": true
-    },
-    {
-      "id": "ex_26",
-      "name": "Press 오(오 빡!)",
-      "desc": "**Press 오.**\n강한 오 모음으로 목구멍의 공간을 뒤쪽까지 열어주는 훈련입니다.\n\n**훈련 방법.**\n입을 세로로 모아 오 발음을 만들면서 흉강고정기법을 사용해 '오'발음을 내줍니다. \n목 뒤쪽이 열리는 느낌을 찾습니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
+      "name": "성구전환 훈련",
+      "desc": "**아 모음 성구전환.**\n아 모음을 통해 9도스케일로 훈련하여 실제적인 성구전환을 해봅니다.\n\n**훈련 방법.**\n9도스케일을 선택 후 아 모음으로 시작하여 소리를 시작하고 5번째 음정에서 H어택을 실시해 성대의 모양을 두성에 유리하게 바꿔주어 올라갑니다.\n\n조금 더 강한소리의 훈련을 원한다면 첫 음에서 흉강고정을 실시합니다.\n\n**훈련 효과.**\n노래를 부를때 실제적으로 소리를 내는 방법과 성구전환에 대해 인지합니다.\n\n※ 모음 아, 오 등으로 진행할 수 있다.",
       "videoId": "",
       "active": true,
       "hasScale": true
     },
     {
       "id": "ex_27",
-      "name": "오 두성",
+      "name": "헤드보이스 셋업",
       "desc": "**오 두성.**\n공명강을 최대한 연 상태로 가성과 진성 구분없이 두성화 된 감각을 훈련합니다.\n\n**훈련 방법.**\n입을 '오' 모양으로 잘 만들어 둔 뒤, 진성과 가성의 구분을 두지않고 머리통이 울리는 느낌을 갖으며 뒤,위 방향으로 올라갑니다.\n\n**오 모음의 특성.**\n오 모음은 후두를 자연스럽게 낮춰주어 성악적인 발성에 가까운 열린 소리를 만듭니다.\n후두 안정과 공명 균형을 동시에 훈련하는 데 효과적입니다.",
       "videoId": "",
       "active": true,
@@ -1448,7 +1871,7 @@ const INIT_DB={
     },
     {
       "id": "ex_28",
-      "name": "백프레셔",
+      "name": "Back Pressure",
       "desc": "**백 프레셔.**\n두성화된 소리를 만드는 방법의 꽃으로 뱃고동소리를 유지하며 소리를 내는 훈련입니다.\n\n**훈련 방법.**\n양볼을 최대한 빵빵하게 한 뒤 입술은 모아주고 바람을 불어주며 입술 주변근육에 힘부터 만들어줍니다.\n입술 주변근육에 힘이 충분히 생기면 Z브레셔와 같이 성대음을 추가합니다.\n되돌아가는 압력을 통하여 성대음을 가슴 위치까지 내려 뱃고동 소리를 유지해줍니다.\n\n**훈련 효과.**\n강하게 되돌아 온 압력이 목구멍을 열어주고 성대를 두성화 시켜 두성 훈련과 성구전환 감각을 키워줍니다.\n\n**주의 사항.**\n성대근력이 부족해 성대 힘이 너무 약한 경우 백프레셔를 반복 실시하면 오히려 성대만 더 벌어지게 됩니다. 성대의 근력이 어느정도 생겼을 때 실시해야 효과적입니다.",
       "videoId": "",
       "active": true,
@@ -1456,7 +1879,7 @@ const INIT_DB={
     },
     {
       "id": "ex_29",
-      "name": "후 내려오기",
+      "name": "후~ 내려오기",
       "desc": "**후 내려오기.**\n'후' 라는 발음을 활용하여 호흡의압력과 소리를 뒤로 당겨주기위한 훈련입니다.\n\n**훈련 방법.**\n'후' 라는 발음을 뒤로 위로 향하게 당겨줍니다.\n처음엔 가성으로 시작하여 가볍게 고음의 길부터 만들어 줍니다.\n본격적으로 가슴소리를 추가하여 두성화 시킨 소리를 내줍니다.\n이 때 뒷통수에 마치 진공청소기를 댄 듯한 느낌으로 훈련해주면 도움이 됩니다.\n\n**훈련 효과.**\n성대를 당기는 느낌에 대해 알게되어 두성역의 발달에 도움을 줍니다.",
       "videoId": "",
       "active": true,
@@ -4462,7 +4885,7 @@ if(mod.noScale){
   const _dots2=document.getElementById('dots');if(_dots2)_dots2.style.display='flex';
   const _ctrl2=document.getElementById('ctrl-bar');if(_ctrl2)_ctrl2.style.display='flex';
   const _exDC2=document.getElementById('ex-desc')?.closest('.card');if(_exDC2)_exDC2.style.display='';
-  const _pp2=document.getElementById('pp');if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
+  const _pp2=document.getElementById('pp');if(_pp2){_setPpIcon('play');_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
   window._savedSch=null;window._pausedSch=null;
   window._descPlaying=false;const _dBtn2=document.getElementById('desc-play-btn');if(_dBtn2)_dBtn2.textContent='설명▶';
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
@@ -4475,7 +4898,7 @@ document.getElementById('cur-key').textContent=sn.full;
 document.getElementById('dir-l').textContent='↑ 상행';document.getElementById('dir-l2').textContent='↑';
 document.getElementById('prog').style.width='0%';document.getElementById('pct').textContent='0%';
 document.getElementById('cur-n').textContent='—';document.getElementById('cur-o').textContent='';
-document.getElementById('pp').textContent='▶';
+_setPpIcon('play');
 setCoachTxt('재생 버튼을 누르면 시작합니다.');
 document.getElementById('bpm-sl').value=curBpm;document.getElementById('bpm-disp').textContent=curBpm;
 const _edEl=document.getElementById('ex-desc');
@@ -4503,11 +4926,26 @@ window._pendingStepGuide = '';
 const ytBtn=document.getElementById('yt-btn');ytBtn.style.display=mod.videoId?'flex':'none';
 buildPianoSVG(mod.startNote,mod.endNote);buildDots();
 }
+
+/* 재생/일시정지 버튼 아이콘 변경 (SVG) */
+function _setPpIcon(state){
+  /* state: 'play' (▶) or 'pause' (⏸) */
+  const pp = document.getElementById('pp');
+  if(!pp) return;
+  if(state === 'pause'){
+    /* 일시정지 아이콘 (||) */
+    pp.innerHTML = '<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  } else {
+    /* 재생 아이콘 (▶) */
+    pp.innerHTML = '<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><polygon points="7,5 19,12 7,19"/></svg>';
+  }
+}
+
 function togglePlay(){
   if(!curMod) return;
   if(playing){window._pausedSch={s:sch.s,p:sch.p};stopEngine();}
   else{const sv=window._pausedSch||window._savedSch;
-  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;document.getElementById('pp').textContent='⏸';sch.s=sv.s;sch.p=0;sch.nx=0;
+  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;_setPpIcon('pause');sch.s=sv.s;sch.p=0;sch.nx=0;
 /* 일시정지 후 재개 시 polling 재시작 */
 _scheduledNotes=[];_lastDisplayedSIdx=-1;
 if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
@@ -4570,7 +5008,7 @@ return mod.startNote+firstSemi;
 
 function startEngine(){
 
-gCtx();playing=true;document.getElementById('pp').textContent='⏸';
+gCtx();playing=true;_setPpIcon('pause');
 const pt=curMod.previewType;
 
 /* 빛 polling 시스템 초기화 */
@@ -4611,7 +5049,7 @@ _stopMetronome();
 if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
 _scheduledNotes=[];_lastDisplayedSIdx=-1;
 _clearLitKey();
-document.getElementById('pp').textContent='▶';
+_setPpIcon('play');
 if(coachAuto&&window.speechSynthesis)speechSynthesis.cancel();
 }
 
@@ -4677,7 +5115,7 @@ loopT=setTimeout(runLoop,50);
 }
 
 function onDone(){
-playing=false;clrCT();document.getElementById('pp').textContent='▶';
+playing=false;clrCT();_setPpIcon('play');
 document.getElementById('prog').style.width='100%';document.getElementById('pct').textContent='100%';
 updDots(true);if(coachAuto)speak('수고했습니다! 훈련을 완료했습니다.');
 
@@ -6014,79 +6452,126 @@ return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
 function bldFreePick(){
 const pick=document.getElementById('free-pick');
 pick.innerHTML='';
-const exList=_getScaleExercises();
-if(!exList.length){
-pick.innerHTML='<div class="empty">스케일 가능한 훈련이 없습니다</div>';
-return;
+const scales = (DB.scales||[]).filter(s => s.active !== false);
+if(!scales.length){
+  pick.innerHTML='<div class="empty" style="padding:24px;text-align:center;color:var(--mu)">스케일이 없습니다</div>';
+  return;
 }
-exList.forEach(ex=>{
-const isOpen=(_freeOpenEx===ex.name||_freeOpenEx===(ex.id||ex.name));
 
-const wrap=document.createElement('div');
-wrap.style.cssText='border:1.5px solid var(--bd2);border-radius:12px;overflow:hidden;background:#fff';
+/* 스케일 그룹 정의 (음정/패턴별) */
+const groups = [
+  {label:'3도 스케일', prefix:'3D', icon:_freeScaleIcon('3D')},
+  {label:'5도 스케일', prefix:'5D', icon:_freeScaleIcon('5D')},
+  {label:'5도 쉬고 내려오기', prefix:'5H', icon:_freeScaleIcon('5H')},
+  {label:'9도 스케일', prefix:'9D', icon:_freeScaleIcon('9D')},
+  {label:'9도 쉬고 내려오기', prefix:'9H', icon:_freeScaleIcon('9H')},
+  {label:'5도 하향', prefix:'5DN', icon:_freeScaleIcon('5DN')},
+  {label:'9도 하향', prefix:'9DN', icon:_freeScaleIcon('9DN')},
+];
 
-const hdr=document.createElement('div');
-hdr.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;user-select:none';
-hdr.innerHTML=`
-<div style="width:34px;height:34px;border-radius:9px;background:#fff7f0;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🎤</div>
-<div style="flex:1;min-width:0">
-<div style="font-size:13px;font-weight:800">${ex.name}</div>
-<div style="font-size:10px;color:var(--mu);margin-top:1px">${ex.desc?ex.desc.slice(0,40)+'…':''}</div>
-</div>
-<div class="free-arr" style="font-size:12px;color:var(--or);transition:transform .2s;transform:${isOpen?'rotate(0deg)':'rotate(-90deg)'}"">▼</div>`;
-
-const body=document.createElement('div');
-body.style.cssText=`display:${isOpen?'flex':'none'};flex-direction:column;gap:0;border-top:1px solid var(--line)`;
-
-(DB.scales||[]).forEach((sc,si)=>{
-const row=document.createElement('div');
-row.style.cssText='display:flex;align-items:center;gap:8px;padding:9px 13px 9px 16px;'+(si<(DB.scales||[]).length-1?'border-bottom:1px solid var(--line)':'');
-row.innerHTML=`
-<div style="flex:1;min-width:0">
-<div style="font-size:12px;font-weight:700;color:var(--tx)">${sc.name} <span style="font-size:10px;font-weight:400;color:var(--mu)">${sc.range}</span></div>
-<div style="font-size:10px;color:var(--mu2)">${m2n(sc.startNote).full}~${m2n(sc.endNote).full} · BPM ${sc.bpm||60}</div>
-</div>
-<button data-exid="${(ex.id||ex.name)}" data-scid="${sc.id}"
-onclick="addFreeBtn(this)"
-style="background:var(--or);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">+</button>`;
-body.appendChild(row);
-});
-
-hdr.onclick=function(){
-const wasOpen=body.style.display!=='none';
-_freeOpenEx=wasOpen?null:(ex.id||ex.name);
-body.style.display=wasOpen?'none':'flex';
-const arr=hdr.querySelector('.free-arr');
-if(arr)arr.style.transform=wasOpen?'rotate(-90deg)':'rotate(0deg)';
-};
-
-wrap.appendChild(hdr);
-wrap.appendChild(body);
-pick.appendChild(wrap);
-});
-const noScaleEx=(DB.exercises||[]).filter(ex=>ex.hasScale!==true&&ex.active!==false);
-if(noScaleEx.length){
-  const sec=document.createElement('div');
-  sec.style.cssText='font-size:11px;font-weight:800;color:var(--mu);margin:12px 0 6px;padding-top:10px;border-top:1px solid var(--line)';
-  sec.textContent='📋 설명 훈련 (스케일 없음)';
-  pick.appendChild(sec);
-  noScaleEx.forEach(ex=>{
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1.5px solid var(--bd);border-radius:10px;margin-bottom:4px;background:#fff';
-    const nm=document.createElement('span');nm.style.cssText='font-size:12px;font-weight:700';nm.textContent=ex.name;
-    const btn=document.createElement('button');
-    btn.style.cssText='background:var(--or);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:800;cursor:pointer';
-    btn.textContent='+ 추가';
-    (function(e,b){b.onclick=function(){
-      freeList.push({id:'free_ns_'+Date.now(),exId:e.id||e.name,exName:e.name,name:e.name,scaleId:'',noScale:true,label:e.name,desc:e.desc||'',hwComment:e.desc||'',comment:e.desc||'',repeat:1});
-      _saveFreeList();rndrFree();
-      b.textContent='✅ 추가됨';b.style.background='#16a34a';
-      setTimeout(function(){b.textContent='+ 추가';b.style.background='var(--or)';},1200);
-    };})(ex,btn);
-    row.appendChild(nm);row.appendChild(btn);
-    pick.appendChild(row);
+/* 그룹별 카드 생성 */
+groups.forEach(g => {
+  const groupScales = scales.filter(s => {
+    /* 정확한 prefix 매칭 (5D는 5DN과 구분) */
+    return s.id === g.prefix || s.id.startsWith(g.prefix+'-');
   });
+  if(groupScales.length === 0) return;
+  
+  const isOpen = (_freeOpenEx === g.prefix);
+  
+  const wrap = document.createElement('div');
+  wrap.className = 'v2-pick-wrap';
+  
+  const hdr = document.createElement('div');
+  hdr.className = 'v2-pick-hdr';
+  hdr.innerHTML = `
+    <div class="v2-pick-illust">${g.icon}</div>
+    <div class="v2-pick-info">
+      <div class="v2-pick-title">${g.label}</div>
+      <div class="v2-pick-desc">${groupScales.length}개 음역대</div>
+    </div>
+    <div class="v2-pick-arrow free-arr" style="transform:${isOpen?'rotate(0deg)':'rotate(-90deg)'}">▼</div>`;
+  
+  const body = document.createElement('div');
+  body.className = 'v2-pick-body';
+  body.style.display = isOpen ? 'block' : 'none';
+  
+  groupScales.forEach((sc, si) => {
+    const row = document.createElement('div');
+    row.className = 'v2-scale-row';
+    row.innerHTML = `
+      <div class="v2-scale-info">
+        <div class="v2-scale-name">${sc.name} <span class="v2-scale-range">${sc.range}</span></div>
+        <div class="v2-scale-meta">${m2n(sc.startNote).full}~${m2n(sc.endNote).full} · BPM ${sc.bpm||60}</div>
+      </div>
+      <button data-scid="${sc.id}" onclick="addFreeScaleBtn(this)" class="v2-add-btn">+</button>`;
+    body.appendChild(row);
+  });
+  
+  hdr.onclick = function(){
+    const wasOpen = body.style.display !== 'none';
+    _freeOpenEx = wasOpen ? null : g.prefix;
+    body.style.display = wasOpen ? 'none' : 'block';
+    const arr = hdr.querySelector('.free-arr');
+    if(arr) arr.style.transform = wasOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+  };
+  
+  wrap.appendChild(hdr);
+  wrap.appendChild(body);
+  pick.appendChild(wrap);
+});
 }
+
+/* 스케일 그룹별 일러스트 */
+function _freeScaleIcon(prefix){
+  /* 모두 다른 색감 + 패턴 표현 */
+  const icons = {
+    '3D': '<svg viewBox="0 0 40 40" fill="none"><circle cx="10" cy="28" r="3" fill="#fb923c"/><circle cx="20" cy="22" r="3" fill="#f97316"/><circle cx="30" cy="28" r="3" fill="#fb923c"/><line x1="10" y1="28" x2="20" y2="22" stroke="#c2410c" stroke-width="1.5"/><line x1="20" y1="22" x2="30" y2="28" stroke="#c2410c" stroke-width="1.5"/></svg>',
+    '5D': '<svg viewBox="0 0 40 40" fill="none"><circle cx="6" cy="30" r="2.5" fill="#fb923c"/><circle cx="14" cy="24" r="2.5" fill="#f97316"/><circle cx="20" cy="14" r="2.5" fill="#ea580c"/><circle cx="26" cy="24" r="2.5" fill="#f97316"/><circle cx="34" cy="30" r="2.5" fill="#fb923c"/><polyline points="6,30 14,24 20,14 26,24 34,30" stroke="#c2410c" stroke-width="1.5" fill="none"/></svg>',
+    '5H': '<svg viewBox="0 0 40 40" fill="none"><circle cx="8" cy="30" r="2.5" fill="#fb923c"/><circle cx="16" cy="20" r="2.5" fill="#ea580c"/><circle cx="22" cy="12" r="2.5" fill="#dc2626"/><line x1="22" y1="12" x2="26" y2="12" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="20" r="2.5" fill="#ea580c"/><polyline points="8,30 16,20 22,12 30,20" stroke="#c2410c" stroke-width="1.5" fill="none"/></svg>',
+    '9D': '<svg viewBox="0 0 40 40" fill="none"><polyline points="4,32 9,28 14,22 19,16 24,10 29,16 34,22" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="4" cy="32" r="2" fill="#fb923c"/><circle cx="14" cy="22" r="2" fill="#f97316"/><circle cx="24" cy="10" r="2.5" fill="#dc2626"/><circle cx="34" cy="22" r="2" fill="#f97316"/></svg>',
+    '9H': '<svg viewBox="0 0 40 40" fill="none"><polyline points="4,32 14,22 22,10 30,22" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="4" cy="32" r="2" fill="#fb923c"/><circle cx="14" cy="22" r="2" fill="#f97316"/><circle cx="22" cy="10" r="2.5" fill="#dc2626"/><line x1="22" y1="10" x2="28" y2="10" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="22" r="2" fill="#f97316"/></svg>',
+    '5DN': '<svg viewBox="0 0 40 40" fill="none"><circle cx="6" cy="12" r="2.5" fill="#dc2626"/><circle cx="14" cy="18" r="2.5" fill="#ea580c"/><circle cx="20" cy="28" r="2.5" fill="#f97316"/><circle cx="26" cy="18" r="2.5" fill="#ea580c"/><circle cx="34" cy="12" r="2.5" fill="#dc2626"/><polyline points="6,12 14,18 20,28 26,18 34,12" stroke="#c2410c" stroke-width="1.5" fill="none"/></svg>',
+    '9DN': '<svg viewBox="0 0 40 40" fill="none"><polyline points="4,8 9,14 14,20 19,26 24,32 29,26 34,20" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="4" cy="8" r="2.5" fill="#dc2626"/><circle cx="14" cy="20" r="2" fill="#f97316"/><circle cx="24" cy="32" r="2" fill="#fb923c"/><circle cx="34" cy="20" r="2" fill="#f97316"/></svg>',
+  };
+  return icons[prefix] || icons['3D'];
+}
+
+/* 스케일만 추가하는 핸들러 (훈련 매핑 없이) */
+function addFreeScaleBtn(btn){
+  const scid = btn.dataset.scid;
+  const sc = (DB.scales||[]).find(s => s.id === scid);
+  if(!sc) return;
+  
+  /* 가상 훈련 객체 (label = 스케일 이름, exId = 스케일 ID) */
+  freeList.push({
+    id: 'free_sc_' + Date.now(),
+    exId: sc.id,
+    exName: sc.name,
+    name: sc.name,
+    scaleId: sc.id,
+    label: sc.name + ' · ' + sc.range,
+    startNote: sc.startNote,
+    endNote: sc.endNote,
+    bpm: sc.bpm,
+    pattern: sc.pattern,
+    previewType: sc.previewType,
+    desc: '본인이 필요한 연습을 음계에 맞춰 자유롭게 실시합니다.',
+    hwComment: '',
+    comment: '',
+    repeat: 1
+  });
+  _saveFreeList();
+  rndrFree();
+  
+  /* 버튼 피드백 */
+  const orig = btn.textContent;
+  btn.textContent = '✓';
+  btn.style.background = '#16a34a';
+  setTimeout(() => {
+    btn.textContent = '+';
+    btn.style.background = '';
+  }, 1200);
 }
 
 /* + 버튼 눌림 피드백 — 체크 표시 후 원래대로 */
@@ -6150,35 +6635,42 @@ rndrFree();
 function rndrFree(){
 const c=document.getElementById('free-slots');
 c.innerHTML='';
+const fab = document.getElementById('v2-free-start-fab');
 if(!freeList.length){
-c.innerHTML='<div class="empty" style="padding:14px"><div style="font-size:24px;margin-bottom:5px">📋</div>아래에서 훈련을 추가하세요</div>';
+c.innerHTML='<div style="padding:24px 16px;text-align:center;color:var(--mu);background:#f9fafb;border-radius:14px;border:1.5px dashed var(--bd2)"><div style="font-size:13px;font-weight:700">아직 추가된 훈련이 없습니다</div><div style="font-size:11px;margin-top:4px">아래에서 훈련을 골라 추가하세요</div></div>';
+if(fab) fab.style.display='none';
 return;
 }
+if(fab) fab.style.display='flex';
 freeList.forEach((ex,i)=>{
 const d=document.createElement('div');
-d.className='wod-slot';d.draggable=true;d.dataset.idx=i;
+d.className='v2-free-slot';
+d.draggable=true;
+d.dataset.idx=i;
 const rep=ex.repeat||1;
+const startStr = ex.startNote ? m2n(ex.startNote).full : '';
+const endStr = ex.endNote ? m2n(ex.endNote).full : '';
+const meta = (startStr && endStr) ? `${startStr}~${endStr} · BPM ${ex.bpm||60}` : (ex.noScale ? '설명 훈련' : '');
 d.innerHTML=`
 <div style="color:var(--mu2);font-size:15px;flex-shrink:0;cursor:grab">⠿</div>
-<div class="wnum">${i+1}</div>
-<div style="flex:1;min-width:0">
-<div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.label||ex.exId}</div>
-<div style="font-size:10px;color:var(--mu)">${m2n(ex.startNote).full}~${m2n(ex.endNote).full} · BPM ${ex.bpm||60}</div>
+<div class="v2-free-slot-num">${i+1}</div>
+<div class="v2-free-slot-info">
+  <div class="v2-free-slot-title">${ex.label||ex.exId}</div>
+  <div class="v2-free-slot-meta">${meta}</div>
 </div>
-<!-- 횟수 조절 -->
-<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
-  <button onclick="changeRepeat(${i},-1)" style="background:none;border:1px solid var(--bd2);border-radius:5px;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu)">−</button>
-  <div style="font-size:11px;font-weight:800;color:var(--or);min-width:22px;text-align:center">${rep}회</div>
-  <button onclick="changeRepeat(${i},1)" style="background:none;border:1px solid var(--bd2);border-radius:5px;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu)">+</button>
+<div class="v2-free-rep-box">
+  <button class="v2-free-rep-btn" onclick="changeRepeat(${i},-1)">−</button>
+  <div class="v2-free-rep-num">${rep}회</div>
+  <button class="v2-free-rep-btn" onclick="changeRepeat(${i},1)">+</button>
 </div>
-<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-<button onclick="moveFree(${i},-1)" ${i===0?'disabled':''} style="background:none;border:1px solid var(--bd2);border-radius:5px;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;${i===0?'opacity:.3':''}">▲</button>
-<button onclick="moveFree(${i},1)" ${i===freeList.length-1?'disabled':''} style="background:none;border:1px solid var(--bd2);border-radius:5px;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;${i===freeList.length-1?'opacity:.3':''}">▼</button>
+<div class="v2-free-move-box">
+  <button class="v2-free-move-btn" onclick="moveFree(${i},-1)" ${i===0?'disabled':''}>▲</button>
+  <button class="v2-free-move-btn" onclick="moveFree(${i},1)" ${i===freeList.length-1?'disabled':''}>▼</button>
 </div>
-<button onclick="removeFree(${i})" style="background:none;border:1.5px solid #fecaca;border-radius:50%;width:24px;height:24px;color:#dc2626;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>`;
+<button class="v2-free-del-btn" onclick="removeFree(${i})">✕</button>`;
 
 d.addEventListener('dragstart',e=>{dSrc=i;d.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
-d.addEventListener('dragend',()=>{d.classList.remove('dragging');document.querySelectorAll('.wod-slot').forEach(s=>s.classList.remove('drag-over'));dSrc=null;});
+d.addEventListener('dragend',()=>{d.classList.remove('dragging');document.querySelectorAll('.v2-free-slot').forEach(s=>s.classList.remove('drag-over'));dSrc=null;});
 d.addEventListener('dragover',e=>{e.preventDefault();if(dSrc!==null&&dSrc!==i)d.classList.add('drag-over');});
 d.addEventListener('dragleave',()=>d.classList.remove('drag-over'));
 d.addEventListener('drop',e=>{
@@ -7848,26 +8340,25 @@ if(bar) bar.style.width=pct+'%';
 if(txt) txt.textContent=done.length+' / '+total;
 const resetBtn=document.getElementById('hw-reset-btn');
 if(total>0 && done.length>=total){
-  if(txt){ txt.textContent='🎉 전체 완료!'; txt.style.color='#15803d'; }
-  if(bar) bar.style.background='linear-gradient(90deg,#16a34a,#15803d)';
-  /* 전체 완료 시 초기화 버튼 활성화 */
+  if(txt){ txt.textContent='🎉 전체 완료!'; }
+  /* 전체 완료 시 초기화 버튼 활성화 + 다시하기 모드 */
   if(resetBtn){
-    resetBtn.style.opacity='1';
-    resetBtn.style.pointerEvents='auto';
+    resetBtn.disabled = false;
+    resetBtn.textContent='🔄 다시 하기';
+    /* 다시하기 모드 색상 (초록) */
     resetBtn.style.background='#f0fdf4';
     resetBtn.style.borderColor='#86efac';
     resetBtn.style.color='#16a34a';
-    resetBtn.textContent='🔄 다시 하기';
   }
 } else {
   /* 미완료 시 비활성화 */
   if(resetBtn){
-    resetBtn.style.opacity='0.4';
-    resetBtn.style.pointerEvents='none';
-    resetBtn.style.background='none';
-    resetBtn.style.borderColor='var(--bd)';
-    resetBtn.style.color='var(--mu)';
+    resetBtn.disabled = true;
     resetBtn.textContent='완료 초기화';
+    /* 색상 초기화 (CSS 기본값으로) */
+    resetBtn.style.background='';
+    resetBtn.style.borderColor='';
+    resetBtn.style.color='';
   }
 }
 }
@@ -7876,10 +8367,13 @@ function rndrHw(){
 const c = document.getElementById('hw-slots');
 if(!c) return;
 c.innerHTML = '';
+const fab = document.getElementById('v2-hw-start-fab');
 if(!hwList.length){
-c.innerHTML = '<div class="empty" style="padding:16px">숙제가 없습니다</div>';
+c.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--mu);background:#f9fafb;border-radius:14px;border:1.5px dashed var(--bd2)"><div style="font-size:13px;font-weight:700">아직 숙제가 없습니다</div></div>';
+if(fab) fab.style.display='none';
 return;
 }
+if(fab) fab.style.display='flex';
 const done=_getHwDone();
 hwList.forEach((item, i) => {
 const hasScale = !!item.scaleId && !!(DB.scales||[]).find(s=>s.id===item.scaleId);
@@ -7887,28 +8381,21 @@ const sc = hasScale ? (DB.scales||[]).find(s=>s.id===item.scaleId) : null;
 const isDone=done.includes(i);
 
 const d = document.createElement('div');
-/* 코스 UI처럼 카드 스타일 */
-d.className='cc';
-d.style.cssText='background:'+(isDone?'#f0fdf4':'#fff')+';border:1.5px solid '+(isDone?'#bbf7d0':'var(--bd)')+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:default';
+d.className = 'v2-hw-slot' + (isDone ? ' done' : '');
 
-/* 번호 뱃지 */
-const numBg=isDone?'#16a34a':'var(--or-l)';
-const numFg=isDone?'#fff':'var(--or)';
-const numBorder=isDone?'#16a34a':'var(--or-m)';
-
-d.innerHTML=`
-<div style="width:36px;height:36px;border-radius:10px;background:${numBg};border:1.5px solid ${numBorder};display:flex;align-items:center;justify-content:center;font-size:${isDone?'16px':'12px'};font-weight:800;color:${numFg};flex-shrink:0">
+d.innerHTML = `
+<div class="v2-hw-num-badge ${isDone?'done':''}">
   ${isDone?'✓':String((item.num!==undefined?item.num:i)+1)}
 </div>
-<div style="flex:1;min-width:0">
-  <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">
-    ${item.label||item.name||item.exId||''}
-    ${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':''}
+<div class="v2-hw-slot-info">
+  <div class="v2-hw-slot-title ${isDone?'done':''}">
+    <span>${item.label||item.name||item.exId||''}</span>
+    ${isDone?'<span class="v2-hw-done-badge">완료</span>':''}
   </div>
-  <div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">
-    ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}${isDone?' ✓':''}
+  <div class="v2-hw-slot-meta ${isDone?'done':''}">
+    ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}
   </div>
-  ${item.comment&&!isDone?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
+  ${item.comment && !isDone ? `<div class="v2-hw-slot-comment">${item.comment}</div>` : ''}
 </div>`;
 
 c.appendChild(d);
