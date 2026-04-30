@@ -641,7 +641,13 @@ input,select,button,textarea{font-family:inherit;}
 <div id="scr-admin" class="scr hidden">
   <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">⚙ 관리자</div><div style="display:flex;align-items:center;gap:2px"><button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div></div>
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:12px">
-    <div class="card" id="el-card">
+    <div class="v2-admin-acc" id="acc-el">
+      <div class="v2-admin-acc-hdr" onclick="_toggleAdminAcc('acc-el')">
+        <div class="v2-admin-acc-icon">🎙</div>
+        <div class="v2-admin-acc-title">ElevenLabs AI 목소리 설정</div>
+        <div class="v2-admin-acc-arrow">▼</div>
+      </div>
+      <div class="v2-admin-acc-body">
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">🎙 ElevenLabs AI 목소리</div>
       <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.6">
         실제 남성 성우 AI 목소리를 사용합니다.<br>
@@ -674,6 +680,7 @@ input,select,button,textarea{font-family:inherit;}
           </div>
         </div>
       </div>
+    </div>
 
       <div style="display:flex;gap:7px;margin-bottom:10px">
         <button class="btn btn-or" onclick="saveElSettings()" style="flex:1;padding:10px;font-size:13px" id="el-save-btn">🔊 연결 확인</button>
@@ -725,7 +732,13 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
 
-    <div class="card">
+    <div class="v2-admin-acc" id="acc-diag">
+      <div class="v2-admin-acc-hdr" onclick="_toggleAdminAcc('acc-diag')">
+        <div class="v2-admin-acc-icon">🔊</div>
+        <div class="v2-admin-acc-title">목소리 진단 & 안내</div>
+        <div class="v2-admin-acc-arrow">▼</div>
+      </div>
+      <div class="v2-admin-acc-body">
       <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎙 목소리 진단 & 안내</div>
       <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.6">
         브라우저 TTS는 기기·OS·브라우저에 따라 제공 목소리가 다릅니다.<br>
@@ -737,17 +750,30 @@ input,select,button,textarea{font-family:inherit;}
       <button class="btn btn-ol btn-sm" onclick="diagnoseTTS()" style="width:100%;margin-bottom:8px">🔊 목소리 테스트</button>
       <div id="tts-diag" style="display:none;font-size:11px;color:var(--mu);line-height:1.6;max-height:120px;overflow-y:auto;background:#f5f5f4;border-radius:8px;padding:8px"></div>
     </div>
-
-    <!-- 메뉴 노출 설정 -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">👁 메인 화면 메뉴 설정</div>
-      <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
-      <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
-      <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
     </div>
 
-    <!-- 숙제 완료 현황 -->
-    <div class="card">
+    <!-- 메뉴 노출 설정 (아코디언) -->
+    <div class="v2-admin-acc" id="acc-menu-vis">
+      <div class="v2-admin-acc-hdr" onclick="_toggleAdminAcc('acc-menu-vis')">
+        <div class="v2-admin-acc-icon">👁</div>
+        <div class="v2-admin-acc-title">메인 화면 메뉴 설정</div>
+        <div class="v2-admin-acc-arrow">▼</div>
+      </div>
+      <div class="v2-admin-acc-body">
+        <div style="font-size:11px;color:var(--mu);margin-bottom:12px">표시할 메뉴를 선택하세요. 비활성화하면 학생에게 보이지 않습니다.</div>
+        <div style="display:flex;flex-direction:column;gap:10px" id="menu-vis-list"></div>
+        <button class="btn btn-or" onclick="saveMenuVis()" style="width:100%;margin-top:12px;padding:10px;font-size:13px">저장</button>
+      </div>
+    </div>
+
+    <!-- 숙제 완료 현황 (아코디언) -->
+    <div class="v2-admin-acc" id="acc-hw-status">
+      <div class="v2-admin-acc-hdr" onclick="_toggleAdminAcc('acc-hw-status')">
+        <div class="v2-admin-acc-icon">📋</div>
+        <div class="v2-admin-acc-title">숙제 완료 현황 & 초기화</div>
+        <div class="v2-admin-acc-arrow">▼</div>
+      </div>
+      <div class="v2-admin-acc-body">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:800">📋 숙제 완료 현황</div>
         <div style="display:flex;gap:5px">
@@ -782,10 +808,12 @@ input,select,button,textarea{font-family:inherit;}
         <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:12px;color:#166534;line-height:1.9"></div>
       </div>
     </div>
+    </div>
 
-  </div></div>
+        <!-- 관리자 로그아웃 버튼 -->
+      <button class="v2-admin-logout" onclick="adminLogout()">🔓 관리자 로그아웃</button>
+    </div></div>
 </div>
-
 
 <!-- 설정 모달 -->
 <div class="modal-bg" id="settings-modal" onclick="if(event.target===this)closeSettings()" style="display:none;align-items:flex-end">
@@ -1859,6 +1887,296 @@ input,select,button,textarea{font-family:inherit;}
   color:var(--or);
   flex-shrink:0;
 }
+
+
+
+/* ═══════════════════════════════════════════
+   v2 관리자 페이지
+   ═══════════════════════════════════════════ */
+
+/* 아코디언 카드 */
+.v2-admin-acc{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:10px;
+  transition:all 0.2s;
+}
+.v2-admin-acc.open{border-color:var(--or-m);}
+
+.v2-admin-acc-hdr{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:13px 16px;
+  cursor:pointer;
+  user-select:none;
+  transition:all 0.2s;
+}
+.v2-admin-acc-hdr:hover{background:#fafafa;}
+.v2-admin-acc.open .v2-admin-acc-hdr{
+  background:#fff7f0;
+  border-bottom:1px solid var(--or-m);
+}
+
+.v2-admin-acc-icon{
+  font-size:18px;
+  flex-shrink:0;
+}
+
+.v2-admin-acc-title{
+  flex:1;
+  font-size:14px;
+  font-weight:800;
+  color:var(--tx);
+}
+
+.v2-admin-acc-arrow{
+  color:var(--or);
+  font-size:13px;
+  transition:transform 0.2s;
+  flex-shrink:0;
+}
+.v2-admin-acc.open .v2-admin-acc-arrow{
+  transform:rotate(180deg);
+}
+
+.v2-admin-acc-body{
+  display:none;
+  padding:14px 16px;
+}
+.v2-admin-acc.open .v2-admin-acc-body{
+  display:block;
+}
+
+/* 메뉴 그룹 헤더 (이론/코스 세부) */
+.v2-menu-group-hdr{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 4px 6px;
+  margin-top:8px;
+  font-size:12px;
+  font-weight:800;
+  color:var(--mu);
+  border-top:1px solid var(--line);
+}
+.v2-menu-group-hdr:first-child{
+  border-top:none;
+  margin-top:0;
+}
+
+/* 학생별 초기화 행 */
+.v2-reset-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 12px;
+  border-bottom:1.5px solid #fca5a5;
+  gap:12px;
+}
+.v2-reset-row:last-child{border-bottom:none;}
+
+.v2-reset-name{
+  font-size:13px;
+  font-weight:700;
+  color:var(--tx);
+  flex:1;
+  min-width:0;
+}
+
+.v2-reset-btn{
+  background:#dc2626;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:6px 14px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+.v2-reset-btn:hover{background:#b91c1c;}
+.v2-reset-btn:active{transform:scale(0.95);}
+
+/* 관리자 로그아웃 버튼 */
+.v2-admin-logout{
+  width:100%;
+  padding:11px;
+  background:#f3f4f6;
+  border:1.5px solid var(--bd2);
+  border-radius:12px;
+  color:var(--mu);
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:14px;
+  transition:all 0.2s;
+}
+.v2-admin-logout:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626;}
+
+
+
+/* 그룹 아코디언 (훈련 설명, 발성 이론, 훈련 코스) */
+.v2-menu-group-toggle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  background:#fafafa;
+  border:1.5px solid var(--bd2);
+  border-radius:10px;
+  cursor:pointer;
+  user-select:none;
+  margin-bottom:6px;
+  transition:all 0.2s;
+}
+.v2-menu-group-toggle:hover{background:#f3f4f6;}
+.v2-menu-group-toggle.open{
+  background:#fff7f0;
+  border-color:var(--or-m);
+}
+
+.v2-menu-group-toggle-icon{font-size:14px;flex-shrink:0;}
+.v2-menu-group-toggle-title{
+  flex:1;
+  font-size:12px;
+  font-weight:800;
+  color:var(--tx);
+}
+.v2-menu-group-toggle-arrow{
+  font-size:11px;
+  color:var(--mu);
+  transition:transform 0.2s;
+}
+.v2-menu-group-toggle.open .v2-menu-group-toggle-arrow{
+  transform:rotate(180deg);
+  color:var(--or);
+}
+
+.v2-menu-group-content{
+  display:none;
+  padding-left:8px;
+  margin-bottom:8px;
+}
+.v2-menu-group-content.open{display:block;}
+
+
+
+/* ═══════════════════════════════════════════
+   v2 iOS Safari 안내 모달
+   ═══════════════════════════════════════════ */
+
+/* 배경 (어두운 오버레이) */
+.v2-ios-modal-bg{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  z-index:10001;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  box-sizing:border-box;
+  animation:v2-fade-in 0.2s ease;
+}
+.v2-ios-modal-bg.active{display:flex;}
+
+@keyframes v2-fade-in{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+
+/* 카드 (흰 배경) */
+.v2-ios-modal-card{
+  background:#fff;
+  border-radius:20px;
+  padding:32px 24px 24px;
+  max-width:340px;
+  width:100%;
+  position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  animation:v2-pop-in 0.25s ease;
+}
+
+@keyframes v2-pop-in{
+  from{opacity:0;transform:scale(0.92);}
+  to{opacity:1;transform:scale(1);}
+}
+
+/* 닫기 X 버튼 */
+.v2-ios-modal-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:#f3f4f6;
+  border:none;
+  color:var(--mu);
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s;
+  padding:0;
+  line-height:1;
+}
+.v2-ios-modal-close:hover{
+  background:#fee2e2;
+  color:#dc2626;
+}
+.v2-ios-modal-close:active{transform:scale(0.92);}
+
+/* 아이콘들 */
+.v2-ios-modal-icons{
+  font-size:36px;
+  text-align:center;
+  margin-bottom:8px;
+}
+
+/* 제목 */
+.v2-ios-modal-title{
+  font-size:17px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:16px;
+  color:var(--or-d);
+  letter-spacing:-0.3px;
+}
+
+/* 본문 */
+.v2-ios-modal-body{
+  font-size:13px;
+  color:#374151;
+  line-height:1.75;
+  margin-bottom:18px;
+}
+
+/* 알겠어요 버튼 (전체 너비) */
+.v2-ios-modal-ok{
+  width:100%;
+  background:var(--or);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  padding:13px;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  transition:all 0.2s;
+  box-shadow:0 4px 12px rgba(249,115,22,0.3);
+}
+.v2-ios-modal-ok:hover{
+  background:var(--or-d);
+  transform:translateY(-1px);
+}
+.v2-ios-modal-ok:active{transform:scale(0.97);}
 
 </style>
 <!-- 학생 로그인 모달 -->
@@ -5536,7 +5854,19 @@ document.getElementById(id)?.classList.remove('hidden');
 document.getElementById(id)?.classList.remove('behind');
 scrStack.push(id);
 }
-function pop(){cancelTTS();if(scrStack.length<=1)return;const cur=scrStack.pop();document.getElementById(cur)?.classList.add('hidden');document.getElementById(scrStack[scrStack.length-1])?.classList.remove('behind');}
+function pop(){
+  cancelTTS();
+  if(scrStack.length<=1) return;
+  const cur = scrStack.pop();
+  document.getElementById(cur)?.classList.add('hidden');
+  /* 이전 화면을 다시 보이게 (hidden + behind 둘 다 제거) */
+  const prevId = scrStack[scrStack.length-1];
+  const prevEl = document.getElementById(prevId);
+  if(prevEl){
+    prevEl.classList.remove('behind');
+    prevEl.classList.remove('hidden');
+  }
+}
 
 const _APW='Zmtxa2RybmVrMSE=';
 
@@ -5982,21 +6312,83 @@ prompt('아래 내용을 복사해서 카카오톡으로 보내세요:', msg);
 }
 
 function openAdminPW(){
-document.getElementById('pw-input').value='';
-document.getElementById('pw-err').textContent='';
-document.getElementById('pw-modal').classList.add('open');
-setTimeout(()=>document.getElementById('pw-input').focus(),100);
+  /* 이미 로그인된 상태면 비밀번호 스킵 */
+  if(_isAdminLoggedIn()){
+    push('scr-admin');
+    setTimeout(()=>{showHwToday();buildMenuVisList();},200);
+    return;
+  }
+  /* 비밀번호 모달 열기 */
+  document.getElementById('pw-modal').classList.add('open');
+  document.getElementById('pw-input').value='';
+  setTimeout(()=>document.getElementById('pw-input').focus(),100);
 }
 function closePWModal(){
 document.getElementById('pw-modal').classList.remove('open');
 document.getElementById('pw-input').value='';
 document.getElementById('pw-err').textContent='';
 }
+
+
+/* ═══════════════════════════════════════════
+   v2 관리자 페이지 함수
+   ═══════════════════════════════════════════ */
+
+/* 아코디언 토글 */
+function _toggleAdminAcc(id){
+  const acc = document.getElementById(id);
+  if(!acc) return;
+  acc.classList.toggle('open');
+}
+
+/* 관리자 로그인 세션 - sessionStorage 사용 */
+function _isAdminLoggedIn(){
+  try{ return sessionStorage.getItem('ev_admin_logged') === '1'; }catch(e){ return false; }
+}
+function _setAdminLogin(yes){
+  try{
+    if(yes) sessionStorage.setItem('ev_admin_logged', '1');
+    else sessionStorage.removeItem('ev_admin_logged');
+  }catch(e){}
+}
+
+/* 관리자 로그아웃 */
+function adminLogout(){
+  if(!confirm('관리자 모드를 종료할까요?')) return;
+  _setAdminLogin(false);
+  goHome();
+}
+
+/* 학생별 초기화 버튼 다시 그리기 (v2 디자인) */
+function renderAdminResetBtns(){
+  const c = document.getElementById('admin-reset-btns');
+  if(!c) return;
+  c.innerHTML = '';
+  (STUDENTS_DB||[]).forEach(function(s){
+    const row = document.createElement('div');
+    row.className = 'v2-reset-row';
+    
+    const nameEl = document.createElement('span');
+    nameEl.className = 'v2-reset-name';
+    nameEl.textContent = s.name;
+    
+    const btn = document.createElement('button');
+    btn.className = 'v2-reset-btn';
+    btn.textContent = '초기화';
+    (function(nm){ btn.onclick = function(){ resetStudentHw(nm); }; })(s.name);
+    
+    row.appendChild(nameEl);
+    row.appendChild(btn);
+    c.appendChild(row);
+  });
+}
+
 function checkPW(){
 const val=document.getElementById('pw-input').value;
 const encoded=btoa(unescape(encodeURIComponent(val)));
 if(encoded===_APW){
 closePWModal();
+_setAdminLogin(true); /* 로그인 상태 저장 */
 push('scr-admin');
 setTimeout(()=>{showHwToday();buildMenuVisList();},200);
 } else {
@@ -6174,48 +6566,100 @@ if(!wrap)return;
 const vis=_getMenuVis();
 wrap.innerHTML='';
 
+/* 헬퍼: 카테고리 헤더 추가 */
+function _addGroupHeader(text){
+  const h = document.createElement('div');
+  h.className = 'v2-menu-group-hdr';
+  h.textContent = text;
+  wrap.appendChild(h);
+}
+
+/* 헬퍼: 그룹 아코디언 (전체 토글 + 펼침 영역) */
+function _addGroupAccordion(groupKey, icon, title, show, contentBuilder){
+  /* 토글 헤더 */
+  const tg = document.createElement('div');
+  tg.className = 'v2-menu-group-toggle';
+  tg.innerHTML = `
+    <div class="v2-menu-group-toggle-icon">${icon}</div>
+    <div class="v2-menu-group-toggle-title">${title}</div>
+    <div class="v2-menu-group-toggle-arrow">▼</div>`;
+  
+  /* 토글 본문 (개별 항목들) */
+  const tc = document.createElement('div');
+  tc.className = 'v2-menu-group-content';
+  
+  /* 본문 채우기 */
+  contentBuilder(tc);
+  
+  /* 헤더 클릭 시 펼침/접힘 */
+  tg.onclick = function(e){
+    /* 토글 자체는 클릭 시 열고 닫기만 */
+    tg.classList.toggle('open');
+    tc.classList.toggle('open');
+  };
+  
+  wrap.appendChild(tg);
+  wrap.appendChild(tc);
+}
+
+/* === 1. 메인 메뉴 === */
+_addGroupHeader('메인 메뉴');
 const topItems=[
-{key:'theory', label:'이론 및 훈련설명', icon:'🎤📚'},
-{key:'course', label:'훈련 코스', icon:'💪'},
-{key:'free', label:'자유 연습', icon:'🎯'},
-{key:'hw', label:'숙제', icon:'📚'},
+  {key:'theory', label:'이론 및 훈련설명', icon:'🎤📚'},
+  {key:'course', label:'훈련 코스', icon:'💪'},
+  {key:'free', label:'자유 연습', icon:'🎯'},
+  {key:'hw', label:'숙제', icon:'📚'},
 ];
-
 topItems.forEach(m=>{
-const show = vis[m.key] !== false;
-wrap.appendChild(_makeToggleRow(m.key, m.icon, m.label, show, false));
+  const show = vis[m.key] !== false;
+  wrap.appendChild(_makeToggleRow(m.key, m.icon, m.label, show, false));
+});
 
-if(m.key==='theory'){
-/* 훈련 설명 그룹 */
+/* === 2. 훈련 설명 (t_ex*) - 아코디언 === */
 const exItems=(DB.theories||[]).filter(t=>t.id.startsWith('t_ex'));
-const thItems=(DB.theories||[]).filter(t=>t.id.startsWith('t_th'));
 if(exItems.length){
+  _addGroupHeader('훈련 설명');
+  /* 전체 토글 */
   const exGShow=vis['theory_group_ex']!==false;
   wrap.appendChild(_makeToggleRow('theory_group_ex','🎤','훈련 설명 (전체)',exGShow,true));
-  exItems.forEach(t=>{
-    const tkey='theory_'+t.id;
-    const tshow=vis[tkey]!==false;
-    wrap.appendChild(_makeToggleRow(tkey,'▸',t.title,tshow,'deep'));
+  /* 개별 항목 아코디언 */
+  _addGroupAccordion('ex_items','📂','개별 훈련 설명 (총 '+exItems.length+'개)', true, function(tc){
+    exItems.forEach(t=>{
+      const tkey='theory_'+t.id;
+      const tshow=vis[tkey]!==false;
+      tc.appendChild(_makeToggleRow(tkey,'▸',t.title,tshow,'deep'));
+    });
   });
 }
+
+/* === 3. 발성 이론 (t_th*) - 아코디언 === */
+const thItems=(DB.theories||[]).filter(t=>t.id.startsWith('t_th'));
 if(thItems.length){
+  _addGroupHeader('발성 이론');
+  /* 전체 토글 */
   const thGShow=vis['theory_group_th']!==false;
   wrap.appendChild(_makeToggleRow('theory_group_th','📚','발성 이론 (전체)',thGShow,true));
-  thItems.forEach(t=>{
-    const tkey='theory_'+t.id;
-    const tshow=vis[tkey]!==false;
-    wrap.appendChild(_makeToggleRow(tkey,'▸',t.title,tshow,'deep'));
+  /* 개별 항목 아코디언 */
+  _addGroupAccordion('th_items','📂','개별 발성 이론 (총 '+thItems.length+'개)', true, function(tc){
+    thItems.forEach(t=>{
+      const tkey='theory_'+t.id;
+      const tshow=vis[tkey]!==false;
+      tc.appendChild(_makeToggleRow(tkey,'▸',t.title,tshow,'deep'));
+    });
   });
 }
+
+/* === 4. 훈련 코스 - 아코디언 === */
+if((DB.courses||[]).length){
+  _addGroupHeader('훈련 코스');
+  _addGroupAccordion('courses_items','💪','코스 목록 (총 '+(DB.courses||[]).length+'개)', true, function(tc){
+    (DB.courses||[]).forEach(c=>{
+      const ckey='course_'+c.id;
+      const cshow = vis[ckey] !== false;
+      tc.appendChild(_makeToggleRow(ckey, '▸', c.name, cshow, true));
+    });
+  });
 }
-if(m.key==='course'){
-(DB.courses||[]).forEach(c=>{
-const ckey='course_'+c.id;
-const cshow = vis[ckey] !== false;
-wrap.appendChild(_makeToggleRow(ckey, '▸', c.name, cshow, true));
-});
-}
-});
 }
 
 function saveMenuVis(){
@@ -9151,12 +9595,12 @@ function _isIosSafari(){
 
 function openIosSilentModal(){
   const m = document.getElementById('ios-silent-modal');
-  if (m) m.style.display = 'flex';
+  if (m) m.classList.add('active');
 }
 
 function closeIosSilentModal(){
   const m = document.getElementById('ios-silent-modal');
-  if (m) m.style.display = 'none';
+  if (m) m.classList.remove('active');
   /* 본 적 있음 표시 */
   try { localStorage.setItem('ios_silent_seen', '1'); } catch(e) {}
 }
@@ -9395,23 +9839,19 @@ function _thPagerPrev(){ _thPagerGoTo(_thPagerIdx - 1); }
 </script>
 
 <!-- iOS Safari 무음 모드 안내 모달 -->
-<div id="ios-silent-modal" class="modal hidden" style="display:none;z-index:10001;position:fixed;inset:0;background:rgba(0,0,0,0.54);align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
-  <div class="modal-bg" onclick="closeIosSilentModal()"></div>
-  <div class="modal-c" style="max-width:340px">
-    <div style="padding:24px 22px">
-      <div style="font-size:36px;text-align:center;margin-bottom:8px">🍎 🔇</div>
-      <div style="font-size:17px;font-weight:800;text-align:center;margin-bottom:14px;color:var(--or-d)">아이폰 사파리 사용 안내</div>
-      <div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px">
-        <strong>아이폰 사파리에서 소리가 안 들리시나요?</strong>
-        <br><br>
-        아이폰 왼쪽 옆면의 <strong>무음 스위치</strong>를 확인해주세요. <span style="color:#ea580c;font-weight:700">주황색 줄</span>이 보이면 무음 모드예요. <strong>위로 올려서 벨소리 모드</strong>로 변경하시면 소리가 잘 들립니다.
-        <br><br>
-        <span style="color:var(--mu);font-size:12px">(이어폰 연결 시엔 자동으로 들려요)</span>
-      </div>
-      <div style="display:flex;justify-content:center;margin-top:18px">
-        <button class="btn btn-or" onclick="closeIosSilentModal()" style="padding:11px 28px;font-size:14px">알겠어요</button>
-      </div>
+<div id="ios-silent-modal" class="v2-ios-modal-bg" onclick="if(event.target===this)closeIosSilentModal()">
+  <div class="v2-ios-modal-card">
+    <button class="v2-ios-modal-close" onclick="closeIosSilentModal()" aria-label="닫기">✕</button>
+    <div class="v2-ios-modal-icons">🍎 🔇</div>
+    <div class="v2-ios-modal-title">아이폰 사파리 사용 안내</div>
+    <div class="v2-ios-modal-body">
+      <strong>아이폰 사파리에서 소리가 안 들리시나요?</strong>
+      <br><br>
+      아이폰 왼쪽 옆면의 <strong>무음 스위치</strong>를 확인해주세요. <span style="color:#ea580c;font-weight:700">주황색 줄</span>이 보이면 무음 모드예요. <strong>위로 올려서 벨소리 모드</strong>로 변경하시면 소리가 잘 들립니다.
+      <br><br>
+      <span style="color:var(--mu);font-size:12px">(이어폰 연결 시엔 자동으로 들려요)</span>
     </div>
+    <button class="v2-ios-modal-ok" onclick="closeIosSilentModal()">알겠어요</button>
   </div>
 </div>
 
