@@ -10557,17 +10557,32 @@ function _ptCanvasInit(){
   _ptCanvasDraw();
 }
 
-/* PVR 그래프 그리기 */
+/* PVR 그래프 그리기 (의학용 PVR + 피아노 건반) */
 function _ptCanvasDraw(){
   if(!_ptCanvasCtx || !_ptCanvasEl) return;
   
   const rect = _ptCanvasEl.getBoundingClientRect();
   const W = rect.width > 0 ? rect.width : 320;
-  const H = W * 320 / 600;
+  /* 의학용 PVR 비율 (피아노 건반 영역 추가) */
+  const totalH = W * 360 / 600;
+  /* 피아노 건반 높이 */
+  const PIANO_H = 28;
+  /* 메인 그래프 높이 */
+  const H = totalH - PIANO_H - 4;
+  
+  /* Canvas 전체 높이 갱신 */
+  if(_ptCanvasEl.style.height !== totalH + 'px'){
+    _ptCanvasEl.style.height = totalH + 'px';
+    const dpr = window.devicePixelRatio || 1;
+    _ptCanvasEl.width = W * dpr;
+    _ptCanvasEl.height = totalH * dpr;
+    _ptCanvasCtx.setTransform(1, 0, 0, 1, 0, 0); /* reset */
+    _ptCanvasCtx.scale(dpr, dpr);
+  }
   
   /* 배경 */
   _ptCanvasCtx.fillStyle = '#fff';
-  _ptCanvasCtx.fillRect(0, 0, W, H);
+  _ptCanvasCtx.fillRect(0, 0, W, totalH);
   
   /* 음역 범위: MIDI 36(C2) ~ 84(C6) */
   const midiMin = 36, midiMax = 84;
@@ -10593,13 +10608,13 @@ function _ptCanvasDraw(){
     const x = ((o.midi - midiMin) / (midiMax - midiMin)) * W;
     _ptCanvasCtx.beginPath();
     _ptCanvasCtx.moveTo(x, 0);
-    _ptCanvasCtx.lineTo(x, H - 14);
+    _ptCanvasCtx.lineTo(x, H);
     _ptCanvasCtx.stroke();
-    _ptCanvasCtx.fillText(o.label, x, H - 2);
+    /* 옥타브 라벨은 피아노 위에 표시 */
+    _ptCanvasCtx.fillText(o.label, x, H + 10);
   });
   
-  /* 성종별 음역 가이드 영역 (성별에 따라 표시) */
-  /* MIDI 기준 (SPN 표준): 성악 표준 음역 */
+  /* 성종별 음역 가이드 영역 (좌측 상단 가로 띠 - 위치 표시) */
   const voiceRanges = {
     male: [
       {name:'베이스', low:40, high:64, color:'#1e40af'},     /* E2 ~ E4 */
@@ -10618,26 +10633,21 @@ function _ptCanvasDraw(){
     ranges.forEach((r, idx) => {
       const x1 = ((r.low - midiMin) / (midiMax - midiMin)) * W;
       const x2 = ((r.high - midiMin) / (midiMax - midiMin)) * W;
-      const y = idx * 18 + 4; /* 위쪽에 가로 띠 표시 */
-      const h = 14;
+      const y = idx * 14 + 2;
+      const h = 11;
       
-      /* 영역 배경 (옅은 색) */
-      _ptCanvasCtx.fillStyle = r.color + '15'; /* 알파 약 8% */
+      _ptCanvasCtx.fillStyle = r.color + '15';
       _ptCanvasCtx.fillRect(x1, y, x2 - x1, h);
-      
-      /* 영역 테두리 */
       _ptCanvasCtx.strokeStyle = r.color + '60';
       _ptCanvasCtx.lineWidth = 1;
       _ptCanvasCtx.strokeRect(x1 + 0.5, y + 0.5, x2 - x1 - 1, h - 1);
       
-      /* 라벨 */
       _ptCanvasCtx.fillStyle = r.color;
-      _ptCanvasCtx.font = 'bold 9px sans-serif';
+      _ptCanvasCtx.font = 'bold 8px sans-serif';
       _ptCanvasCtx.textAlign = 'left';
-      _ptCanvasCtx.fillText(r.name, x1 + 4, y + 10);
+      _ptCanvasCtx.fillText(r.name, x1 + 3, y + 8);
     });
     
-    /* 폰트 원래대로 */
     _ptCanvasCtx.font = '10px sans-serif';
     _ptCanvasCtx.fillStyle = '#9ca3af';
     _ptCanvasCtx.textAlign = 'center';
@@ -10646,7 +10656,7 @@ function _ptCanvasDraw(){
   /* dB 가로선 (dB SPL 기준) */
   _ptCanvasCtx.textAlign = 'left';
   [50, 60, 70, 80, 90, 100].forEach(db => {
-    const y = ((dbMax - db) / (dbMax - dbMin)) * (H - 16) + 4;
+    const y = ((dbMax - db) / (dbMax - dbMin)) * H;
     _ptCanvasCtx.beginPath();
     _ptCanvasCtx.moveTo(0, y);
     _ptCanvasCtx.lineTo(W, y);
@@ -10654,77 +10664,122 @@ function _ptCanvasDraw(){
     _ptCanvasCtx.fillText(db + 'dB', 4, y - 2);
   });
   
-  /* 의학용 PVR 폴리곤 그래프 (음정별 최저/최고 dB 외곽선) */
+  /* 의학용 PVR 등고선 그래프 + 부드러운 곡선 */
   if(_ptDataPoints.length > 0){
-    /* 음정(반음 단위)별로 최저/최고 dB 수집 */
+    /* MIDI(반음 단위)별로 모든 dB 값 수집 + count */
     const byMidi = {};
     _ptDataPoints.forEach((p) => {
       const midiKey = Math.round(p.midi);
       if(!byMidi[midiKey]){
-        byMidi[midiKey] = {midi:midiKey, minDb:p.dB, maxDb:p.dB, count:0, lastTime:0};
+        byMidi[midiKey] = {midi:midiKey, dbs:[], count:0, lastTime:0};
       }
-      const b = byMidi[midiKey];
-      if(p.dB < b.minDb) b.minDb = p.dB;
-      if(p.dB > b.maxDb) b.maxDb = p.dB;
-      b.count++;
-      b.lastTime = Math.max(b.lastTime, p.time);
+      byMidi[midiKey].dbs.push(p.dB);
+      byMidi[midiKey].count++;
+      byMidi[midiKey].lastTime = Math.max(byMidi[midiKey].lastTime, p.time);
     });
     
-    /* 음정 정렬 (낮은→높은) */
     const sortedMidis = Object.keys(byMidi).map(Number).sort((a,b) => a - b);
     
     if(sortedMidis.length >= 2){
-      /* 폴리곤 외곽선 그리기: 최고 dB 라인 (위쪽) → 최저 dB 라인 (아래쪽) */
-      _ptCanvasCtx.fillStyle = 'rgba(59,130,246,0.25)'; /* 옅은 파랑 영역 */
-      _ptCanvasCtx.strokeStyle = 'rgba(37,99,235,0.85)'; /* 진한 파랑 외곽선 */
-      _ptCanvasCtx.lineWidth = 2;
-      _ptCanvasCtx.lineJoin = 'round';
-      
-      _ptCanvasCtx.beginPath();
-      
-      /* 위쪽 라인 (낮은→높은 음정, 최고 dB) */
-      sortedMidis.forEach((midi, i) => {
-        const cell = byMidi[midi];
-        const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
-        const yMax = ((dbMax - cell.maxDb) / (dbMax - dbMin)) * (H - 16) + 4;
-        if(i === 0) _ptCanvasCtx.moveTo(x, yMax);
-        else _ptCanvasCtx.lineTo(x, yMax);
-      });
-      
-      /* 아래쪽 라인 (높은→낮은 음정, 최저 dB) - 역순으로 */
-      for(let i = sortedMidis.length - 1; i >= 0; i--){
-        const midi = sortedMidis[i];
-        const cell = byMidi[midi];
-        const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
-        const yMin = ((dbMax - cell.minDb) / (dbMax - dbMin)) * (H - 16) + 4;
-        _ptCanvasCtx.lineTo(x, yMin);
+      /* 카토물 로젠 보간으로 부드러운 곡선 그리기 */
+      function _drawSmoothPath(points){
+        if(points.length < 2) return;
+        _ptCanvasCtx.beginPath();
+        _ptCanvasCtx.moveTo(points[0].x, points[0].y);
+        for(let i = 0; i < points.length - 1; i++){
+          const p0 = points[i === 0 ? 0 : i - 1];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+          /* Catmull-Rom 보간 */
+          for(let t = 0; t < 1; t += 0.1){
+            const tt = t * t;
+            const ttt = tt * t;
+            const x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2*p0.x - 5*p1.x + 4*p2.x - p3.x) * tt + (-p0.x + 3*p1.x - 3*p2.x + p3.x) * ttt);
+            const y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2*p0.y - 5*p1.y + 4*p2.y - p3.y) * tt + (-p0.y + 3*p1.y - 3*p2.y + p3.y) * ttt);
+            _ptCanvasCtx.lineTo(x, y);
+          }
+        }
+        _ptCanvasCtx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
       }
       
-      _ptCanvasCtx.closePath();
-      _ptCanvasCtx.fill();
-      _ptCanvasCtx.stroke();
+      /* 등고선 3겹: percentile (10/50/90) */
+      /* 각 percentile별로 음정-dB 좌표 계산 */
+      function _percentile(arr, p){
+        if(arr.length === 0) return null;
+        const sorted = [...arr].sort((a, b) => a - b);
+        const idx = Math.floor((sorted.length - 1) * p);
+        return sorted[idx];
+      }
       
-      /* 위쪽 라인만 더 진하게 강조 (음역 한계 표시) */
-      _ptCanvasCtx.strokeStyle = 'rgba(220,38,38,0.7)';
-      _ptCanvasCtx.lineWidth = 1.5;
-      _ptCanvasCtx.beginPath();
-      sortedMidis.forEach((midi, i) => {
-        const cell = byMidi[midi];
-        const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
-        const yMax = ((dbMax - cell.maxDb) / (dbMax - dbMin)) * (H - 16) + 4;
-        if(i === 0) _ptCanvasCtx.moveTo(x, yMax);
-        else _ptCanvasCtx.lineTo(x, yMax);
-      });
-      _ptCanvasCtx.stroke();
+      /* 등고선 그리기 - 위/아래 외곽선을 부드럽게 */
+      function _drawContour(percentile, fillColor, strokeColor, lineWidth){
+        const upperPoints = [];
+        const lowerPoints = [];
+        
+        sortedMidis.forEach((midi) => {
+          const cell = byMidi[midi];
+          const upperDb = _percentile(cell.dbs, 1 - percentile);
+          const lowerDb = _percentile(cell.dbs, percentile);
+          if(upperDb === null || lowerDb === null) return;
+          
+          const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
+          const yUp = ((dbMax - upperDb) / (dbMax - dbMin)) * H;
+          const yDn = ((dbMax - lowerDb) / (dbMax - dbMin)) * H;
+          
+          upperPoints.push({x, y:yUp});
+          lowerPoints.push({x, y:yDn});
+        });
+        
+        if(upperPoints.length < 2) return;
+        
+        /* 폴리곤 영역 (위 라인 → 아래 라인 역순) */
+        _ptCanvasCtx.fillStyle = fillColor;
+        _ptCanvasCtx.strokeStyle = strokeColor;
+        _ptCanvasCtx.lineWidth = lineWidth;
+        _ptCanvasCtx.lineJoin = 'round';
+        _ptCanvasCtx.lineCap = 'round';
+        
+        _ptCanvasCtx.beginPath();
+        /* 위쪽 부드러운 곡선 */
+        _ptCanvasCtx.moveTo(upperPoints[0].x, upperPoints[0].y);
+        for(let i = 1; i < upperPoints.length; i++){
+          const prev = upperPoints[i-1];
+          const curr = upperPoints[i];
+          const cpx = (prev.x + curr.x) / 2;
+          _ptCanvasCtx.quadraticCurveTo(cpx, prev.y, curr.x, curr.y);
+        }
+        /* 아래쪽 부드러운 곡선 (역순) */
+        for(let i = lowerPoints.length - 1; i >= 0; i--){
+          const curr = lowerPoints[i];
+          if(i === lowerPoints.length - 1){
+            _ptCanvasCtx.lineTo(curr.x, curr.y);
+          } else {
+            const next = lowerPoints[i+1];
+            const cpx = (next.x + curr.x) / 2;
+            _ptCanvasCtx.quadraticCurveTo(cpx, next.y, curr.x, curr.y);
+          }
+        }
+        _ptCanvasCtx.closePath();
+        _ptCanvasCtx.fill();
+        _ptCanvasCtx.stroke();
+      }
+      
+      /* 등고선 3겹 (안쪽이 더 진함 = 자주 발성한 영역) */
+      /* 가장 바깥 (10% percentile = 전체 음역) */
+      _drawContour(0.0, 'rgba(147,197,253,0.20)', 'rgba(96,165,250,0.55)', 1.5);
+      /* 중간 (25% percentile = 평균 음역) */
+      _drawContour(0.15, 'rgba(96,165,250,0.25)', 'rgba(59,130,246,0.7)', 1.5);
+      /* 가장 안쪽 (40% percentile = 자주 사용 음역) */
+      _drawContour(0.30, 'rgba(59,130,246,0.30)', 'rgba(37,99,235,0.85)', 2);
     }
     
-    /* 가장 최근 점 - 발광 표시 */
+    /* 최근 점 - 발광 표시 */
     const last = _ptDataPoints[_ptDataPoints.length - 1];
     if(last && (Date.now() - last.time) < 300){
       const x = ((last.midi - midiMin) / (midiMax - midiMin)) * W;
-      const y = ((dbMax - last.dB) / (dbMax - dbMin)) * (H - 16) + 4;
+      const y = ((dbMax - last.dB) / (dbMax - dbMin)) * H;
       
-      /* 외곽 빛 */
       const grad = _ptCanvasCtx.createRadialGradient(x, y, 0, x, y, 14);
       grad.addColorStop(0, 'rgba(220,38,38,0.9)');
       grad.addColorStop(0.5, 'rgba(220,38,38,0.4)');
@@ -10734,7 +10789,6 @@ function _ptCanvasDraw(){
       _ptCanvasCtx.arc(x, y, 14, 0, Math.PI * 2);
       _ptCanvasCtx.fill();
       
-      /* 중앙 점 */
       _ptCanvasCtx.fillStyle = '#dc2626';
       _ptCanvasCtx.beginPath();
       _ptCanvasCtx.arc(x, y, 4.5, 0, Math.PI * 2);
@@ -10742,6 +10796,89 @@ function _ptCanvasDraw(){
       _ptCanvasCtx.strokeStyle = '#fff';
       _ptCanvasCtx.lineWidth = 1.5;
       _ptCanvasCtx.stroke();
+    }
+  }
+  
+  /* 피아노 건반 그리기 (그래프 하단) */
+  _drawPianoKeyboard(W, H, totalH, midiMin, midiMax, PIANO_H);
+}
+
+/* 피아노 건반 그리기 함수 */
+function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH){
+  const ctx = _ptCanvasCtx;
+  if(!ctx) return;
+  
+  const pianoY = graphH + 4;
+  const totalKeys = midiMax - midiMin + 1;
+  const keyW = W / totalKeys;
+  
+  /* 검은 건반 위치 (옥타브 내 인덱스) */
+  const blackKeySet = new Set([1, 3, 6, 8, 10]); /* C#, D#, F#, G#, A# */
+  
+  /* 1. 흰 건반 먼저 그리기 (배경) */
+  ctx.fillStyle = '#fafafa';
+  ctx.fillRect(0, pianoY, W, pianoH);
+  
+  /* 흰건반 외곽선 */
+  ctx.strokeStyle = '#9ca3af';
+  ctx.lineWidth = 0.5;
+  for(let m = midiMin; m <= midiMax; m++){
+    if(!blackKeySet.has(m % 12)){
+      const x = ((m - midiMin) / totalKeys) * W;
+      ctx.beginPath();
+      ctx.moveTo(x, pianoY);
+      ctx.lineTo(x, pianoY + pianoH);
+      ctx.stroke();
+    }
+  }
+  /* 마지막 건반 끝선 */
+  ctx.beginPath();
+  ctx.moveTo(W, pianoY);
+  ctx.lineTo(W, pianoY + pianoH);
+  ctx.stroke();
+  
+  /* 외곽 박스 */
+  ctx.strokeStyle = '#6b7280';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, pianoY + 0.5, W - 1, pianoH - 1);
+  
+  /* 2. 검은 건반 그리기 */
+  ctx.fillStyle = '#1f2937';
+  for(let m = midiMin; m <= midiMax; m++){
+    if(blackKeySet.has(m % 12)){
+      const x = ((m - midiMin) / totalKeys) * W - keyW * 0.35;
+      const blackH = pianoH * 0.6;
+      ctx.fillRect(x, pianoY, keyW * 0.7, blackH);
+    }
+  }
+  
+  /* 3. C 건반에 라벨 (옥타브 표시) */
+  ctx.fillStyle = '#6b7280';
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  for(let m = midiMin; m <= midiMax; m += 12){
+    if(m % 12 === 0){ /* C 건반 */
+      const x = ((m - midiMin) / totalKeys) * W + keyW / 2;
+      const oct = Math.floor(m / 12) - 1; /* SPN */
+      ctx.fillText('C' + oct, x, pianoY + pianoH - 3);
+    }
+  }
+  
+  /* 4. 현재 발성 음정 위치 표시 (피아노 건반에 빨간 마커) */
+  const last = _ptDataPoints[_ptDataPoints.length - 1];
+  if(last && (Date.now() - last.time) < 500){
+    const midiRound = Math.round(last.midi);
+    if(midiRound >= midiMin && midiRound <= midiMax){
+      const isBlack = blackKeySet.has(midiRound % 12);
+      const x = ((midiRound - midiMin) / totalKeys) * W;
+      const markerW = keyW;
+      
+      ctx.fillStyle = 'rgba(220,38,38,0.6)';
+      if(isBlack){
+        ctx.fillRect(x - keyW * 0.35, pianoY, keyW * 0.7, pianoH * 0.6);
+      } else {
+        ctx.fillRect(x, pianoY, keyW, pianoH);
+      }
     }
   }
 }
