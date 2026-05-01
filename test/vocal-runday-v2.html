@@ -10466,22 +10466,25 @@ function _ptAnalyzeLoop(){
   /* 음정 측정 */
   const [pitch, clarity] = _ptDetector.findPitch(buf, _ptCtx.sampleRate);
   
-  /* 음량 측정 (RMS → dB) */
+  /* 음량 측정 (RMS → dB SPL 추정) */
   let rms = 0;
   for(let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
   rms = Math.sqrt(rms / buf.length);
-  const dB = rms > 0 ? 20 * Math.log10(rms) : -100;
+  /* dBFS 계산 */
+  const dBFS = rms > 0 ? 20 * Math.log10(rms) : -100;
+  /* dB SPL 추정: 일반 모바일 마이크 기준 보정값 (조정 가능) */
+  const dB = dBFS + 94; /* dBFS -50 → SPL 44, dBFS -10 → SPL 84 */
   
   /* UI 업데이트 */
-  /* 1. 음량 바 (-60dB ~ 0dB → 0% ~ 100%) */
-  const volPct = Math.max(0, Math.min(100, (dB + 60) * (100/60)));
+  /* 1. 음량 바 (40 dB SPL ~ 110 dB SPL → 0% ~ 100%) */
+  const volPct = Math.max(0, Math.min(100, ((dB - 40) / 70) * 100));
   const volBar = document.getElementById('pt-vol-bar');
   if(volBar) volBar.style.right = (100 - volPct) + '%';
   const volVal = document.getElementById('pt-vol-val');
-  if(volVal) volVal.textContent = dB > -100 ? Math.round(dB) + ' dB' : '- dB';
+  if(volVal) volVal.textContent = dB > 30 ? Math.round(dB) + ' dB' : '- dB';
   
   /* 2. 음정 (clarity 0.9 이상이고 음량이 충분할 때만) */
-  if(clarity > 0.9 && dB > -50 && pitch > 50 && pitch < 2000){
+  if(clarity > 0.9 && dB > 40 && pitch > 50 && pitch < 2000){
     const noteInfo = _freqToNote(pitch);
     
     /* 음정 표시 */
@@ -10519,7 +10522,7 @@ function _ptAnalyzeLoop(){
   } else {
     /* 음량 너무 작거나 명확하지 않을 때 */
     const noteEl = document.getElementById('pt-note');
-    if(noteEl && noteEl.textContent !== '—' && dB < -50) noteEl.textContent = '—';
+    if(noteEl && noteEl.textContent !== '—' && dB < 40) noteEl.textContent = '—';
   }
   
   /* Canvas 갱신 (필요할 때만) */
@@ -10568,8 +10571,8 @@ function _ptCanvasDraw(){
   
   /* 음역 범위: MIDI 36(C2) ~ 84(C6) */
   const midiMin = 36, midiMax = 84;
-  /* dB 범위: -50 ~ 0 */
-  const dbMin = -50, dbMax = 0;
+  /* dB SPL 범위: 40 ~ 110 */
+  const dbMin = 40, dbMax = 110;
   
   /* 격자 + 라벨 */
   _ptCanvasCtx.strokeStyle = '#f3f4f6';
@@ -10640,9 +10643,9 @@ function _ptCanvasDraw(){
     _ptCanvasCtx.textAlign = 'center';
   }
   
-  /* dB 가로선 */
+  /* dB 가로선 (dB SPL 기준) */
   _ptCanvasCtx.textAlign = 'left';
-  [-40, -30, -20, -10].forEach(db => {
+  [50, 60, 70, 80, 90, 100].forEach(db => {
     const y = ((dbMax - db) / (dbMax - dbMin)) * (H - 16) + 4;
     _ptCanvasCtx.beginPath();
     _ptCanvasCtx.moveTo(0, y);
@@ -10651,78 +10654,94 @@ function _ptCanvasDraw(){
     _ptCanvasCtx.fillText(db + 'dB', 4, y - 2);
   });
   
-  /* 데이터 도형 그리기 (히트맵 - 셀 단위로 차오름) */
+  /* 의학용 PVR 폴리곤 그래프 (음정별 최저/최고 dB 외곽선) */
   if(_ptDataPoints.length > 0){
-    /* 셀 그리드 생성 (반음 단위 X 5dB 단위) */
-    const cellsByKey = {};
-    /* 각 셀: midi(반올림) + dB버킷(5dB 단위) */
+    /* 음정(반음 단위)별로 최저/최고 dB 수집 */
+    const byMidi = {};
     _ptDataPoints.forEach((p) => {
       const midiKey = Math.round(p.midi);
-      const dbKey = Math.round(p.dB / 5) * 5; /* 5dB 단위로 그룹화 */
-      const key = midiKey + '_' + dbKey;
-      if(!cellsByKey[key]){
-        cellsByKey[key] = {midi:midiKey, dB:dbKey, count:0, lastTime:0};
+      if(!byMidi[midiKey]){
+        byMidi[midiKey] = {midi:midiKey, minDb:p.dB, maxDb:p.dB, count:0, lastTime:0};
       }
-      cellsByKey[key].count++;
-      cellsByKey[key].lastTime = p.time;
+      const b = byMidi[midiKey];
+      if(p.dB < b.minDb) b.minDb = p.dB;
+      if(p.dB > b.maxDb) b.maxDb = p.dB;
+      b.count++;
+      b.lastTime = Math.max(b.lastTime, p.time);
     });
     
-    /* 셀 크기 계산 */
-    const cellW = W / (midiMax - midiMin); /* 반음당 픽셀 폭 */
-    const cellH = (H - 16) / ((dbMax - dbMin) / 5); /* 5dB 당 픽셀 높이 */
+    /* 음정 정렬 (낮은→높은) */
+    const sortedMidis = Object.keys(byMidi).map(Number).sort((a,b) => a - b);
     
-    /* 셀 그리기 (count 많을수록 진한 색) */
-    Object.values(cellsByKey).forEach((cell) => {
-      const x = ((cell.midi - midiMin) / (midiMax - midiMin)) * W - cellW/2;
-      const y = ((dbMax - cell.dB) / (dbMax - dbMin)) * (H - 16) + 4 - cellH/2;
+    if(sortedMidis.length >= 2){
+      /* 폴리곤 외곽선 그리기: 최고 dB 라인 (위쪽) → 최저 dB 라인 (아래쪽) */
+      _ptCanvasCtx.fillStyle = 'rgba(59,130,246,0.25)'; /* 옅은 파랑 영역 */
+      _ptCanvasCtx.strokeStyle = 'rgba(37,99,235,0.85)'; /* 진한 파랑 외곽선 */
+      _ptCanvasCtx.lineWidth = 2;
+      _ptCanvasCtx.lineJoin = 'round';
       
-      /* 카운트별 색상 강도 (1~30+) - 차오르는 효과 */
-      const intensity = Math.min(1.0, cell.count / 15);
-      const isRecent = (Date.now() - cell.lastTime) < 800;
+      _ptCanvasCtx.beginPath();
       
-      /* 그라데이션 색상 (옅은 파랑 → 진한 파랑) */
-      let r, g, b;
-      if(isRecent){
-        /* 최근 셀: 빨강~주황 톤 */
-        r = 239; g = Math.round(68 + (146 - 68) * (1 - intensity)); b = 68;
-      } else {
-        /* 일반 셀: 파랑 톤 (옅은 → 진한) */
-        r = Math.round(147 + (37 - 147) * intensity);
-        g = Math.round(197 + (99 - 197) * intensity);
-        b = Math.round(253 + (235 - 253) * intensity);
+      /* 위쪽 라인 (낮은→높은 음정, 최고 dB) */
+      sortedMidis.forEach((midi, i) => {
+        const cell = byMidi[midi];
+        const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
+        const yMax = ((dbMax - cell.maxDb) / (dbMax - dbMin)) * (H - 16) + 4;
+        if(i === 0) _ptCanvasCtx.moveTo(x, yMax);
+        else _ptCanvasCtx.lineTo(x, yMax);
+      });
+      
+      /* 아래쪽 라인 (높은→낮은 음정, 최저 dB) - 역순으로 */
+      for(let i = sortedMidis.length - 1; i >= 0; i--){
+        const midi = sortedMidis[i];
+        const cell = byMidi[midi];
+        const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
+        const yMin = ((dbMax - cell.minDb) / (dbMax - dbMin)) * (H - 16) + 4;
+        _ptCanvasCtx.lineTo(x, yMin);
       }
-      const alpha = 0.3 + intensity * 0.6;
       
-      _ptCanvasCtx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
-      _ptCanvasCtx.fillRect(x, y, cellW, cellH);
+      _ptCanvasCtx.closePath();
+      _ptCanvasCtx.fill();
+      _ptCanvasCtx.stroke();
       
-      /* 테두리 (옅게) */
-      _ptCanvasCtx.strokeStyle = `rgba(${r},${g},${b},${Math.min(1, alpha + 0.2)})`;
-      _ptCanvasCtx.lineWidth = 0.5;
-      _ptCanvasCtx.strokeRect(x, y, cellW, cellH);
-    });
+      /* 위쪽 라인만 더 진하게 강조 (음역 한계 표시) */
+      _ptCanvasCtx.strokeStyle = 'rgba(220,38,38,0.7)';
+      _ptCanvasCtx.lineWidth = 1.5;
+      _ptCanvasCtx.beginPath();
+      sortedMidis.forEach((midi, i) => {
+        const cell = byMidi[midi];
+        const x = ((midi - midiMin) / (midiMax - midiMin)) * W;
+        const yMax = ((dbMax - cell.maxDb) / (dbMax - dbMin)) * (H - 16) + 4;
+        if(i === 0) _ptCanvasCtx.moveTo(x, yMax);
+        else _ptCanvasCtx.lineTo(x, yMax);
+      });
+      _ptCanvasCtx.stroke();
+    }
     
-    /* 가장 최근 점은 발광 효과 */
+    /* 가장 최근 점 - 발광 표시 */
     const last = _ptDataPoints[_ptDataPoints.length - 1];
     if(last && (Date.now() - last.time) < 300){
       const x = ((last.midi - midiMin) / (midiMax - midiMin)) * W;
       const y = ((dbMax - last.dB) / (dbMax - dbMin)) * (H - 16) + 4;
       
-      /* 외곽 빛 (radial gradient 효과) */
-      const grad = _ptCanvasCtx.createRadialGradient(x, y, 0, x, y, 12);
+      /* 외곽 빛 */
+      const grad = _ptCanvasCtx.createRadialGradient(x, y, 0, x, y, 14);
       grad.addColorStop(0, 'rgba(220,38,38,0.9)');
       grad.addColorStop(0.5, 'rgba(220,38,38,0.4)');
       grad.addColorStop(1, 'rgba(220,38,38,0)');
       _ptCanvasCtx.fillStyle = grad;
       _ptCanvasCtx.beginPath();
-      _ptCanvasCtx.arc(x, y, 12, 0, Math.PI * 2);
+      _ptCanvasCtx.arc(x, y, 14, 0, Math.PI * 2);
       _ptCanvasCtx.fill();
       
       /* 중앙 점 */
       _ptCanvasCtx.fillStyle = '#dc2626';
       _ptCanvasCtx.beginPath();
-      _ptCanvasCtx.arc(x, y, 4, 0, Math.PI * 2);
+      _ptCanvasCtx.arc(x, y, 4.5, 0, Math.PI * 2);
       _ptCanvasCtx.fill();
+      _ptCanvasCtx.strokeStyle = '#fff';
+      _ptCanvasCtx.lineWidth = 1.5;
+      _ptCanvasCtx.stroke();
     }
   }
 }
