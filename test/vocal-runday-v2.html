@@ -329,6 +329,23 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
 
+    <!-- 음역대 테스트 카드 (학습 메뉴 다음, 발성 이론 위) -->
+    <div class="v2-card v2-card-blue" id="menu-pitchtest" onclick="openPitchTest()" style="margin-top:10px;flex-direction:row;align-items:center;min-height:auto;padding:14px 18px">
+      <div class="v2-card-illust" style="width:48px;height:48px;margin-bottom:0;margin-right:14px;flex-shrink:0">
+        <svg viewBox="0 0 64 64" fill="none">
+          <polyline points="6,32 14,26 20,38 26,20 32,32 38,12 44,32 50,28 58,32" stroke="#2563eb" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="50" cy="50" r="8" fill="#3b82f6"/>
+          <rect x="48" y="46" width="4" height="6" rx="2" fill="#fff"/>
+          <line x1="50" y1="54" x2="50" y2="56" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="v2-card-title" style="margin-bottom:2px">음역대 테스트</div>
+        <div class="v2-card-desc" style="font-size:11px">실시간으로 내 음역과 강도 측정</div>
+      </div>
+      <div class="v2-card-arrow" style="position:static;color:#2563eb">›</div>
+    </div>
+
     <!-- ═══════════════════════════════════════ -->
     <!-- 섹션 3: 발성 이론 (누구나 - 가로 스크롤) -->
     <!-- ═══════════════════════════════════════ -->
@@ -813,6 +830,128 @@ input,select,button,textarea{font-family:inherit;}
         <!-- 관리자 로그아웃 버튼 -->
       <button class="v2-admin-logout" onclick="adminLogout()">🔓 관리자 로그아웃</button>
     </div></div>
+</div>
+
+
+<!-- 음역대 테스트 화면 -->
+<div id="scr-pitchtest" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="_closePitchTest();pop()">←</button>
+    <div class="tb">음역대 테스트</div>
+    <button class="ico" onclick="_closePitchTest();goHome()" title="홈">🏠</button>
+  </div>
+  <div class="body"><div class="inner" style="padding-bottom:24px">
+    
+    <!-- 측정 전 안내 + 시작 버튼 (대기 상태) -->
+    <div id="pt-pre-screen">
+      <div class="v2-pt-notice" id="pt-notice">
+        <div class="v2-pt-notice-icon">🎤</div>
+        <div class="v2-pt-notice-text">
+          <strong>음역대 테스트</strong><br>
+          본인의 음역과 강도를 실시간으로 측정합니다.<br>
+          조용한 환경에서 진행하세요.
+        </div>
+      </div>
+      
+      <button class="v2-pt-btn-start" onclick="_openPtGenderModal()" style="width:100%;margin-top:8px">
+        <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="7" cy="7" r="4"/>
+        </svg>
+        <span>측정 시작</span>
+      </button>
+      
+      <div class="v2-pt-info" style="margin-top:14px">
+        💡 <strong>팁</strong><br>
+        • 천천히 낮은 음에서 높은 음까지 발성해보세요<br>
+        • 각 음을 2-3초씩 유지하면 정확도가 올라갑니다<br>
+        • 측정값은 참고용이며 의료 진단 대체용이 아닙니다
+      </div>
+    </div>
+
+    <!-- 측정 중/완료 화면 -->
+    <div id="pt-active-screen" style="display:none">
+      <!-- 상단: 현재 음정 (큰 표시) -->
+      <div class="v2-pt-card v2-pt-pitch-card">
+        <div class="v2-pt-label">현재 음정</div>
+        <div class="v2-pt-pitch-main">
+          <div class="v2-pt-note" id="pt-note">—</div>
+          <div class="v2-pt-cents" id="pt-cents"></div>
+        </div>
+        <div class="v2-pt-freq" id="pt-freq">- Hz</div>
+      </div>
+
+      <!-- 강도 + 음역 (작은 카드 가로) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="v2-pt-card" style="padding:12px 14px;margin-bottom:0">
+          <div class="v2-pt-label" style="margin-bottom:6px">소리 크기</div>
+          <div class="v2-pt-vol-bar-wrap" style="margin-bottom:6px">
+            <div class="v2-pt-vol-bar" id="pt-vol-bar"></div>
+          </div>
+          <div class="v2-pt-vol-val" id="pt-vol-val" style="text-align:left">- dB</div>
+        </div>
+        <div class="v2-pt-card" style="padding:12px 14px;margin-bottom:0">
+          <div class="v2-pt-label" style="margin-bottom:6px">음역</div>
+          <div style="display:flex;justify-content:space-around;align-items:center;font-size:14px;font-weight:800;color:#1e40af">
+            <span id="pt-low">—</span>
+            <span style="color:var(--mu2);font-size:12px">~</span>
+            <span id="pt-high">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 실시간 PVR 그래프 -->
+      <div class="v2-pt-card" style="padding:14px 14px 10px">
+        <div class="v2-pt-label" style="margin-bottom:8px">PVR 그래프 (음정 × 강도)</div>
+        <canvas id="pt-canvas" width="600" height="320" style="width:100%;height:auto;display:block;background:#fff;border-radius:8px"></canvas>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-top:4px;padding:0 4px">
+          <span>← 낮은 음</span>
+          <span>높은 음 →</span>
+        </div>
+      </div>
+
+      <!-- 컨트롤 -->
+      <div class="v2-pt-controls">
+        <button class="v2-pt-btn-stop" id="pt-stop-btn" onclick="_stopPitchTest()">
+          <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="8" height="8" rx="1"/>
+          </svg>
+          <span>측정 종료</span>
+        </button>
+        <button class="v2-pt-btn-reset" onclick="_resetPitchTest()">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3 L3 7 L7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 7 A6 6 0 0 1 13 7 A6 6 0 0 1 8 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          <span>초기화</span>
+        </button>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 성별 선택 모달 -->
+<div class="v2-pt-modal-bg" id="pt-gender-modal" onclick="if(event.target===this)_closePtGenderModal()">
+  <div class="v2-pt-modal-card">
+    <button class="v2-ios-modal-close" onclick="_closePtGenderModal()" aria-label="닫기">✕</button>
+    <div class="v2-pt-modal-title">측정 시작 전 안내</div>
+    <div class="v2-pt-modal-body">측정 결과를 분석하기 위해<br>본인의 성별을 선택해주세요.</div>
+    
+    <div class="v2-pt-gender-row">
+      <button class="v2-pt-gender-btn v2-pt-gender-male" onclick="_selectGender('male')">
+        <div class="v2-pt-gender-icon">👨</div>
+        <div class="v2-pt-gender-label">남성</div>
+      </button>
+      <button class="v2-pt-gender-btn v2-pt-gender-female" onclick="_selectGender('female')">
+        <div class="v2-pt-gender-icon">👩</div>
+        <div class="v2-pt-gender-label">여성</div>
+      </button>
+    </div>
+    
+    <div style="font-size:10px;color:var(--mu);text-align:center;margin-top:12px;line-height:1.6">
+      *성별에 따라 분석 기준이 다르게 적용됩니다.<br>
+      어떤 분류에도 강제되지 않으며 결과는 참고용입니다.
+    </div>
+  </div>
 </div>
 
 <!-- 설정 모달 -->
@@ -2177,6 +2316,313 @@ input,select,button,textarea{font-family:inherit;}
   transform:translateY(-1px);
 }
 .v2-ios-modal-ok:active{transform:scale(0.97);}
+
+
+
+/* ═══════════════════════════════════════════
+   v2 음역대 테스트 화면
+   ═══════════════════════════════════════════ */
+
+/* 안내 알림 */
+.v2-pt-notice{
+  background:#eff6ff;
+  border:1.5px solid #bfdbfe;
+  border-radius:14px;
+  padding:14px 16px;
+  margin:12px 0;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.v2-pt-notice-icon{font-size:28px;flex-shrink:0;}
+.v2-pt-notice-text{
+  flex:1;
+  font-size:12px;
+  color:#1e40af;
+  line-height:1.5;
+}
+.v2-pt-notice-text strong{color:#1e3a8a;}
+
+/* 카드 공통 */
+.v2-pt-card{
+  background:#fff;
+  border:1.5px solid var(--bd2);
+  border-radius:16px;
+  padding:18px 20px;
+  margin-bottom:12px;
+}
+
+.v2-pt-label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--mu);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:10px;
+}
+
+/* 음정 카드 (강조) */
+.v2-pt-pitch-card{
+  background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);
+  border-color:#93c5fd;
+}
+
+.v2-pt-pitch-main{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+
+.v2-pt-note{
+  font-size:48px;
+  font-weight:900;
+  color:#1e40af;
+  line-height:1;
+  letter-spacing:-2px;
+  font-feature-settings:"tnum";
+}
+
+.v2-pt-cents{
+  font-size:14px;
+  font-weight:700;
+  color:#3b82f6;
+  min-width:60px;
+}
+.v2-pt-cents.flat{color:#dc2626;}
+.v2-pt-cents.sharp{color:#16a34a;}
+
+.v2-pt-freq{
+  font-size:12px;
+  color:var(--mu);
+  text-align:center;
+  font-family:monospace;
+}
+
+/* 강도 바 */
+.v2-pt-vol-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.v2-pt-vol-bar-wrap{
+  flex:1;
+  background:#f3f4f6;
+  border-radius:99px;
+  height:18px;
+  overflow:hidden;
+  position:relative;
+}
+
+.v2-pt-vol-bar{
+  position:absolute;
+  inset:0 100% 0 0;
+  background:linear-gradient(90deg,#22c55e 0%,#eab308 60%,#ef4444 100%);
+  border-radius:99px;
+  transition:right 0.1s ease;
+}
+
+.v2-pt-vol-val{
+  font-size:13px;
+  font-weight:800;
+  color:var(--tx);
+  min-width:55px;
+  text-align:right;
+  font-family:monospace;
+}
+
+/* 음역 표시 (최저~최고) */
+.v2-pt-range{
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  gap:12px;
+}
+.v2-pt-range-item{
+  flex:1;
+  text-align:center;
+}
+.v2-pt-range-label{
+  font-size:10px;
+  color:var(--mu);
+  margin-bottom:6px;
+  font-weight:700;
+}
+.v2-pt-range-val{
+  font-size:24px;
+  font-weight:900;
+  color:#1e40af;
+  letter-spacing:-1px;
+}
+.v2-pt-range-divider{
+  font-size:18px;
+  color:var(--mu2);
+  font-weight:700;
+}
+
+/* 컨트롤 버튼 */
+.v2-pt-controls{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+  margin-bottom:14px;
+}
+
+.v2-pt-btn-start, .v2-pt-btn-stop, .v2-pt-btn-reset{
+  flex:1;
+  border:none;
+  border-radius:12px;
+  padding:13px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:all 0.2s;
+  font-family:inherit;
+}
+
+.v2-pt-btn-start{
+  background:linear-gradient(135deg,#3b82f6,#2563eb);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(59,130,246,0.3);
+}
+.v2-pt-btn-start:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(59,130,246,0.4);}
+.v2-pt-btn-start:active{transform:scale(0.97);}
+
+.v2-pt-btn-stop{
+  background:linear-gradient(135deg,#dc2626,#b91c1c);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(220,38,38,0.3);
+}
+.v2-pt-btn-stop:hover{transform:translateY(-1px);}
+.v2-pt-btn-stop:active{transform:scale(0.97);}
+
+.v2-pt-btn-reset{
+  flex:0 0 auto;
+  background:#f3f4f6;
+  border:1.5px solid var(--bd2);
+  color:var(--mu);
+  padding:13px 16px;
+}
+.v2-pt-btn-reset:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626;}
+.v2-pt-btn-reset svg{width:14px;height:14px;}
+
+.v2-pt-btn-start svg, .v2-pt-btn-stop svg{width:12px;height:12px;}
+
+/* 안내 정보 */
+.v2-pt-info{
+  background:#fef3c7;
+  border:1.5px solid #fcd34d;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:11px;
+  color:#92400e;
+  line-height:1.7;
+}
+.v2-pt-info strong{color:#78350f;}
+
+/* 측정 중 펄스 애니메이션 */
+.v2-pt-pitch-card.measuring{
+  animation:v2-pt-pulse 1.5s ease-in-out infinite;
+}
+@keyframes v2-pt-pulse{
+  0%, 100%{box-shadow:0 0 0 0 rgba(59,130,246,0.3);}
+  50%{box-shadow:0 0 0 8px rgba(59,130,246,0);}
+}
+
+
+
+/* ═══════════════════════════════════════════
+   v2 음역대 테스트 - PVR 그래프 + 성별 모달
+   ═══════════════════════════════════════════ */
+
+/* 성별 선택 모달 */
+.v2-pt-modal-bg{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  z-index:10001;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  box-sizing:border-box;
+}
+.v2-pt-modal-bg.active{display:flex;}
+
+.v2-pt-modal-card{
+  background:#fff;
+  border-radius:20px;
+  padding:32px 24px 24px;
+  max-width:340px;
+  width:100%;
+  position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+}
+
+.v2-pt-modal-title{
+  font-size:18px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:8px;
+  color:var(--tx);
+}
+
+.v2-pt-modal-body{
+  font-size:13px;
+  color:var(--mu);
+  line-height:1.6;
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.v2-pt-gender-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.v2-pt-gender-btn{
+  background:#fff;
+  border:2px solid var(--bd2);
+  border-radius:14px;
+  padding:20px 12px;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  font-family:inherit;
+}
+.v2-pt-gender-btn:hover{transform:translateY(-2px);}
+.v2-pt-gender-btn:active{transform:scale(0.96);}
+
+.v2-pt-gender-male:hover{
+  border-color:#3b82f6;
+  background:#eff6ff;
+  box-shadow:0 4px 12px rgba(59,130,246,0.15);
+}
+.v2-pt-gender-female:hover{
+  border-color:#ec4899;
+  background:#fdf2f8;
+  box-shadow:0 4px 12px rgba(236,72,153,0.15);
+}
+
+.v2-pt-gender-icon{
+  font-size:48px;
+}
+
+.v2-pt-gender-label{
+  font-size:14px;
+  font-weight:800;
+  color:var(--tx);
+}
 
 </style>
 <!-- 학생 로그인 모달 -->
@@ -9835,6 +10281,414 @@ function _thPagerGoTo(idx){
 
 function _thPagerNext(){ _thPagerGoTo(_thPagerIdx + 1); }
 function _thPagerPrev(){ _thPagerGoTo(_thPagerIdx - 1); }
+
+
+
+/* ═══════════════════════════════════════════
+   v2 음역대 테스트 (Pitch Detection)
+   ═══════════════════════════════════════════ */
+
+let _ptCtx = null;
+let _ptStream = null;
+let _ptAnalyser = null;
+let _ptDetector = null;  /* pitchy detector */
+let _ptRunning = false;
+let _ptRafId = null;
+let _ptLowFreq = null;   /* 최저 주파수 */
+let _ptHighFreq = null;  /* 최고 주파수 */
+let _ptDataPoints = [];  /* {midi, dB, time} 점들 */
+let _ptCanvasEl = null;
+let _ptCanvasCtx = null;
+let _ptDrawNeeded = false;
+
+/* 음역대 테스트 화면 열기 */
+function openPitchTest(){
+  push('scr-pitchtest');
+  /* 초기 상태 - 시작 전 안내 표시 */
+  const pre = document.getElementById('pt-pre-screen');
+  const act = document.getElementById('pt-active-screen');
+  if(pre) pre.style.display = '';
+  if(act) act.style.display = 'none';
+  _ptResetData();
+}
+
+/* 성별 모달 열기/닫기 */
+function _openPtGenderModal(){
+  document.getElementById('pt-gender-modal').classList.add('active');
+}
+function _closePtGenderModal(){
+  document.getElementById('pt-gender-modal').classList.remove('active');
+}
+
+/* 성별 선택 → 측정 시작 */
+let _ptGender = null;
+function _selectGender(g){
+  _ptGender = g;
+  _closePtGenderModal();
+  /* 측정 화면으로 전환 */
+  document.getElementById('pt-pre-screen').style.display = 'none';
+  document.getElementById('pt-active-screen').style.display = '';
+  _ptCanvasInit();
+  /* 측정 시작 */
+  _startPitchTest();
+}
+
+/* 데이터 리셋 */
+function _ptResetData(){
+  _ptLowFreq = null;
+  _ptHighFreq = null;
+  _ptDataPoints = [];
+}
+
+/* 화면 닫을 때 정리 */
+function _closePitchTest(){
+  _stopPitchTest();
+  _ptResetData();
+  /* 화면 상태 초기화 - 다음에 들어올 때 시작 전 화면 */
+  const pre = document.getElementById('pt-pre-screen');
+  const act = document.getElementById('pt-active-screen');
+  if(pre) pre.style.display = '';
+  if(act) act.style.display = 'none';
+}
+
+/* pitchy 라이브러리 동적 로드 */
+async function _loadPitchy(){
+  if(window.PitchDetector) return window.PitchDetector;
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.textContent = `
+      import { PitchDetector } from 'https://esm.sh/pitchy@4.1.0';
+      window.PitchDetector = PitchDetector;
+      window.dispatchEvent(new Event('pitchy-loaded'));
+    `;
+    document.head.appendChild(script);
+    window.addEventListener('pitchy-loaded', () => {
+      resolve(window.PitchDetector);
+    }, {once: true});
+    setTimeout(() => reject(new Error('pitchy 로드 타임아웃')), 5000);
+  });
+}
+
+/* 측정 시작 */
+async function _startPitchTest(){
+  if(_ptRunning) return;
+  
+  try {
+    /* pitchy 로드 */
+    const PitchDetector = await _loadPitchy();
+    
+    /* 마이크 권한 + 스트림 받기 */
+    _ptStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+      }
+    });
+    
+    /* AudioContext 생성 */
+    _ptCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = _ptCtx.createMediaStreamSource(_ptStream);
+    
+    _ptAnalyser = _ptCtx.createAnalyser();
+    _ptAnalyser.fftSize = 2048;
+    source.connect(_ptAnalyser);
+    
+    /* PitchDetector 생성 */
+    _ptDetector = PitchDetector.forFloat32Array(_ptAnalyser.fftSize);
+    _ptDetector.minVolumeDecibels = -50;
+    
+    _ptRunning = true;
+    
+    /* UI 변경: 시작 → 정지 */
+    document.getElementById('pt-start-btn').style.display = 'none';
+    document.getElementById('pt-stop-btn').style.display = 'flex';
+    document.querySelector('.v2-pt-pitch-card').classList.add('measuring');
+    
+    /* 안내 변경 */
+    const notice = document.getElementById('pt-notice');
+    if(notice){
+      notice.style.background = '#dcfce7';
+      notice.style.borderColor = '#86efac';
+      notice.querySelector('.v2-pt-notice-icon').textContent = '🎙';
+      notice.querySelector('.v2-pt-notice-text').innerHTML = '<strong>측정 중...</strong><br>마이크에 대고 천천히 낮은 음 → 높은 음으로 발성해보세요.';
+    }
+    
+    /* 분석 루프 시작 */
+    _ptAnalyzeLoop();
+    
+  } catch(e) {
+    console.error('Pitch test error:', e);
+    alert('마이크 권한이 필요합니다.\n오류: ' + e.message);
+    _stopPitchTest();
+  }
+}
+
+/* 분석 루프 (실시간) */
+function _ptAnalyzeLoop(){
+  if(!_ptRunning) return;
+  
+  const buf = new Float32Array(_ptAnalyser.fftSize);
+  _ptAnalyser.getFloatTimeDomainData(buf);
+  
+  /* 음정 측정 */
+  const [pitch, clarity] = _ptDetector.findPitch(buf, _ptCtx.sampleRate);
+  
+  /* 음량 측정 (RMS → dB) */
+  let rms = 0;
+  for(let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / buf.length);
+  const dB = rms > 0 ? 20 * Math.log10(rms) : -100;
+  
+  /* UI 업데이트 */
+  /* 1. 음량 바 (-60dB ~ 0dB → 0% ~ 100%) */
+  const volPct = Math.max(0, Math.min(100, (dB + 60) * (100/60)));
+  const volBar = document.getElementById('pt-vol-bar');
+  if(volBar) volBar.style.right = (100 - volPct) + '%';
+  const volVal = document.getElementById('pt-vol-val');
+  if(volVal) volVal.textContent = dB > -100 ? Math.round(dB) + ' dB' : '- dB';
+  
+  /* 2. 음정 (clarity 0.9 이상이고 음량이 충분할 때만) */
+  if(clarity > 0.9 && dB > -50 && pitch > 50 && pitch < 2000){
+    const noteInfo = _freqToNote(pitch);
+    
+    /* 음정 표시 */
+    const noteEl = document.getElementById('pt-note');
+    if(noteEl) noteEl.textContent = noteInfo.note;
+    
+    /* 센트 차이 */
+    const centsEl = document.getElementById('pt-cents');
+    if(centsEl){
+      const cents = noteInfo.cents;
+      const sign = cents > 0 ? '+' : '';
+      centsEl.textContent = cents !== 0 ? `${sign}${cents}¢` : '정확';
+      centsEl.classList.toggle('flat', cents < -10);
+      centsEl.classList.toggle('sharp', cents > 10);
+    }
+    
+    /* 주파수 */
+    const freqEl = document.getElementById('pt-freq');
+    if(freqEl) freqEl.textContent = pitch.toFixed(1) + ' Hz';
+    
+    /* 음역 갱신 (최저/최고) */
+    if(_ptLowFreq === null || pitch < _ptLowFreq){
+      _ptLowFreq = pitch;
+      const lowEl = document.getElementById('pt-low');
+      if(lowEl) lowEl.textContent = noteInfo.note;
+    }
+    if(_ptHighFreq === null || pitch > _ptHighFreq){
+      _ptHighFreq = pitch;
+      const highEl = document.getElementById('pt-high');
+      if(highEl) highEl.textContent = noteInfo.note;
+    }
+    
+    /* PVR Canvas에 점 찍기 */
+    _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB);
+  } else {
+    /* 음량 너무 작거나 명확하지 않을 때 */
+    const noteEl = document.getElementById('pt-note');
+    if(noteEl && noteEl.textContent !== '—' && dB < -50) noteEl.textContent = '—';
+  }
+  
+  /* Canvas 갱신 (필요할 때만) */
+  if(_ptDrawNeeded){
+    _ptCanvasDraw();
+    _ptDrawNeeded = false;
+  }
+  
+  _ptRafId = requestAnimationFrame(_ptAnalyzeLoop);
+}
+
+
+
+/* PVR Canvas 초기화 */
+function _ptCanvasInit(){
+  _ptCanvasEl = document.getElementById('pt-canvas');
+  if(!_ptCanvasEl) return;
+  _ptCanvasCtx = _ptCanvasEl.getContext('2d');
+  
+  /* 고해상도 대응 */
+  const dpr = window.devicePixelRatio || 1;
+  const rect = _ptCanvasEl.getBoundingClientRect();
+  _ptCanvasEl.width = rect.width * dpr;
+  _ptCanvasEl.height = rect.height * dpr;
+  _ptCanvasCtx.scale(dpr, dpr);
+  _ptCanvasEl.style.height = (rect.width * 320 / 600) + 'px';
+  
+  _ptCanvasDraw();
+}
+
+/* PVR 그래프 그리기 */
+function _ptCanvasDraw(){
+  if(!_ptCanvasCtx || !_ptCanvasEl) return;
+  
+  const rect = _ptCanvasEl.getBoundingClientRect();
+  const W = rect.width;
+  const H = rect.width * 320 / 600;
+  
+  /* 배경 */
+  _ptCanvasCtx.fillStyle = '#fff';
+  _ptCanvasCtx.fillRect(0, 0, W, H);
+  
+  /* 음역 범위: MIDI 36(C2) ~ 84(C6) */
+  const midiMin = 36, midiMax = 84;
+  /* dB 범위: -50 ~ 0 */
+  const dbMin = -50, dbMax = 0;
+  
+  /* 격자 + 라벨 */
+  _ptCanvasCtx.strokeStyle = '#f3f4f6';
+  _ptCanvasCtx.lineWidth = 1;
+  _ptCanvasCtx.fillStyle = '#9ca3af';
+  _ptCanvasCtx.font = '10px sans-serif';
+  _ptCanvasCtx.textAlign = 'center';
+  
+  /* 옥타브별 세로선 */
+  const octaves = [
+    {midi:36, label:'C2'},
+    {midi:48, label:'C3'},
+    {midi:60, label:'C4'},
+    {midi:72, label:'C5'},
+    {midi:84, label:'C6'},
+  ];
+  octaves.forEach(o => {
+    const x = ((o.midi - midiMin) / (midiMax - midiMin)) * W;
+    _ptCanvasCtx.beginPath();
+    _ptCanvasCtx.moveTo(x, 0);
+    _ptCanvasCtx.lineTo(x, H - 14);
+    _ptCanvasCtx.stroke();
+    _ptCanvasCtx.fillText(o.label, x, H - 2);
+  });
+  
+  /* dB 가로선 */
+  _ptCanvasCtx.textAlign = 'left';
+  [-40, -30, -20, -10].forEach(db => {
+    const y = ((dbMax - db) / (dbMax - dbMin)) * (H - 16) + 4;
+    _ptCanvasCtx.beginPath();
+    _ptCanvasCtx.moveTo(0, y);
+    _ptCanvasCtx.lineTo(W, y);
+    _ptCanvasCtx.stroke();
+    _ptCanvasCtx.fillText(db + 'dB', 4, y - 2);
+  });
+  
+  /* 데이터 점 그리기 */
+  if(_ptDataPoints.length > 0){
+    _ptDataPoints.forEach((p, i) => {
+      const x = ((p.midi - midiMin) / (midiMax - midiMin)) * W;
+      const y = ((dbMax - p.dB) / (dbMax - dbMin)) * (H - 16) + 4;
+      
+      /* 최근 점일수록 진한 색상 */
+      const recent = (i >= _ptDataPoints.length - 30);
+      _ptCanvasCtx.fillStyle = recent ? 'rgba(59,130,246,0.7)' : 'rgba(59,130,246,0.25)';
+      _ptCanvasCtx.beginPath();
+      _ptCanvasCtx.arc(x, y, recent ? 3.5 : 2.5, 0, Math.PI * 2);
+      _ptCanvasCtx.fill();
+    });
+    
+    /* 가장 최근 점은 강조 */
+    const last = _ptDataPoints[_ptDataPoints.length - 1];
+    if(last && (Date.now() - last.time) < 500){
+      const x = ((last.midi - midiMin) / (midiMax - midiMin)) * W;
+      const y = ((dbMax - last.dB) / (dbMax - dbMin)) * (H - 16) + 4;
+      _ptCanvasCtx.fillStyle = '#dc2626';
+      _ptCanvasCtx.beginPath();
+      _ptCanvasCtx.arc(x, y, 5, 0, Math.PI * 2);
+      _ptCanvasCtx.fill();
+      _ptCanvasCtx.strokeStyle = '#fff';
+      _ptCanvasCtx.lineWidth = 2;
+      _ptCanvasCtx.stroke();
+    }
+  }
+}
+
+/* Canvas 점 추가 */
+function _ptAddPoint(midi, dB){
+  /* 너무 자주 점 추가 방지 - 같은 음정에 너무 많은 점 X */
+  const last = _ptDataPoints[_ptDataPoints.length - 1];
+  const now = Date.now();
+  if(last && Math.abs(last.midi - midi) < 0.3 && (now - last.time) < 100) return;
+  
+  _ptDataPoints.push({midi:midi, dB:dB, time:now});
+  /* 최대 500개까지만 보관 */
+  if(_ptDataPoints.length > 500) _ptDataPoints.shift();
+  _ptDrawNeeded = true;
+}
+
+/* 주파수 → 음표 변환 */
+function _freqToNote(freq){
+  const A4 = 440;
+  /* MIDI number = 69 + 12 * log2(freq / A4) */
+  const midiFloat = 69 + 12 * Math.log2(freq / A4);
+  const midi = Math.round(midiFloat);
+  const cents = Math.round((midiFloat - midi) * 100);
+  
+  const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const noteName = noteNames[midi % 12];
+  const octave = Math.floor(midi / 12) - 1;
+  
+  /* 한국어 음정 */
+  const koNames = ['도','도#','레','레#','미','파','파#','솔','솔#','라','라#','시'];
+  const koName = koNames[midi % 12];
+  
+  return {
+    note: noteName + octave,
+    koNote: koName + octave,
+    cents: cents,
+    midi: midi
+  };
+}
+
+/* 측정 정지 */
+function _stopPitchTest(){
+  _ptRunning = false;
+  if(_ptRafId){ cancelAnimationFrame(_ptRafId); _ptRafId = null; }
+  
+  if(_ptStream){
+    _ptStream.getTracks().forEach(t => t.stop());
+    _ptStream = null;
+  }
+  if(_ptCtx){ _ptCtx.close(); _ptCtx = null; }
+  _ptAnalyser = null;
+  _ptDetector = null;
+  
+  /* UI 복구 */
+  const startBtn = document.getElementById('pt-start-btn');
+  const stopBtn = document.getElementById('pt-stop-btn');
+  if(startBtn) startBtn.style.display = 'flex';
+  if(stopBtn) stopBtn.style.display = 'none';
+  document.querySelector('.v2-pt-pitch-card')?.classList.remove('measuring');
+  
+  /* 음량/주파수 표시 리셋 */
+  const volBar = document.getElementById('pt-vol-bar');
+  if(volBar) volBar.style.right = '100%';
+  const volVal = document.getElementById('pt-vol-val');
+  if(volVal) volVal.textContent = '- dB';
+  
+  /* 안내 복구 */
+  const notice = document.getElementById('pt-notice');
+  if(notice){
+    notice.style.background = '';
+    notice.style.borderColor = '';
+    const ic = notice.querySelector('.v2-pt-notice-icon');
+    if(ic) ic.textContent = '🎤';
+    const tx = notice.querySelector('.v2-pt-notice-text');
+    if(tx) tx.innerHTML = '<strong>측정 시작</strong> 버튼을 누르면 마이크 권한을 요청합니다.<br>조용한 환경에서 마이크에 가까이 대고 발성해주세요.';
+  }
+}
+
+/* 측정 결과 초기화 */
+function _resetPitchTest(){
+  _ptLowFreq = null;
+  _ptHighFreq = null;
+  _ptDataPoints = [];
+  const lo=document.getElementById('pt-low'); if(lo) lo.textContent = '—';
+  const hi=document.getElementById('pt-high'); if(hi) hi.textContent = '—';
+  const no=document.getElementById('pt-note'); if(no) no.textContent = '—';
+  const ce=document.getElementById('pt-cents'); if(ce) ce.textContent = '';
+  const fr=document.getElementById('pt-freq'); if(fr) fr.textContent = '- Hz';
+  /* Canvas 다시 그리기 */
+  _ptCanvasDraw();
+}
 
 </script>
 
