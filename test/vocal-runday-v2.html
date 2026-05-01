@@ -10314,10 +10314,10 @@ function openPitchTest(){
 
 /* 성별 모달 열기/닫기 */
 function _openPtGenderModal(){
-  document.getElementById('pt-gender-modal').classList.add('active');
+  const _gm1 = document.getElementById('pt-gender-modal'); if(_gm1) _gm1.classList.add('active');
 }
 function _closePtGenderModal(){
-  document.getElementById('pt-gender-modal').classList.remove('active');
+  const _gm2 = document.getElementById('pt-gender-modal'); if(_gm2) _gm2.classList.remove('active');
 }
 
 /* 성별 선택 → 측정 시작 */
@@ -10405,18 +10405,23 @@ async function _startPitchTest(){
     
     _ptRunning = true;
     
-    /* UI 변경: 시작 → 정지 */
-    document.getElementById('pt-start-btn').style.display = 'none';
-    document.getElementById('pt-stop-btn').style.display = 'flex';
-    document.querySelector('.v2-pt-pitch-card').classList.add('measuring');
+    /* UI 변경: 모든 element 존재 체크 (새 화면 구조에 맞게) */
+    const startBtn = document.getElementById('pt-start-btn');
+    if(startBtn) startBtn.style.display = 'none';
+    const stopBtn = document.getElementById('pt-stop-btn');
+    if(stopBtn) stopBtn.style.display = 'flex';
+    const pitchCard = document.querySelector('.v2-pt-pitch-card');
+    if(pitchCard) pitchCard.classList.add('measuring');
     
-    /* 안내 변경 */
+    /* 안내 변경 (있을 때만) */
     const notice = document.getElementById('pt-notice');
     if(notice){
       notice.style.background = '#dcfce7';
       notice.style.borderColor = '#86efac';
-      notice.querySelector('.v2-pt-notice-icon').textContent = '🎙';
-      notice.querySelector('.v2-pt-notice-text').innerHTML = '<strong>측정 중...</strong><br>마이크에 대고 천천히 낮은 음 → 높은 음으로 발성해보세요.';
+      const ic = notice.querySelector('.v2-pt-notice-icon');
+      if(ic) ic.textContent = '🎙';
+      const tx = notice.querySelector('.v2-pt-notice-text');
+      if(tx) tx.innerHTML = '<strong>측정 중...</strong><br>마이크에 대고 천천히 낮은 음 → 높은 음으로 발성해보세요.';
     }
     
     /* 분석 루프 시작 */
