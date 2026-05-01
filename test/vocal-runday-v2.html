@@ -10325,12 +10325,16 @@ let _ptGender = null;
 function _selectGender(g){
   _ptGender = g;
   _closePtGenderModal();
-  /* 측정 화면으로 전환 */
-  document.getElementById('pt-pre-screen').style.display = 'none';
-  document.getElementById('pt-active-screen').style.display = '';
-  _ptCanvasInit();
-  /* 측정 시작 */
-  _startPitchTest();
+  /* 측정 화면으로 전환 - null 안전 */
+  const pre = document.getElementById('pt-pre-screen');
+  if(pre) pre.style.display = 'none';
+  const act = document.getElementById('pt-active-screen');
+  if(act) act.style.display = '';
+  /* 다음 프레임에 Canvas 초기화 (DOM 업데이트 후) */
+  setTimeout(function(){
+    _ptCanvasInit();
+    _startPitchTest();
+  }, 50);
 }
 
 /* 데이터 리셋 */
@@ -10420,7 +10424,14 @@ async function _startPitchTest(){
     
   } catch(e) {
     console.error('Pitch test error:', e);
-    alert('마이크 권한이 필요합니다.\n오류: ' + e.message);
+    /* 진짜 권한 거부 vs 코드 에러 구분 */
+    if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError'){
+      alert('마이크 권한이 거부되었습니다.\n브라우저 설정에서 권한을 허용해주세요.');
+    } else if(e.name === 'NotFoundError'){
+      alert('마이크 장치를 찾을 수 없습니다.');
+    } else {
+      alert('측정 시작 중 오류가 발생했습니다.\n' + e.name + ': ' + e.message);
+    }
     _stopPitchTest();
   }
 }
@@ -10505,16 +10516,20 @@ function _ptAnalyzeLoop(){
 /* PVR Canvas 초기화 */
 function _ptCanvasInit(){
   _ptCanvasEl = document.getElementById('pt-canvas');
-  if(!_ptCanvasEl) return;
+  if(!_ptCanvasEl){ console.warn('pt-canvas not found'); return; }
   _ptCanvasCtx = _ptCanvasEl.getContext('2d');
+  if(!_ptCanvasCtx){ console.warn('canvas context unavailable'); return; }
   
   /* 고해상도 대응 */
   const dpr = window.devicePixelRatio || 1;
   const rect = _ptCanvasEl.getBoundingClientRect();
-  _ptCanvasEl.width = rect.width * dpr;
-  _ptCanvasEl.height = rect.height * dpr;
+  /* width가 0이면 (display:none 상태) 기본값 사용 */
+  const w = rect.width > 0 ? rect.width : 320;
+  const h = w * 320 / 600;
+  _ptCanvasEl.width = w * dpr;
+  _ptCanvasEl.height = h * dpr;
   _ptCanvasCtx.scale(dpr, dpr);
-  _ptCanvasEl.style.height = (rect.width * 320 / 600) + 'px';
+  _ptCanvasEl.style.height = h + 'px';
   
   _ptCanvasDraw();
 }
@@ -10524,8 +10539,8 @@ function _ptCanvasDraw(){
   if(!_ptCanvasCtx || !_ptCanvasEl) return;
   
   const rect = _ptCanvasEl.getBoundingClientRect();
-  const W = rect.width;
-  const H = rect.width * 320 / 600;
+  const W = rect.width > 0 ? rect.width : 320;
+  const H = W * 320 / 600;
   
   /* 배경 */
   _ptCanvasCtx.fillStyle = '#fff';
