@@ -864,8 +864,11 @@ input,select,button,textarea{font-family:inherit;}
         💡 <strong>팁</strong><br>
         • 천천히 낮은 음에서 높은 음까지 발성해보세요<br>
         • 각 음을 2-3초씩 유지하면 정확도가 올라갑니다<br>
+        • 그래프 위에 표시된 영역은 성종별 표준 음역입니다<br>
         • 측정값은 참고용이며 의료 진단 대체용이 아닙니다
       </div>
+      
+
     </div>
 
     <!-- 측정 중/완료 화면 -->
@@ -2525,6 +2528,18 @@ input,select,button,textarea{font-family:inherit;}
   line-height:1.7;
 }
 .v2-pt-info strong{color:#78350f;}
+
+/* 옥타브 표기 안내 (파란색) */
+.v2-pt-info-piano{
+  background:#eff6ff;
+  border:1.5px solid #bfdbfe;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:11px;
+  color:#1e40af;
+  line-height:1.7;
+}
+.v2-pt-info-piano strong{color:#1e3a8a;}
 
 /* 측정 중 펄스 애니메이션 */
 .v2-pt-pitch-card.measuring{
@@ -10563,7 +10578,7 @@ function _ptCanvasDraw(){
   _ptCanvasCtx.font = '10px sans-serif';
   _ptCanvasCtx.textAlign = 'center';
   
-  /* 옥타브별 세로선 */
+  /* 옥타브별 세로선 (SPN 국제 표준) */
   const octaves = [
     {midi:36, label:'C2'},
     {midi:48, label:'C3'},
@@ -10580,6 +10595,51 @@ function _ptCanvasDraw(){
     _ptCanvasCtx.fillText(o.label, x, H - 2);
   });
   
+  /* 성종별 음역 가이드 영역 (성별에 따라 표시) */
+  /* MIDI 기준 (SPN 표준): 성악 표준 음역 */
+  const voiceRanges = {
+    male: [
+      {name:'베이스', low:40, high:64, color:'#1e40af'},     /* E2 ~ E4 */
+      {name:'바리톤', low:43, high:67, color:'#3b82f6'},    /* G2 ~ G4 */
+      {name:'테너',   low:48, high:72, color:'#06b6d4'},    /* C3 ~ C5 */
+    ],
+    female: [
+      {name:'알토',         low:53, high:77, color:'#a855f7'},  /* F3 ~ F5 */
+      {name:'메조소프라노', low:57, high:81, color:'#ec4899'},  /* A3 ~ A5 */
+      {name:'소프라노',     low:60, high:84, color:'#f43f5e'},  /* C4 ~ C6 */
+    ]
+  };
+  
+  const ranges = (typeof _ptGender !== 'undefined' && _ptGender) ? voiceRanges[_ptGender] : null;
+  if(ranges){
+    ranges.forEach((r, idx) => {
+      const x1 = ((r.low - midiMin) / (midiMax - midiMin)) * W;
+      const x2 = ((r.high - midiMin) / (midiMax - midiMin)) * W;
+      const y = idx * 18 + 4; /* 위쪽에 가로 띠 표시 */
+      const h = 14;
+      
+      /* 영역 배경 (옅은 색) */
+      _ptCanvasCtx.fillStyle = r.color + '15'; /* 알파 약 8% */
+      _ptCanvasCtx.fillRect(x1, y, x2 - x1, h);
+      
+      /* 영역 테두리 */
+      _ptCanvasCtx.strokeStyle = r.color + '60';
+      _ptCanvasCtx.lineWidth = 1;
+      _ptCanvasCtx.strokeRect(x1 + 0.5, y + 0.5, x2 - x1 - 1, h - 1);
+      
+      /* 라벨 */
+      _ptCanvasCtx.fillStyle = r.color;
+      _ptCanvasCtx.font = 'bold 9px sans-serif';
+      _ptCanvasCtx.textAlign = 'left';
+      _ptCanvasCtx.fillText(r.name, x1 + 4, y + 10);
+    });
+    
+    /* 폰트 원래대로 */
+    _ptCanvasCtx.font = '10px sans-serif';
+    _ptCanvasCtx.fillStyle = '#9ca3af';
+    _ptCanvasCtx.textAlign = 'center';
+  }
+  
   /* dB 가로선 */
   _ptCanvasCtx.textAlign = 'left';
   [-40, -30, -20, -10].forEach(db => {
@@ -10591,32 +10651,78 @@ function _ptCanvasDraw(){
     _ptCanvasCtx.fillText(db + 'dB', 4, y - 2);
   });
   
-  /* 데이터 점 그리기 */
+  /* 데이터 도형 그리기 (히트맵 - 셀 단위로 차오름) */
   if(_ptDataPoints.length > 0){
-    _ptDataPoints.forEach((p, i) => {
-      const x = ((p.midi - midiMin) / (midiMax - midiMin)) * W;
-      const y = ((dbMax - p.dB) / (dbMax - dbMin)) * (H - 16) + 4;
-      
-      /* 최근 점일수록 진한 색상 */
-      const recent = (i >= _ptDataPoints.length - 30);
-      _ptCanvasCtx.fillStyle = recent ? 'rgba(59,130,246,0.7)' : 'rgba(59,130,246,0.25)';
-      _ptCanvasCtx.beginPath();
-      _ptCanvasCtx.arc(x, y, recent ? 3.5 : 2.5, 0, Math.PI * 2);
-      _ptCanvasCtx.fill();
+    /* 셀 그리드 생성 (반음 단위 X 5dB 단위) */
+    const cellsByKey = {};
+    /* 각 셀: midi(반올림) + dB버킷(5dB 단위) */
+    _ptDataPoints.forEach((p) => {
+      const midiKey = Math.round(p.midi);
+      const dbKey = Math.round(p.dB / 5) * 5; /* 5dB 단위로 그룹화 */
+      const key = midiKey + '_' + dbKey;
+      if(!cellsByKey[key]){
+        cellsByKey[key] = {midi:midiKey, dB:dbKey, count:0, lastTime:0};
+      }
+      cellsByKey[key].count++;
+      cellsByKey[key].lastTime = p.time;
     });
     
-    /* 가장 최근 점은 강조 */
+    /* 셀 크기 계산 */
+    const cellW = W / (midiMax - midiMin); /* 반음당 픽셀 폭 */
+    const cellH = (H - 16) / ((dbMax - dbMin) / 5); /* 5dB 당 픽셀 높이 */
+    
+    /* 셀 그리기 (count 많을수록 진한 색) */
+    Object.values(cellsByKey).forEach((cell) => {
+      const x = ((cell.midi - midiMin) / (midiMax - midiMin)) * W - cellW/2;
+      const y = ((dbMax - cell.dB) / (dbMax - dbMin)) * (H - 16) + 4 - cellH/2;
+      
+      /* 카운트별 색상 강도 (1~30+) - 차오르는 효과 */
+      const intensity = Math.min(1.0, cell.count / 15);
+      const isRecent = (Date.now() - cell.lastTime) < 800;
+      
+      /* 그라데이션 색상 (옅은 파랑 → 진한 파랑) */
+      let r, g, b;
+      if(isRecent){
+        /* 최근 셀: 빨강~주황 톤 */
+        r = 239; g = Math.round(68 + (146 - 68) * (1 - intensity)); b = 68;
+      } else {
+        /* 일반 셀: 파랑 톤 (옅은 → 진한) */
+        r = Math.round(147 + (37 - 147) * intensity);
+        g = Math.round(197 + (99 - 197) * intensity);
+        b = Math.round(253 + (235 - 253) * intensity);
+      }
+      const alpha = 0.3 + intensity * 0.6;
+      
+      _ptCanvasCtx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+      _ptCanvasCtx.fillRect(x, y, cellW, cellH);
+      
+      /* 테두리 (옅게) */
+      _ptCanvasCtx.strokeStyle = `rgba(${r},${g},${b},${Math.min(1, alpha + 0.2)})`;
+      _ptCanvasCtx.lineWidth = 0.5;
+      _ptCanvasCtx.strokeRect(x, y, cellW, cellH);
+    });
+    
+    /* 가장 최근 점은 발광 효과 */
     const last = _ptDataPoints[_ptDataPoints.length - 1];
-    if(last && (Date.now() - last.time) < 500){
+    if(last && (Date.now() - last.time) < 300){
       const x = ((last.midi - midiMin) / (midiMax - midiMin)) * W;
       const y = ((dbMax - last.dB) / (dbMax - dbMin)) * (H - 16) + 4;
+      
+      /* 외곽 빛 (radial gradient 효과) */
+      const grad = _ptCanvasCtx.createRadialGradient(x, y, 0, x, y, 12);
+      grad.addColorStop(0, 'rgba(220,38,38,0.9)');
+      grad.addColorStop(0.5, 'rgba(220,38,38,0.4)');
+      grad.addColorStop(1, 'rgba(220,38,38,0)');
+      _ptCanvasCtx.fillStyle = grad;
+      _ptCanvasCtx.beginPath();
+      _ptCanvasCtx.arc(x, y, 12, 0, Math.PI * 2);
+      _ptCanvasCtx.fill();
+      
+      /* 중앙 점 */
       _ptCanvasCtx.fillStyle = '#dc2626';
       _ptCanvasCtx.beginPath();
-      _ptCanvasCtx.arc(x, y, 5, 0, Math.PI * 2);
+      _ptCanvasCtx.arc(x, y, 4, 0, Math.PI * 2);
       _ptCanvasCtx.fill();
-      _ptCanvasCtx.strokeStyle = '#fff';
-      _ptCanvasCtx.lineWidth = 2;
-      _ptCanvasCtx.stroke();
     }
   }
 }
@@ -10644,6 +10750,7 @@ function _freqToNote(freq){
   
   const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const noteName = noteNames[midi % 12];
+  /* SPN 국제 표준: Middle C = C4, A4 = 440Hz */
   const octave = Math.floor(midi / 12) - 1;
   
   /* 한국어 음정 */
