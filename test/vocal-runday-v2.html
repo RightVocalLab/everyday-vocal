@@ -860,14 +860,29 @@ input,select,button,textarea{font-family:inherit;}
         <span>측정 시작</span>
       </button>
       
-      <div class="v2-pt-info" style="margin-top:14px">
-        💡 <strong>팁</strong><br>
-        • 천천히 낮은 음에서 높은 음까지 발성해보세요<br>
-        • 각 음을 2-3초씩 유지하면 정확도가 올라갑니다<br>
-        • 그래프 위에 표시된 영역은 성종별 표준 음역입니다<br>
-        • 측정값은 참고용이며 의료 진단 대체용이 아닙니다
+      <!-- 측정 거리 안내 (가장 중요) -->
+      <div style="margin-top:14px;padding:12px 14px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;font-size:12px;line-height:1.6;color:#1e3a8a">
+        📏 <strong>측정 거리 안내</strong><br>
+        스마트폰 마이크와 입 사이 거리를<br>
+        <strong style="color:#1d4ed8;font-size:13px">약 20~30cm (손바닥 한 뼘)</strong>로 유지하세요.<br>
+        <span style="font-size:11px;color:#64748b">※ 의학용 PVR 검사 표준은 30cm입니다.<br>너무 가까우면 음량이 과대 측정되고, 너무 멀면 잡음이 섞입니다.</span>
       </div>
       
+      <div class="v2-pt-info" style="margin-top:10px">
+        💡 <strong>측정 팁</strong><br>
+        • 천천히 낮은 음에서 높은 음까지 발성해보세요<br>
+        • 각 음을 2-3초씩 유지하면 정확도가 올라갑니다<br>
+        • "아~" 또는 "이~" 같은 모음으로 발성하세요<br>
+        • 그래프 위에 표시된 영역은 성종별 표준 음역입니다
+      </div>
+      
+      <!-- 면책 안내 (강화) -->
+      <div style="margin-top:10px;padding:12px 14px;background:#fef3c7;border:1.5px solid #fcd34d;border-radius:10px;font-size:11.5px;line-height:1.65;color:#78350f">
+        ⚠️ <strong>참고용 안내</strong><br>
+        본 테스트는 <strong>이비인후과의 정밀 음성검사를 대체하지 않습니다.</strong><br>
+        스마트폰 마이크 특성, 주변 환경, 자세에 따라 측정값이 달라질 수 있으며, 실제 의료 검진과는 차이가 있습니다.<br>
+        <span style="font-size:10.5px;color:#92400e">• 매우 낮은 음(100Hz 이하 / G2 이하)은 폰 마이크 특성상 정확도가 떨어질 수 있습니다.<br>• 음성 관련 의학적 진단이나 치료가 필요한 경우 반드시 전문의와 상담하세요.<br>• 측정값은 본인의 발성 변화 추적용 참고 자료로만 활용하세요.</span>
+      </div>
 
     </div>
 
@@ -928,6 +943,12 @@ input,select,button,textarea{font-family:inherit;}
           <span>초기화</span>
         </button>
       </div>
+      
+      <!-- 측정 중 안내 (거리 유지 + 참고용) -->
+      <div style="margin-top:14px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:10.5px;line-height:1.6;color:#6b7280">
+        📏 마이크와 입 거리는 <strong style="color:#1d4ed8">20~30cm</strong>로 일정하게 유지하세요.<br>
+        ⚠️ 본 측정은 <strong>참고용</strong>이며, 이비인후과 정밀검사를 대체하지 않습니다.
+      </div>
     </div>
   </div></div>
 </div>
@@ -951,8 +972,9 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     
     <div style="font-size:10px;color:var(--mu);text-align:center;margin-top:12px;line-height:1.6">
-      *성별에 따라 분석 기준이 다르게 적용됩니다.<br>
-      어떤 분류에도 강제되지 않으며 결과는 참고용입니다.
+      *성별에 따라 표준 음역 기준이 다르게 표시됩니다.<br>
+      어떤 분류에도 강제되지 않으며 <strong>결과는 참고용</strong>입니다.<br>
+      정확한 음성 진단은 이비인후과 검진이 필요합니다.
     </div>
   </div>
 </div>
@@ -10587,8 +10609,8 @@ function _ptCanvasDraw(){
   _ptCanvasCtx.fillStyle = '#fff';
   _ptCanvasCtx.fillRect(0, 0, W, totalH);
   
-  /* 음역 범위: MIDI 36(C2) ~ 84(C6), 4옥타브 */
-  const midiMin = 36, midiMax = 84;
+  /* 음역 범위: MIDI 33(A1) ~ 84(C6), 약 4.25옥타브 (베이스 영역 포함) */
+  const midiMin = 33, midiMax = 84;
   /* dB SPL 범위: 40 ~ 110 */
   const dbMin = 40, dbMax = 110;
   
@@ -10637,6 +10659,7 @@ function _ptCanvasDraw(){
       {name:'테너',   low:48, high:72, color:'#06b6d4'},    /* C3 ~ C5 */
     ],
     female: [
+      {name:'콘트랄토',     low:48, high:72, color:'#7c3aed'},  /* C3 ~ C5 (여성 최저음역) */
       {name:'알토',         low:53, high:77, color:'#a855f7'},  /* F3 ~ F5 */
       {name:'메조소프라노', low:57, high:81, color:'#ec4899'},  /* A3 ~ A5 */
       {name:'소프라노',     low:60, high:84, color:'#f43f5e'},  /* C4 ~ C6 */
@@ -10869,30 +10892,67 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
       whiteCount++;
     }
   }
-  /* 마지막 흰건반의 끝까지 포함되므로 흰건반 총 개수 */
+  /* 흰건반 너비 */
   const whiteW = W / whiteCount;
   /* 검은건반 너비 (흰건반의 약 60%) */
   const blackW = whiteW * 0.6;
+  /* 검은건반 높이 (흰건반의 62%) */
+  const blackH = pianoH * 0.62;
   
-  /* 흰건반 위치 (왼쪽 끝 x좌표) - midi → x */
+  /* 흰건반 위치 (왼쪽 끝 x좌표) */
   function whiteKeyLeft(m){
     return whiteKeyIndex[m] * whiteW;
   }
-  /* 검은건반 위치 (왼쪽 끝 x좌표) - 검은건반은 인접 흰건반 사이 중간 */
+  /* 검은건반 위치 (왼쪽 끝 x좌표) - 인접 흰건반 사이 중간 */
   function blackKeyLeft(m){
-    /* 검은건반 m 바로 앞의 흰건반 (m-1) 의 오른쪽 끝 - blackW/2 */
     let prevWhite = m - 1;
     while(blackKeySet.has(prevWhite % 12) && prevWhite >= midiMin) prevWhite--;
-    if(prevWhite < midiMin) return 0;
+    if(prevWhite < midiMin) return whiteKeyLeft(m+1) - blackW / 2;
     const prevWhiteRight = whiteKeyLeft(prevWhite) + whiteW;
     return prevWhiteRight - blackW / 2;
+  }
+  
+  /* 흰건반 모양 path 만들기 (위쪽은 인접 검은건반을 피해 좁아짐, 아래쪽은 전체 너비)
+     반환: ctx에 적용 가능한 path. 호출 후 ctx.fill() 또는 stroke()  */
+  function _whiteKeyPath(m){
+    const left = whiteKeyLeft(m);
+    const right = left + whiteW;
+    const top = pianoY;
+    const bottom = pianoY + pianoH;
+    const cutY = pianoY + blackH; /* 검은건반 끝 y */
+    
+    /* 왼쪽 검은건반이 있는지 (m-1이 검은건반) */
+    const hasLeftBlack = (m - 1 >= midiMin) && blackKeySet.has((m - 1 + 12) % 12);
+    /* 오른쪽 검은건반이 있는지 (m+1이 검은건반) */
+    const hasRightBlack = (m + 1 <= midiMax) && blackKeySet.has((m + 1) % 12);
+    
+    /* 왼쪽 검은건반의 오른쪽 끝 (= 흰건반 위쪽의 왼쪽 경계) */
+    const leftCut = hasLeftBlack ? (blackKeyLeft(m - 1) + blackW) : left;
+    /* 오른쪽 검은건반의 왼쪽 끝 (= 흰건반 위쪽의 오른쪽 경계) */
+    const rightCut = hasRightBlack ? blackKeyLeft(m + 1) : right;
+    
+    /* path: 왼쪽 위 → 시계방향 */
+    ctx.beginPath();
+    ctx.moveTo(leftCut, top);     /* 왼쪽 위 (검은건반 옆) */
+    ctx.lineTo(rightCut, top);    /* 오른쪽 위 */
+    ctx.lineTo(rightCut, cutY);   /* 검은건반 끝 높이까지 내려감 */
+    if(hasRightBlack){
+      ctx.lineTo(right, cutY);    /* 검은건반 아래로 펼쳐짐 (오른쪽) */
+    }
+    ctx.lineTo(right, bottom);    /* 오른쪽 아래 */
+    ctx.lineTo(left, bottom);     /* 왼쪽 아래 */
+    if(hasLeftBlack){
+      ctx.lineTo(left, cutY);     /* 검은건반 아래로 펼쳐짐 (왼쪽) */
+    }
+    ctx.lineTo(leftCut, cutY);    /* 검은건반 끝 높이까지 올라옴 */
+    ctx.closePath();
   }
   
   /* 1. 흰건반 그리기 (배경) */
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, pianoY, W, pianoH);
   
-  /* 흰건반 구분선 */
+  /* 흰건반 구분선 (인접 흰건반 사이 세로선) */
   ctx.strokeStyle = '#9ca3af';
   ctx.lineWidth = 0.5;
   for(let m = midiMin; m <= midiMax; m++){
@@ -10912,29 +10972,33 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
   ctx.lineWidth = 1;
   ctx.strokeRect(0.5, pianoY + 0.5, W - 1, pianoH - 1);
   
-  /* 2. 검은건반 그리기 (흰건반 위에 덮어씀) */
+  /* 2. 검은건반 그리기 */
   ctx.fillStyle = '#1f2937';
   for(let m = midiMin; m <= midiMax; m++){
     if(blackKeySet.has(m % 12)){
       const x = blackKeyLeft(m);
-      const blackH = pianoH * 0.62;
       ctx.fillRect(x, pianoY, blackW, blackH);
     }
   }
   
-  /* 3. C 건반 라벨 (옥타브 표시) - 피아노 아래에 표시 */
+  /* 3. C 건반 라벨 (옥타브 표시) + A1 라벨 */
   ctx.fillStyle = '#4b5563';
   ctx.font = 'bold 10px sans-serif';
   ctx.textAlign = 'center';
-  for(let m = midiMin; m <= midiMax; m += 12){
+  for(let m = midiMin; m <= midiMax; m++){
     if(m % 12 === 0){ /* C 건반 */
       const x = whiteKeyLeft(m) + whiteW / 2;
       const oct = Math.floor(m / 12) - 1; /* SPN: C4 = middle C */
       ctx.fillText('C' + oct, x, pianoY + pianoH + labelH - 2);
     }
   }
+  /* A1 라벨 (시작점이 A1인 경우) */
+  if(midiMin <= 33 && 33 <= midiMax){
+    const x = whiteKeyLeft(33) + whiteW / 2;
+    ctx.fillText('A1', x, pianoY + pianoH + labelH - 2);
+  }
   
-  /* 4. 현재 발성 음정 위치 표시 (정확한 건반 너비/위치) */
+  /* 4. 현재 발성 음정 위치 표시 - 흰건반은 흰건반 모양으로, 검은건반은 검은건반 모양으로 */
   const last = _ptDataPoints[_ptDataPoints.length - 1];
   if(last && (Date.now() - last.time) < 500){
     const midiRound = Math.round(last.midi);
@@ -10942,20 +11006,19 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
       const isBlack = blackKeySet.has(midiRound % 12);
       
       ctx.fillStyle = 'rgba(220, 38, 38, 0.65)';
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 1.2;
+      
       if(isBlack){
+        /* 검은건반: 직사각형 그대로 */
         const x = blackKeyLeft(midiRound);
-        const blackH = pianoH * 0.62;
         ctx.fillRect(x, pianoY, blackW, blackH);
-        /* 빨간색 위에 외곽선으로 강조 */
-        ctx.strokeStyle = '#dc2626';
-        ctx.lineWidth = 1.2;
         ctx.strokeRect(x + 0.5, pianoY + 0.5, blackW - 1, blackH - 1);
       } else {
-        const x = whiteKeyLeft(midiRound);
-        ctx.fillRect(x, pianoY, whiteW, pianoH);
-        ctx.strokeStyle = '#dc2626';
-        ctx.lineWidth = 1.2;
-        ctx.strokeRect(x + 0.5, pianoY + 0.5, whiteW - 1, pianoH - 1);
+        /* 흰건반: 흰건반 실제 모양(위는 좁고 아래는 넓음)으로 */
+        _whiteKeyPath(midiRound);
+        ctx.fill();
+        ctx.stroke();
       }
     }
   }
