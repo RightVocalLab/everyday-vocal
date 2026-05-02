@@ -6959,7 +6959,9 @@ function _renderHwStatusWithData(fbData,histData){
     if(fbData&&fbData[sKey]) done=fbData[sKey];
     else{try{done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateKey)||'[]');}catch(e){}}
     const total=(s.homework||[]).filter(h=>h.active!==false).length;
-    const cnt=done.length;const pct=total>0?Math.round(cnt/total*100):0;
+    /* done 배열에서 현재 active 범위 내(0 ~ total-1)인 것만 카운트 (숙제 개수가 줄어든 경우 대비) */
+    const validDone = Array.isArray(done) ? done.filter(idx => typeof idx === 'number' && idx >= 0 && idx < total) : [];
+    const cnt=validDone.length;const pct=total>0?Math.min(100, Math.round(cnt/total*100)):0;
     const hist=histData[sKey]||null;let startStr='',endStr='',durStr='';
     if(hist&&hist.startedAt){const dt=new Date(hist.startedAt);startStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
     if(hist&&hist.updatedAt){const dt=new Date(hist.updatedAt);endStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
@@ -7000,20 +7002,22 @@ function _renderCalWithHistoryData(studentName, student, monthHistory){
     const rec=monthHistory[dateKey];
     const done=rec?rec.done:0;
     const tot=rec?rec.total:total;
-    const pct=tot>0?done/tot:0;
+    /* done이 tot보다 클 수 있는 과거 데이터 호환 (active 숙제 줄어든 경우) */
+    const safeDone=Math.min(done, tot);
+    const pct=tot>0?safeDone/tot:0;
     const isToday=new Date().getDate()===d&&new Date().getMonth()===_hwCalMonth&&new Date().getFullYear()===_hwCalYear;
     const cell=document.createElement('div');
     const bg=pct>=1?'#16a34a':pct>0?'rgba(249,115,22,'+(0.3+pct*0.7)+')':'transparent';
     const fg=pct>=1?'#fff':pct>0?'#fff':isToday?'var(--or)':'var(--tx)';
-    cell.style.cssText='text-align:center;border-radius:6px;padding:4px 2px;font-size:10px;font-weight:'+(isToday?'800':'600')+';background:'+bg+';color:'+fg+';cursor:'+(done>0?'pointer':'default')+';border:'+(isToday?'1.5px solid var(--or)':'1px solid transparent');
+    cell.style.cssText='text-align:center;border-radius:6px;padding:4px 2px;font-size:10px;font-weight:'+(isToday?'800':'600')+';background:'+bg+';color:'+fg+';cursor:'+(safeDone>0?'pointer':'default')+';border:'+(isToday?'1.5px solid var(--or)':'1px solid transparent');
     cell.textContent=d;
-    if(done>0){
+    if(safeDone>0){
       (function(dk,dn,dt){cell.onclick=function(){
         const det=document.getElementById('hw-cal-detail');
         if(!det)return;
         det.style.display='';
-        det.innerHTML='<b>'+dk+'</b><br>완료: '+dn+'/'+dt+'개 ('+Math.round(dn/dt*100)+'%)';
-      };})(dateKey,done,tot);
+        det.innerHTML='<b>'+dk+'</b><br>완료: '+dn+'/'+dt+'개 ('+Math.min(100,Math.round(dn/dt*100))+'%)';
+      };})(dateKey,safeDone,tot);
     }
     grid.appendChild(cell);
   }
@@ -8775,6 +8779,17 @@ let STUDENTS_DB = [
         "name": "오픈허밍(흉성)"
       },
       {
+        "exId": "오픈허밍(두성)",
+        "exName": "오픈허밍(두성)",
+        "displayLabel": "오픈허밍(두성)",
+        "scaleId": "5H-B",
+        "repeat": 1,
+        "comment": "붙은채로 못올라가니까 가성으로 올라가되 뒤에위에 계속 호흡이\n음정에 맞게 속도가빨라져서 올라가줘야되! 그리고 그 느껴지는 위치까지\n눈안에 손가락 해서 소리를 데리고 가야 되! 내려올때 풀지말고 호흡 꺼뜨리지 말고!\n뒤로위로 올라간다는 생각으로 내려오기!\n",
+        "active": true,
+        "num": 7,
+        "name": "오픈허밍(두성)"
+      },
+      {
         "exId": "후 내려오기(5도 하향)",
         "exName": "후 내려오기(5도 하향)",
         "displayLabel": "후 내려오기(5도 하향)",
@@ -8782,8 +8797,19 @@ let STUDENTS_DB = [
         "repeat": 1,
         "comment": "호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!",
         "active": true,
-        "num": 7,
+        "num": 8,
         "name": "후 내려오기(5도 하향)"
+      },
+      {
+        "exId": "백프레셔 x10",
+        "exName": "백프레셔 x10",
+        "displayLabel": "백프레셔 x10",
+        "scaleId": "6H-B",
+        "repeat": 1,
+        "comment": "백프레셔 한음정 내서 버티기! 처음에는 입술힘이 없는게 당연! 할수록 좋아짐!\nZ처럼 소리를 가슴으로 가두려고 할 것! 익숙해지면 가슴위치에서 성대가 얇게 붙는다고 생각하고 버틸 것!",
+        "active": true,
+        "num": 9,
+        "name": "백프레셔 x10"
       }
     ]
   },
@@ -9963,13 +9989,16 @@ rndrHw();
 function _updateHwProgress(){
 const done=_getHwDone();
 const total=(hwList||[]).length;
-const pct=total>0?Math.round(done.length/total*100):0;
+/* done 배열에서 현재 hwList 범위 내인 것만 카운트 (숙제 개수 줄어든 경우 대비) */
+const validDone = Array.isArray(done) ? done.filter(idx => typeof idx === 'number' && idx >= 0 && idx < total) : [];
+const validCount = validDone.length;
+const pct=total>0?Math.min(100, Math.round(validCount/total*100)):0;
 const bar=document.getElementById('hw-progress-bar');
 const txt=document.getElementById('hw-progress-text');
 if(bar) bar.style.width=pct+'%';
-if(txt) txt.textContent=done.length+' / '+total;
+if(txt) txt.textContent=validCount+' / '+total;
 const resetBtn=document.getElementById('hw-reset-btn');
-if(total>0 && done.length>=total){
+if(total>0 && validCount>=total){
   if(txt){ txt.textContent='🎉 전체 완료!'; }
   /* 전체 완료 시 초기화 버튼 활성화 + 다시하기 모드 */
   if(resetBtn){
@@ -10305,8 +10334,11 @@ function _fbRecordDailyCount(studentName, doneCount){
   const _totalSec=window._hwStartTime?Math.round((Date.now()-window._hwStartTime)/1000):0;
   _fbDb.ref(path).transaction(function(cur){
     if(!cur) cur={};
-    cur.done=doneCount;cur.total=totalCount;
-    cur.pct=totalCount>0?Math.round(doneCount/totalCount*100):0;
+    /* done이 total보다 클 수 없도록 보정 (숙제 개수가 줄어들었을 때 대비) */
+    const safeDone = (totalCount > 0) ? Math.min(doneCount, totalCount) : doneCount;
+    cur.done=safeDone;cur.total=totalCount;
+    /* pct도 100% 초과 못하게 (안전망) */
+    cur.pct=totalCount>0?Math.min(100, Math.round(safeDone/totalCount*100)):0;
     cur.updatedAt=new Date().toISOString();cur.totalSec=_totalSec;
     return cur;
   }).then(function(){
