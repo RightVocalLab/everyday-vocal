@@ -345,6 +345,23 @@ input,select,button,textarea{font-family:inherit;}
       </div>
       <div class="v2-card-arrow" style="position:static;color:#2563eb">›</div>
     </div>
+    
+    <!-- 발전 자랑 게시판 카드 (커뮤니티) -->
+    <div class="v2-card" id="menu-community" onclick="openCommunity()" style="margin-top:10px;flex-direction:row;align-items:center;min-height:auto;padding:14px 18px;background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:1.5px solid #e9d5ff">
+      <div class="v2-card-illust" style="width:48px;height:48px;margin-bottom:0;margin-right:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:12px">
+        <svg viewBox="0 0 64 64" fill="none" width="36" height="36">
+          <!-- 차트 비교 아이콘 -->
+          <path d="M10 50 L18 38 L26 44 L34 30 L42 36 L54 18" stroke="#a855f7" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="54" cy="18" r="4" fill="#a855f7"/>
+          <text x="48" y="58" font-size="14" font-weight="900" fill="#a855f7">↑</text>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="v2-card-title" style="margin-bottom:2px;color:#7c2d92">🌟 발전 자랑 게시판</div>
+        <div class="v2-card-desc" style="font-size:11px;color:#a855f7">비포&애프터 측정 결과를 공유하세요</div>
+      </div>
+      <div class="v2-card-arrow" style="position:static;color:#a855f7">›</div>
+    </div>
 
     <!-- ═══════════════════════════════════════ -->
     <!-- 섹션 3: 발성 이론 (누구나 - 가로 스크롤) -->
@@ -642,6 +659,12 @@ input,select,button,textarea{font-family:inherit;}
       <span class="v2-hw-theory-link-text">음역대 측정 이력</span>
       <span class="v2-hw-theory-link-arrow">›</span>
     </button>
+    
+    <!-- 이전 측정 이력 가져오기 버튼 (비로그인 시 측정한 이력을 학생 계정으로) -->
+    <button onclick="_importLocalPtHistory()" style="width:100%;margin-top:8px;background:#fff;color:#0d9488;border:1.5px solid #5eead4;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <span>📥</span>
+      <span>이전 측정 이력 가져오기</span>
+    </button>
 
     <!-- 숙제 리스트 -->
     <div class="v2-section-header">
@@ -867,6 +890,18 @@ input,select,button,textarea{font-family:inherit;}
         <span>측정 시작</span>
       </button>
       
+      <!-- 내 측정 이력 보기 버튼 -->
+      <button onclick="_showLocalPtHistory()" style="width:100%;margin-top:8px;background:#fff;color:#1d4ed8;border:1.5px solid #93c5fd;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>📊</span>
+        <span>내 측정 이력 보기 (이 기기)</span>
+      </button>
+      
+      <!-- 발전 자랑 게시판 진입 버튼 -->
+      <button onclick="openCommunity()" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#fdf4ff,#fae8ff);color:#7c2d92;border:1.5px solid #d8b4fe;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span>🌟</span>
+        <span>발전 자랑 게시판 가기</span>
+      </button>
+      
       <!-- 측정 거리 안내 (가장 중요) -->
       <div style="margin-top:14px;padding:12px 14px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;font-size:12px;line-height:1.6;color:#1e3a8a">
         📏 <strong>측정 거리 안내</strong><br>
@@ -992,13 +1027,173 @@ input,select,button,textarea{font-family:inherit;}
   </div></div>
 </div>
 
+<!-- ============ 발전 자랑 게시판 화면 ============ -->
+<div id="scr-community" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="pop()">←</button>
+    <div class="tb">🌟 발전 자랑 게시판</div>
+    <button class="ico" onclick="goHome()" title="홈">🏠</button>
+  </div>
+  <div class="body"><div class="inner" style="padding-bottom:80px">
+    
+    <!-- 안내 카드 -->
+    <div style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:1.5px solid #e9d5ff;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:#7c2d92;margin-bottom:6px">🌟 비포&애프터 발전 자랑</div>
+      <div style="font-size:11.5px;color:#6b21a8;line-height:1.6">
+        2번 이상 측정하면 발전 과정을 게시할 수 있어요!<br>
+        다른 사람의 발전 사례를 보며 동기부여 받아보세요 💪
+      </div>
+    </div>
+    
+    <!-- 새 글 작성 버튼 -->
+    <button onclick="_openCommunityWrite()" style="width:100%;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;box-shadow:0 2px 10px rgba(168,85,247,0.3)">
+      <span style="font-size:18px">✍️</span>
+      <span>발전 자랑 글쓰기</span>
+    </button>
+    
+    <!-- 게시글 리스트 -->
+    <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">📋 최근 게시글</div>
+    <div id="community-posts" style="display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">불러오는 중...</div>
+    </div>
+    
+    <!-- 더 보기 버튼 -->
+    <button id="community-more-btn" onclick="_loadMoreCommunityPosts()" style="display:none;width:100%;margin-top:12px;background:#fff;color:#7c3aed;border:1.5px solid #d8b4fe;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">
+      더 보기
+    </button>
+    
+  </div></div>
+</div>
+
+<!-- 게시글 작성 모달 -->
+<div class="v2-pt-modal-bg" id="community-write-modal" onclick="if(event.target===this)_closeCommunityWrite()">
+  <div class="v2-pt-modal-card" style="max-width:420px;max-height:95vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeCommunityWrite()" aria-label="닫기">✕</button>
+    <div style="text-align:center;font-size:17px;font-weight:900;color:#7c2d92;margin-bottom:14px">✍️ 발전 자랑 글쓰기</div>
+    
+    <!-- 닉네임 -->
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">닉네임 <span style="color:#dc2626">*</span></label>
+      <input id="comm-nickname" type="text" placeholder="공개될 닉네임" maxlength="15"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:13px;box-sizing:border-box">
+    </div>
+    
+    <!-- Before 선택 -->
+    <div style="margin-bottom:10px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">Before (이전 측정) <span style="color:#dc2626">*</span></label>
+      <select id="comm-before" style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;background:#fff">
+        <option value="">측정 이력에서 선택...</option>
+      </select>
+    </div>
+    
+    <!-- After 선택 -->
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">After (최근 측정) <span style="color:#dc2626">*</span></label>
+      <select id="comm-after" style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;background:#fff">
+        <option value="">측정 이력에서 선택...</option>
+      </select>
+    </div>
+    
+    <!-- 제목 -->
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">제목 <span style="color:#dc2626">*</span></label>
+      <input id="comm-title" type="text" placeholder="예: 3개월 만에 1옥타브 확장!" maxlength="50"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:13px;box-sizing:border-box">
+    </div>
+    
+    <!-- 한 줄 소감 -->
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">한 줄 소감 (선택)</label>
+      <textarea id="comm-content" placeholder="훈련 방법, 변화 비결 등을 공유해주세요" maxlength="200" rows="3"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
+    </div>
+    
+    <!-- 에러 메시지 -->
+    <div id="comm-write-err" style="font-size:11px;color:#dc2626;margin-bottom:10px;min-height:14px"></div>
+    
+    <!-- 버튼 -->
+    <div style="display:flex;gap:8px;justify-content:space-between">
+      <button onclick="_closeCommunityWrite()" style="flex:1;background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="_submitCommunityPost()" id="comm-submit-btn" style="flex:1.5;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer">게시하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 게시글 상세 보기 모달 -->
+<div class="v2-pt-modal-bg" id="community-view-modal" onclick="if(event.target===this)_closeCommunityView()">
+  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeCommunityView()" aria-label="닫기">✕</button>
+    
+    <!-- 게시글 헤더 -->
+    <div id="comm-view-header" style="margin-bottom:14px">
+      <div style="font-size:18px;font-weight:900;color:#1e3a8a;margin-bottom:6px" id="comm-view-title">—</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--mu)">
+        <span id="comm-view-author">—</span>
+        <span id="comm-view-time">—</span>
+      </div>
+    </div>
+    
+    <!-- 비교 그래프 -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:12px">
+      <canvas id="comm-view-canvas" width="600" height="700" style="width:100%;height:auto;display:block"></canvas>
+    </div>
+    
+    <!-- 변화 요약 -->
+    <div id="comm-view-summary" style="margin-bottom:12px"></div>
+    
+    <!-- 본인 글 -->
+    <div id="comm-view-content" style="background:#f9fafb;border-left:3px solid #a855f7;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#475569;line-height:1.65;white-space:pre-wrap;display:none"></div>
+    
+    <!-- 좋아요 + 신고 + 삭제 -->
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;margin-bottom:14px">
+      <button onclick="_toggleCommunityLike()" id="comm-like-btn" style="background:#fff;color:#dc2626;border:1.5px solid #fca5a5;border-radius:99px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <span id="comm-like-icon">🤍</span>
+        <span id="comm-like-count">0</span>
+      </button>
+      <div style="display:flex;gap:6px">
+        <button onclick="_reportCommunity()" style="background:#fff;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer">🚨 신고</button>
+        <button id="comm-delete-btn" onclick="_deleteCommunityPost()" style="display:none;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer;font-weight:700">🗑 삭제</button>
+      </div>
+    </div>
+    
+    <!-- 댓글 영역 -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px">💬 댓글 <span id="comm-cmt-count">0</span></div>
+      <div id="comm-cmt-list" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
+      
+      <!-- 댓글 작성 -->
+      <div style="display:flex;gap:6px">
+        <input id="comm-cmt-nickname" type="text" placeholder="닉네임" maxlength="15" style="width:80px;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
+        <input id="comm-cmt-input" type="text" placeholder="댓글 입력..." maxlength="100" style="flex:1;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
+        <button onclick="_submitComment()" style="background:#a855f7;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:11.5px;font-weight:700;cursor:pointer">등록</button>
+      </div>
+    </div>
+    
+    <!-- 닫기 -->
+    <div style="display:flex;justify-content:center;margin-top:12px">
+      <button onclick="_closeCommunityView()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:9px 28px;font-size:12.5px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 성별 선택 모달 -->
 <div class="v2-pt-modal-bg" id="pt-gender-modal" onclick="if(event.target===this)_closePtGenderModal()">
   <div class="v2-pt-modal-card">
     <button class="v2-ios-modal-close" onclick="_closePtGenderModal()" aria-label="닫기">✕</button>
     <div class="v2-pt-modal-title">측정 시작 전 안내</div>
-    <div class="v2-pt-modal-body">측정 결과를 분석하기 위해<br>본인의 성별을 선택해주세요.</div>
+    <div class="v2-pt-modal-body">측정 결과를 저장하기 위해<br>이름과 성별을 입력해주세요.</div>
     
+    <!-- 이름 입력 -->
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">이름 <span style="color:#dc2626">*</span></label>
+      <input id="pt-name-input" type="text" placeholder="이름을 입력하세요" maxlength="20"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')document.getElementById('pt-name-input').blur()">
+      <div id="pt-name-err" style="font-size:10.5px;color:#dc2626;margin-top:4px;min-height:14px"></div>
+    </div>
+    
+    <!-- 성별 선택 -->
+    <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">성별 <span style="color:#dc2626">*</span></label>
     <div class="v2-pt-gender-row">
       <button class="v2-pt-gender-btn v2-pt-gender-male" onclick="_selectGender('male')">
         <div class="v2-pt-gender-icon">👨</div>
@@ -1011,9 +1206,9 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     
     <div style="font-size:10px;color:var(--mu);text-align:center;margin-top:12px;line-height:1.6">
+      *입력하신 정보는 이 기기에만 저장됩니다.<br>
       *성별에 따라 표준 음역 기준이 다르게 표시됩니다.<br>
-      어떤 분류에도 강제되지 않으며 <strong>결과는 참고용</strong>입니다.<br>
-      정확한 음성 진단은 이비인후과 검진이 필요합니다.
+      <strong>결과는 참고용</strong>이며, 정확한 음성 진단은 이비인후과 검진이 필요합니다.
     </div>
   </div>
 </div>
@@ -1080,6 +1275,82 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     <div style="display:flex;justify-content:center;margin-top:14px">
       <button onclick="_closePtHistory()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자용: 학생별 측정 이력 모달 (체크박스 + 비교) -->
+<div class="v2-pt-modal-bg" id="admin-pt-history-modal" onclick="if(event.target===this)_closeAdminPtHistory()">
+  <div class="v2-pt-modal-card" style="max-width:420px;max-height:90vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeAdminPtHistory()" aria-label="닫기">✕</button>
+    <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px" id="admin-pt-title">📊 학생 음역대 이력</div>
+    <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:12px">최대 3개까지 선택해서 비교할 수 있습니다</div>
+    <div id="admin-pt-list">
+      <div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
+      <button onclick="_closeAdminPtHistory()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+      <button id="admin-pt-compare-btn" onclick="_compareSelectedPt()" disabled style="flex:1;background:#9ca3af;color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:700;cursor:not-allowed">비교하기 (0개 선택)</button>
+    </div>
+  </div>
+</div>
+
+<!-- 측정 결과 비교 모달 (그래프 겹침) -->
+<div class="v2-pt-modal-bg" id="pt-compare-modal" onclick="if(event.target===this)_closePtCompare()">
+  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closePtCompare()" aria-label="닫기">✕</button>
+    <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">📈 측정 결과 비교</div>
+    <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:12px" id="pt-compare-info">—</div>
+    
+    <!-- 색상 범례 -->
+    <div id="pt-compare-legend" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:8px 10px;background:#f9fafb;border-radius:8px">
+      <!-- 동적 생성 -->
+    </div>
+    
+    <!-- 비교 그래프 캔버스 -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px">
+      <canvas id="pt-compare-canvas" width="600" height="700" style="width:100%;height:auto;display:block"></canvas>
+    </div>
+    
+    <!-- 요약 정보 -->
+    <div id="pt-compare-summary" style="margin-top:12px"></div>
+    
+    <div style="display:flex;justify-content:center;margin-top:14px">
+      <button onclick="_closePtCompare()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로컬 이력: 이름 그룹 모달 (이 기기에 저장된 사용자 목록) -->
+<div class="v2-pt-modal-bg" id="local-pt-group-modal" onclick="if(event.target===this)_closeLocalPtGroup()">
+  <div class="v2-pt-modal-card" style="max-width:400px;max-height:90vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeLocalPtGroup()" aria-label="닫기">✕</button>
+    <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:6px">📊 측정 이력 (이 기기)</div>
+    <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:14px">이름을 누르면 해당 사용자의 측정 이력을 볼 수 있습니다</div>
+    <div id="local-pt-group-list">
+      <div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.</div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:14px">
+      <button onclick="_closeLocalPtGroup()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로컬 이력: 특정 사용자 이력 모달 (체크박스 + 비교) -->
+<div class="v2-pt-modal-bg" id="local-pt-user-modal" onclick="if(event.target===this)_closeLocalPtUser()">
+  <div class="v2-pt-modal-card" style="max-width:420px;max-height:90vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeLocalPtUser()" aria-label="닫기">✕</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <button onclick="_backToLocalPtGroup()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer">‹ 뒤로</button>
+      <div style="flex:1;text-align:center;font-size:16px;font-weight:900;color:#1d4ed8" id="local-pt-user-title">측정 이력</div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:12px">최대 3개까지 선택해서 비교할 수 있습니다</div>
+    <div id="local-pt-user-list">
+      <div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
+      <button onclick="_closeLocalPtUser()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+      <button id="local-pt-compare-btn" onclick="_compareLocalSelectedPt()" disabled style="flex:1;background:#9ca3af;color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:700;cursor:not-allowed">비교하기 (0개 선택)</button>
     </div>
   </div>
 </div>
@@ -6543,13 +6814,26 @@ function _debugFirebase(){
 function renderAdminResetBtns(){
 const c=document.getElementById('admin-reset-btns');if(!c)return;c.innerHTML='';
 (STUDENTS_DB||[]).forEach(function(s){
-  const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0';
-  const nameEl=document.createElement('span');nameEl.style.cssText='font-size:12px;font-weight:700';nameEl.textContent=s.name;
+  const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0;gap:6px';
+  const nameEl=document.createElement('span');nameEl.style.cssText='font-size:12px;font-weight:700;flex:1';nameEl.textContent=s.name;
+  
+  const btnGroup=document.createElement('div');btnGroup.style.cssText='display:flex;gap:5px';
+  
+  /* 음역대 보기 버튼 */
+  const ptBtn=document.createElement('button');
+  ptBtn.style.cssText='background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer';
+  ptBtn.textContent='📊 음역대';
+  (function(nm){ptBtn.onclick=function(){_showAdminPtHistory(nm);};})(s.name);
+  
+  /* 초기화 버튼 */
   const btn=document.createElement('button');
   btn.style.cssText='background:#dc2626;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:800;cursor:pointer';
   btn.textContent='초기화';
   (function(nm){btn.onclick=function(){resetStudentHw(nm);};})(s.name);
-  row.appendChild(nameEl);row.appendChild(btn);c.appendChild(row);
+  
+  btnGroup.appendChild(ptBtn);
+  btnGroup.appendChild(btn);
+  row.appendChild(nameEl);row.appendChild(btnGroup);c.appendChild(row);
 });
 }
 function showHwToday(){
@@ -6960,13 +7244,26 @@ function renderAdminResetBtns(){
     nameEl.className = 'v2-reset-name';
     nameEl.textContent = s.name;
     
+    const btnGroup = document.createElement('div');
+    btnGroup.style.cssText = 'display:flex;gap:5px;align-items:center';
+    
+    /* 음역대 보기 버튼 */
+    const ptBtn = document.createElement('button');
+    ptBtn.style.cssText = 'background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer';
+    ptBtn.textContent = '📊 음역대';
+    (function(nm){ ptBtn.onclick = function(){ _showAdminPtHistory(nm); }; })(s.name);
+    
+    /* 초기화 버튼 */
     const btn = document.createElement('button');
     btn.className = 'v2-reset-btn';
     btn.textContent = '초기화';
     (function(nm){ btn.onclick = function(){ resetStudentHw(nm); }; })(s.name);
     
+    btnGroup.appendChild(ptBtn);
+    btnGroup.appendChild(btn);
+    
     row.appendChild(nameEl);
-    row.appendChild(btn);
+    row.appendChild(btnGroup);
     c.appendChild(row);
   });
 }
@@ -9963,6 +10260,7 @@ const _FB_CONFIG = {
 let _fbApp = null;
 let _fbDb = null;
 let _fbReady = false;
+let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
 
 /* Firebase 초기화 */
 (function _initFirebase(){
@@ -9972,28 +10270,47 @@ let _fbReady = false;
     const script2 = document.createElement('script');
     script2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
     script2.onload = function(){
-      try{
-        if(!firebase.apps.length){
-          _fbApp = firebase.initializeApp(_FB_CONFIG);
-        } else {
-          _fbApp = firebase.apps[0];
-        }
-        _fbDb = firebase.database();
-        _fbReady = true;
-        console.log('✅ Firebase 연결 완료');
-        /* 연결 후 관리자 현황 리프레시 */
-        if(typeof refreshHwStatus === 'function') setTimeout(refreshHwStatus, 500);
-        /* 관리자 메뉴 설정 동기화 */
-        setTimeout(_getMenuVisFromFirebase, 800);
-        /* 실시간 메뉴 변경 감지 — 관리자가 저장하면 모든 기기 즉시 반영 */
-        _fbDb.ref('adminSettings/menuVis').on('value', function(snap){
-          const fbVis = snap.val();
-          if(fbVis){
-            try{ localStorage.setItem('ev_menu_vis', JSON.stringify(fbVis)); }catch(e){}
-            buildHome(); buildTheoryList(); _applyMenuVis();
+      /* Auth SDK 추가 로드 (게시판용 익명 로그인) */
+      const scriptAuth = document.createElement('script');
+      scriptAuth.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+      scriptAuth.onload = function(){
+        try{
+          if(!firebase.apps.length){
+            _fbApp = firebase.initializeApp(_FB_CONFIG);
+          } else {
+            _fbApp = firebase.apps[0];
           }
-        });
-      }catch(e){ console.warn('Firebase 초기화 실패:', e); }
+          _fbDb = firebase.database();
+          _fbReady = true;
+          console.log('✅ Firebase 연결 완료');
+          
+          /* Anonymous Auth: 익명 사용자 자동 로그인 (게시판 권한용) */
+          firebase.auth().onAuthStateChanged(function(user){
+            if(user){
+              _fbAuthUid = user.uid;
+              console.log('✅ 익명 사용자 ID:', user.uid.substring(0, 8) + '...');
+            }
+          });
+          /* 자동 익명 로그인 시도 */
+          firebase.auth().signInAnonymously().catch(function(e){
+            console.warn('익명 로그인 실패:', e.message);
+          });
+          
+          /* 연결 후 관리자 현황 리프레시 */
+          if(typeof refreshHwStatus === 'function') setTimeout(refreshHwStatus, 500);
+          /* 관리자 메뉴 설정 동기화 */
+          setTimeout(_getMenuVisFromFirebase, 800);
+          /* 실시간 메뉴 변경 감지 — 관리자가 저장하면 모든 기기 즉시 반영 */
+          _fbDb.ref('adminSettings/menuVis').on('value', function(snap){
+            const fbVis = snap.val();
+            if(fbVis){
+              try{ localStorage.setItem('ev_menu_vis', JSON.stringify(fbVis)); }catch(e){}
+              buildHome(); buildTheoryList(); _applyMenuVis();
+            }
+          });
+        }catch(e){ console.warn('Firebase 초기화 실패:', e); }
+      };
+      document.head.appendChild(scriptAuth);
     };
     document.head.appendChild(script2);
   };
@@ -10454,17 +10771,45 @@ function openPitchTest(){
   _ptResetData();
 }
 
-/* 성별 모달 열기/닫기 */
+/* 성별 모달 열기/닫기 - 이름 입력칸도 자동 채우기 (마지막 사용 이름 기억) */
 function _openPtGenderModal(){
   const _gm1 = document.getElementById('pt-gender-modal'); if(_gm1) _gm1.classList.add('active');
+  /* 마지막 사용 이름 자동 입력 */
+  const nameInput = document.getElementById('pt-name-input');
+  const nameErr = document.getElementById('pt-name-err');
+  if(nameInput){
+    const lastName = localStorage.getItem('pt_last_name') || '';
+    nameInput.value = lastName;
+    if(nameErr) nameErr.textContent = '';
+  }
 }
 function _closePtGenderModal(){
   const _gm2 = document.getElementById('pt-gender-modal'); if(_gm2) _gm2.classList.remove('active');
 }
 
-/* 성별 선택 → 측정 시작 */
+/* 성별 선택 → 측정 시작 (이름 검증 포함) */
 let _ptGender = null;
+let _ptUserName = null;  /* 측정자 이름 (필수) */
 function _selectGender(g){
+  /* 이름 검증 */
+  const nameInput = document.getElementById('pt-name-input');
+  const nameErr = document.getElementById('pt-name-err');
+  const name = nameInput ? nameInput.value.trim() : '';
+  
+  if(!name){
+    if(nameErr) nameErr.textContent = '⚠️ 이름을 입력해주세요.';
+    if(nameInput) nameInput.focus();
+    return;
+  }
+  if(name.length > 20){
+    if(nameErr) nameErr.textContent = '⚠️ 이름은 20자 이내로 입력해주세요.';
+    return;
+  }
+  
+  /* 이름 저장 (다음 측정에 자동 입력용) */
+  _ptUserName = name;
+  try { localStorage.setItem('pt_last_name', name); } catch(e){}
+  
   _ptGender = g;
   _closePtGenderModal();
   /* 측정 화면으로 전환 - null 안전 */
@@ -11556,6 +11901,7 @@ function _ptAnalyzeResult(){
   
   return {
     timestamp: Date.now(),
+    userName: _ptUserName || '익명',  /* 측정자 이름 */
     gender: _ptGender,
     lowMidi, highMidi, rangeOctaves,
     realLow, realHigh,
@@ -11566,7 +11912,13 @@ function _ptAnalyzeResult(){
     chestRatio, mixRatio, falsettoRatio,
     primary: matches[0],
     others: matches.slice(1),
-    dataCount: total
+    dataCount: total,
+    /* 비교 그래프를 위한 raw 데이터 (간소화) */
+    dataPoints: _ptDataPoints.map(p => ({
+      midi: Math.round(p.midi * 10) / 10,
+      dB: Math.round(p.dB),
+      register: p.register
+    }))
   };
 }
 
@@ -11776,6 +12128,1364 @@ function _showPtHistoryDetail(result){
 function _closePtHistory(){
   const modal = document.getElementById('pt-history-modal');
   if(modal) modal.classList.remove('active');
+}
+
+/* ========== 관리자용: 학생별 측정 이력 + 비교 ========== */
+
+let _adminPtSelected = [];  /* 비교용 선택된 결과들 */
+let _adminPtCurrentList = [];  /* 현재 표시된 학생 이력 전체 */
+
+/* 관리자가 학생 음역대 이력 보기 (학생 이름 입력) */
+async function _showAdminPtHistory(studentName){
+  const modal = document.getElementById('admin-pt-history-modal');
+  const titleEl = document.getElementById('admin-pt-title');
+  const listEl = document.getElementById('admin-pt-list');
+  if(!modal || !listEl) return;
+  
+  if(titleEl) titleEl.textContent = `📊 ${studentName} 학생 음역대 이력`;
+  
+  /* 선택 초기화 */
+  _adminPtSelected = [];
+  _adminPtCurrentList = [];
+  _updateCompareBtn();
+  
+  /* 로딩 */
+  listEl.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">불러오는 중...</div>';
+  modal.classList.add('active');
+  
+  /* Firebase에서 학생 이력 가져오기 */
+  let list = [];
+  try {
+    if(typeof firebase !== 'undefined'){
+      const snap = await firebase.database().ref(`pt_history/${studentName}`).once('value');
+      const fbData = snap.val();
+      if(fbData){
+        list = Object.values(fbData);
+      }
+    }
+  } catch(e){
+    console.warn('Firebase 이력 로드 실패:', e);
+  }
+  
+  /* 최신순 정렬 */
+  list.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  _adminPtCurrentList = list;
+  
+  if(list.length === 0){
+    listEl.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">' + studentName + ' 학생의 측정 이력이 없습니다.</div>';
+    return;
+  }
+  
+  /* 이력 목록 렌더 (체크박스 포함) */
+  const html = list.map((r, idx) => {
+    const d = new Date(r.timestamp);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const primary = r.primary || {name:'-', match:0};
+    return `
+      <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="admin-pt-cb-${idx}" onchange="_toggleAdminPtSelect(${idx})" style="width:18px;height:18px;cursor:pointer;accent-color:#3b82f6">
+        <div style="flex:1;cursor:pointer" onclick="_showAdminPtDetail(${idx})">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <span style="font-weight:700;font-size:13px;color:#1e3a8a">${dateStr}</span>
+            <span style="font-size:10px;color:var(--mu)">${timeStr}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280">
+            <span><strong style="color:#1d4ed8">${primary.name}</strong> · ${r.lowNote}~${r.highNote}</span>
+            <span>매칭 ${primary.match}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  listEl.innerHTML = html;
+}
+
+/* 체크박스 토글 - 비교용 선택 */
+function _toggleAdminPtSelect(idx){
+  const cb = document.getElementById(`admin-pt-cb-${idx}`);
+  if(!cb) return;
+  
+  if(cb.checked){
+    /* 최대 3개까지만 */
+    if(_adminPtSelected.length >= 3){
+      cb.checked = false;
+      alert('최대 3개까지만 선택할 수 있습니다.');
+      return;
+    }
+    _adminPtSelected.push(idx);
+  } else {
+    _adminPtSelected = _adminPtSelected.filter(i => i !== idx);
+  }
+  _updateCompareBtn();
+}
+
+/* 비교 버튼 상태 갱신 */
+function _updateCompareBtn(){
+  const btn = document.getElementById('admin-pt-compare-btn');
+  if(!btn) return;
+  const n = _adminPtSelected.length;
+  btn.textContent = `비교하기 (${n}개 선택)`;
+  if(n >= 2){
+    btn.disabled = false;
+    btn.style.background = '#3b82f6';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '#9ca3af';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+/* 관리자 - 단일 이력 상세보기 (기존 결과 모달 재활용) */
+function _showAdminPtDetail(idx){
+  const r = _adminPtCurrentList[idx];
+  if(!r) return;
+  /* 결과 모달용 캐시에 저장하고 표시 */
+  _ptLastResult = r;
+  _showPtResult();
+}
+
+/* 관리자 이력 모달 닫기 */
+function _closeAdminPtHistory(){
+  const modal = document.getElementById('admin-pt-history-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+/* 선택된 결과들 비교 */
+function _compareSelectedPt(){
+  if(_adminPtSelected.length < 2) return;
+  const selectedResults = _adminPtSelected.map(i => _adminPtCurrentList[i]);
+  /* 시간순 정렬 (오래된 것 먼저) */
+  selectedResults.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+  
+  _closeAdminPtHistory();
+  _showPtCompare(selectedResults);
+}
+
+/* 비교 모달 표시 */
+function _showPtCompare(results){
+  const modal = document.getElementById('pt-compare-modal');
+  if(!modal) return;
+  
+  /* 색상 (3개 비교용) - 시간순으로 빨강(가장 옛날), 파랑(중간), 초록(최신) */
+  const colors = [
+    {fill:'rgba(239,68,68,0.20)',  stroke:'rgba(220,38,38,0.85)',  name:'빨강'},
+    {fill:'rgba(59,130,246,0.20)', stroke:'rgba(29,78,216,0.85)',  name:'파랑'},
+    {fill:'rgba(34,197,94,0.20)',  stroke:'rgba(22,163,74,0.85)',  name:'초록'},
+  ];
+  
+  /* 정보 텍스트 */
+  const infoEl = document.getElementById('pt-compare-info');
+  if(infoEl) infoEl.textContent = `${results.length}개 측정 결과 비교 (시간순)`;
+  
+  /* 범례 */
+  const legendEl = document.getElementById('pt-compare-legend');
+  if(legendEl){
+    legendEl.innerHTML = results.map((r, i) => {
+      const c = colors[i];
+      const d = new Date(r.timestamp);
+      const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const primary = r.primary || {name:'-', match:0};
+      return `
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px">
+          <span style="display:inline-block;width:18px;height:12px;background:${c.fill};border:2px solid ${c.stroke};border-radius:3px"></span>
+          <strong style="color:${c.stroke}">${dateStr}</strong>
+          <span style="color:#6b7280">· ${primary.name} · ${r.lowNote}~${r.highNote}</span>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  modal.classList.add('active');
+  
+  /* 다음 프레임에 캔버스 그리기 (모달 표시 후 크기 잡힘) */
+  setTimeout(() => _drawPtCompare(results, colors), 100);
+  
+  /* 요약 정보 */
+  const summary = document.getElementById('pt-compare-summary');
+  if(summary){
+    let summaryHtml = '<div style="background:#f9fafb;border-radius:10px;padding:10px 12px;font-size:11px"><div style="font-weight:800;margin-bottom:6px;color:#374151">📈 변화 요약</div>';
+    if(results.length >= 2){
+      const first = results[0];
+      const last = results[results.length-1];
+      const lowDiff = last.lowMidi - first.lowMidi;
+      const highDiff = last.highMidi - first.highMidi;
+      const rangeDiff = last.rangeOctaves - first.rangeOctaves;
+      const arrow = (n) => n > 0 ? '<span style="color:#16a34a">↑</span>' : (n < 0 ? '<span style="color:#dc2626">↓</span>' : '<span style="color:#9ca3af">→</span>');
+      summaryHtml += `
+        <div style="line-height:1.85;color:#475569">
+          • 최저음 변화: ${first.lowNote} → ${last.lowNote} ${arrow(-lowDiff)}<br>
+          • 최고음 변화: ${first.highNote} → ${last.highNote} ${arrow(highDiff)}<br>
+          • 음역 폭 변화: ${first.rangeOctaves.toFixed(1)} → ${last.rangeOctaves.toFixed(1)} 옥타브 ${arrow(rangeDiff)}
+        </div>
+      `;
+    }
+    summaryHtml += '</div>';
+    summary.innerHTML = summaryHtml;
+  }
+}
+
+/* 비교 모달 닫기 */
+function _closePtCompare(){
+  const modal = document.getElementById('pt-compare-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+/* 비교 그래프 그리기 - 여러 측정의 등고선을 한 캔버스에 겹침 */
+function _drawPtCompare(results, colors){
+  const canvas = document.getElementById('pt-compare-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  /* DPR 적용 */
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width > 0 ? rect.width : 320;
+  const h = w * 700 / 600;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr, dpr);
+  canvas.style.height = h + 'px';
+  
+  const W = w, H = h;
+  
+  /* 모든 결과의 음역에서 최저/최고 추출해서 그래프 범위 결정 */
+  const isFemale = results[0]?.gender === 'female';
+  let midiMin, midiMax;
+  if(isFemale){
+    midiMin = 43; midiMax = 96;
+  } else {
+    midiMin = 36; midiMax = 84;
+  }
+  const dbMin = 50, dbMax = 90;
+  
+  const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
+  const y2px = (db) => ((dbMax - db) / (dbMax - dbMin)) * H;
+  
+  /* 배경 격자 */
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, W, H);
+  
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  /* dB 라벨 */
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'left';
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    const txt = db + 'dB';
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+    ctx.lineWidth = 3;
+    ctx.strokeText(txt, 4, y - 3);
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(txt, 4, y - 3);
+  }
+  
+  /* 옥타브 세로선 */
+  ctx.strokeStyle = '#f3f4f6';
+  const allOctaves = [
+    {midi:36, label:'C2'},{midi:48, label:'C3'},{midi:60, label:'C4'},
+    {midi:72, label:'C5'},{midi:84, label:'C6'},{midi:96, label:'C7'},
+  ];
+  const octs = allOctaves.filter(o => o.midi >= midiMin && o.midi <= midiMax);
+  octs.forEach(o => {
+    const x = x2px(o.midi);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H - 30);
+    ctx.stroke();
+    /* 옥타브 라벨 */
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(o.label, x, H - 5);
+  });
+  
+  /* Convex Hull + 부드러운 곡선 헬퍼 (재사용) */
+  function _hull(arr){
+    if(arr.length < 3) return arr.slice();
+    const sorted = arr.slice().sort((a,b) => a.x === b.x ? a.y - b.y : a.x - b.x);
+    const cross = (O, A, B) => (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+    const lower = [];
+    for(const p of sorted){
+      while(lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+      lower.push(p);
+    }
+    const upper = [];
+    for(let i = sorted.length - 1; i >= 0; i--){
+      const p = sorted[i];
+      while(upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    lower.pop(); upper.pop();
+    return lower.concat(upper);
+  }
+  function _expandHull(hullPts, padding){
+    if(hullPts.length < 3) return hullPts;
+    let cx = 0, cy = 0;
+    hullPts.forEach(p => { cx += p.x; cy += p.y; });
+    cx /= hullPts.length; cy /= hullPts.length;
+    return hullPts.map(p => {
+      const dx = p.x - cx, dy = p.y - cy;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      if(len < 0.01) return {x: p.x, y: p.y};
+      return {x: p.x + (dx / len) * padding, y: p.y + (dy / len) * padding};
+    });
+  }
+  function _drawSmoothPath(pts, fillStyle, strokeStyle, lineWidth){
+    if(pts.length < 3) return;
+    ctx.beginPath();
+    const n = pts.length;
+    ctx.moveTo((pts[n-1].x + pts[0].x)/2, (pts[n-1].y + pts[0].y)/2);
+    for(let i = 0; i < n; i++){
+      const curr = pts[i];
+      const next = pts[(i+1) % n];
+      const midX = (curr.x + next.x) / 2;
+      const midY = (curr.y + next.y) / 2;
+      ctx.quadraticCurveTo(curr.x, curr.y, midX, midY);
+    }
+    ctx.closePath();
+    if(fillStyle){ ctx.fillStyle = fillStyle; ctx.fill(); }
+    if(strokeStyle){
+      ctx.strokeStyle = strokeStyle;
+      ctx.lineWidth = lineWidth;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+  }
+  
+  /* 각 결과의 데이터 포인트로 등고선 그리기 (색상별로) */
+  results.forEach((r, idx) => {
+    const c = colors[idx];
+    
+    /* dataPoints가 있으면 실제 데이터로 등고선 그리기 (가성 제외 - 실용 음역만) */
+    if(r.dataPoints && r.dataPoints.length >= 3){
+      const realPts = r.dataPoints.filter(p => p.register !== 'falsetto');
+      const ptsToUse = realPts.length >= 3 ? realPts : r.dataPoints;
+      const points = ptsToUse.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const hull = _expandHull(_hull(points), 6);
+      _drawSmoothPath(hull, c.fill, c.stroke, 2);
+    } else {
+      /* fallback: 통계 정보로 가상 타원 (구버전 데이터 호환) */
+      const lowMidi = r.realLow || r.lowMidi;
+      const highMidi = r.realHigh || r.highMidi;
+      const cx = (lowMidi + highMidi) / 2;
+      const semitoneRange = (highMidi - lowMidi) / 2;
+      const fakePts = [];
+      const dbCenter = 75, dbRange = 10;
+      for(let i = 0; i < 16; i++){
+        const angle = (i / 16) * Math.PI * 2;
+        const midi = cx + Math.cos(angle) * semitoneRange;
+        const db = dbCenter + Math.sin(angle) * dbRange;
+        fakePts.push({x: x2px(midi), y: y2px(db)});
+      }
+      const hull = _expandHull(_hull(fakePts), 4);
+      _drawSmoothPath(hull, c.fill, c.stroke, 2);
+    }
+  });
+}
+
+/* ========== 로컬 이력 (localStorage) - 이름 그룹 보기 ========== */
+
+let _localPtSelected = [];  /* 로컬 비교용 선택 */
+let _localPtCurrentList = [];  /* 현재 표시된 사용자 이력 */
+let _localPtCurrentName = '';  /* 현재 보고 있는 사용자 이름 */
+
+/* localStorage에서 모든 이력 로드 (이름별 그룹) */
+function _loadAllLocalPtHistory(){
+  try {
+    const list = JSON.parse(localStorage.getItem('pt_history_local') || '[]');
+    return list;
+  } catch(e){
+    return [];
+  }
+}
+
+/* 이름별 그룹화 */
+function _groupLocalPtByName(list){
+  const groups = {};
+  list.forEach(r => {
+    const name = r.userName || '익명';
+    if(!groups[name]) groups[name] = [];
+    groups[name].push(r);
+  });
+  /* 각 그룹 내 최신순 정렬 */
+  Object.keys(groups).forEach(name => {
+    groups[name].sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  });
+  return groups;
+}
+
+/* 이름 그룹 모달 표시 */
+function _showLocalPtHistory(){
+  const modal = document.getElementById('local-pt-group-modal');
+  const listEl = document.getElementById('local-pt-group-list');
+  if(!modal || !listEl) return;
+  
+  const allList = _loadAllLocalPtHistory();
+  
+  if(allList.length === 0){
+    listEl.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.<br><span style="font-size:10px">측정을 시작해보세요!</span></div>';
+    modal.classList.add('active');
+    return;
+  }
+  
+  const groups = _groupLocalPtByName(allList);
+  const names = Object.keys(groups);
+  /* 최신 측정 순으로 정렬 (각 그룹의 최신 측정 시각 기준) */
+  names.sort((a,b) => (groups[b][0].timestamp||0) - (groups[a][0].timestamp||0));
+  
+  const html = names.map(name => {
+    const items = groups[name];
+    const latest = items[0];
+    const d = new Date(latest.timestamp);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const escapedName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+      <div onclick="_showLocalPtUser('${escapedName}')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='#e5e7eb'">
+        <div style="flex:1">
+          <div style="font-weight:800;font-size:14px;color:#1e3a8a;margin-bottom:3px">${name}</div>
+          <div style="font-size:10.5px;color:var(--mu)">최근 측정: ${dateStr} · 총 ${items.length}회</div>
+        </div>
+        <div style="background:#dbeafe;color:#1d4ed8;border-radius:99px;padding:3px 11px;font-size:12px;font-weight:700">${items.length}회</div>
+        <div style="color:#9ca3af;margin-left:6px;font-size:18px">›</div>
+      </div>
+    `;
+  }).join('');
+  
+  listEl.innerHTML = html;
+  modal.classList.add('active');
+}
+
+function _closeLocalPtGroup(){
+  const modal = document.getElementById('local-pt-group-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+/* 특정 사용자 이력 모달 표시 */
+function _showLocalPtUser(name){
+  _closeLocalPtGroup();
+  
+  const modal = document.getElementById('local-pt-user-modal');
+  const titleEl = document.getElementById('local-pt-user-title');
+  const listEl = document.getElementById('local-pt-user-list');
+  if(!modal || !listEl) return;
+  
+  _localPtCurrentName = name;
+  _localPtSelected = [];
+  _updateLocalCompareBtn();
+  
+  if(titleEl) titleEl.textContent = `${name} 측정 이력`;
+  
+  const allList = _loadAllLocalPtHistory();
+  const userList = allList.filter(r => (r.userName || '익명') === name);
+  userList.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  _localPtCurrentList = userList;
+  
+  if(userList.length === 0){
+    listEl.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.</div>';
+    modal.classList.add('active');
+    return;
+  }
+  
+  const html = userList.map((r, idx) => {
+    const d = new Date(r.timestamp);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const primary = r.primary || {name:'-', match:0};
+    return `
+      <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="local-pt-cb-${idx}" onchange="_toggleLocalPtSelect(${idx})" style="width:18px;height:18px;cursor:pointer;accent-color:#3b82f6">
+        <div style="flex:1;cursor:pointer" onclick="_showLocalPtDetail(${idx})">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <span style="font-weight:700;font-size:13px;color:#1e3a8a">${dateStr}</span>
+            <span style="font-size:10px;color:var(--mu)">${timeStr}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280">
+            <span><strong style="color:#1d4ed8">${primary.name}</strong> · ${r.lowNote}~${r.highNote}</span>
+            <span>매칭 ${primary.match}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  listEl.innerHTML = html;
+  modal.classList.add('active');
+}
+
+function _closeLocalPtUser(){
+  const modal = document.getElementById('local-pt-user-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+/* 뒤로가기 - 그룹 목록으로 */
+function _backToLocalPtGroup(){
+  _closeLocalPtUser();
+  _showLocalPtHistory();
+}
+
+/* 체크박스 토글 */
+function _toggleLocalPtSelect(idx){
+  const cb = document.getElementById(`local-pt-cb-${idx}`);
+  if(!cb) return;
+  if(cb.checked){
+    if(_localPtSelected.length >= 3){
+      cb.checked = false;
+      alert('최대 3개까지만 선택할 수 있습니다.');
+      return;
+    }
+    _localPtSelected.push(idx);
+  } else {
+    _localPtSelected = _localPtSelected.filter(i => i !== idx);
+  }
+  _updateLocalCompareBtn();
+}
+
+function _updateLocalCompareBtn(){
+  const btn = document.getElementById('local-pt-compare-btn');
+  if(!btn) return;
+  const n = _localPtSelected.length;
+  btn.textContent = `비교하기 (${n}개 선택)`;
+  if(n >= 2){
+    btn.disabled = false;
+    btn.style.background = '#3b82f6';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '#9ca3af';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+/* 단일 이력 상세보기 */
+function _showLocalPtDetail(idx){
+  const r = _localPtCurrentList[idx];
+  if(!r) return;
+  _ptLastResult = r;
+  _showPtResult();
+}
+
+/* 선택된 이력 비교 */
+function _compareLocalSelectedPt(){
+  if(_localPtSelected.length < 2) return;
+  const selectedResults = _localPtSelected.map(i => _localPtCurrentList[i]);
+  selectedResults.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+  
+  _closeLocalPtUser();
+  _showPtCompare(selectedResults);
+}
+
+/* ========== 학생 로그인 후: 이전 측정 이력 받아오기 ========== */
+
+/* 학생 이름과 일치하는 localStorage 이력을 Firebase로 이전 */
+async function _importLocalPtHistory(){
+  if(typeof curStudent === 'undefined' || !curStudent){
+    alert('학생 로그인이 필요합니다.');
+    return;
+  }
+  if(typeof firebase === 'undefined'){
+    alert('Firebase 연결이 필요합니다.');
+    return;
+  }
+  
+  const studentName = curStudent.name || curStudent;
+  const allList = _loadAllLocalPtHistory();
+  
+  /* 학생 이름과 정확히 일치하는 측정 이력 찾기 */
+  const matched = allList.filter(r => (r.userName || '') === studentName);
+  
+  if(matched.length === 0){
+    alert(`'${studentName}' 이름으로 측정한 이력이 이 기기에 없습니다.\n\n비로그인 상태에서 측정 시 학생 이름과 동일하게 입력하셨는지 확인해주세요.`);
+    return;
+  }
+  
+  /* 이미 Firebase에 있는 timestamp 확인 (중복 방지) */
+  const existingTimestamps = new Set();
+  try {
+    const snap = await firebase.database().ref(`pt_history/${studentName}`).once('value');
+    const fbData = snap.val();
+    if(fbData){
+      Object.values(fbData).forEach(r => {
+        if(r.timestamp) existingTimestamps.add(r.timestamp);
+      });
+    }
+  } catch(e){
+    console.warn('Firebase 조회 실패:', e);
+  }
+  
+  /* 중복 제외 */
+  const newOnes = matched.filter(r => !existingTimestamps.has(r.timestamp));
+  
+  if(newOnes.length === 0){
+    alert(`'${studentName}'의 측정 이력 ${matched.length}개가 이미 모두 학생 계정에 저장되어 있습니다.`);
+    return;
+  }
+  
+  /* 확인 */
+  if(!confirm(`'${studentName}'의 측정 이력 ${newOnes.length}개를 학생 계정으로 가져오시겠습니까?\n\n(이미 저장된 ${matched.length - newOnes.length}개는 제외됩니다)`)){
+    return;
+  }
+  
+  /* Firebase에 업로드 */
+  const db = firebase.database();
+  let uploaded = 0, failed = 0;
+  for(const r of newOnes){
+    try {
+      const ref = db.ref(`pt_history/${studentName}`).push();
+      await ref.set(r);
+      uploaded++;
+    } catch(e){
+      console.warn('업로드 실패:', e);
+      failed++;
+    }
+  }
+  
+  if(failed > 0){
+    alert(`${uploaded}개 이력을 가져왔습니다. (${failed}개 실패)`);
+  } else {
+    alert(`✅ ${uploaded}개 이력을 학생 계정으로 가져왔습니다!\n\n'음역대 측정 이력' 메뉴에서 확인하실 수 있습니다.`);
+  }
+}
+
+/* ========== 발전 자랑 게시판 (Community) ========== */
+
+let _communityPosts = [];        /* 현재 표시된 게시글 목록 */
+let _communityLastKey = null;    /* 페이징용 마지막 키 */
+let _communityPostsPerPage = 20;
+let _currentViewingPost = null;  /* 현재 보고 있는 게시글 */
+
+/* 게시판 화면 열기 */
+function openCommunity(){
+  push('scr-community');
+  _loadCommunityPosts(true);
+}
+
+/* 게시글 로드 (페이징) */
+async function _loadCommunityPosts(reset){
+  const container = document.getElementById('community-posts');
+  const moreBtn = document.getElementById('community-more-btn');
+  if(!container) return;
+  
+  if(!_fbReady || typeof firebase === 'undefined'){
+    container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">Firebase 연결 대기 중...<br><span style="font-size:10px">잠시 후 다시 시도해주세요.</span></div>';
+    return;
+  }
+  
+  if(reset){
+    _communityPosts = [];
+    _communityLastKey = null;
+    container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">불러오는 중...</div>';
+  }
+  
+  try {
+    /* 최신순으로 N개 페이징 (timestamp 기준 내림차순) */
+    let query = firebase.database().ref('community/posts').orderByChild('timestamp');
+    if(_communityLastKey){
+      query = query.endBefore(_communityLastKey);
+    }
+    query = query.limitToLast(_communityPostsPerPage);
+    
+    const snap = await query.once('value');
+    const data = snap.val();
+    
+    if(!data && _communityPosts.length === 0){
+      container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">아직 게시글이 없습니다.<br><span style="font-size:10px">첫 발전 자랑을 올려보세요!</span></div>';
+      if(moreBtn) moreBtn.style.display = 'none';
+      return;
+    }
+    
+    if(!data){
+      if(moreBtn) moreBtn.style.display = 'none';
+      return;
+    }
+    
+    /* 객체 → 배열 + 최신순 정렬 */
+    const newPosts = Object.entries(data).map(([id, post]) => ({...post, _id: id}));
+    newPosts.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+    
+    /* 다음 페이지를 위한 마지막 키 */
+    if(newPosts.length > 0){
+      _communityLastKey = newPosts[newPosts.length-1].timestamp;
+    }
+    
+    _communityPosts = _communityPosts.concat(newPosts);
+    
+    /* 더 보기 버튼 표시 여부 */
+    if(moreBtn){
+      moreBtn.style.display = newPosts.length >= _communityPostsPerPage ? 'block' : 'none';
+    }
+    
+    _renderCommunityPosts();
+  } catch(e){
+    console.warn('게시글 로드 실패:', e);
+    container.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:12px;padding:20px">게시글 로드 실패<br><span style="font-size:10px;color:var(--mu)">' + e.message + '</span></div>';
+  }
+}
+
+/* 더 보기 클릭 */
+function _loadMoreCommunityPosts(){
+  _loadCommunityPosts(false);
+}
+
+/* 게시글 리스트 렌더 */
+function _renderCommunityPosts(){
+  const container = document.getElementById('community-posts');
+  if(!container) return;
+  
+  const html = _communityPosts.map(p => {
+    const d = new Date(p.timestamp);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const before = p.before || {};
+    const after = p.after || {};
+    const lowChange = (after.lowMidi || 0) - (before.lowMidi || 0);
+    const highChange = (after.highMidi || 0) - (before.highMidi || 0);
+    const arrow = (n) => n > 0 ? '<span style="color:#16a34a">↓</span>' : (n < 0 ? '<span style="color:#dc2626">↑</span>' : '<span style="color:#9ca3af">→</span>');
+    /* 음역 폭 변화 */
+    const beforeRange = ((before.highMidi || 0) - (before.lowMidi || 0)) / 12;
+    const afterRange = ((after.highMidi || 0) - (after.lowMidi || 0)) / 12;
+    const rangeDiff = (afterRange - beforeRange).toFixed(1);
+    const rangeArrow = parseFloat(rangeDiff) > 0 ? '<span style="color:#16a34a">↑</span>' : '';
+    
+    const likes = p.likes || 0;
+    const comments = p.commentCount || 0;
+    
+    return `
+      <div onclick="_openCommunityView('${p._id}')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='#d8b4fe'" onmouseout="this.style.borderColor='#e5e7eb'">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+          <div style="font-weight:800;font-size:14px;color:#1e3a8a;flex:1;line-height:1.3">${_escapeHtml(p.title || '제목 없음')}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--mu);margin-bottom:10px">
+          <span>👤 ${_escapeHtml(p.nickname || '익명')}</span>
+          <span>${dateStr}</span>
+        </div>
+        <!-- 변화 요약 -->
+        <div style="background:#fafafa;border-radius:8px;padding:8px 11px;font-size:11px;color:#475569;display:flex;justify-content:space-around;text-align:center">
+          <div>
+            <div style="font-size:9.5px;color:var(--mu)">최저음</div>
+            <div style="font-weight:700">${before.lowNote || '-'} → ${after.lowNote || '-'} ${arrow(lowChange)}</div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;color:var(--mu)">최고음</div>
+            <div style="font-weight:700">${before.highNote || '-'} → ${after.highNote || '-'} ${arrow(-highChange)}</div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;color:var(--mu)">음역 폭</div>
+            <div style="font-weight:700">+${rangeDiff} 옥타브 ${rangeArrow}</div>
+          </div>
+        </div>
+        <!-- 좋아요/댓글 -->
+        <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:#6b7280">
+          <span>❤️ ${likes}</span>
+          <span>💬 ${comments}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = html;
+}
+
+/* HTML escape */
+function _escapeHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* === 글 작성 모달 === */
+function _openCommunityWrite(){
+  const modal = document.getElementById('community-write-modal');
+  if(!modal) return;
+  
+  /* localStorage 측정 이력 + Firebase 학생 이력 모두 */
+  const allList = _loadAllLocalPtHistory();
+  
+  if(allList.length < 2){
+    alert('비포&애프터를 게시하려면 최소 2개의 측정 이력이 필요합니다.\n\n측정을 더 진행해주세요!');
+    return;
+  }
+  
+  /* 닉네임 자동 채우기 (마지막 사용 닉네임) */
+  const lastNick = localStorage.getItem('comm_nickname') || localStorage.getItem('pt_last_name') || '';
+  const nickInput = document.getElementById('comm-nickname');
+  if(nickInput) nickInput.value = lastNick;
+  
+  /* before/after 옵션 채우기 */
+  const beforeSel = document.getElementById('comm-before');
+  const afterSel = document.getElementById('comm-after');
+  if(beforeSel && afterSel){
+    /* 시간순 (옛날 → 최신) */
+    const sorted = [...allList].sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+    const optionsHtml = '<option value="">측정 이력에서 선택...</option>' + sorted.map((r, idx) => {
+      const d = new Date(r.timestamp);
+      const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      return `<option value="${idx}">${dateStr} · ${r.userName || '익명'} · ${r.lowNote}~${r.highNote}</option>`;
+    }).join('');
+    beforeSel.innerHTML = optionsHtml;
+    afterSel.innerHTML = optionsHtml;
+    /* 자동 선택: 첫 번째(가장 옛날) Before, 마지막(최신) After */
+    beforeSel.value = '0';
+    afterSel.value = String(sorted.length - 1);
+  }
+  
+  /* 에러 초기화 */
+  const errEl = document.getElementById('comm-write-err');
+  if(errEl) errEl.textContent = '';
+  
+  modal.classList.add('active');
+}
+
+function _closeCommunityWrite(){
+  const modal = document.getElementById('community-write-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+/* 게시글 등록 */
+async function _submitCommunityPost(){
+  const errEl = document.getElementById('comm-write-err');
+  const setErr = (msg) => { if(errEl) errEl.textContent = msg; };
+  
+  const nickname = document.getElementById('comm-nickname').value.trim();
+  const beforeIdx = document.getElementById('comm-before').value;
+  const afterIdx = document.getElementById('comm-after').value;
+  const title = document.getElementById('comm-title').value.trim();
+  const content = document.getElementById('comm-content').value.trim();
+  
+  if(!nickname){ setErr('⚠️ 닉네임을 입력해주세요.'); return; }
+  if(!beforeIdx || !afterIdx){ setErr('⚠️ Before와 After 측정 이력을 선택해주세요.'); return; }
+  if(beforeIdx === afterIdx){ setErr('⚠️ Before와 After는 서로 다른 측정이어야 합니다.'); return; }
+  if(!title){ setErr('⚠️ 제목을 입력해주세요.'); return; }
+  if(!_fbReady || typeof firebase === 'undefined'){ setErr('⚠️ Firebase 연결을 확인해주세요.'); return; }
+  if(!_fbAuthUid){ setErr('⚠️ 인증 대기 중... 잠시 후 다시 시도해주세요.'); return; }
+  
+  /* 측정 이력에서 데이터 가져오기 (시간순 정렬된 인덱스) */
+  const allList = _loadAllLocalPtHistory();
+  const sorted = [...allList].sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+  const before = sorted[parseInt(beforeIdx)];
+  const after = sorted[parseInt(afterIdx)];
+  
+  if(!before || !after){ setErr('⚠️ 선택한 측정 이력을 찾을 수 없습니다.'); return; }
+  
+  /* before가 최신이면 swap (시간순으로 자동 정렬) */
+  let actualBefore = before, actualAfter = after;
+  if(before.timestamp > after.timestamp){
+    actualBefore = after;
+    actualAfter = before;
+  }
+  
+  /* 게시글 데이터 (간소화 - 비용 절감) */
+  const post = {
+    timestamp: Date.now(),
+    nickname: nickname.substring(0, 15),
+    title: title.substring(0, 50),
+    content: content.substring(0, 200),
+    authorUid: _fbAuthUid,
+    likes: 0,
+    commentCount: 0,
+    /* before/after 핵심 데이터만 저장 */
+    before: {
+      timestamp: actualBefore.timestamp,
+      lowMidi: actualBefore.lowMidi,
+      highMidi: actualBefore.highMidi,
+      lowNote: actualBefore.lowNote,
+      highNote: actualBefore.highNote,
+      gender: actualBefore.gender,
+      primary: actualBefore.primary,
+      /* dataPoints는 그래프 그리기용 (간소화) */
+      dataPoints: actualBefore.dataPoints || []
+    },
+    after: {
+      timestamp: actualAfter.timestamp,
+      lowMidi: actualAfter.lowMidi,
+      highMidi: actualAfter.highMidi,
+      lowNote: actualAfter.lowNote,
+      highNote: actualAfter.highNote,
+      gender: actualAfter.gender,
+      primary: actualAfter.primary,
+      dataPoints: actualAfter.dataPoints || []
+    }
+  };
+  
+  /* 닉네임 저장 (재사용) */
+  try { localStorage.setItem('comm_nickname', nickname); } catch(e){}
+  
+  /* Firebase 등록 */
+  const submitBtn = document.getElementById('comm-submit-btn');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '게시 중...'; }
+  
+  try {
+    const ref = firebase.database().ref('community/posts').push();
+    await ref.set(post);
+    alert('✅ 게시글이 등록되었습니다!');
+    _closeCommunityWrite();
+    _loadCommunityPosts(true);  /* 새로고침 */
+  } catch(e){
+    setErr('등록 실패: ' + e.message);
+  } finally {
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '게시하기'; }
+  }
+}
+
+/* === 게시글 상세 보기 === */
+async function _openCommunityView(postId){
+  const post = _communityPosts.find(p => p._id === postId);
+  if(!post) return;
+  
+  _currentViewingPost = post;
+  
+  const modal = document.getElementById('community-view-modal');
+  if(!modal) return;
+  
+  /* 헤더 채우기 */
+  document.getElementById('comm-view-title').textContent = post.title || '제목 없음';
+  document.getElementById('comm-view-author').textContent = '👤 ' + (post.nickname || '익명');
+  
+  const d = new Date(post.timestamp);
+  const timeStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('comm-view-time').textContent = timeStr;
+  
+  /* 본인 글 */
+  const contentEl = document.getElementById('comm-view-content');
+  if(contentEl){
+    if(post.content){
+      contentEl.textContent = post.content;
+      contentEl.style.display = 'block';
+    } else {
+      contentEl.style.display = 'none';
+    }
+  }
+  
+  /* 변화 요약 */
+  const summaryEl = document.getElementById('comm-view-summary');
+  if(summaryEl){
+    const before = post.before || {};
+    const after = post.after || {};
+    const beforeRange = ((before.highMidi||0) - (before.lowMidi||0)) / 12;
+    const afterRange = ((after.highMidi||0) - (after.lowMidi||0)) / 12;
+    const lowDiff = after.lowMidi - before.lowMidi;
+    const highDiff = after.highMidi - before.highMidi;
+    const rangeDiff = afterRange - beforeRange;
+    const arrow = (n) => n > 0 ? '<span style="color:#16a34a;font-weight:800">↑</span>' : (n < 0 ? '<span style="color:#dc2626;font-weight:800">↓</span>' : '<span style="color:#9ca3af">→</span>');
+    
+    summaryEl.innerHTML = `
+      <div style="background:#f9fafb;border-radius:10px;padding:11px 13px;font-size:11.5px">
+        <div style="font-weight:800;color:#374151;margin-bottom:6px">📈 변화 요약</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:#475569;line-height:1.7">
+          <div>최저음: ${before.lowNote||'-'} → ${after.lowNote||'-'} ${arrow(-lowDiff)}</div>
+          <div>최고음: ${before.highNote||'-'} → ${after.highNote||'-'} ${arrow(highDiff)}</div>
+          <div style="grid-column:1/-1">음역 폭: ${beforeRange.toFixed(1)} → ${afterRange.toFixed(1)} 옥타브 ${arrow(rangeDiff)}</div>
+        </div>
+      </div>
+    `;
+  }
+  
+  /* 좋아요 상태 */
+  await _refreshLikeStatus(postId);
+  
+  /* 본인 글이면 삭제 버튼 표시 */
+  const deleteBtn = document.getElementById('comm-delete-btn');
+  if(deleteBtn){
+    if(_fbAuthUid && post.authorUid === _fbAuthUid){
+      deleteBtn.style.display = 'inline-flex';
+    } else {
+      deleteBtn.style.display = 'none';
+    }
+  }
+  
+  /* 모달 표시 + 그래프 그리기 */
+  modal.classList.add('active');
+  
+  /* 비교 그래프 - 기존 _drawPtCompare 재사용 */
+  setTimeout(() => {
+    const colors = [
+      {fill:'rgba(239,68,68,0.20)',  stroke:'rgba(220,38,38,0.85)'},
+      {fill:'rgba(34,197,94,0.20)',  stroke:'rgba(22,163,74,0.85)'}
+    ];
+    const results = [post.before, post.after];
+    /* 캔버스 ID를 임시로 변경하기 위한 wrapper */
+    _drawCompareToCanvas('comm-view-canvas', results, colors);
+  }, 100);
+  
+  /* 댓글 로드 */
+  _loadComments(postId);
+}
+
+/* 임의 캔버스에 비교 그래프 그리기 (_drawPtCompare 변형) */
+function _drawCompareToCanvas(canvasId, results, colors){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width > 0 ? rect.width : 320;
+  const h = w * 700 / 600;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr, dpr);
+  canvas.style.height = h + 'px';
+  
+  const W = w, H = h;
+  const isFemale = results[0]?.gender === 'female';
+  const midiMin = isFemale ? 43 : 36;
+  const midiMax = isFemale ? 96 : 84;
+  const dbMin = 50, dbMax = 90;
+  const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
+  const y2px = (db) => ((dbMax - db) / (dbMax - dbMin)) * H;
+  
+  /* 배경 */
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    const txt = db + 'dB';
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3; ctx.strokeText(txt, 4, y - 3);
+    ctx.fillStyle = '#6b7280'; ctx.fillText(txt, 4, y - 3);
+  }
+  /* 옥타브 세로선 */
+  ctx.strokeStyle = '#f3f4f6';
+  const allOctaves = [{midi:36,label:'C2'},{midi:48,label:'C3'},{midi:60,label:'C4'},{midi:72,label:'C5'},{midi:84,label:'C6'},{midi:96,label:'C7'}];
+  const octs = allOctaves.filter(o => o.midi >= midiMin && o.midi <= midiMax);
+  octs.forEach(o => {
+    const x = x2px(o.midi);
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H - 30); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(o.label, x, H - 5);
+  });
+  
+  /* Hull 함수 (재사용) */
+  function _hull(arr){
+    if(arr.length < 3) return arr.slice();
+    const sorted = arr.slice().sort((a,b) => a.x === b.x ? a.y - b.y : a.x - b.x);
+    const cross = (O, A, B) => (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+    const lower = [];
+    for(const p of sorted){
+      while(lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+      lower.push(p);
+    }
+    const upper = [];
+    for(let i = sorted.length - 1; i >= 0; i--){
+      const p = sorted[i];
+      while(upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    lower.pop(); upper.pop();
+    return lower.concat(upper);
+  }
+  function _expandHull(hullPts, padding){
+    if(hullPts.length < 3) return hullPts;
+    let cx = 0, cy = 0;
+    hullPts.forEach(p => { cx += p.x; cy += p.y; });
+    cx /= hullPts.length; cy /= hullPts.length;
+    return hullPts.map(p => {
+      const dx = p.x - cx, dy = p.y - cy;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      if(len < 0.01) return {x: p.x, y: p.y};
+      return {x: p.x + (dx/len)*padding, y: p.y + (dy/len)*padding};
+    });
+  }
+  function _drawSmoothPath(pts, fillStyle, strokeStyle, lineWidth){
+    if(pts.length < 3) return;
+    ctx.beginPath();
+    const n = pts.length;
+    ctx.moveTo((pts[n-1].x + pts[0].x)/2, (pts[n-1].y + pts[0].y)/2);
+    for(let i = 0; i < n; i++){
+      const curr = pts[i];
+      const next = pts[(i+1) % n];
+      ctx.quadraticCurveTo(curr.x, curr.y, (curr.x+next.x)/2, (curr.y+next.y)/2);
+    }
+    ctx.closePath();
+    if(fillStyle){ ctx.fillStyle = fillStyle; ctx.fill(); }
+    if(strokeStyle){ ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth; ctx.lineJoin = 'round'; ctx.stroke(); }
+  }
+  
+  /* 각 결과 등고선 */
+  results.forEach((r, idx) => {
+    const c = colors[idx];
+    if(r.dataPoints && r.dataPoints.length >= 3){
+      const realPts = r.dataPoints.filter(p => p.register !== 'falsetto');
+      const ptsToUse = realPts.length >= 3 ? realPts : r.dataPoints;
+      const points = ptsToUse.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const hull = _expandHull(_hull(points), 6);
+      _drawSmoothPath(hull, c.fill, c.stroke, 2);
+    } else {
+      /* fallback */
+      const lowMidi = r.lowMidi || 60;
+      const highMidi = r.highMidi || 72;
+      const cx = (lowMidi + highMidi) / 2;
+      const semitoneRange = (highMidi - lowMidi) / 2;
+      const fakePts = [];
+      for(let i = 0; i < 16; i++){
+        const angle = (i / 16) * Math.PI * 2;
+        const midi = cx + Math.cos(angle) * semitoneRange;
+        const db = 75 + Math.sin(angle) * 10;
+        fakePts.push({x: x2px(midi), y: y2px(db)});
+      }
+      const hull = _expandHull(_hull(fakePts), 4);
+      _drawSmoothPath(hull, c.fill, c.stroke, 2);
+    }
+  });
+  
+  /* 범례 (그래프 상단) */
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'left';
+  /* Before */
+  ctx.fillStyle = colors[0].fill;
+  ctx.fillRect(W - 110, 6, 14, 10);
+  ctx.strokeStyle = colors[0].stroke;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(W - 110, 6, 14, 10);
+  ctx.fillStyle = colors[0].stroke;
+  ctx.fillText('Before', W - 92, 15);
+  /* After */
+  ctx.fillStyle = colors[1].fill;
+  ctx.fillRect(W - 110, 22, 14, 10);
+  ctx.strokeStyle = colors[1].stroke;
+  ctx.strokeRect(W - 110, 22, 14, 10);
+  ctx.fillStyle = colors[1].stroke;
+  ctx.fillText('After', W - 92, 31);
+}
+
+function _closeCommunityView(){
+  const modal = document.getElementById('community-view-modal');
+  if(modal) modal.classList.remove('active');
+  _currentViewingPost = null;
+}
+
+/* === 좋아요 === */
+async function _refreshLikeStatus(postId){
+  if(!_fbReady || typeof firebase === 'undefined' || !_fbAuthUid) return;
+  
+  const likeIcon = document.getElementById('comm-like-icon');
+  const likeCount = document.getElementById('comm-like-count');
+  
+  try {
+    /* 본인 좋아요 여부 */
+    const userLikeSnap = await firebase.database().ref(`community/likes/${postId}/${_fbAuthUid}`).once('value');
+    const liked = userLikeSnap.val() === true;
+    
+    /* 총 좋아요 개수 */
+    const allLikesSnap = await firebase.database().ref(`community/likes/${postId}`).once('value');
+    const allLikes = allLikesSnap.val() || {};
+    const count = Object.values(allLikes).filter(v => v === true).length;
+    
+    if(likeIcon) likeIcon.textContent = liked ? '❤️' : '🤍';
+    if(likeCount) likeCount.textContent = count;
+  } catch(e){
+    console.warn('좋아요 상태 로드 실패:', e);
+  }
+}
+
+async function _toggleCommunityLike(){
+  if(!_currentViewingPost || !_fbReady || !_fbAuthUid) return;
+  
+  const postId = _currentViewingPost._id;
+  try {
+    const ref = firebase.database().ref(`community/likes/${postId}/${_fbAuthUid}`);
+    const snap = await ref.once('value');
+    const currentlyLiked = snap.val() === true;
+    
+    if(currentlyLiked){
+      await ref.set(null);
+    } else {
+      await ref.set(true);
+    }
+    
+    /* 게시글 좋아요 카운트 업데이트 (transaction) */
+    await firebase.database().ref(`community/posts/${postId}/likes`).transaction(cur => {
+      return Math.max(0, (cur || 0) + (currentlyLiked ? -1 : 1));
+    });
+    
+    _refreshLikeStatus(postId);
+    /* 리스트도 갱신 */
+    const listPost = _communityPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.likes = Math.max(0, (listPost.likes || 0) + (currentlyLiked ? -1 : 1));
+      _renderCommunityPosts();
+    }
+  } catch(e){
+    console.warn('좋아요 토글 실패:', e);
+  }
+}
+
+/* === 댓글 === */
+async function _loadComments(postId){
+  const listEl = document.getElementById('comm-cmt-list');
+  const countEl = document.getElementById('comm-cmt-count');
+  if(!listEl) return;
+  
+  if(!_fbReady || typeof firebase === 'undefined'){
+    listEl.innerHTML = '<div style="font-size:11px;color:var(--mu);text-align:center;padding:10px">댓글을 불러오는 중...</div>';
+    return;
+  }
+  
+  try {
+    const snap = await firebase.database().ref(`community/comments/${postId}`).once('value');
+    const data = snap.val() || {};
+    const comments = Object.entries(data).map(([id, c]) => ({...c, _id: id}));
+    comments.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+    
+    if(countEl) countEl.textContent = comments.length;
+    
+    if(comments.length === 0){
+      listEl.innerHTML = '<div style="font-size:11px;color:var(--mu);text-align:center;padding:10px">첫 댓글을 남겨보세요!</div>';
+      return;
+    }
+    
+    listEl.innerHTML = comments.map(c => {
+      const d = new Date(c.timestamp);
+      const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const isMine = _fbAuthUid && c.authorUid === _fbAuthUid;
+      const delLink = isMine ? ` · <a onclick="_deleteComment('${c._id}')" style="color:#dc2626;cursor:pointer">삭제</a>` : '';
+      return `
+        <div style="background:#f9fafb;border-radius:8px;padding:8px 11px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <span style="font-size:11px;font-weight:700;color:#1e3a8a">👤 ${_escapeHtml(c.nickname || '익명')}</span>
+            <span style="font-size:9.5px;color:var(--mu)">${timeStr}${delLink}</span>
+          </div>
+          <div style="font-size:11.5px;color:#475569;line-height:1.5">${_escapeHtml(c.text || '')}</div>
+        </div>
+      `;
+    }).join('');
+  } catch(e){
+    console.warn('댓글 로드 실패:', e);
+    listEl.innerHTML = '<div style="font-size:11px;color:#dc2626;text-align:center;padding:10px">댓글 로드 실패</div>';
+  }
+}
+
+async function _submitComment(){
+  if(!_currentViewingPost) return;
+  if(!_fbReady || typeof firebase === 'undefined' || !_fbAuthUid){
+    alert('인증 대기 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  
+  const nickname = document.getElementById('comm-cmt-nickname').value.trim();
+  const text = document.getElementById('comm-cmt-input').value.trim();
+  
+  if(!nickname){ alert('닉네임을 입력해주세요.'); return; }
+  if(!text){ alert('댓글 내용을 입력해주세요.'); return; }
+  
+  const postId = _currentViewingPost._id;
+  const comment = {
+    timestamp: Date.now(),
+    nickname: nickname.substring(0, 15),
+    text: text.substring(0, 100),
+    authorUid: _fbAuthUid
+  };
+  
+  try {
+    /* 닉네임 저장 */
+    try { localStorage.setItem('comm_nickname', nickname); } catch(e){}
+    
+    const ref = firebase.database().ref(`community/comments/${postId}`).push();
+    await ref.set(comment);
+    
+    /* 게시글 댓글 카운트 갱신 */
+    await firebase.database().ref(`community/posts/${postId}/commentCount`).transaction(cur => {
+      return (cur || 0) + 1;
+    });
+    
+    /* 입력칸 비우기 */
+    document.getElementById('comm-cmt-input').value = '';
+    
+    /* 댓글 새로고침 */
+    _loadComments(postId);
+    
+    /* 리스트의 카운트도 갱신 */
+    const listPost = _communityPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.commentCount = (listPost.commentCount || 0) + 1;
+      _renderCommunityPosts();
+    }
+  } catch(e){
+    alert('댓글 등록 실패: ' + e.message);
+  }
+}
+
+async function _deleteComment(commentId){
+  if(!_currentViewingPost) return;
+  if(!confirm('댓글을 삭제하시겠습니까?')) return;
+  
+  const postId = _currentViewingPost._id;
+  try {
+    await firebase.database().ref(`community/comments/${postId}/${commentId}`).set(null);
+    /* 카운트 감소 */
+    await firebase.database().ref(`community/posts/${postId}/commentCount`).transaction(cur => {
+      return Math.max(0, (cur || 0) - 1);
+    });
+    _loadComments(postId);
+    /* 리스트 갱신 */
+    const listPost = _communityPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.commentCount = Math.max(0, (listPost.commentCount || 0) - 1);
+      _renderCommunityPosts();
+    }
+  } catch(e){
+    alert('삭제 실패: ' + e.message);
+  }
+}
+
+/* === 게시글 신고 === */
+async function _reportCommunity(){
+  if(!_currentViewingPost) return;
+  const reason = prompt('신고 사유를 입력해주세요:\n(욕설, 스팸, 부적절한 콘텐츠 등)');
+  if(!reason || !reason.trim()) return;
+  
+  if(!_fbReady || !_fbAuthUid){ alert('Firebase 연결을 확인해주세요.'); return; }
+  
+  try {
+    const postId = _currentViewingPost._id;
+    const ref = firebase.database().ref(`community/reports/${postId}`).push();
+    await ref.set({
+      timestamp: Date.now(),
+      reporterUid: _fbAuthUid,
+      reason: reason.trim().substring(0, 200)
+    });
+    alert('✅ 신고가 접수되었습니다. 관리자가 검토 후 조치합니다.');
+  } catch(e){
+    alert('신고 접수 실패: ' + e.message);
+  }
+}
+
+/* === 본인 게시글 삭제 === */
+async function _deleteCommunityPost(){
+  if(!_currentViewingPost) return;
+  if(_currentViewingPost.authorUid !== _fbAuthUid){
+    alert('본인 게시글만 삭제할 수 있습니다.');
+    return;
+  }
+  if(!confirm('이 게시글을 삭제하시겠습니까?\n댓글, 좋아요도 함께 삭제됩니다.')) return;
+  
+  const postId = _currentViewingPost._id;
+  try {
+    /* 게시글 + 좋아요 + 댓글 모두 삭제 */
+    await Promise.all([
+      firebase.database().ref(`community/posts/${postId}`).set(null),
+      firebase.database().ref(`community/likes/${postId}`).set(null),
+      firebase.database().ref(`community/comments/${postId}`).set(null)
+    ]);
+    alert('✅ 게시글이 삭제되었습니다.');
+    _closeCommunityView();
+    _loadCommunityPosts(true);
+  } catch(e){
+    alert('삭제 실패: ' + e.message);
+  }
 }
 
 </script>
