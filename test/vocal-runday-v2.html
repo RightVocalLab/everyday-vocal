@@ -870,8 +870,8 @@ input,select,button,textarea{font-family:inherit;}
       
       <div class="v2-pt-info" style="margin-top:10px">
         💡 <strong>측정 팁</strong><br>
-        • 천천히 낮은 음에서 높은 음까지 발성해보세요<br>
-        • 각 음을 2-3초씩 유지하면 정확도가 올라갑니다<br>
+        • 천천히 낮은 음에서 높은 음까지 가성~진성 등 낼 수 있는 모든 소리를 내주세요<br>
+        • 각 음을 1초 정도 유지하면 정확도가 올라갑니다<br>
         • "아~" 또는 "이~" 같은 모음으로 발성하세요<br>
         • 그래프 위에 표시된 영역은 성종별 표준 음역입니다
       </div>
@@ -924,6 +924,21 @@ input,select,button,textarea{font-family:inherit;}
         <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mu2);margin-top:4px;padding:0 4px">
           <span>← 낮은 음</span>
           <span>높은 음 →</span>
+        </div>
+        <!-- 범례 (성구별 색상 안내) -->
+        <div style="display:flex;justify-content:center;gap:14px;font-size:10.5px;color:#475569;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:14px;height:10px;background:rgba(59,130,246,0.35);border:1.5px solid rgba(29,78,216,0.9);border-radius:2px"></span>
+            진성(흉성)
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:14px;height:10px;background:rgba(125,211,252,0.30);border:1.5px solid rgba(14,165,233,0.75);border-radius:2px"></span>
+            믹스(중간)
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:14px;height:10px;background:rgba(196,181,253,0.22);border:1.5px solid rgba(139,92,246,0.55);border-radius:2px"></span>
+            가성(두성)
+          </span>
         </div>
       </div>
 
@@ -10540,8 +10555,11 @@ function _ptAnalyzeLoop(){
       if(highEl) highEl.textContent = noteInfo.note;
     }
     
-    /* PVR Canvas에 점 찍기 */
-    _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB);
+    /* H1-H2 측정 → 가성/믹스/진성 판정 */
+    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate);
+    
+    /* PVR Canvas에 점 찍기 (register 정보 포함) */
+    _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB, register);
   } else {
     /* 음량 너무 작거나 명확하지 않을 때 */
     const noteEl = document.getElementById('pt-note');
@@ -10558,6 +10576,51 @@ function _ptAnalyzeLoop(){
   }
   
   _ptRafId = requestAnimationFrame(_ptAnalyzeLoop);
+}
+
+/* H1-H2 기반 발성 모드 판정 (가성/믹스/진성) 
+   원리: H1(기본주파수)과 H2(2배 배음)의 강도 차이로 성구(register) 판정
+   - 진성(흉성, modal/chest): H1 < H2 (H1-H2 < 0)
+   - 가성(falsetto): H1 > H2 (H1-H2 > +5dB)
+   - 믹스(mix): 그 사이
+   참고: Keating 2014, Sundberg 등 음향학 표준 */
+function _ptDetectRegister(timeBuf, f0, sampleRate){
+  /* DFT를 직접 계산 (FFT 데이터 부족하므로 H1, H2 위치만 정확히 측정) */
+  /* Goertzel 알고리즘 사용 - 특정 주파수의 강도만 효율적으로 계산 */
+  const N = timeBuf.length;
+  
+  function _goertzelMagnitude(freq){
+    const k = freq / sampleRate;
+    const w = 2 * Math.PI * k;
+    const cosw = Math.cos(w);
+    const coeff = 2 * cosw;
+    let s_prev = 0, s_prev2 = 0;
+    for(let i = 0; i < N; i++){
+      const s = timeBuf[i] + coeff * s_prev - s_prev2;
+      s_prev2 = s_prev;
+      s_prev = s;
+    }
+    /* magnitude squared */
+    const mag2 = s_prev * s_prev + s_prev2 * s_prev2 - coeff * s_prev * s_prev2;
+    return Math.sqrt(Math.max(0, mag2));
+  }
+  
+  const h1Mag = _goertzelMagnitude(f0);
+  const h2Mag = _goertzelMagnitude(f0 * 2);
+  
+  if(h1Mag < 1e-10 || h2Mag < 1e-10) return 'mix';
+  
+  /* H1-H2 dB 차이 */
+  const h1h2 = 20 * Math.log10(h1Mag / h2Mag);
+  
+  /* 판정 기준 (음향학 연구 기준):
+     - H1-H2 > +6dB: 가성 (falsetto)
+     - H1-H2 < -2dB: 진성 (chest/modal)
+     - 그 사이: 믹스 (mix)
+     +5도 가성 가능성이 있지만 안전하게 +6 이상으로 잡음 */
+  if(h1h2 > 6) return 'falsetto';
+  if(h1h2 < -2) return 'chest';
+  return 'mix';
 }
 
 
@@ -10615,8 +10678,8 @@ function _ptCanvasDraw(){
   
   /* 음역 범위: MIDI 33(A1) ~ 84(C6), 약 4.25옥타브 (베이스 영역 포함) */
   const midiMin = 33, midiMax = 84;
-  /* dB SPL 범위: 30 ~ 100 (가성/작은소리 영역 확장) */
-  const dbMin = 30, dbMax = 100;
+  /* dB SPL 범위: 50 ~ 90 (실제 측정 영역으로 좁혀서 그래프가 위아래로 크게) */
+  const dbMin = 50, dbMax = 90;
   
   /* 좌표 변환 헬퍼 */
   const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
@@ -10691,54 +10754,24 @@ function _ptCanvasDraw(){
     });
   }
   
-  /* ============ 타원형 등고선 (PVR core) ============ */
+  /* ============ 타원형 등고선 (register별 3개 등고선) ============ */
   if(_ptDataPoints.length >= 3){
-    /* 점들을 픽셀 좌표로 변환 + 지속 시간 정보 유지 */
+    /* 점들을 픽셀 좌표로 변환 + register 정보 유지 */
     const pts = _ptDataPoints.map(p => ({
       x: x2px(p.midi),
       y: y2px(p.dB),
       midi: p.midi,
       dB: p.dB,
-      duration: p.duration || 1000,  /* 안전 기본값 */
+      duration: p.duration || 500,
+      register: p.register || 'mix',
       time: p.time
     }));
     
-    /* 지속 시간 기반 분류 (1초 이상은 이미 필터링됨)
-       - 모든 점: 1초 이상 (잡음 아님)
-       - 진한 점: 1.5초 이상 (확실한 발성)  */
-    const PT_STRONG_MS = 1500;
-    
-    /* 각 점 주변에 같은 음정대 누적 지속 시간 → 자주 발성한 영역 식별 */
-    /* 격자 셀 단위로 누적 시간 합산 */
-    const cellSize = 0.8; /* MIDI 단위 */
-    const cellMap = new Map();
-    _ptDataPoints.forEach(p => {
-      const cx = Math.round(p.midi / cellSize) * cellSize;
-      const cy = Math.round(p.dB / 2) * 2; /* 2dB 단위 */
-      const key = cx + ',' + cy;
-      cellMap.set(key, (cellMap.get(key) || 0) + (p.duration || 1000));
-    });
-    
-    /* 각 점에 누적 지속시간 매핑 */
-    pts.forEach(p => {
-      const cx = Math.round(p.midi / cellSize) * cellSize;
-      const cy = Math.round(p.dB / 2) * 2;
-      p.cellTime = cellMap.get(cx + ',' + cy) || p.duration;
-    });
-    
-    /* 누적 시간 분포로 percentile 계산 */
-    const times = [...cellMap.values()].sort((a,b) => a - b);
-    const _pcl = (p) => times[Math.floor((times.length - 1) * p)] || 1000;
-    const tp25 = _pcl(0.25);
-    const tp60 = _pcl(0.60);
-    
-    /* 등고선용 점 집합:
-       - 외곽: 모든 점 (1초 이상 지속된 모든 발성)
-       - 중간: 누적 시간 25% 이상
-       - 내부: 1.5초 이상 진한 발성 + 누적 시간 60% 이상 (확실한 영역) */
+    /* register별로 점 분류 */
+    const ptsChest = pts.filter(p => p.register === 'chest');
+    const ptsMix = pts.filter(p => p.register === 'mix');
+    const ptsFalsetto = pts.filter(p => p.register === 'falsetto');
     const ptsAll = pts;
-    const ptsMid = pts.filter(p => p.cellTime >= tp25);
-    const ptsCore = pts.filter(p => p.duration >= PT_STRONG_MS && p.cellTime >= tp60);
     
     /* Convex Hull (Andrew's monotone chain) - 볼록 껍질 계산 */
     function _hull(arr){
@@ -10763,11 +10796,9 @@ function _ptCanvasDraw(){
     /* 볼록 껍질을 살짝 부풀려서 (smoothing) 자연스러운 타원 형태 만들기 */
     function _expandHull(hullPts, padding){
       if(hullPts.length < 3) return hullPts;
-      /* 무게중심 계산 */
       let cx = 0, cy = 0;
       hullPts.forEach(p => { cx += p.x; cy += p.y; });
       cx /= hullPts.length; cy /= hullPts.length;
-      /* 각 점을 무게중심 반대 방향으로 padding만큼 밀어내기 */
       return hullPts.map(p => {
         const dx = p.x - cx, dy = p.y - cy;
         const len = Math.sqrt(dx*dx + dy*dy);
@@ -10785,7 +10816,6 @@ function _ptCanvasDraw(){
       const ctx = _ptCanvasCtx;
       ctx.beginPath();
       const n = pts.length;
-      /* 시작점: 첫 두 점의 중점 */
       const startX = (pts[n-1].x + pts[0].x) / 2;
       const startY = (pts[n-1].y + pts[0].y) / 2;
       ctx.moveTo(startX, startY);
@@ -10809,27 +10839,30 @@ function _ptCanvasDraw(){
       }
     }
     
-    /* 등고선 그리기 (외곽 → 중간 → 내부 순서로 진하게) */
-    /* 외곽 (전체 음역) */
-    if(ptsAll.length >= 3){
-      const hull = _expandHull(_hull(ptsAll), 8);
-      _drawSmoothClosedPath(hull, 'rgba(147,197,253,0.18)', 'rgba(96,165,250,0.5)', 1.5);
+    /* 등고선 그리기: 진성(진한 파랑) → 믹스(중간) → 가성(연한 회색빛) 순서로 (밑에 진한 게 깔리도록) */
+    /* 가성: 연한 회색-라벤더 (가장 옅음) */
+    if(ptsFalsetto.length >= 3){
+      const hull = _expandHull(_hull(ptsFalsetto), 6);
+      _drawSmoothClosedPath(hull, 'rgba(196,181,253,0.22)', 'rgba(139,92,246,0.55)', 1.5);
     }
-    /* 중간 (자주 발성한 영역) */
-    if(ptsMid.length >= 3){
-      const hull = _expandHull(_hull(ptsMid), 5);
-      _drawSmoothClosedPath(hull, 'rgba(96,165,250,0.22)', 'rgba(59,130,246,0.65)', 1.5);
+    /* 믹스: 중간 채도 파랑 */
+    if(ptsMix.length >= 3){
+      const hull = _expandHull(_hull(ptsMix), 6);
+      _drawSmoothClosedPath(hull, 'rgba(125,211,252,0.30)', 'rgba(14,165,233,0.75)', 1.8);
     }
-    /* 내부 (가장 자주 발성한 영역) */
-    if(ptsCore.length >= 3){
-      const hull = _expandHull(_hull(ptsCore), 3);
-      _drawSmoothClosedPath(hull, 'rgba(59,130,246,0.30)', 'rgba(37,99,235,0.85)', 2);
+    /* 진성: 진한 파랑 */
+    if(ptsChest.length >= 3){
+      const hull = _expandHull(_hull(ptsChest), 6);
+      _drawSmoothClosedPath(hull, 'rgba(59,130,246,0.35)', 'rgba(29,78,216,0.9)', 2);
     }
     
-    /* 데이터 점이 적을 때 (3개 미만 그룹)는 점 자체로 표시 */
-    if(ptsAll.length < 3){
-      _ptCanvasCtx.fillStyle = 'rgba(59,130,246,0.7)';
+    /* 데이터 점 적을 때 점 자체로 표시 (각 register 색깔로) */
+    if(ptsAll.length < 3 || (ptsChest.length < 3 && ptsMix.length < 3 && ptsFalsetto.length < 3)){
       pts.forEach(p => {
+        let color = 'rgba(14,165,233,0.7)';
+        if(p.register === 'chest') color = 'rgba(29,78,216,0.85)';
+        else if(p.register === 'falsetto') color = 'rgba(139,92,246,0.7)';
+        _ptCanvasCtx.fillStyle = color;
         _ptCanvasCtx.beginPath();
         _ptCanvasCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
         _ptCanvasCtx.fill();
@@ -11037,13 +11070,13 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
 
 /* Canvas 점 추가 (지속 시간 추적 + 잡음 필터링) 
    현재 발성 중인 음정 버퍼에 누적하고, 음정이 바뀌거나 발성이 끊기면 
-   1초 이상 지속된 경우에만 정식 데이터 포인트로 확정 */
+   0.5초 이상 지속된 경우에만 정식 데이터 포인트로 확정 */
 let _ptCurrentTone = null;  /* {midi, dB합계, 카운트, 시작시각, 마지막시각} */
 const PT_MIDI_TOLERANCE = 0.6;  /* 같은 음정으로 간주 (반음 이내) */
 const PT_GAP_MS = 200;          /* 발성 끊김 판정 (마지막 입력 후 200ms 무입력 → 끊김) */
-const PT_MIN_DURATION_MS = 1000; /* 1초 미만은 잡음으로 무시 */
+const PT_MIN_DURATION_MS = 500; /* 0.5초 미만은 잡음으로 무시 */
 
-function _ptAddPoint(midi, dB){
+function _ptAddPoint(midi, dB, register){
   const now = Date.now();
   
   /* 현재 발성 중인 톤이 있고 음정이 비슷하면 누적 */
@@ -11055,8 +11088,12 @@ function _ptAddPoint(midi, dB){
     _ptCurrentTone.lastTime = now;
     /* midi는 평균값으로 계속 갱신 (소수점 정밀도) */
     _ptCurrentTone.midi = (_ptCurrentTone.midi * (_ptCurrentTone.count - 1) + midi) / _ptCurrentTone.count;
+    /* register 카운트 누적 (다수결로 최종 결정) */
+    if(register){
+      _ptCurrentTone.regCount[register] = (_ptCurrentTone.regCount[register] || 0) + 1;
+    }
     
-    /* 진행 중인 톤이 1초 이상 지속됐으면 라이브 표시용으로 갱신 */
+    /* 진행 중인 톤이 0.5초 이상 지속됐으면 라이브 표시용으로 갱신 */
     const dur = now - _ptCurrentTone.startTime;
     if(dur >= PT_MIN_DURATION_MS){
       _ptDrawNeeded = true;
@@ -11070,21 +11107,32 @@ function _ptAddPoint(midi, dB){
       dBSum: dB,
       count: 1,
       startTime: now,
-      lastTime: now
+      lastTime: now,
+      regCount: register ? {[register]: 1} : {}
     };
   }
 }
 
-/* 현재 진행 중인 톤이 1초 이상이면 정식 데이터로 확정 */
+/* 현재 진행 중인 톤이 0.5초 이상이면 정식 데이터로 확정 */
 function _ptFinalizeCurrentTone(){
   if(!_ptCurrentTone) return;
   const dur = _ptCurrentTone.lastTime - _ptCurrentTone.startTime;
   if(dur >= PT_MIN_DURATION_MS){
-    /* 1초 이상 지속됐으면 데이터 포인트로 추가 */
+    /* register 다수결로 최종 결정 */
+    let finalReg = 'mix';
+    let maxCount = 0;
+    for(const r in _ptCurrentTone.regCount){
+      if(_ptCurrentTone.regCount[r] > maxCount){
+        maxCount = _ptCurrentTone.regCount[r];
+        finalReg = r;
+      }
+    }
+    /* 0.5초 이상 지속됐으면 데이터 포인트로 추가 */
     _ptDataPoints.push({
       midi: _ptCurrentTone.midi,
       dB: _ptCurrentTone.dBSum / _ptCurrentTone.count,
       duration: dur,
+      register: finalReg,  /* 'chest' | 'mix' | 'falsetto' */
       time: _ptCurrentTone.lastTime
     });
     if(_ptDataPoints.length > 500) _ptDataPoints.shift();
