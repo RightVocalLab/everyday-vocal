@@ -635,6 +635,13 @@ input,select,button,textarea{font-family:inherit;}
       <span class="v2-hw-theory-link-text">훈련 설명 보기</span>
       <span class="v2-hw-theory-link-arrow">›</span>
     </button>
+    
+    <!-- 측정 이력 보기 버튼 -->
+    <button class="v2-hw-theory-link" onclick="_showPtHistory()" style="margin-top:8px">
+      <span class="v2-hw-theory-link-icon">📊</span>
+      <span class="v2-hw-theory-link-text">음역대 측정 이력</span>
+      <span class="v2-hw-theory-link-arrow">›</span>
+    </button>
 
     <!-- 숙제 리스트 -->
     <div class="v2-section-header">
@@ -942,8 +949,8 @@ input,select,button,textarea{font-family:inherit;}
         </div>
       </div>
 
-      <!-- 컨트롤 -->
-      <div class="v2-pt-controls">
+      <!-- 컨트롤 (측정 중) -->
+      <div class="v2-pt-controls" id="pt-controls-running">
         <button class="v2-pt-btn-stop" id="pt-stop-btn" onclick="_stopPitchTest()">
           <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg">
             <rect x="3" y="3" width="8" height="8" rx="1"/>
@@ -956,6 +963,23 @@ input,select,button,textarea{font-family:inherit;}
             <path d="M3 7 A6 6 0 0 1 13 7 A6 6 0 0 1 8 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
           </svg>
           <span>초기화</span>
+        </button>
+      </div>
+      
+      <!-- 컨트롤 (측정 종료 후) -->
+      <div class="v2-pt-controls" id="pt-controls-finished" style="display:none">
+        <button class="v2-pt-btn-result" onclick="_showPtResult()" style="flex:1.5;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;box-shadow:0 2px 8px rgba(59,130,246,0.3)">
+          <svg viewBox="0 0 16 16" fill="#fff" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+            <path d="M2 13h12V3H2v10zm2-2V5h2v6H4zm3 0V7h2v4H7zm3 0V4h2v7h-2z"/>
+          </svg>
+          <span>결과 보기</span>
+        </button>
+        <button class="v2-pt-btn-reset" onclick="_restartPtMeasure()">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3 L3 7 L7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 7 A6 6 0 0 1 13 7 A6 6 0 0 1 8 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          <span>다시 측정</span>
         </button>
       </div>
       
@@ -990,6 +1014,72 @@ input,select,button,textarea{font-family:inherit;}
       *성별에 따라 표준 음역 기준이 다르게 표시됩니다.<br>
       어떤 분류에도 강제되지 않으며 <strong>결과는 참고용</strong>입니다.<br>
       정확한 음성 진단은 이비인후과 검진이 필요합니다.
+    </div>
+  </div>
+</div>
+
+<!-- 음역대 측정 결과 모달 -->
+<div class="v2-pt-modal-bg" id="pt-result-modal" onclick="if(event.target===this)_closePtResult()">
+  <div class="v2-pt-modal-card" style="max-width:380px;max-height:90vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closePtResult()" aria-label="닫기">✕</button>
+    
+    <div style="text-align:center;font-size:18px;font-weight:900;color:#1d4ed8;margin-bottom:6px">🎤 음역대 측정 결과</div>
+    <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:18px" id="pt-result-time">측정일: -</div>
+    
+    <!-- 추정 성종 (메인) -->
+    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #93c5fd;border-radius:14px;padding:16px;margin-bottom:14px;text-align:center">
+      <div style="font-size:11px;color:#1e40af;font-weight:700;margin-bottom:4px">추정 성종</div>
+      <div id="pt-result-voicetype" style="font-size:24px;font-weight:900;color:#1e3a8a;margin-bottom:4px">—</div>
+      <div id="pt-result-match" style="font-size:12px;color:#3b82f6;font-weight:600">매칭도: —%</div>
+      <div id="pt-result-desc" style="font-size:11px;color:#475569;margin-top:8px;line-height:1.5">—</div>
+    </div>
+    
+    <!-- 음역 분석 -->
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px">📊 음역 분석</div>
+      <div style="font-size:11.5px;color:#475569;line-height:1.85" id="pt-result-range">—</div>
+    </div>
+    
+    <!-- 발성 분석 (가성/믹스/진성 비율) -->
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:10px">💡 발성 분석</div>
+      <div id="pt-result-register" style="font-size:11.5px;color:#475569;line-height:1.85">—</div>
+    </div>
+    
+    <!-- 다른 가능성 -->
+    <div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px">📌 다른 가능성</div>
+      <div id="pt-result-others" style="font-size:11px;color:#6b7280;line-height:1.7">—</div>
+    </div>
+    
+    <!-- 면책 안내 -->
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:#78350f;line-height:1.55">
+      ⚠️ 본 결과는 <strong>참고용</strong>이며, 측정 환경(마이크/잡음)에 따라 달라질 수 있습니다.<br>
+      정확한 음성 진단은 이비인후과 음성검사가 필요합니다.
+    </div>
+    
+    <!-- 저장 안내 -->
+    <div id="pt-result-save-info" style="background:#ecfdf5;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:10.5px;color:#047857;line-height:1.5;display:none">
+      ✅ 측정 결과가 저장되었습니다.
+    </div>
+    
+    <!-- 닫기 버튼 -->
+    <div style="display:flex;justify-content:center">
+      <button onclick="_closePtResult()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:11px 32px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 측정 이력 모달 (학생 숙제 화면에서 사용) -->
+<div class="v2-pt-modal-bg" id="pt-history-modal" onclick="if(event.target===this)_closePtHistory()">
+  <div class="v2-pt-modal-card" style="max-width:400px;max-height:90vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closePtHistory()" aria-label="닫기">✕</button>
+    <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:14px">📊 음역대 측정 이력</div>
+    <div id="pt-history-list">
+      <div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.</div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:14px">
+      <button onclick="_closePtHistory()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
     </div>
   </div>
 </div>
@@ -11343,6 +11433,29 @@ function _stopPitchTest(){
     const tx = notice.querySelector('.v2-pt-notice-text');
     if(tx) tx.innerHTML = '<strong>측정 시작</strong> 버튼을 누르면 마이크 권한을 요청합니다.<br>조용한 환경에서 마이크에 가까이 대고 발성해주세요.';
   }
+  
+  /* 컨트롤 전환: 측정 중 → 측정 종료 후 (데이터가 있을 때만) */
+  if(_ptDataPoints.length >= 3){
+    const ctrlRunning = document.getElementById('pt-controls-running');
+    const ctrlFinished = document.getElementById('pt-controls-finished');
+    if(ctrlRunning) ctrlRunning.style.display = 'none';
+    if(ctrlFinished) ctrlFinished.style.display = 'flex';
+    
+    /* 결과 자동 분석 + 저장 (모달은 사용자가 결과보기 누를 때 표시) */
+    _ptLastResult = _ptAnalyzeResult();
+    if(_ptLastResult){
+      _ptSaveResult(_ptLastResult);
+    }
+  }
+}
+
+/* 다시 측정 - 결과 초기화 후 컨트롤 원위치 */
+function _restartPtMeasure(){
+  _resetPitchTest();
+  const ctrlRunning = document.getElementById('pt-controls-running');
+  const ctrlFinished = document.getElementById('pt-controls-finished');
+  if(ctrlRunning) ctrlRunning.style.display = 'flex';
+  if(ctrlFinished) ctrlFinished.style.display = 'none';
 }
 
 /* 측정 결과 초기화 */
@@ -11351,6 +11464,7 @@ function _resetPitchTest(){
   _ptHighFreq = null;
   _ptDataPoints = [];
   _ptCurrentTone = null;  /* 현재 진행 중인 톤도 초기화 */
+  _ptLastResult = null;
   const lo=document.getElementById('pt-low'); if(lo) lo.textContent = '—';
   const hi=document.getElementById('pt-high'); if(hi) hi.textContent = '—';
   const no=document.getElementById('pt-note'); if(no) no.textContent = '—';
@@ -11358,6 +11472,310 @@ function _resetPitchTest(){
   const fr=document.getElementById('pt-freq'); if(fr) fr.textContent = '- Hz';
   /* Canvas 다시 그리기 */
   _ptCanvasDraw();
+}
+
+/* ==================== Phase 2: 결과 분석 + 표시 + 저장 ==================== */
+let _ptLastResult = null;  /* 마지막 측정 결과 캐시 */
+
+/* MIDI → 음정 이름 변환 (영문) */
+function _midiToNoteName(midi){
+  const names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const r = Math.round(midi);
+  const oct = Math.floor(r / 12) - 1;
+  return names[r % 12] + oct;
+}
+
+/* 측정 데이터 분석 → 결과 객체 생성 */
+function _ptAnalyzeResult(){
+  if(!_ptDataPoints || _ptDataPoints.length < 3) return null;
+  
+  /* 1. 음정 통계 */
+  const midis = _ptDataPoints.map(p => p.midi);
+  const lowMidi = Math.min(...midis);
+  const highMidi = Math.max(...midis);
+  const rangeOctaves = (highMidi - lowMidi) / 12;
+  
+  /* 2. register별 분류 */
+  const chestPts = _ptDataPoints.filter(p => p.register === 'chest');
+  const mixPts = _ptDataPoints.filter(p => p.register === 'mix');
+  const falsettoPts = _ptDataPoints.filter(p => p.register === 'falsetto');
+  const total = _ptDataPoints.length;
+  const chestRatio = chestPts.length / total;
+  const mixRatio = mixPts.length / total;
+  const falsettoRatio = falsettoPts.length / total;
+  
+  /* 3. 진성 음역 (가성 제외한 실용 음역) */
+  const realPts = _ptDataPoints.filter(p => p.register !== 'falsetto');
+  const realLow = realPts.length > 0 ? Math.min(...realPts.map(p=>p.midi)) : lowMidi;
+  const realHigh = realPts.length > 0 ? Math.max(...realPts.map(p=>p.midi)) : highMidi;
+  
+  /* 4. 성종 매칭 (성별별)
+     매칭 점수 = 측정 음역과 표준 음역의 겹침 비율 */
+  const isFemale = (_ptGender === 'female');
+  const voiceTypes = isFemale ? [
+    {key:'contralto',     name:'콘트랄토',     low:48, high:72, desc:'여성 최저음역. 깊고 어두운 음색이 특징입니다.'},
+    {key:'alto',          name:'알토',         low:53, high:77, desc:'풍부하고 따뜻한 중저음역. 합창에서 중요한 성부입니다.'},
+    {key:'mezzo',         name:'메조소프라노', low:57, high:81, desc:'알토와 소프라노 사이의 중음역. 가장 일반적인 여성 성종입니다.'},
+    {key:'soprano',       name:'소프라노',     low:60, high:84, desc:'밝고 청아한 고음역. 클래식과 발라드에 적합합니다.'},
+    {key:'coloratura',    name:'콜로라투라소프라노', low:62, high:89, desc:'화려한 초고음역. 매우 드물고 기교가 풍부합니다.'},
+  ] : [
+    {key:'bass',     name:'베이스',     low:40, high:64, desc:'남성 최저음역. 깊고 묵직한 저음이 특징입니다.'},
+    {key:'baritone', name:'바리톤',     low:43, high:67, desc:'남성에서 가장 흔한 중저음역. 안정적이고 따뜻합니다.'},
+    {key:'tenor',    name:'테너',       low:48, high:72, desc:'남성 고음역. 밝고 화려한 음색으로 멜로디 라인에 자주 쓰입니다.'},
+  ];
+  
+  /* 각 성종별 매칭 점수 (0~100)
+     - 측정 음역이 표준 음역에 얼마나 들어가는가
+     - 측정 중심값이 표준 중심값과 얼마나 가까운가 */
+  const matches = voiceTypes.map(vt => {
+    const measureLow = realLow;
+    const measureHigh = realHigh;
+    const stdLow = vt.low;
+    const stdHigh = vt.high;
+    const stdCenter = (stdLow + stdHigh) / 2;
+    const measureCenter = (measureLow + measureHigh) / 2;
+    
+    /* 중심값 거리 (가까울수록 점수 높음, 최대 12 semitones = 1옥타브 차이) */
+    const centerDist = Math.abs(measureCenter - stdCenter);
+    const centerScore = Math.max(0, 100 - centerDist * 8); /* 1 semitone당 8점 감점 */
+    
+    /* 음역 겹침 (overlap) */
+    const overlapLow = Math.max(measureLow, stdLow);
+    const overlapHigh = Math.min(measureHigh, stdHigh);
+    const overlap = Math.max(0, overlapHigh - overlapLow);
+    const stdRange = stdHigh - stdLow;
+    const overlapScore = (overlap / stdRange) * 100;
+    
+    /* 종합 점수: 중심값 60% + 겹침 40% */
+    const total = Math.round(centerScore * 0.6 + overlapScore * 0.4);
+    return {...vt, match: Math.min(100, Math.max(0, total))};
+  });
+  
+  /* 매칭 점수 내림차순 정렬 */
+  matches.sort((a,b) => b.match - a.match);
+  
+  return {
+    timestamp: Date.now(),
+    gender: _ptGender,
+    lowMidi, highMidi, rangeOctaves,
+    realLow, realHigh,
+    lowNote: _midiToNoteName(lowMidi),
+    highNote: _midiToNoteName(highMidi),
+    realLowNote: _midiToNoteName(realLow),
+    realHighNote: _midiToNoteName(realHigh),
+    chestRatio, mixRatio, falsettoRatio,
+    primary: matches[0],
+    others: matches.slice(1),
+    dataCount: total
+  };
+}
+
+/* 결과를 모달에 표시 */
+function _showPtResult(){
+  if(!_ptLastResult){
+    _ptLastResult = _ptAnalyzeResult();
+  }
+  if(!_ptLastResult){
+    alert('측정 데이터가 부족합니다. 다시 측정해주세요.');
+    return;
+  }
+  
+  const r = _ptLastResult;
+  
+  /* 시간 표시 */
+  const d = new Date(r.timestamp);
+  const timeStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('pt-result-time').textContent = `측정일: ${timeStr}`;
+  
+  /* 추정 성종 */
+  document.getElementById('pt-result-voicetype').textContent = r.primary.name;
+  document.getElementById('pt-result-match').textContent = `매칭도: ${r.primary.match}%`;
+  document.getElementById('pt-result-desc').textContent = r.primary.desc;
+  
+  /* 음역 분석 */
+  const rangeHtml = `
+    • <strong>최저음:</strong> ${r.lowNote} ${r.realLowNote !== r.lowNote ? `<span style="color:#9333ea">(가성 제외 ${r.realLowNote})</span>` : ''}<br>
+    • <strong>최고음:</strong> ${r.highNote} ${r.realHighNote !== r.highNote ? `<span style="color:#9333ea">(가성 제외 ${r.realHighNote})</span>` : ''}<br>
+    • <strong>음역 폭:</strong> 약 ${r.rangeOctaves.toFixed(1)}옥타브<br>
+    • <strong>측정 데이터:</strong> ${r.dataCount}개 음정
+  `;
+  document.getElementById('pt-result-range').innerHTML = rangeHtml;
+  
+  /* 발성 분석 (비율 바) */
+  const chestPct = Math.round(r.chestRatio * 100);
+  const mixPct = Math.round(r.mixRatio * 100);
+  const falsPct = Math.round(r.falsettoRatio * 100);
+  const regHtml = `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:#1d4ed8;font-weight:700">진성(흉성)</span><span style="font-weight:600">${chestPct}%</span>
+      </div>
+      <div style="background:#e5e7eb;height:7px;border-radius:4px;overflow:hidden">
+        <div style="background:#3b82f6;height:100%;width:${chestPct}%"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:#0ea5e9;font-weight:700">믹스(중간)</span><span style="font-weight:600">${mixPct}%</span>
+      </div>
+      <div style="background:#e5e7eb;height:7px;border-radius:4px;overflow:hidden">
+        <div style="background:#0ea5e9;height:100%;width:${mixPct}%"></div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:#7c3aed;font-weight:700">가성(두성)</span><span style="font-weight:600">${falsPct}%</span>
+      </div>
+      <div style="background:#e5e7eb;height:7px;border-radius:4px;overflow:hidden">
+        <div style="background:#8b5cf6;height:100%;width:${falsPct}%"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('pt-result-register').innerHTML = regHtml;
+  
+  /* 다른 가능성 (Top 2~3) */
+  const othersHtml = r.others.slice(0, 3).map(o => 
+    `<span style="display:inline-block;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:3px 9px;margin:2px;font-size:10.5px"><strong>${o.name}</strong> ${o.match}%</span>`
+  ).join(' ');
+  document.getElementById('pt-result-others').innerHTML = othersHtml || '—';
+  
+  /* 저장 안내 (학생 로그인 시 메시지 표시) */
+  const saveInfo = document.getElementById('pt-result-save-info');
+  if(saveInfo){
+    if(typeof curStudent !== 'undefined' && curStudent){
+      saveInfo.innerHTML = `✅ 측정 결과가 저장되었습니다.<br><span style="font-size:9.5px">학생 페이지에서 측정 이력을 확인하실 수 있습니다.</span>`;
+      saveInfo.style.display = 'block';
+    } else {
+      saveInfo.innerHTML = `💾 측정 결과가 이 기기에 저장되었습니다.`;
+      saveInfo.style.display = 'block';
+    }
+  }
+  
+  /* 모달 표시 */
+  const modal = document.getElementById('pt-result-modal');
+  if(modal) modal.classList.add('active');
+}
+
+/* 결과 모달 닫기 */
+function _closePtResult(){
+  const modal = document.getElementById('pt-result-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+/* 결과 저장 (localStorage + Firebase 학생 로그인 시) */
+function _ptSaveResult(result){
+  if(!result) return;
+  
+  /* 1. localStorage에 저장 (이 기기) */
+  try {
+    const storageKey = 'pt_history_local';
+    const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    list.unshift(result);
+    /* 최근 30개만 보관 */
+    if(list.length > 30) list.length = 30;
+    localStorage.setItem(storageKey, JSON.stringify(list));
+  } catch(e){
+    console.warn('localStorage 저장 실패:', e);
+  }
+  
+  /* 2. Firebase에 저장 (학생 로그인 시) */
+  if(typeof curStudent !== 'undefined' && curStudent && typeof firebase !== 'undefined'){
+    try {
+      const db = firebase.database();
+      const studentName = curStudent.name || curStudent;
+      const ref = db.ref(`pt_history/${studentName}`).push();
+      ref.set(result).catch(e => console.warn('Firebase 저장 실패:', e));
+    } catch(e){
+      console.warn('Firebase 저장 실패:', e);
+    }
+  }
+}
+
+/* 측정 이력 가져오기 (localStorage + Firebase 통합) */
+async function _ptLoadHistory(){
+  let list = [];
+  
+  /* 1. localStorage 이력 */
+  try {
+    const local = JSON.parse(localStorage.getItem('pt_history_local') || '[]');
+    list = list.concat(local);
+  } catch(e){}
+  
+  /* 2. Firebase 이력 (학생 로그인 시) */
+  if(typeof curStudent !== 'undefined' && curStudent && typeof firebase !== 'undefined'){
+    try {
+      const studentName = curStudent.name || curStudent;
+      const snap = await firebase.database().ref(`pt_history/${studentName}`).once('value');
+      const fbData = snap.val();
+      if(fbData){
+        const fbList = Object.values(fbData);
+        /* localStorage와 중복 제거 (timestamp 기준) */
+        const localTimestamps = new Set(list.map(r => r.timestamp));
+        fbList.forEach(r => {
+          if(!localTimestamps.has(r.timestamp)) list.push(r);
+        });
+      }
+    } catch(e){
+      console.warn('Firebase 이력 로드 실패:', e);
+    }
+  }
+  
+  /* 최신순 정렬 */
+  list.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  return list;
+}
+
+/* 측정 이력 모달 표시 (학생 숙제 화면에서 호출) */
+async function _showPtHistory(){
+  const modal = document.getElementById('pt-history-modal');
+  const listEl = document.getElementById('pt-history-list');
+  if(!modal || !listEl) return;
+  
+  /* 로딩 표시 */
+  listEl.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">불러오는 중...</div>';
+  modal.classList.add('active');
+  
+  const list = await _ptLoadHistory();
+  
+  if(list.length === 0){
+    listEl.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px">측정 이력이 없습니다.<br><span style="font-size:10px">음역대 테스트를 진행해보세요!</span></div>';
+    return;
+  }
+  
+  /* 이력 목록 렌더 */
+  const html = list.map(r => {
+    const d = new Date(r.timestamp);
+    const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const primary = r.primary || {name:'-', match:0};
+    return `
+      <div onclick='_showPtHistoryDetail(${JSON.stringify(r).replace(/"/g,"&quot;")})' style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='#e5e7eb'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:700;font-size:13px;color:#1e3a8a">${primary.name}</span>
+          <span style="font-size:10px;color:var(--mu)">${timeStr}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280">
+          <span>음역: ${r.lowNote} ~ ${r.highNote}</span>
+          <span>매칭 ${primary.match}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  listEl.innerHTML = html;
+}
+
+/* 이력 항목 상세 보기 (결과 모달 재활용) */
+function _showPtHistoryDetail(result){
+  if(!result) return;
+  _ptLastResult = result;
+  _closePtHistory();
+  _showPtResult();
+}
+
+/* 이력 모달 닫기 */
+function _closePtHistory(){
+  const modal = document.getElementById('pt-history-modal');
+  if(modal) modal.classList.remove('active');
 }
 
 </script>
