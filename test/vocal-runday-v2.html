@@ -10712,6 +10712,22 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
     else result = 'mix';
   }
   
+  /* === 생리학적 검증 ===
+     가성(falsetto)은 성대 가장자리만 진동하는 발성으로,
+     낮은 음역에서는 물리적으로 불가능함.
+     - 남성: G3(196Hz) 이하에서는 가성 발성 불가 → mix로 강등
+     - 여성: D4(294Hz) 이하에서는 가성 발성 불가 → mix로 강등
+     이 영역에서 가성으로 판정되는 건 알고리즘 오판 */
+  if(result === 'falsetto'){
+    const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
+    const falsettoLowLimit = isFemale ? 294 : 196;  /* 여성 D4, 남성 G3 */
+    if(f0 < falsettoLowLimit){
+      /* 낮은 음에서 가성으로 잘못 판정 → 점수가 충분히 낮으면 진성, 아니면 믹스 */
+      if(score <= -1) result = 'chest';
+      else result = 'mix';
+    }
+  }
+  
   _ptLastRegister = result;
   return result;
 }
