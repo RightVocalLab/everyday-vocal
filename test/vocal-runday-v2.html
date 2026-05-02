@@ -10668,8 +10668,9 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   if(highRatio > -12) score -= 4;
   else if(highRatio > -18) score -= 3;
   else if(highRatio > -25) score -= 1;
-  else if(highRatio < -38) score += 3;
-  else if(highRatio < -32) score += 2;
+  else if(highRatio < -35) score += 3;  /* -38 → -35 (가성 감지 임계값 완화) */
+  else if(highRatio < -28) score += 2;  /* -32 → -28 */
+  else if(highRatio < -25) score += 1;  /* 추가: 약간 약한 고주파도 가성 신호로 */
   
   /* F0 보정 */
   if(f0 < 165) score -= 2;        /* E3 이하 = 진성 강 보정 */
@@ -10678,10 +10679,11 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
   
   /* === 매번 독립 판정 (Hysteresis 제거) ===
-     모호한 경우 mix로 → 오판 방지 우선
-     점수 임계값을 조금 보수적으로 (4점 이상이어야 가성) */
+     - 가성: 점수 +3 이상 (균형 잡힌 임계값)
+     - 진성: 점수 -3 이하 
+     - 모호한 경우: mix */
   let result;
-  if(score >= 4) result = 'falsetto';
+  if(score >= 3) result = 'falsetto';
   else if(score <= -3) result = 'chest';
   else result = 'mix';
   
@@ -11223,7 +11225,7 @@ function _ptFinalizeCurrentTone(){
   if(!_ptCurrentTone) return;
   const dur = _ptCurrentTone.lastTime - _ptCurrentTone.startTime;
   if(dur >= PT_MIN_DURATION_MS){
-    /* register 다수결로 최종 결정 (60% 이상 지배적이어야 함, 아니면 mix) */
+    /* register 다수결로 최종 결정 (50% 이상 우세하면 그 register, 아니면 mix) */
     let finalReg = 'mix';
     let maxCount = 0;
     let totalCount = 0;
@@ -11234,8 +11236,8 @@ function _ptFinalizeCurrentTone(){
         finalReg = r;
       }
     }
-    /* 60% 미만이면 mix로 강등 (모호한 발성은 mix 처리) */
-    if(totalCount > 0 && maxCount / totalCount < 0.6){
+    /* 50% 미만이면 mix로 강등 (정말 모호한 경우만) */
+    if(totalCount > 0 && maxCount / totalCount < 0.5){
       finalReg = 'mix';
     }
     /* 0.5초 이상 지속됐으면 데이터 포인트로 추가 */
