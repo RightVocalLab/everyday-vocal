@@ -6811,31 +6811,6 @@ function _debugFirebase(){
     document.body.appendChild(ov);
   }).catch(function(e){alert('오류: '+e.message);});
 }
-function renderAdminResetBtns(){
-const c=document.getElementById('admin-reset-btns');if(!c)return;c.innerHTML='';
-(STUDENTS_DB||[]).forEach(function(s){
-  const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0;gap:6px';
-  const nameEl=document.createElement('span');nameEl.style.cssText='font-size:12px;font-weight:700;flex:1';nameEl.textContent=s.name;
-  
-  const btnGroup=document.createElement('div');btnGroup.style.cssText='display:flex;gap:5px';
-  
-  /* 음역대 보기 버튼 */
-  const ptBtn=document.createElement('button');
-  ptBtn.style.cssText='background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer';
-  ptBtn.textContent='📊 음역대';
-  (function(nm){ptBtn.onclick=function(){_showAdminPtHistory(nm);};})(s.name);
-  
-  /* 초기화 버튼 */
-  const btn=document.createElement('button');
-  btn.style.cssText='background:#dc2626;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:800;cursor:pointer';
-  btn.textContent='초기화';
-  (function(nm){btn.onclick=function(){resetStudentHw(nm);};})(s.name);
-  
-  btnGroup.appendChild(ptBtn);
-  btnGroup.appendChild(btn);
-  row.appendChild(nameEl);row.appendChild(btnGroup);c.appendChild(row);
-});
-}
 function showHwToday(){
 renderAdminResetBtns();
 /* 항상 Firebase에서 최신 데이터 로드 */
@@ -11939,24 +11914,31 @@ function _showPtResult(){
   const timeStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   document.getElementById('pt-result-time').textContent = `측정일: ${timeStr}`;
   
-  /* 추정 성종 */
-  document.getElementById('pt-result-voicetype').textContent = r.primary.name;
-  document.getElementById('pt-result-match').textContent = `매칭도: ${r.primary.match}%`;
-  document.getElementById('pt-result-desc').textContent = r.primary.desc;
+  /* 추정 성종 (방어 코드) */
+  const primary = r.primary || {name:'알 수 없음', match:0, desc:''};
+  document.getElementById('pt-result-voicetype').textContent = primary.name || '—';
+  document.getElementById('pt-result-match').textContent = `매칭도: ${primary.match || 0}%`;
+  document.getElementById('pt-result-desc').textContent = primary.desc || '—';
   
-  /* 음역 분석 */
+  /* 음역 분석 (방어 코드) */
+  const lowNote = r.lowNote || '—';
+  const highNote = r.highNote || '—';
+  const realLowNote = r.realLowNote || lowNote;
+  const realHighNote = r.realHighNote || highNote;
+  const rangeOct = (typeof r.rangeOctaves === 'number') ? r.rangeOctaves.toFixed(1) : '—';
+  const dataCount = r.dataCount || 0;
   const rangeHtml = `
-    • <strong>최저음:</strong> ${r.lowNote} ${r.realLowNote !== r.lowNote ? `<span style="color:#9333ea">(가성 제외 ${r.realLowNote})</span>` : ''}<br>
-    • <strong>최고음:</strong> ${r.highNote} ${r.realHighNote !== r.highNote ? `<span style="color:#9333ea">(가성 제외 ${r.realHighNote})</span>` : ''}<br>
-    • <strong>음역 폭:</strong> 약 ${r.rangeOctaves.toFixed(1)}옥타브<br>
-    • <strong>측정 데이터:</strong> ${r.dataCount}개 음정
+    • <strong>최저음:</strong> ${lowNote} ${realLowNote !== lowNote ? `<span style="color:#9333ea">(가성 제외 ${realLowNote})</span>` : ''}<br>
+    • <strong>최고음:</strong> ${highNote} ${realHighNote !== highNote ? `<span style="color:#9333ea">(가성 제외 ${realHighNote})</span>` : ''}<br>
+    • <strong>음역 폭:</strong> 약 ${rangeOct}옥타브<br>
+    • <strong>측정 데이터:</strong> ${dataCount}개 음정
   `;
   document.getElementById('pt-result-range').innerHTML = rangeHtml;
   
-  /* 발성 분석 (비율 바) */
-  const chestPct = Math.round(r.chestRatio * 100);
-  const mixPct = Math.round(r.mixRatio * 100);
-  const falsPct = Math.round(r.falsettoRatio * 100);
+  /* 발성 분석 (비율 바) - 방어 코드 */
+  const chestPct = Math.round((r.chestRatio || 0) * 100);
+  const mixPct = Math.round((r.mixRatio || 0) * 100);
+  const falsPct = Math.round((r.falsettoRatio || 0) * 100);
   const regHtml = `
     <div style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
@@ -11985,8 +11967,9 @@ function _showPtResult(){
   `;
   document.getElementById('pt-result-register').innerHTML = regHtml;
   
-  /* 다른 가능성 (Top 2~3) */
-  const othersHtml = r.others.slice(0, 3).map(o => 
+  /* 다른 가능성 (Top 2~3) - 구버전 데이터 호환 */
+  const others = (r.others && Array.isArray(r.others)) ? r.others : [];
+  const othersHtml = others.slice(0, 3).map(o => 
     `<span style="display:inline-block;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:3px 9px;margin:2px;font-size:10.5px"><strong>${o.name}</strong> ${o.match}%</span>`
   ).join(' ');
   document.getElementById('pt-result-others').innerHTML = othersHtml || '—';
@@ -12244,6 +12227,7 @@ function _showAdminPtDetail(idx){
   if(!r) return;
   /* 결과 모달용 캐시에 저장하고 표시 */
   _ptLastResult = r;
+  _closeAdminPtHistory();  /* 이전 모달 닫기 (겹침 방지) */
   _showPtResult();
 }
 
@@ -12673,6 +12657,7 @@ function _showLocalPtDetail(idx){
   const r = _localPtCurrentList[idx];
   if(!r) return;
   _ptLastResult = r;
+  _closeLocalPtUser();  /* 이전 모달 닫기 (겹침 방지) */
   _showPtResult();
 }
 
@@ -12850,12 +12835,17 @@ function _renderCommunityPosts(){
     const after = p.after || {};
     const lowChange = (after.lowMidi || 0) - (before.lowMidi || 0);
     const highChange = (after.highMidi || 0) - (before.highMidi || 0);
-    const arrow = (n) => n > 0 ? '<span style="color:#16a34a">↓</span>' : (n < 0 ? '<span style="color:#dc2626">↑</span>' : '<span style="color:#9ca3af">→</span>');
+    /* 최저음 화살표: 음수(낮아짐 = 발전)면 초록 ↓, 양수면 빨강 ↑ */
+    const lowArrow = lowChange < 0 ? '<span style="color:#16a34a">↓</span>' : (lowChange > 0 ? '<span style="color:#dc2626">↑</span>' : '<span style="color:#9ca3af">→</span>');
+    /* 최고음 화살표: 양수(높아짐 = 발전)면 초록 ↑, 음수면 빨강 ↓ */
+    const highArrow = highChange > 0 ? '<span style="color:#16a34a">↑</span>' : (highChange < 0 ? '<span style="color:#dc2626">↓</span>' : '<span style="color:#9ca3af">→</span>');
     /* 음역 폭 변화 */
     const beforeRange = ((before.highMidi || 0) - (before.lowMidi || 0)) / 12;
     const afterRange = ((after.highMidi || 0) - (after.lowMidi || 0)) / 12;
     const rangeDiff = (afterRange - beforeRange).toFixed(1);
-    const rangeArrow = parseFloat(rangeDiff) > 0 ? '<span style="color:#16a34a">↑</span>' : '';
+    const rangeNum = parseFloat(rangeDiff);
+    const rangeStr = rangeNum > 0 ? '+' + rangeDiff : rangeDiff;
+    const rangeArrow = rangeNum > 0 ? '<span style="color:#16a34a">↑</span>' : (rangeNum < 0 ? '<span style="color:#dc2626">↓</span>' : '');
     
     const likes = p.likes || 0;
     const comments = p.commentCount || 0;
@@ -12873,15 +12863,15 @@ function _renderCommunityPosts(){
         <div style="background:#fafafa;border-radius:8px;padding:8px 11px;font-size:11px;color:#475569;display:flex;justify-content:space-around;text-align:center">
           <div>
             <div style="font-size:9.5px;color:var(--mu)">최저음</div>
-            <div style="font-weight:700">${before.lowNote || '-'} → ${after.lowNote || '-'} ${arrow(lowChange)}</div>
+            <div style="font-weight:700">${before.lowNote || '-'} → ${after.lowNote || '-'} ${lowArrow}</div>
           </div>
           <div>
             <div style="font-size:9.5px;color:var(--mu)">최고음</div>
-            <div style="font-weight:700">${before.highNote || '-'} → ${after.highNote || '-'} ${arrow(-highChange)}</div>
+            <div style="font-weight:700">${before.highNote || '-'} → ${after.highNote || '-'} ${highArrow}</div>
           </div>
           <div>
             <div style="font-size:9.5px;color:var(--mu)">음역 폭</div>
-            <div style="font-weight:700">+${rangeDiff} 옥타브 ${rangeArrow}</div>
+            <div style="font-weight:700">${rangeStr} 옥타브 ${rangeArrow}</div>
           </div>
         </div>
         <!-- 좋아요/댓글 -->
@@ -13072,8 +13062,8 @@ async function _openCommunityView(postId){
     const after = post.after || {};
     const beforeRange = ((before.highMidi||0) - (before.lowMidi||0)) / 12;
     const afterRange = ((after.highMidi||0) - (after.lowMidi||0)) / 12;
-    const lowDiff = after.lowMidi - before.lowMidi;
-    const highDiff = after.highMidi - before.highMidi;
+    const lowDiff = (after.lowMidi||0) - (before.lowMidi||0);
+    const highDiff = (after.highMidi||0) - (before.highMidi||0);
     const rangeDiff = afterRange - beforeRange;
     const arrow = (n) => n > 0 ? '<span style="color:#16a34a;font-weight:800">↑</span>' : (n < 0 ? '<span style="color:#dc2626;font-weight:800">↓</span>' : '<span style="color:#9ca3af">→</span>');
     
