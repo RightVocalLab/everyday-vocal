@@ -10578,18 +10578,21 @@ function _ptAnalyzeLoop(){
   _ptRafId = requestAnimationFrame(_ptAnalyzeLoop);
 }
 
-/* H1-H2 기반 발성 모드 판정 (가성/믹스/진성) 
-   원리: H1(기본주파수)과 H2(2배 배음)의 강도 차이로 성구(register) 판정
-   - 진성(흉성, modal/chest): H1 < H2 (H1-H2 < 0)
-   - 가성(falsetto): H1 > H2 (H1-H2 > +5dB)
-   - 믹스(mix): 그 사이
-   참고: Keating 2014, Sundberg 등 음향학 표준 */
+/* H1-H2 + Spectral Tilt + 고주파 에너지 기반 발성 모드 판정 (가성/믹스/진성)
+   원리: 단일 H1-H2는 모음/마이크 영향이 커서 부정확.
+        여러 음향 지표를 점수화해서 합산하면 더 신뢰할 수 있음.
+   
+   - 진성(흉성): H1<H2 (or H1-H2 음수), 고배음 풍부 (spectral tilt 완만 -12dB/oct), 고주파 에너지 강함
+   - 가성(두성): H1>H2 (H1-H2 양수), 고배음 약함 (spectral tilt 가파름 -18dB/oct 이상), 고주파 에너지 약함
+   - 믹스: 그 사이
+   
+   참고: Keating 2014, Sundberg, Childers&Lee 등 음향학 표준 */
 function _ptDetectRegister(timeBuf, f0, sampleRate){
-  /* DFT를 직접 계산 (FFT 데이터 부족하므로 H1, H2 위치만 정확히 측정) */
-  /* Goertzel 알고리즘 사용 - 특정 주파수의 강도만 효율적으로 계산 */
   const N = timeBuf.length;
   
-  function _goertzelMagnitude(freq){
+  /* Goertzel 알고리즘으로 특정 주파수 강도 계산 */
+  function _goertzelMag(freq){
+    if(freq >= sampleRate / 2) return 0;
     const k = freq / sampleRate;
     const w = 2 * Math.PI * k;
     const cosw = Math.cos(w);
@@ -10600,26 +10603,81 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
       s_prev2 = s_prev;
       s_prev = s;
     }
-    /* magnitude squared */
     const mag2 = s_prev * s_prev + s_prev2 * s_prev2 - coeff * s_prev * s_prev2;
     return Math.sqrt(Math.max(0, mag2));
   }
   
-  const h1Mag = _goertzelMagnitude(f0);
-  const h2Mag = _goertzelMagnitude(f0 * 2);
+  /* 주변 주파수의 평균 강도 (대역 에너지) */
+  function _bandMag(centerFreq, bandwidth){
+    if(centerFreq + bandwidth/2 >= sampleRate / 2) return 0;
+    const numBins = 5;
+    let sum = 0;
+    for(let i = 0; i < numBins; i++){
+      const freq = centerFreq - bandwidth/2 + (bandwidth * i / (numBins - 1));
+      sum += _goertzelMag(freq);
+    }
+    return sum / numBins;
+  }
   
-  if(h1Mag < 1e-10 || h2Mag < 1e-10) return 'mix';
+  /* H1, H2, H3, H4 측정 */
+  const h1 = _goertzelMag(f0);
+  const h2 = _goertzelMag(f0 * 2);
+  const h3 = _goertzelMag(f0 * 3);
+  const h4 = _goertzelMag(f0 * 4);
   
-  /* H1-H2 dB 차이 */
-  const h1h2 = 20 * Math.log10(h1Mag / h2Mag);
+  /* 고주파 에너지: 2~4 kHz 대역 (싱어 포만트 영역, 진성에서 풍부) */
+  const highBand = _bandMag(3000, 1000);
   
-  /* 판정 기준 (음향학 연구 기준):
-     - H1-H2 > +6dB: 가성 (falsetto)
-     - H1-H2 < -2dB: 진성 (chest/modal)
-     - 그 사이: 믹스 (mix)
-     +5도 가성 가능성이 있지만 안전하게 +6 이상으로 잡음 */
-  if(h1h2 > 6) return 'falsetto';
-  if(h1h2 < -2) return 'chest';
+  /* 데이터 부족 시 안전 처리 */
+  if(h1 < 1e-8 || h2 < 1e-8) return 'mix';
+  
+  /* === 1. H1-H2 (dB) === */
+  /* 진성: 음수 (H2 강함), 가성: 양수 (H1 강함) */
+  const h1h2 = 20 * Math.log10(h1 / h2);
+  
+  /* === 2. Spectral Tilt: H1-H4 (dB) ===
+     진성은 완만 (작은 값), 가성은 가파름 (큰 값)
+     H4가 H1보다 얼마나 약한가 */
+  const h1h4 = h4 > 1e-8 ? 20 * Math.log10(h1 / h4) : 30;
+  
+  /* === 3. 고주파 에너지 비율 ===
+     진성은 고주파 풍부 (높은 비율), 가성은 약함 (낮은 비율)
+     H1 대비 고주파 평균 강도 */
+  const highRatio = h1 > 1e-8 ? 20 * Math.log10(highBand / h1) : -40;
+  
+  /* === 4. F0 기반 보조 지표 ===
+     매우 높은 음 + 작은 dB이면 가성 가능성 높음 (단순 보조) */
+  
+  /* === 점수 합산 (높을수록 가성, 낮을수록 진성) === */
+  let score = 0;
+  
+  /* H1-H2 점수 (-3 ~ +3) */
+  if(h1h2 > 8) score += 3;
+  else if(h1h2 > 4) score += 2;
+  else if(h1h2 > 0) score += 1;
+  else if(h1h2 < -4) score -= 2;
+  else if(h1h2 < 0) score -= 1;
+  
+  /* H1-H4 점수 (스펙트럼 기울기 - 가성일수록 큼) */
+  if(h1h4 > 25) score += 3;       /* 매우 가파름 = 가성 */
+  else if(h1h4 > 18) score += 2;
+  else if(h1h4 > 12) score += 1;
+  else if(h1h4 < 6) score -= 2;   /* 매우 완만 = 진성 */
+  else if(h1h4 < 10) score -= 1;
+  
+  /* 고주파 에너지 점수 (진성일수록 고주파 비율 높음) */
+  if(highRatio > -10) score -= 3;       /* 매우 강한 고주파 = 진성 */
+  else if(highRatio > -18) score -= 2;
+  else if(highRatio > -25) score -= 1;
+  else if(highRatio < -35) score += 2;  /* 매우 약한 고주파 = 가성 */
+  else if(highRatio < -30) score += 1;
+  
+  /* === 최종 판정 ===
+     점수 >= +3: 가성
+     점수 <= -3: 진성
+     그 사이: 믹스 */
+  if(score >= 3) return 'falsetto';
+  if(score <= -3) return 'chest';
   return 'mix';
 }
 
@@ -10676,8 +10734,18 @@ function _ptCanvasDraw(){
   _ptCanvasCtx.fillStyle = '#fff';
   _ptCanvasCtx.fillRect(0, 0, W, totalH);
   
-  /* 음역 범위: MIDI 33(A1) ~ 84(C6), 약 4.25옥타브 (베이스 영역 포함) */
-  const midiMin = 33, midiMax = 84;
+  /* 음역 범위: 성별에 따라 다름
+     - 남성: C2 (MIDI 36) ~ C6 (MIDI 84) 
+     - 여성: G2 (MIDI 43) ~ C7 (MIDI 96)
+     - 미지정 시 (성별 모달 전): 전체 범위 A1~C7 */
+  let midiMin, midiMax;
+  if(typeof _ptGender !== 'undefined' && _ptGender === 'female'){
+    midiMin = 43; midiMax = 96;  /* G2 ~ C7 */
+  } else if(typeof _ptGender !== 'undefined' && _ptGender === 'male'){
+    midiMin = 36; midiMax = 84;  /* C2 ~ C6 */
+  } else {
+    midiMin = 33; midiMax = 96;  /* A1 ~ C7 (성별 미선택 시) */
+  }
   /* dB SPL 범위: 50 ~ 90 (실제 측정 영역으로 좁혀서 그래프가 위아래로 크게) */
   const dbMin = 50, dbMax = 90;
   
@@ -10689,27 +10757,39 @@ function _ptCanvasDraw(){
   /* dB 가로선 (10dB 간격, 세로로 길어졌으니 충분히 보임) */
   _ptCanvasCtx.strokeStyle = '#e5e7eb';
   _ptCanvasCtx.lineWidth = 1;
-  _ptCanvasCtx.fillStyle = '#9ca3af';
-  _ptCanvasCtx.font = '10px sans-serif';
-  _ptCanvasCtx.textAlign = 'left';
   for(let db = dbMin; db <= dbMax; db += 10){
     const y = y2px(db);
     _ptCanvasCtx.beginPath();
     _ptCanvasCtx.moveTo(0, y);
     _ptCanvasCtx.lineTo(W, y);
     _ptCanvasCtx.stroke();
-    _ptCanvasCtx.fillText(db + 'dB', 4, y - 3);
+  }
+  /* dB 라벨 (음역 가이드와 겹치지 않게 흰 배경 + 외곽선으로 가독성 확보) */
+  _ptCanvasCtx.font = 'bold 10px sans-serif';
+  _ptCanvasCtx.textAlign = 'left';
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    const txt = db + 'dB';
+    /* 흰색 외곽 (가독성) */
+    _ptCanvasCtx.strokeStyle = 'rgba(255,255,255,0.95)';
+    _ptCanvasCtx.lineWidth = 3;
+    _ptCanvasCtx.strokeText(txt, 4, y - 3);
+    /* 회색 텍스트 */
+    _ptCanvasCtx.fillStyle = '#6b7280';
+    _ptCanvasCtx.fillText(txt, 4, y - 3);
   }
   
-  /* 옥타브별 세로선 (그래프 영역 안에만) */
+  /* 옥타브별 세로선 (그래프 영역 안에만) - 현재 midiMin~midiMax 범위에 있는 것만 */
   _ptCanvasCtx.strokeStyle = '#f3f4f6';
-  const octaves = [
+  const allOctaves = [
     {midi:36, label:'C2'},
     {midi:48, label:'C3'},
     {midi:60, label:'C4'},
     {midi:72, label:'C5'},
     {midi:84, label:'C6'},
+    {midi:96, label:'C7'},
   ];
+  const octaves = allOctaves.filter(o => o.midi >= midiMin && o.midi <= midiMax);
   octaves.forEach(o => {
     const x = x2px(o.midi);
     _ptCanvasCtx.beginPath();
@@ -10730,16 +10810,19 @@ function _ptCanvasDraw(){
       {name:'알토',         low:53, high:77, color:'#a855f7'},  /* F3 ~ F5 */
       {name:'메조소프라노', low:57, high:81, color:'#ec4899'},  /* A3 ~ A5 */
       {name:'소프라노',     low:60, high:84, color:'#f43f5e'},  /* C4 ~ C6 */
+      {name:'콜로라투라',   low:62, high:89, color:'#dc2626'},  /* D4 ~ F6 (콜로라투라 소프라노) */
     ]
   };
   
   const ranges = (typeof _ptGender !== 'undefined' && _ptGender) ? voiceRanges[_ptGender] : null;
   if(ranges){
+    /* dB 라벨 영역 (왼쪽 35px)을 피해서 라벨 그리기 */
+    const labelMinX = 38;
     ranges.forEach((r, idx) => {
       const x1 = x2px(r.low);
       const x2 = x2px(r.high);
-      const y = idx * 16 + 4;
-      const h = 13;
+      const y = idx * 14 + 2;
+      const h = 12;
       
       _ptCanvasCtx.fillStyle = r.color + '15';
       _ptCanvasCtx.fillRect(x1, y, x2 - x1, h);
@@ -10750,7 +10833,9 @@ function _ptCanvasDraw(){
       _ptCanvasCtx.fillStyle = r.color;
       _ptCanvasCtx.font = 'bold 9px sans-serif';
       _ptCanvasCtx.textAlign = 'left';
-      _ptCanvasCtx.fillText(r.name, x1 + 4, y + 9);
+      /* 라벨이 dB 라벨 영역에 겹치면 안쪽으로 밀기 */
+      const labelX = Math.max(x1 + 4, labelMinX);
+      _ptCanvasCtx.fillText(r.name, labelX, y + 9);
     });
   }
   
