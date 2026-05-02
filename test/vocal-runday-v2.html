@@ -10672,18 +10672,35 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   else if(highRatio < -28) score += 2;  /* -32 → -28 */
   else if(highRatio < -25) score += 1;  /* 추가: 약간 약한 고주파도 가성 신호로 */
   
-  /* F0 보정 */
-  if(f0 < 165) score -= 2;        /* E3 이하 = 진성 강 보정 */
-  else if(f0 < 196) score -= 1;   /* G3 이하 = 진성 보정 */
-  else if(f0 > 880) score += 3;   /* A5 이상 = 가성 강 보정 */
-  else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
+  /* F0 보정 (성별별로 다르게)
+     남자: G3 이하 진성, E5 이상 가성 가능성 ↑
+     여자: 음역 자체가 높으니 더 보수적으로 - mix 영역 넓게 잡기
+           F5 (698Hz) 이상부터 가성 보정 (남자보다 높게)
+           A5 (880Hz) 이상부터 강 보정 */
+  const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
+  if(isFemale){
+    /* 여자 - mix 영역을 훨씬 넓게 */
+    if(f0 < 220) score -= 1;        /* A3 이하 (드물지만) = 진성 보정 */
+    else if(f0 > 988) score += 3;   /* B5 이상 = 가성 강 보정 */
+    else if(f0 > 784) score += 2;   /* G5 이상 = 가성 보정 */
+    else if(f0 > 698) score += 1;   /* F5 이상 = 약한 가성 보정 */
+    /* F5 이하는 F0 보정 없음 - mix/chest/falsetto는 다른 지표로만 판단 */
+  } else {
+    /* 남자 - 기존 로직 유지 */
+    if(f0 < 165) score -= 2;        /* E3 이하 = 진성 강 보정 */
+    else if(f0 < 196) score -= 1;   /* G3 이하 = 진성 보정 */
+    else if(f0 > 880) score += 3;   /* A5 이상 = 가성 강 보정 */
+    else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
+  }
   
   /* === 매번 독립 판정 (Hysteresis 제거) ===
-     - 가성: 점수 +3 이상 (균형 잡힌 임계값)
+     - 가성: 점수 +3 이상 (남자) / +4 이상 (여자, 더 보수적)
      - 진성: 점수 -3 이하 
-     - 모호한 경우: mix */
+     - 모호한 경우: mix 
+     여자는 음역 자체가 높아서 가성 오판 가능성이 큼 → 가성 임계값을 더 높임 */
   let result;
-  if(score >= 3) result = 'falsetto';
+  const falsettoThreshold = isFemale ? 4 : 3;
+  if(score >= falsettoThreshold) result = 'falsetto';
   else if(score <= -3) result = 'chest';
   else result = 'mix';
   
@@ -10693,7 +10710,6 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
      - 남성: G3(196Hz) 이하에서는 가성 발성 불가
      - 여성: D4(294Hz) 이하에서는 가성 발성 불가 */
   if(result === 'falsetto'){
-    const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
     const falsettoLowLimit = isFemale ? 294 : 196;
     if(f0 < falsettoLowLimit){
       result = score <= -1 ? 'chest' : 'mix';
