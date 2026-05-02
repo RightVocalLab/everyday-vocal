@@ -10395,7 +10395,6 @@ function _ptResetData(){
   _ptHighFreq = null;
   _ptDataPoints = [];
   _ptCurrentTone = null;
-  _ptLastRegister = null;  /* register 안정화 변수도 초기화 */
 }
 
 /* 화면 닫을 때 정리 */
@@ -10580,15 +10579,14 @@ function _ptAnalyzeLoop(){
 }
 
 /* H1-H2 + H2-H4 + Spectral Tilt + 고주파 에너지 + F0 기반 발성 모드 판정
-   원리: 5가지 음향 지표를 점수화 + Hysteresis(이전 결과 안정화)
+   원리: 5가지 음향 지표를 점수화 (Hysteresis 제거 - 매 프레임 독립 판정)
    
    - 진성(흉성, modal/chest): 고배음 풍부, H1<H2, spectral tilt 완만
    - 가성(두성, falsetto): 고배음 약함, H1>H2, spectral tilt 가파름  
    - 믹스: 그 사이 (전환 영역)
+   - 모호한 경우 mix로 (오판 방지가 더 중요)
    
    참고: Keating 2014, Sundberg, Childers&Lee, Lee 2021 등 음향학 표준 */
-let _ptLastRegister = null;  /* 안정화용 - 이전 결정 register */
-
 function _ptDetectRegister(timeBuf, f0, sampleRate){
   const N = timeBuf.length;
   
@@ -10629,106 +10627,77 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   /* 고주파 에너지: 2~4 kHz 대역 (싱어 포만트 영역, 진성에서 풍부) */
   const highBand = _bandMag(3000, 1000);
   
-  /* 데이터 부족 시 안전 처리 */
-  if(h1 < 1e-8 || h2 < 1e-8) return _ptLastRegister || 'mix';
+  /* 데이터 부족 시 mix (안전한 기본값) */
+  if(h1 < 1e-8 || h2 < 1e-8) return 'mix';
   
-  /* === 1. H1-H2 (dB) ===
-     "아" 모음 기준: 진성은 -2~+2, 가성은 +5 이상
-     진성: 음수, 가성: 양수 */
+  /* === 1. H1-H2 (dB) === */
   const h1h2 = 20 * Math.log10(h1 / h2);
   
-  /* === 2. H2-H4 (dB) - 중배음 스펙트럼 기울기 ===
-     "아" 모음에서 가성은 H4가 H2보다 훨씬 약함
-     진성: 작음 (H4도 살아있음), 가성: 큼 (H4 거의 없음) */
+  /* === 2. H2-H4 (dB) - 중배음 스펙트럼 기울기 === */
   const h2h4 = h4 > 1e-8 ? 20 * Math.log10(h2 / h4) : 25;
   
-  /* === 3. H1-H4 (dB) - 전체 스펙트럼 기울기 ===
-     진성: 작음(완만 ~12dB), 가성: 큼(가파름 ~20dB+) */
+  /* === 3. H1-H4 (dB) - 전체 스펙트럼 기울기 === */
   const h1h4 = h4 > 1e-8 ? 20 * Math.log10(h1 / h4) : 30;
   
-  /* === 4. 고주파 에너지 비율 (dB) ===
-     H1 대비 2-4kHz 대역 에너지
-     진성: 높음 (-15dB), 가성: 매우 낮음 (-35dB) */
+  /* === 4. 고주파 에너지 비율 (dB) === */
   const highRatio = h1 > 1e-8 ? 20 * Math.log10(highBand / h1) : -40;
-  
-  /* === 5. F0 (음정) 기반 보정 ===
-     낮은 음 (G3=196Hz 이하): 진성 가능성 ↑
-     높은 음 (E5=659Hz 이상): 가성 가능성 ↑ 
-     중간 음정: 영향 없음 */
   
   /* === 점수 합산 (높을수록 가성, 낮을수록 진성) === */
   let score = 0;
   
-  /* H1-H2 점수 (가중치 ↑, "아" 모음 임계값 조정) */
+  /* H1-H2 점수 */
   if(h1h2 > 7) score += 3;
   else if(h1h2 > 3) score += 2;
   else if(h1h2 > -1) score += 1;
   else if(h1h2 < -5) score -= 3;
   else if(h1h2 < -2) score -= 2;
   
-  /* H2-H4 점수 (새 추가 - 중배음 기울기) */
-  if(h2h4 > 18) score += 2;        /* 중배음 급격 감쇠 = 가성 */
+  /* H2-H4 점수 */
+  if(h2h4 > 18) score += 2;
   else if(h2h4 > 12) score += 1;
-  else if(h2h4 < 4) score -= 2;    /* H4도 강함 = 진성 */
+  else if(h2h4 < 4) score -= 2;
   else if(h2h4 < 8) score -= 1;
   
-  /* H1-H4 점수 (전체 스펙트럼 기울기) */
+  /* H1-H4 점수 */
   if(h1h4 > 25) score += 2;
   else if(h1h4 > 18) score += 1;
   else if(h1h4 < 8) score -= 2;
   else if(h1h4 < 12) score -= 1;
   
-  /* 고주파 에너지 점수 (가중치 ↑, 가장 신뢰할 수 있는 지표) */
-  if(highRatio > -12) score -= 4;       /* 매우 강한 고주파 = 확실한 진성 */
+  /* 고주파 에너지 점수 (가장 신뢰할 수 있는 지표) */
+  if(highRatio > -12) score -= 4;
   else if(highRatio > -18) score -= 3;
   else if(highRatio > -25) score -= 1;
-  else if(highRatio < -38) score += 3;  /* 매우 약한 고주파 = 확실한 가성 */
+  else if(highRatio < -38) score += 3;
   else if(highRatio < -32) score += 2;
   
-  /* F0 보정 (음정 자체로 보정) */
-  if(f0 < 196) score -= 1;        /* G3 이하 = 진성 가능성 ↑ */
-  else if(f0 < 165) score -= 2;   /* E3 이하 = 진성 강 보정 */
-  else if(f0 > 659) score += 2;   /* E5 이상 = 가성 가능성 ↑ */
+  /* F0 보정 */
+  if(f0 < 165) score -= 2;        /* E3 이하 = 진성 강 보정 */
+  else if(f0 < 196) score -= 1;   /* G3 이하 = 진성 보정 */
   else if(f0 > 880) score += 3;   /* A5 이상 = 가성 강 보정 */
+  else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
   
-  /* === Hysteresis (안정화) ===
-     이전 결과를 유지하려는 경향 → 잠깐의 잘못된 판정 방지
-     register 전환에 더 큰 변화 필요 */
+  /* === 매번 독립 판정 (Hysteresis 제거) ===
+     모호한 경우 mix로 → 오판 방지 우선
+     점수 임계값을 조금 보수적으로 (4점 이상이어야 가성) */
   let result;
-  if(_ptLastRegister === 'chest'){
-    /* 이전이 진성이면 가성으로 가려면 더 강한 신호 필요 */
-    if(score >= 4) result = 'falsetto';
-    else if(score >= 1) result = 'mix';
-    else result = 'chest';
-  } else if(_ptLastRegister === 'falsetto'){
-    /* 이전이 가성이면 진성으로 가려면 더 강한 신호 필요 */
-    if(score <= -4) result = 'chest';
-    else if(score <= -1) result = 'mix';
-    else result = 'falsetto';
-  } else {
-    /* 이전이 믹스이거나 첫 판정 - 표준 임계값 (chest 쪽 살짝 완화) */
-    if(score >= 3) result = 'falsetto';
-    else if(score <= -2) result = 'chest';  /* -3 → -2 (약한 진성도 잘 잡히게) */
-    else result = 'mix';
-  }
+  if(score >= 4) result = 'falsetto';
+  else if(score <= -3) result = 'chest';
+  else result = 'mix';
   
   /* === 생리학적 검증 ===
      가성(falsetto)은 성대 가장자리만 진동하는 발성으로,
      낮은 음역에서는 물리적으로 불가능함.
-     - 남성: G3(196Hz) 이하에서는 가성 발성 불가 → mix로 강등
-     - 여성: D4(294Hz) 이하에서는 가성 발성 불가 → mix로 강등
-     이 영역에서 가성으로 판정되는 건 알고리즘 오판 */
+     - 남성: G3(196Hz) 이하에서는 가성 발성 불가
+     - 여성: D4(294Hz) 이하에서는 가성 발성 불가 */
   if(result === 'falsetto'){
     const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
-    const falsettoLowLimit = isFemale ? 294 : 196;  /* 여성 D4, 남성 G3 */
+    const falsettoLowLimit = isFemale ? 294 : 196;
     if(f0 < falsettoLowLimit){
-      /* 낮은 음에서 가성으로 잘못 판정 → 점수가 충분히 낮으면 진성, 아니면 믹스 */
-      if(score <= -1) result = 'chest';
-      else result = 'mix';
+      result = score <= -1 ? 'chest' : 'mix';
     }
   }
   
-  _ptLastRegister = result;
   return result;
 }
 
@@ -11254,14 +11223,20 @@ function _ptFinalizeCurrentTone(){
   if(!_ptCurrentTone) return;
   const dur = _ptCurrentTone.lastTime - _ptCurrentTone.startTime;
   if(dur >= PT_MIN_DURATION_MS){
-    /* register 다수결로 최종 결정 */
+    /* register 다수결로 최종 결정 (60% 이상 지배적이어야 함, 아니면 mix) */
     let finalReg = 'mix';
     let maxCount = 0;
+    let totalCount = 0;
     for(const r in _ptCurrentTone.regCount){
+      totalCount += _ptCurrentTone.regCount[r];
       if(_ptCurrentTone.regCount[r] > maxCount){
         maxCount = _ptCurrentTone.regCount[r];
         finalReg = r;
       }
+    }
+    /* 60% 미만이면 mix로 강등 (모호한 발성은 mix 처리) */
+    if(totalCount > 0 && maxCount / totalCount < 0.6){
+      finalReg = 'mix';
     }
     /* 0.5초 이상 지속됐으면 데이터 포인트로 추가 */
     _ptDataPoints.push({
@@ -11358,7 +11333,6 @@ function _resetPitchTest(){
   _ptHighFreq = null;
   _ptDataPoints = [];
   _ptCurrentTone = null;  /* 현재 진행 중인 톤도 초기화 */
-  _ptLastRegister = null;  /* register 안정화 변수도 초기화 */
   const lo=document.getElementById('pt-low'); if(lo) lo.textContent = '—';
   const hi=document.getElementById('pt-high'); if(hi) hi.textContent = '—';
   const no=document.getElementById('pt-note'); if(no) no.textContent = '—';
