@@ -12177,36 +12177,45 @@ function _drawSinglePtToCanvas(canvasId, result){
     const mixPts = result.dataPoints.filter(p => p.register === 'mix');
     const falsettoPts = result.dataPoints.filter(p => p.register === 'falsetto');
     
-    /* 등고선: 가성 제외 (실용 음역) */
-    const realPts = result.dataPoints.filter(p => p.register !== 'falsetto');
-    if(realPts.length >= 3){
-      const points = realPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
-      const hull = _expandHull(_hull(points), 8);
-      _drawSmoothPath(hull, 'rgba(59,130,246,0.20)', 'rgba(29,78,216,0.85)', 2.5);
+    /* 진성 등고선 (파란색) */
+    if(chestPts.length >= 3){
+      const points = chestPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const hull = _expandHull(_hull(points), 6);
+      _drawSmoothPath(hull, 'rgba(59,130,246,0.18)', 'rgba(29,78,216,0.85)', 2);
     }
     
-    /* 가성 영역 (얇은 보라 등고선) */
+    /* 믹스 등고선 (하늘색) */
+    if(mixPts.length >= 3){
+      const points = mixPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const hull = _expandHull(_hull(points), 6);
+      _drawSmoothPath(hull, 'rgba(14,165,233,0.18)', 'rgba(2,132,199,0.85)', 2);
+    }
+    
+    /* 가성 등고선 (보라색) */
     if(falsettoPts.length >= 3){
       const points = falsettoPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
       const hull = _expandHull(_hull(points), 6);
-      _drawSmoothPath(hull, 'rgba(139,92,246,0.15)', 'rgba(124,58,237,0.6)', 1.5);
+      _drawSmoothPath(hull, 'rgba(139,92,246,0.18)', 'rgba(124,58,237,0.85)', 2);
     }
     
-    /* 개별 데이터 포인트 (작은 점) */
+    /* 데이터 포인트가 부족한 영역(<3개)도 점은 표시되도록 fallback */
+    /* 영역이 1~2개뿐이면 등고선 없이 점만 보임 */
+    
+    /* 개별 데이터 포인트 (작은 점) - 등고선 위에 그려서 강조 */
     chestPts.forEach(p => {
-      ctx.fillStyle = '#3b82f6';  /* 진성: 파랑 */
+      ctx.fillStyle = '#1d4ed8';  /* 진성: 진한 파랑 */
       ctx.beginPath();
       ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
       ctx.fill();
     });
     mixPts.forEach(p => {
-      ctx.fillStyle = '#0ea5e9';  /* 믹스: 하늘색 */
+      ctx.fillStyle = '#0284c7';  /* 믹스: 진한 하늘색 */
       ctx.beginPath();
       ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
       ctx.fill();
     });
     falsettoPts.forEach(p => {
-      ctx.fillStyle = '#8b5cf6';  /* 가성: 보라 */
+      ctx.fillStyle = '#7c3aed';  /* 가성: 진한 보라 */
       ctx.beginPath();
       ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
       ctx.fill();
