@@ -11635,11 +11635,13 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
 
 /* Canvas 점 추가 (지속 시간 추적 + 잡음 필터링) 
    현재 발성 중인 음정 버퍼에 누적하고, 음정이 바뀌거나 발성이 끊기면 
-   0.5초 이상 지속된 경우에만 정식 데이터 포인트로 확정 */
+   0.3초 이상 지속된 경우에만 정식 데이터 포인트로 확정 */
 let _ptCurrentTone = null;  /* {midi, dB합계, 카운트, 시작시각, 마지막시각} */
 const PT_MIDI_TOLERANCE = 0.6;  /* 같은 음정으로 간주 (반음 이내) */
 const PT_GAP_MS = 200;          /* 발성 끊김 판정 (마지막 입력 후 200ms 무입력 → 끊김) */
-const PT_MIN_DURATION_MS = 500; /* 0.5초 미만은 잡음으로 무시 */
+const PT_MIN_DURATION_MS = 300; /* 0.3초 미만은 잡음(치찰음/파열음/짧은 외침)으로 무시
+                                   파열음(ㅂ,ㄷ,ㄱ): 5~30ms, 치찰음(ㅅ,ㅈ): 50~200ms,
+                                   짧은 외침: 200~300ms 까지 차단 / 의도된 발성은 250ms+ */
 
 function _ptAddPoint(midi, dB, register){
   const now = Date.now();
@@ -11658,7 +11660,7 @@ function _ptAddPoint(midi, dB, register){
       _ptCurrentTone.regCount[register] = (_ptCurrentTone.regCount[register] || 0) + 1;
     }
     
-    /* 진행 중인 톤이 0.5초 이상 지속됐으면 라이브 표시용으로 갱신 */
+    /* 진행 중인 톤이 0.3초 이상 지속됐으면 라이브 표시용으로 갱신 */
     const dur = now - _ptCurrentTone.startTime;
     if(dur >= PT_MIN_DURATION_MS){
       _ptDrawNeeded = true;
@@ -11678,7 +11680,7 @@ function _ptAddPoint(midi, dB, register){
   }
 }
 
-/* 현재 진행 중인 톤이 0.5초 이상이면 정식 데이터로 확정 */
+/* 현재 진행 중인 톤이 0.3초 이상이면 정식 데이터로 확정 */
 function _ptFinalizeCurrentTone(){
   if(!_ptCurrentTone) return;
   const dur = _ptCurrentTone.lastTime - _ptCurrentTone.startTime;
@@ -11698,7 +11700,7 @@ function _ptFinalizeCurrentTone(){
     if(totalCount > 0 && maxCount / totalCount < 0.5){
       finalReg = 'mix';
     }
-    /* 0.5초 이상 지속됐으면 데이터 포인트로 추가 */
+    /* 0.3초 이상 지속됐으면 데이터 포인트로 추가 */
     _ptDataPoints.push({
       midi: _ptCurrentTone.midi,
       dB: _ptCurrentTone.dBSum / _ptCurrentTone.count,
