@@ -1893,6 +1893,66 @@ const INIT_DB={
       "note": "하행 진행 → 반음씩 상행 반복 → 다시 반음씩 하행 반복(시작음까지)"
     },
     {
+      "id": "5DNH-A",
+      "name": "5도 홀드 하향 스케일",
+      "range": "중성~낮은두성",
+      "startNote": 69,
+      "endNote": 79,
+      "bpm": 125,
+      "pattern": [
+        7,
+        { "hold": 4 },
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
+    },
+    {
+      "id": "5DNH-B",
+      "name": "5도 홀드 하향 스케일",
+      "range": "중성~높은두성",
+      "startNote": 69,
+      "endNote": 83,
+      "bpm": 125,
+      "pattern": [
+        7,
+        { "hold": 4 },
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
+    },
+    {
+      "id": "5DNH-C",
+      "name": "5도 홀드 하향 스케일",
+      "range": "고급",
+      "startNote": 69,
+      "endNote": 91,
+      "bpm": 125,
+      "pattern": [
+        7,
+        { "hold": 4 },
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
+    },
+    {
       "id": "9DN-A",
       "name": "9도 하향 스케일",
       "range": "높은두성 시작",
@@ -1957,6 +2017,78 @@ const INIT_DB={
       "previewType": "첫음단음",
       "previewBeats": 4,
       "note": ""
+    },
+    {
+      "id": "9DNH-A",
+      "name": "9도 홀드 하향 스케일",
+      "range": "높은두성 시작",
+      "startNote": 83,
+      "endNote": 71,
+      "bpm": 180,
+      "pattern": [
+        14,
+        { "hold": 4 },
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "높은레(9, 4박 홀드) → 레-도-시-라-솔-파-미-레-도 하행"
+    },
+    {
+      "id": "9DNH-B",
+      "name": "9도 홀드 하향 스케일",
+      "range": "고급",
+      "startNote": 91,
+      "endNote": 71,
+      "bpm": 180,
+      "pattern": [
+        14,
+        { "hold": 4 },
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "높은레(9, 4박 홀드) → 레-도-시-라-솔-파-미-레-도 하행"
+    },
+    {
+      "id": "9DNH-C",
+      "name": "9도 홀드 하향 스케일(하향만)",
+      "range": "두성",
+      "startNote": 83,
+      "endNote": 88,
+      "bpm": 180,
+      "pattern": [
+        14,
+        { "hold": 4 },
+        14,
+        12,
+        11,
+        9,
+        7,
+        5,
+        4,
+        2,
+        0
+      ],
+      "previewType": "첫음단음",
+      "previewBeats": 4,
+      "note": "높은레(9, 4박 홀드) → 레-도-시-라-솔-파-미-레-도 하행"
     }
   ],
   "courses": [
@@ -5866,7 +5998,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-A",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "올라갈때 앞을타고 위로가서 뒤로가고 내려올때 삼각형 다 버텨보기",
@@ -5877,7 +6009,7 @@ let STUDENTS_DB = [
       {
         "exId": "흉강고정+Press 우(학!우빡!)",
         "exName": "흉강고정+Press 우(학!우빡!)",
-        "displayLabel": "흉강고정+Press 우(학!우빡!)",
+        "displayLabel": "흉강고정+Press 우(학!우빡!)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에 좁히면 안되 주은아! 밖으로 아래로 공간에 성대의 힘을 밀어 넣는다고 생각하면서!",
@@ -5888,7 +6020,7 @@ let STUDENTS_DB = [
       {
         "exId": "Press 후우(후우빡!)",
         "exName": "Press 후우(후우빡!)",
-        "displayLabel": "Press 후우(후우빡!)",
+        "displayLabel": "Press 후우(후우빡!)+3D-B",
         "scaleId": "3D-B",
         "repeat": 1,
         "comment": "이제부터 후 는 위치를 올리는 서비스 이고 계속 가슴에 우빡을 잘 버티려고 해야 되!",
@@ -5899,7 +6031,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "가슴까지 닿은 소리를 창문열고 나간다 생각하면서 앞으로 꺼내기!\n뚜껑 닫기!",
@@ -5910,7 +6042,7 @@ let STUDENTS_DB = [
       {
         "exId": "학! 아빡",
         "exName": "학! 아빡",
-        "displayLabel": "학! 아빡",
+        "displayLabel": "학! 아빡+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에 좁히지말고 버티기! 힘들어지는 음정부터 앞에밑으로 꺽이며 누른다 생각하기!",
@@ -5921,7 +6053,7 @@ let STUDENTS_DB = [
       {
         "exId": "하아빡",
         "exName": "하아빡",
-        "displayLabel": "하아빡",
+        "displayLabel": "하아빡+3D-B",
         "scaleId": "3D-B",
         "repeat": 2,
         "comment": "피아노에 턱 대고 한번(가슴열어 대기), 벽에 붙어서 한번(가슴열어 대기)",
@@ -5932,7 +6064,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "후두를 턱으로 완전 박아서 가슴앞에 공을 상상하며 열 것!",
@@ -5943,7 +6075,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
-        "displayLabel": "오픈허밍(두성)",
+        "displayLabel": "오픈허밍(두성)+5D-B",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "피치만 생각하면서, 가볍게 뒤로위로 당겨가기",
@@ -5954,7 +6086,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성~두성)",
         "exName": "오픈허밍(흉성~두성)",
-        "displayLabel": "오픈허밍(흉성~두성)",
+        "displayLabel": "오픈허밍(흉성~두성)+9D-A",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "앞에 잘 버틴거 생각하면서 위로, 뒤로 연결해서 지나가기!\n잘 되면 뒤에도 내리기",
@@ -5982,7 +6114,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-C",
         "scaleId": "9D-C",
         "repeat": 1,
         "comment": "흉성~두성",
@@ -5993,7 +6125,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "흉성",
@@ -6004,7 +6136,7 @@ let STUDENTS_DB = [
       {
         "exId": "백프레셔",
         "exName": "백프레셔",
-        "displayLabel": "백프레셔",
+        "displayLabel": "백프레셔+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "흉성~두성",
@@ -6015,7 +6147,7 @@ let STUDENTS_DB = [
       {
         "exId": "우빡",
         "exName": "우빡",
-        "displayLabel": "우빡",
+        "displayLabel": "우빡+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "흉성",
@@ -6026,7 +6158,7 @@ let STUDENTS_DB = [
       {
         "exId": "후우빡",
         "exName": "후우빡",
-        "displayLabel": "후우빡",
+        "displayLabel": "후우빡+3D-D",
         "scaleId": "3D-D",
         "repeat": 1,
         "comment": "흉성~높은 중성",
@@ -6037,7 +6169,7 @@ let STUDENTS_DB = [
       {
         "exId": "흐어아 내려오기",
         "exName": "흐어아 내려오기",
-        "displayLabel": "흐어아 내려오기",
+        "displayLabel": "흐어아 내려오기+9DN-B",
         "scaleId": "9DN-B",
         "repeat": 1,
         "comment": "고급",
@@ -6076,7 +6208,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "벽에 붙어서. 맨 첫음에서 너무 넓게 하려고 하지말고 더 한 점으로 모은다고 생각!",
@@ -6087,7 +6219,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "내가 할 수 있는만큼 가슴에 창문 열어서 대주고,\n힘들면 그 구간부터 자연스럽게 가슴에호흡을 꿰서 뒤로위로 멀리멀리 올라가기!, 모든구간에서 다 가슴에 창문 열수있게!\n잘 되서 밴딩으로 넘어갔어! \n밴딩했을때 처음에는 D#5부터안났었는데 한번 붙기시작하니까 G5까지 났는데! G#5부터 더 얇게 안만들어지는거야! \n근데 여기는 밑애 G5랑 같은 느낌이라고 생각하면 절대 못올라가! \n더 얆아진게 다시 가슴으로 붙는다고 생각해야되!\n그래도 안되면 방법 2가지 번갈아가면서 해보기! \n1번은 가슴에 압력을 확보하되 안되는음정은 상상! \n내려올때 붙혀보기(음정을 내려고 해보기), \n2번은 가성으로 빼도 되는데 그럼 더 오래걸리니까 가성이라고 상상하고 더 멀리보내기!(조금 조여지지만 그래도 나기시작하거든? 그럼또 반대로 나기시작한음에서 점점 열어간다 생각하면되!)",
@@ -6098,7 +6230,7 @@ let STUDENTS_DB = [
       {
         "exId": "학! 아빡",
         "exName": "학! 아빡",
-        "displayLabel": "학! 아빡",
+        "displayLabel": "학! 아빡+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "무거운 거 들면서. 벽에 붙어서 가슴위치에서만! 앞으로 나가면서 밝은 아를 자랑한다고 생각! 맨처음 수업들 기억하기! 후두하강해서 누르며 버티는 힘 기르기!",
@@ -6109,7 +6241,7 @@ let STUDENTS_DB = [
       {
         "exId": "허밍",
         "exName": "허밍",
-        "displayLabel": "허밍",
+        "displayLabel": "허밍+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "내려올 때 호흡의 단수를 절대 낮추면 안 돼! 콧구멍으로 호흡을 빼면 안 돼!",
@@ -6120,7 +6252,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "처음에는 앞에만 사용해서!",
@@ -6131,7 +6263,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "3,4번 방향으로 ㅅ자 모양으로 버텨진다고 생각! \n앞에 압력이 뒤로 따라가지 않게 주의!",
@@ -6142,7 +6274,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
-        "displayLabel": "오픈허밍(두성)",
+        "displayLabel": "오픈허밍(두성)+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "뒤로위로 소리를 보냈다가 앞으로 보내면서 내려오기!",
@@ -6153,7 +6285,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성~두성)",
         "exName": "오픈허밍(흉성~두성)",
-        "displayLabel": "오픈허밍(흉성~두성)",
+        "displayLabel": "오픈허밍(흉성~두성)+9D-A",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "4개는 흉성, 5개째부터 두성으로 훅 띄워서 내고 내려올 때는 두성으로!",
@@ -6164,7 +6296,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(두성) 아~",
         "exName": "오픈허밍(두성) 아~",
-        "displayLabel": "오픈허밍(두성) 아~",
+        "displayLabel": "오픈허밍(두성) 아~+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "오픈허밍(두성) 상태에서 아래로 한번 눌러서 뒤로 보내고 위로 당겨 올라가는 걸 버티면서 위를 든다는 생각으로 '아' 하기",
@@ -6203,7 +6335,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔(흉성)",
         "exName": "Z 브레셔(흉성)",
-        "displayLabel": "Z 브레셔(흉성)",
+        "displayLabel": "Z 브레셔(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴앞에 소리 잘 붙혀서 유지하고 음정 올라가면 뒤에 잘 당겨쓰고! 가슴소리가 너무 없으면 안 돼!(중요)",
@@ -6214,7 +6346,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔(흉성~두성)",
         "exName": "Z 브레셔(흉성~두성)",
-        "displayLabel": "Z 브레셔(흉성~두성)",
+        "displayLabel": "Z 브레셔(흉성~두성)+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "벽에 붙어서. 앞에 바람 잘 버티면서! 두성구쯤 올라가면 뒤에서 아래로 눌리는 상압이 생긴다고 상상!",
@@ -6225,7 +6357,7 @@ let STUDENTS_DB = [
       {
         "exId": "허밍",
         "exName": "허밍",
-        "displayLabel": "허밍",
+        "displayLabel": "허밍+5D-B",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "입닫고 뒤로위로 내려올 때 앞으로!",
@@ -6236,7 +6368,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에만 신경써서! 수연이는 밑에를 더 많이 밖으로 꺼낸다 생각!",
@@ -6247,7 +6379,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "3번 4번 위치에서 수평으로만 움직일 것! G4, G#4 되면 뒤에 한칸씩 더 있다고 생각하면서!",
@@ -6258,7 +6390,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
-        "displayLabel": "오픈허밍(두성)",
+        "displayLabel": "오픈허밍(두성)+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "붙은채로 못올라가니까 가성으로 올라가되 뒤에위에 계속 호흡이\n음정에 맞게 속도가빨라져서 올라가줘야되! 그리고 그 느껴지는 위치까지\n눈안에 손가락 해서 소리를 데리고 가야 되! 내려올때 풀지말고 호흡 꺼뜨리지 말고!\n뒤로위로 올라간다는 생각으로 내려오기!",
@@ -6269,7 +6401,7 @@ let STUDENTS_DB = [
       {
         "exId": "후 내려오기(5도 하향)",
         "exName": "후 내려오기(5도 하향)",
-        "displayLabel": "후 내려오기(5도 하향)",
+        "displayLabel": "후 내려오기(5도 하향)+5DN-C",
         "scaleId": "5DN-C",
         "repeat": 1,
         "comment": "호흡과 압력이 뒷통수쪽으로 빨려들어간다는 생각으로!",
@@ -6280,7 +6412,7 @@ let STUDENTS_DB = [
       {
         "exId": "백프레셔 x10",
         "exName": "백프레셔 x10",
-        "displayLabel": "백프레셔 x10",
+        "displayLabel": "백프레셔 x10+6H-B",
         "scaleId": "6H-B",
         "repeat": 1,
         "comment": "백프레셔 한음정 내서 버티기! 처음에는 입술힘이 없는게 당연! 할수록 좋아짐!\nZ처럼 소리를 가슴으로 가두려고 할 것! 익숙해지면 가슴위치에서 성대가 얇게 붙는다고 생각하고 버틸 것!",
@@ -6295,17 +6427,6 @@ let STUDENTS_DB = [
     "pw": "jiyu24",
     "homework": [
       {
-        "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "exName": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "displayLabel": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
-        "scaleId": "",
-        "repeat": 1,
-        "comment": "**주먹말고 호흡 훈련.**\n말아 쥔 주먹의 저항을 통해 호흡근을 훈련합니다.\n\n**훈련 방법.**\n주먹을 말아쥐고 입술을 주먹안에 집어 넣듯이 바짝 붙입니다.\n말아쥔 주먹의 강도를 바꿔가며 주먹에서 공기의 저항이 발생할 수 있도록 하여 입으로 호흡을 마십니다.\n이 때 복흉식 호흡을 실시해야 합니다.(중요)\n익숙해지면 허리를 숙여서 한손을 허리 뒷쪽에 대고 호흡을 마실때 팽창, 내쉴 때 팽창된 호흡이 위로 서포트되서 올려준다는 느낌으로 훈련합니다.\n\n**훈련 효과.**\n코로 저항을 걸어서 마시는 것보다 더 강한 압력으로 호흡을 마셔 호흡근의 증대를 빨리 일으킬 수 있습니다.",
-        "active": true,
-        "num": 0,
-        "name": "호흡훈련 주먹말고 서서 x10, 숙여서 x10"
-      },
-      {
         "exId": "S 브레셔 x10",
         "exName": "S 브레셔 x10",
         "displayLabel": "S 브레셔 x10",
@@ -6313,16 +6434,27 @@ let STUDENTS_DB = [
         "repeat": 1,
         "comment": "길게~ 들어가는 호흡이 컨트롤해준다 생각하면서 더 얇게, 길게~!",
         "active": true,
-        "num": 1,
+        "num": 0,
         "name": "S 브레셔 x10"
       },
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
+        "active": true,
+        "num": 1,
+        "name": "립트릴 9도 흉성~높은두성"
+      },
+      {
+        "exId": "립트릴 9도 흉성~높은두성",
+        "exName": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
+        "scaleId": "9D-B",
+        "repeat": 1,
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 내려오기!\n추가로 성문간격 유지하면서 내려오기!",
         "active": true,
         "num": 2,
         "name": "립트릴 9도 흉성~높은두성"
@@ -6330,101 +6462,90 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
-        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 내려오기!",
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
         "active": true,
         "num": 3,
         "name": "립트릴 9도 흉성~높은두성"
       },
       {
-        "exId": "립트릴 9도 흉성~높은두성",
-        "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
-        "scaleId": "9D-B",
-        "repeat": 1,
-        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
-        "active": true,
-        "num": 4,
-        "name": "립트릴 9도 흉성~높은두성"
-      },
-      {
-        "exId": "립트릴 9도 흉성~높은두성",
-        "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
-        "scaleId": "9D-B",
-        "repeat": 1,
-        "comment": "처음부터 원래 음정의 위치를 따라가기(앞에서 위로 위에서 뒤로 뒤에서 위로 다시 같은길로 내려오기)",
-        "active": true,
-        "num": 5,
-        "name": "립트릴 9도 흉성~높은두성"
-      },
-      {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 벽에 붙어서. 상복부 더 생각하고 집중하면서!",
         "active": true,
-        "num": 6,
+        "num": 4,
         "name": "Z 브레셔"
       },
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). D5부터 뒤가 안 돼. 뒤로꿰서만 가면 D6까지도 가능! 내려올 때는 가슴에 계속 집어넣으려고 하다가!",
         "active": true,
-        "num": 7,
+        "num": 5,
         "name": "Z 브레셔"
       },
       {
         "exId": "허밍",
         "exName": "허밍",
-        "displayLabel": "허밍",
+        "displayLabel": "허밍+5D-B",
         "scaleId": "5D-B",
         "repeat": 1,
         "comment": "7번(5도중성). 1번방식 연습. 처음 시작할 때 코로 뱉지마!! 꽃향기를 맡는다 생각!",
         "active": true,
-        "num": 8,
+        "num": 6,
         "name": "허밍"
       },
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 처음엔 가슴앞에만 열기! 공이 앞에만 있어! 축구공이야!",
         "active": true,
-        "num": 9,
+        "num": 7,
         "name": "오픈허밍(흉성)"
       },
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 요번엔 앞뒤로! 럭비공이야! 가슴 앞뒤로 럭비공이 들어있는데 공기를 채우고 계속 늘려나가야 돼!",
         "active": true,
-        "num": 10,
+        "num": 8,
         "name": "오픈허밍(흉성)"
       },
       {
         "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
-        "displayLabel": "오픈허밍(두성)",
-        "scaleId": "5D-B",
+        "displayLabel": "오픈허밍(두성)+5H-C",
+        "scaleId": "5H-C",
         "repeat": 1,
         "comment": "욕심내지말고 올라갈때 가성으로 뒤로위로 먼저 보내놓고 맨마지막 높은 위치에서 눈안에 손가락 해서 상압 만들어서 뒤로위로 당겨간 다음에, 더 올라간다 생각하면서 내려오기! 호흡 절대 꺼뜨리면 안되!",
         "active": true,
-        "num": 11,
+        "num": 9,
         "name": "오픈허밍(두성)"
+      },
+      {
+        "exId": "가성에서 진성 바꾸기",
+        "exName": "가성에서 진성 바꾸기",
+        "displayLabel": "가성에서 진성 바꾸기+5DNH-A",
+        "scaleId": "5DNH-A",
+        "repeat": 1,
+        "comment": "흐어아 를 사용해서 처음에 가성을 내주고 가성에서 하품한다는 생각으로 소리가 뒤로위로 넘어가서 붙은채로 낑궈질 수 있게!",
+        "active": true,
+        "num": 10,
+        "name": "가성에서 진성 바꾸기"
       }
     ]
   },
@@ -6457,7 +6578,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-A",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "5번(9도흉성~두성). 가슴위치에서 뒷통수 뒤로위로 갔다오기! 목 푼다 생각!",
@@ -6468,7 +6589,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-A",
         "scaleId": "9D-A",
         "repeat": 1,
         "comment": "5번(9도흉성~두성). 내려올 때 가슴위치에 호흡(소리) 더 대보기!",
@@ -6479,7 +6600,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 뒤에를 애매하게 안쓰고 그냥 뒤를 써! 제일 마지막 위에음에서 한번 놨다가 빠르게 다시 훅 불기!",
@@ -6490,7 +6611,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "3번(3도흉성~두성). 밴딩해서! 되는 음정까지 가슴채워보고 안되는 데부터는 다 꿰서 가면 돼!",
@@ -6501,7 +6622,7 @@ let STUDENTS_DB = [
       {
         "exId": "허밍",
         "exName": "허밍",
-        "displayLabel": "허밍",
+        "displayLabel": "허밍+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "8번(5도쉬고중성). 아주~~! 잘했어! 음정이 올라가서 성구가 바뀔 때마다 뒤가 벌어지는데 더 한줄로 모아주려고!",
@@ -6512,7 +6633,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(흉성)",
         "exName": "오픈허밍(흉성)",
-        "displayLabel": "오픈허밍(흉성)",
+        "displayLabel": "오픈허밍(흉성)+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "1번(3도흉성). 앞에만! 앞에 주먹만한 공기공이 튀어나온다고 생각하고! 음정 올라갈 때 집어먹지말고 더 늘려꺼낸 생각",
@@ -6523,7 +6644,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(두성)",
         "exName": "오픈허밍(두성)",
-        "displayLabel": "오픈허밍(두성)",
+        "displayLabel": "오픈허밍(두성)+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "8번(5도쉬고중성). G#5에만 힘이 조금 있음! 수업시간에 여기 사용해서 늘려도 괜찮을 듯!",
@@ -6534,7 +6655,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "주먹말아쥐고, 3번(3도흉성~두성). 주먹을 꽉 잘 말아쥐고 가슴에서 호흡압이 나간다 느낌! 소리가 오히려 펴진다고 생각!",
@@ -6573,7 +6694,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
@@ -6584,7 +6705,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음부터 원래 음정의 위치를 따라가기(앞에서 위로 위에서 뒤로 뒤에서 위로 다시 같은길로 내려오기)",
@@ -6595,7 +6716,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z 브레셔",
         "exName": "Z 브레셔",
-        "displayLabel": "Z 브레셔",
+        "displayLabel": "Z 브레셔+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "z는 1번만 하되 가슴에 붙이는 소리를 만들고 시작한다 라고 생각하는거야! 풀고시작한다! 목푼다!",
@@ -6606,7 +6727,7 @@ let STUDENTS_DB = [
       {
         "exId": "백프레셔",
         "exName": "백프레셔",
-        "displayLabel": "백프레셔",
+        "displayLabel": "백프레셔+5D-C",
         "scaleId": "5D-C",
         "repeat": 1,
         "comment": "흉성에는 가슴에 댄소리 있어야하고 이게 G#4까지 버티는 거야!\nA4부터 얇게만들고 얇게만드는게 아직 안된 음정은 아예 날렸다가 다시\n간극조절 한다 생각!",
@@ -6617,7 +6738,7 @@ let STUDENTS_DB = [
       {
         "exId": "우빡 흉성~낮은 중성구까지",
         "exName": "우빡 흉성~낮은 중성구까지",
-        "displayLabel": "우빡 흉성~낮은 중성구까지",
+        "displayLabel": "우빡 흉성~낮은 중성구까지+3D-C",
         "scaleId": "3D-C",
         "repeat": 1,
         "comment": "처음에는 학! 우빡으로 시작해서 D5시작즈음되면 그냥 우빡 올라가다가 어? 뭔가 질감이 너무 두꺼운데? 하면 후우빡으로 바꾸기!",
@@ -6656,7 +6777,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 5번스케일(9도) x1",
         "exName": "립트릴 5번스케일(9도) x1",
-        "displayLabel": "립트릴 5번스케일(9도) x1",
+        "displayLabel": "립트릴 5번스케일(9도) x1+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "목풀기로 할건데 앞에 타고 올라갔다가 뒤로위로 갔다가 다시 앞으로 타고 내려오는거! 하다가 높아져서 힘들면 그냥 뒤로 빼!",
@@ -6678,7 +6799,7 @@ let STUDENTS_DB = [
       {
         "exId": "학! 아 1번스케일(3도) x1",
         "exName": "학! 아 1번스케일(3도) x1",
-        "displayLabel": "학! 아 1번스케일(3도) x1",
+        "displayLabel": "학! 아 1번스케일(3도) x1+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "앞에를 위주로! 소리가 터져나가지않게! 위에 피치가 가슴위치로 뭉쳐서 같이 버텨진다고 생각하기! 소리를 앞으로 뺴고 음정이 올라가면서 힘들어지면 앞으로 밑으로 꺽으면서 계속 눌르면 버틴다 생각",
@@ -6689,7 +6810,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 1번스케일(3도) x1",
         "exName": "Z브레셔 1번스케일(3도) x1",
-        "displayLabel": "Z브레셔 1번스케일(3도) x1",
+        "displayLabel": "Z브레셔 1번스케일(3도) x1+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "지금은 Z가 잘 안되니까 1번만 가지고 감 찾을때까지 연습하기! 지금은 저음에서는 되는데 음정이 조금 올라가면 입에서 압력이 안버텨 지니까 터져버려! 자꾸 내리려고 해볼 것!",
@@ -6700,7 +6821,7 @@ let STUDENTS_DB = [
       {
         "exId": "허밍",
         "exName": "허밍",
-        "displayLabel": "허밍",
+        "displayLabel": "허밍+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "가성으로 올라가서 눈안에 손가락 기억하면서 아래로 뒤로 누른걸 다시 뒤로 위로 당겨서 내려오기!",
@@ -6711,7 +6832,7 @@ let STUDENTS_DB = [
       {
         "exId": "오픈허밍(NG)",
         "exName": "오픈허밍(NG)",
-        "displayLabel": "오픈허밍(NG)",
+        "displayLabel": "오픈허밍(NG)+5H-B",
         "scaleId": "5H-B",
         "repeat": 1,
         "comment": "올라갈때 NG 꼭기억하고! 그냥 가성 흘리듯이 내면 안되!.\n잘올라갔으면 가성이 내지고있는 그 위치를 기억하고 눈안에 손가락 해서\n소리를 그 위치까지 데려가야되! 그다음에 낑궈! 그리고 낑군거를 더 낑군다 생각하면서 내려오기!",
@@ -6750,7 +6871,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
@@ -6761,10 +6882,10 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
-        "scaleId": "9D-B",
+        "displayLabel": "립트릴+9H-B",
+        "scaleId": "9H-B",
         "repeat": 1,
-        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 내려오기!",
+        "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 내려오기!\n추가로 성문간격 유지하면서 내려오기!",
         "active": true,
         "num": 3,
         "name": "립트릴"
@@ -6772,7 +6893,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 흉성",
         "exName": "Z브레셔 흉성",
-        "displayLabel": "Z브레셔 흉성",
+        "displayLabel": "Z브레셔 흉성+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "혼자하는 법 다시 배웠어! 가슴에서 소리가 빠져있는 Z를 하면안되고 가슴앞으로 소리가 붙어있는 Z를 하는거야! 흉성에서는! 그리고 음정 2번째꺼 마지막음부터 뒤에 땅겨!",
@@ -6783,7 +6904,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 흉성~높은두성",
         "exName": "Z브레셔 흉성~높은두성",
-        "displayLabel": "Z브레셔 흉성~높은두성",
+        "displayLabel": "Z브레셔 흉성~높은두성+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "뱃고동소리 잘 지키고 올라가서 음정이 올라가면 뒤에쓰고 뒤로위로 계속 가져가고! 가슴에 호흡이 같이 올라가면 안되! 저음에서 잘 잡아줘! 중음이상은 되는소리거든 소리가 약하긴하지만? 근데 저음에서 날리면 중음에서도 없어져! 그냥 가성이야!",
@@ -6794,7 +6915,7 @@ let STUDENTS_DB = [
       {
         "exId": "허밍(두성)",
         "exName": "허밍(두성)",
-        "displayLabel": "허밍(두성)",
+        "displayLabel": "허밍(두성)+5D-C",
         "scaleId": "5D-C",
         "repeat": 1,
         "comment": "관자놀이 위치에서 앞뒤로 공간이 좁아져서 만들어진 피치(똥파리)를 뒤로위로 멀리 보낸다는 생각으로! 절대 불안하다고 해서 삑사리안내려고 목이나 혀밑에 힘을 주면 안되고! 관자놀이 위치에서 벽쪽으로 좁혀줘서 버틴다 라고 생각해야 함! 한번에 좋은소리가 나올 수 없어요! 소리에 힘이 조금이라도 붙었다 생각되면 내려올때 호흡 퍼트려서 같이 내리면안되고 계속 올라간다는 생각으로!",
@@ -6827,7 +6948,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG(오픈허밍) 흉성",
         "exName": "NG(오픈허밍) 흉성",
-        "displayLabel": "NG(오픈허밍) 흉성",
+        "displayLabel": "NG(오픈허밍) 흉성+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "목 밑에를 기준으로 밑으로만 소리가 머물러야함! 그렇게되려면 성대가 뒤로당겨져야되! 근데 성대를 뒤로 당기는 느낌을 낼수가 없거든? 그래서 더 뒤에서 더 뒤에서 계속 뒤쪽으로 굴이 있다고 생각해야해! 마지막음정에서 뒤에만 위로 올라가면 안되! 계속 3번포지션으로 당긴다고 생각!",
@@ -6838,7 +6959,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG(오픈허밍) 중성~높은두성",
         "exName": "NG(오픈허밍) 중성~높은두성",
-        "displayLabel": "NG(오픈허밍) 중성~높은두성",
+        "displayLabel": "NG(오픈허밍) 중성~높은두성+5H-C",
         "scaleId": "5H-C",
         "repeat": 1,
         "comment": "NG가 잘 되기 시작하는데 1옥타브에서는 자꾸만 앞으로 밀고싶어해서 그것만 주의하면 될 것같아! 1옥타브(흉성구)에서 흉성이 아닌 두성을 낸다고 생각하는거야!",
@@ -6849,7 +6970,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG(오픈허밍) 중성~높은두성",
         "exName": "NG(오픈허밍) 중성~높은두성",
-        "displayLabel": "NG(오픈허밍) 중성~높은두성",
+        "displayLabel": "NG(오픈허밍) 중성~높은두성+5H-C",
         "scaleId": "5H-C",
         "repeat": 1,
         "comment": "레슨시간에만! 두성구에서 오히려 되는 편! 밑에는 NG부터 안됨!",
@@ -6860,10 +6981,10 @@ let STUDENTS_DB = [
       {
         "exId": "흐어아(가성에서 진성바꾸기) 중성~낮은두성",
         "exName": "흐어아(가성에서 진성바꾸기) 중성~낮은두성",
-        "displayLabel": "흐어아(가성에서 진성바꾸기) 중성~낮은두성",
-        "scaleId": "5H-B",
+        "displayLabel": "흐어아(가성에서 진성바꾸기) 중성~낮은두성+5DNH-A",
+        "scaleId": "5DNH-A",
         "repeat": 1,
-        "comment": "영상참조하고! 내려오는 스케일에서만 하기! 가성에서 진성바꾸는데 앞으로 밀려고하면 안되! 소리가 붙는순간 특히 조심! 뒤로 당겨진다생각하고 더 웃으면서 아해서 소리가 낑궈지게! 소리가 만들어지면 앞으로 밀지말고 뒤에위로 붙혀! 그리고 꼭! 유지하면서 내려와야되!",
+        "comment": "가성에서 진성 하품하듯이 꼭 이동해주고 나서 성문간격 조절해주는 느낌을 가져가는데 아성이가 약하니까 더 밝은 '아'를 한다고 생각하면서 내려올때도 지금 버텨지는게 잘 안되니까 계속 앞으로 아 아 아 아 한다고 생각! 하면 조금 붙어! 위치는 조금 바뀌지만!",
         "active": true,
         "num": 12,
         "name": "흐어아(가성에서 진성바꾸기) 중성~낮은두성"
@@ -6871,7 +6992,7 @@ let STUDENTS_DB = [
       {
         "exId": "후 내려오기 중성~높은두성",
         "exName": "후 내려오기 중성~높은두성",
-        "displayLabel": "후 내려오기 중성~높은두성",
+        "displayLabel": "후 내려오기 중성~높은두성+5DN-B",
         "scaleId": "5DN-B",
         "repeat": 1,
         "comment": "소리들으려고하지말고 뒤에위에 멀리서 호흡이 당겨진다고 생각하면서! 후 라는 소리를내려고 하지말고 소리가 빨아당겨진다고 생각! 두성있어! 이미",
@@ -6910,7 +7031,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "시작은 가슴 맨위에는 뒷통수뒤에 마지막은 가슴! 자연스럽게 소리가 이동한다고 생각하면서! 대신 위에음 낼때 제자리에 있으면 안되! 안되는 음정부터는 위에서 당겨! 오늘 잘 됐어!",
@@ -6921,7 +7042,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 3도 흉성",
         "exName": "Z브레셔 3도 흉성",
-        "displayLabel": "Z브레셔 3도 흉성",
+        "displayLabel": "Z브레셔 3도 흉성+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "무거운거 이제 안들어도 되는데 음정이 올라갔을때 뒤를 잘 당겨야되! 대신 앞이 따라가면안되!",
@@ -6932,7 +7053,7 @@ let STUDENTS_DB = [
       {
         "exId": "후우 내려가기 5도 하행 중성~낮은두성",
         "exName": "후우 내려가기 5도 하행 중성~낮은두성",
-        "displayLabel": "후우 내려가기 5도 하행 중성~낮은두성",
+        "displayLabel": "후우 내려가기 5도 하행 중성~낮은두성+5DN-A",
         "scaleId": "5DN-A",
         "repeat": 1,
         "comment": "후우 내려가기는 공연 전 후로 한다고 생각하고 해 주고 연습할때 넣어주고! 뒤로위로 멀리 낸다고 생각해야되고 소리가 쎄게 낼수없어 절대! 당겨지는걸 더 느끼려고 하면서!",
@@ -6943,7 +7064,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG 9번스케일 5도 하행 중성~낮은두성",
         "exName": "NG 9번스케일 5도 하행 중성~낮은두성",
-        "displayLabel": "NG 9번스케일 5도 하행 중성~낮은두성",
+        "displayLabel": "NG 9번스케일 5도 하행 중성~낮은두성+5DN-A",
         "scaleId": "5DN-A",
         "repeat": 1,
         "comment": "진성인데 예은이가 좋아하는 진성 아니고 뒤에위에서 작게 나는 진성이라고 생각하면서 내려가기!",
@@ -6971,7 +7092,7 @@ let STUDENTS_DB = [
       {
         "exId": "1단계 립트릴 9도 흉성~높은두성",
         "exName": "1단계 립트릴 9도 흉성~높은두성",
-        "displayLabel": "1단계 립트릴 9도 흉성~높은두성",
+        "displayLabel": "1단계 립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
@@ -6982,7 +7103,7 @@ let STUDENTS_DB = [
       {
         "exId": "2단계 립트릴 9도 흉성~높은두성",
         "exName": "2단계 립트릴 9도 흉성~높은두성",
-        "displayLabel": "2단계 립트릴 9도 흉성~높은두성",
+        "displayLabel": "2단계 립트릴 9도 흉성~높은두성+9H-B",
         "scaleId": "9H-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
@@ -6993,7 +7114,7 @@ let STUDENTS_DB = [
       {
         "exId": "3단계 립트릴 9도 흉성~높은두성",
         "exName": "3단계 립트릴 9도 흉성~높은두성",
-        "displayLabel": "3단계 립트릴 9도 흉성~높은두성",
+        "displayLabel": "3단계 립트릴 9도 흉성~높은두성+9H-B",
         "scaleId": "9H-B",
         "repeat": 1,
         "comment": "올라갈때는 똑같은데 내려올때는 뒤에위에 버틴채로 가슴쪽으로 계속 호흡(압력)보내서 힘추가하면서 내려와보기!",
@@ -7004,7 +7125,7 @@ let STUDENTS_DB = [
       {
         "exId": "후 내려오기 5도 하향 중성~낮은두성",
         "exName": "후 내려오기 5도 하향 중성~낮은두성",
-        "displayLabel": "후 내려오기 5도 하향 중성~낮은두성",
+        "displayLabel": "후 내려오기 5도 하향 중성~낮은두성+5DN-A",
         "scaleId": "5DN-A",
         "repeat": 1,
         "comment": "결절이 좋아졌는지 괜찮게 올라갔음! 아직 두성구에서 상압을 만드는 감각은 없어서 B5는 잘 안나오지만 그래도 두성패턴으로 잘 올라갔다 옴!",
@@ -7015,7 +7136,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 3도 흉성 - 벽에붙어서",
         "exName": "Z브레셔 3도 흉성 - 벽에붙어서",
-        "displayLabel": "Z브레셔 3도 흉성 - 벽에붙어서",
+        "displayLabel": "Z브레셔 3도 흉성 - 벽에붙어서+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "다시 앞으로 채우기! 결절을 펴주기위해 뒤로 당겼었는데 앞에 힘이 너무 사라졌어!",
@@ -7043,7 +7164,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!",
@@ -7054,7 +7175,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9H-B",
         "scaleId": "9H-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
@@ -7065,7 +7186,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴",
         "exName": "립트릴",
-        "displayLabel": "립트릴",
+        "displayLabel": "립트릴+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음부터 원래 음정의 위치를 따라가기(앞에서 위로 위에서 뒤로 뒤에서 위로 다시 같은길로 내려오기)",
@@ -7076,7 +7197,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서",
         "exName": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서",
-        "displayLabel": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서",
+        "displayLabel": "Z브레셔 3도 흉성~높은두성 - 무거운거 들면서+3D-E",
         "scaleId": "3D-E",
         "repeat": 1,
         "comment": "파이팅 은채야 할 수 있어!! 소리를 계속 가슴으로 끌어 당기고 바람을 계속 집어넣어!",
@@ -7126,7 +7247,7 @@ let STUDENTS_DB = [
       {
         "exId": "학! 아빡 3도흉성",
         "exName": "학! 아빡 3도흉성",
-        "displayLabel": "학! 아빡 3도흉성",
+        "displayLabel": "학! 아빡 3도흉성+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "학! 할때는 위치가 뜨지않게 가슴위치로 압축이 된다고 생각하면서 하고\n'아' 할때는 위에 압축시켜놓은걸 꾹꾹 버티면서 앞으로 잡아서 보내주려고 하고\n음정이 조금 높아져서 터질겉같으면 큰~헬륨풍선 끈을 잡아 내린다 생각하면서 버티기!\n오늘 낮은중성구 부분은 조금 터질랑 말랑 했지만 적응 잘 했음!",
@@ -7159,7 +7280,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG(오픈허밍) 앞 3도 흉성",
         "exName": "NG(오픈허밍) 앞 3도 흉성",
-        "displayLabel": "NG(오픈허밍) 앞 3도 흉성",
+        "displayLabel": "NG(오픈허밍) 앞 3도 흉성+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "가슴방향으로 호흡을 잘 채우고 그 방향으로 불어낸다고 생각 하면서!\n음정이 조금 떨어져도 상관없으니 호흡압을 계속 채우려고 할 것!",
@@ -7170,7 +7291,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG(오픈허밍) 1번 3도 흉성",
         "exName": "NG(오픈허밍) 1번 3도 흉성",
-        "displayLabel": "NG(오픈허밍) 1번 3도 흉성",
+        "displayLabel": "NG(오픈허밍) 1번 3도 흉성+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "이제 제대로 된 NG! 밑에 방향으로 ㅅ 자로 내려간다고 생각하고 가슴속에\n럭비공이 있다고 생각하면서 앞, 뒤에 공기를 다 채운다고 생각해야 함!\n3,4번 위치를 다 늘리기!",
@@ -7181,7 +7302,7 @@ let STUDENTS_DB = [
       {
         "exId": "NG오픈허밍 5도 중성~높은두성",
         "exName": "NG오픈허밍 5도 중성~높은두성",
-        "displayLabel": "NG오픈허밍 5도 중성~높은두성",
+        "displayLabel": "NG오픈허밍 5도 중성~높은두성+5H-C",
         "scaleId": "5H-C",
         "repeat": 1,
         "comment": "오늘 아주 잘했음! 1옥타브가 제일 안되고 오히려 높은 중성구부터 두성구까지는 엄청 좋음!\n내려갈때 호흡을 꺼뜨리지말고 더 올라간다고 상상하면서 내려가기!",
@@ -7192,7 +7313,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 1번 흉성 - 무거운거 들면서",
         "exName": "Z브레셔 1번 흉성 - 무거운거 들면서",
-        "displayLabel": "Z브레셔 1번 흉성 - 무거운거 들면서",
+        "displayLabel": "Z브레셔 1번 흉성 - 무거운거 들면서+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "아직 호흡압이 약해서 가슴으로 내리는걸 힘들어 함! 처음에는 아예 안되서 NG흉성으로 가슴으로 보내는 느낌을 좀 만들어주고 하니까 밑으로 내려가기 시작 함! 울트라브리드 호흡훈련을 정확히 하고 다시하니 압력도 생겨서 좋아짐! 이렇게 할 것!",
@@ -7203,7 +7324,7 @@ let STUDENTS_DB = [
       {
         "exId": "Z브레셔 1번 흉성 - 벽에 붙어서",
         "exName": "Z브레셔 1번 흉성 - 벽에 붙어서",
-        "displayLabel": "Z브레셔 1번 흉성 - 벽에 붙어서",
+        "displayLabel": "Z브레셔 1번 흉성 - 벽에 붙어서+3D-A",
         "scaleId": "3D-A",
         "repeat": 1,
         "comment": "어깨 말지말것! 가슴당당하게! 열어! 그래야 소리가 안조여져! 그리고 가슴쪽으로 압력이 갈 수 가 있어!\n맨처음에는 가슴앞에 4번포지션 잘지키려고 노력하고! 음정이 올라갈수록 너는 더 내린다생각!\n그러다가 음정이 힘들기 시작하면 뒤로당기는걸 추가! (앞이 뒤로 따라가면안되!) 앞도 잘 버텨! 그리고 한번 뒤썼으면\n거기서부터는 계속 써서 내려오는거야! 최종목표는 처음부터 계속 뒤에쓰는거야! 뒤에써서 올라가도 안되는 음정 다음 음정스케일부터는 마지막에 쉬었다가 맨마지막만 ㅅ 자모양 기억하면서 한번에 쑥! 내려서 집어넣어서 버틴다 생각하고 그거 계속 버티면서 내려오기!",
@@ -7214,7 +7335,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 흉성 x1",
         "exName": "립트릴 흉성 x1",
-        "displayLabel": "립트릴 흉성 x1",
+        "displayLabel": "립트릴 흉성 x1+5D-A",
         "scaleId": "5D-A",
         "repeat": 1,
         "comment": "가슴에 붙힌 립트릴 할 수 있게!",
@@ -7242,7 +7363,7 @@ let STUDENTS_DB = [
       {
         "exId": "후우 내려가기 9도 하향 중성~높은두성",
         "exName": "후우 내려가기 9도 하향 중성~높은두성",
-        "displayLabel": "후우 내려가기 9도 하향 중성~높은두성",
+        "displayLabel": "후우 내려가기 9도 하향 중성~높은두성+5DN-B",
         "scaleId": "5DN-B",
         "repeat": 1,
         "comment": "가성으로 내기! 뒤로위로 멀리 낸다고 생각해야되고 소리가 쎄게 낼수없어 절대! 당겨지는걸 더 느끼려고 하면서!",
@@ -7264,7 +7385,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 다시 가슴으로 내려오기!\n중요한거는 가성으로 넘어가서 올라갈때 가슴의 위치가 따라가지 않는다고 생각 하면서 뒤에서 넘어간다고 생각!",
@@ -7275,7 +7396,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 내려오기!",
@@ -7286,7 +7407,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음에는 가슴에소리를 대고 뒤로위로 갔다가 뒤에위에를 버티면서 가슴에 호흡압력을 대면서 내려오기!",
@@ -7297,7 +7418,7 @@ let STUDENTS_DB = [
       {
         "exId": "립트릴 9도 흉성~높은두성",
         "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성",
+        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
         "scaleId": "9D-B",
         "repeat": 1,
         "comment": "처음부터 원래 음정의 위치를 따라가기(앞에서 위로 위에서 뒤로 뒤에서 위로 다시 같은길로 내려오기)",
@@ -7940,19 +8061,22 @@ if (document.readyState === 'loading') {
 </script>
 
 <!-- iOS Safari 무음 모드 안내 모달 -->
-<div class="modal-bg" id="ios-silent-modal" onclick="if(event.target===this)closeIosSilentModal()" style="z-index:10001">
-  <div class="modal-box" style="max-width:340px">
-    <div style="font-size:36px;text-align:center;margin-bottom:8px">🍎 🔇</div>
-    <div style="font-size:17px;font-weight:800;text-align:center;margin-bottom:14px;color:var(--or-d)">아이폰 사파리 사용 안내</div>
-    <div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px">
-      <strong>아이폰 사파리에서 소리가 안 들리시나요?</strong>
-      <br><br>
-      아이폰 왼쪽 옆면의 <strong>무음 스위치</strong>를 확인해주세요. <span style="color:#ea580c;font-weight:700">주황색 줄</span>이 보이면 무음 모드예요. <strong>위로 올려서 벨소리 모드</strong>로 변경하시면 소리가 잘 들립니다.
-      <br><br>
-      <span style="color:var(--mu);font-size:12px">(이어폰 연결 시엔 자동으로 들려요)</span>
-    </div>
-    <div style="display:flex;justify-content:center;margin-top:18px">
-      <button class="btn btn-or" onclick="closeIosSilentModal()" style="padding:11px 28px;font-size:14px">알겠어요</button>
+<div id="ios-silent-modal" class="modal hidden" style="display:none;z-index:10001;position:fixed;inset:0;background:rgba(0,0,0,0.54);align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
+  <div class="modal-bg" onclick="closeIosSilentModal()"></div>
+  <div class="modal-c" style="max-width:340px">
+    <div style="padding:24px 22px">
+      <div style="font-size:36px;text-align:center;margin-bottom:8px">🍎 🔇</div>
+      <div style="font-size:17px;font-weight:800;text-align:center;margin-bottom:14px;color:var(--or-d)">아이폰 사파리 사용 안내</div>
+      <div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px">
+        <strong>아이폰 사파리에서 소리가 안 들리시나요?</strong>
+        <br><br>
+        아이폰 왼쪽 옆면의 <strong>무음 스위치</strong>를 확인해주세요. <span style="color:#ea580c;font-weight:700">주황색 줄</span>이 보이면 무음 모드예요. <strong>위로 올려서 벨소리 모드</strong>로 변경하시면 소리가 잘 들립니다.
+        <br><br>
+        <span style="color:var(--mu);font-size:12px">(이어폰 연결 시엔 자동으로 들려요)</span>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:18px">
+        <button class="btn btn-or" onclick="closeIosSilentModal()" style="padding:11px 28px;font-size:14px">알겠어요</button>
+      </div>
     </div>
   </div>
 </div>
