@@ -993,8 +993,15 @@ input,select,button,textarea{font-family:inherit;}
 
       <!-- 컨트롤 (측정 중) -->
       <div class="v2-pt-controls" id="pt-controls-running">
-        <button class="v2-pt-btn-stop" id="pt-stop-btn" onclick="_stopPitchTest()">
-          <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+        <button class="v2-pt-btn-pause" id="pt-pause-btn" onclick="_togglePausePitchTest()" style="flex:1;background:#fff;color:#1d4ed8;border:1.5px solid #93c5fd;border-radius:12px;padding:13px 8px;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:all 0.2s">
+          <svg id="pt-pause-icon" viewBox="0 0 14 14" fill="#1d4ed8" xmlns="http://www.w3.org/2000/svg" width="13" height="13">
+            <rect x="3" y="2" width="3" height="10" rx="1"/>
+            <rect x="8" y="2" width="3" height="10" rx="1"/>
+          </svg>
+          <span id="pt-pause-label">일시정지</span>
+        </button>
+        <button class="v2-pt-btn-stop" id="pt-stop-btn" onclick="_stopPitchTest()" style="padding:13px 8px;font-size:12.5px">
+          <svg viewBox="0 0 14 14" fill="#fff" xmlns="http://www.w3.org/2000/svg" width="13" height="13">
             <rect x="3" y="3" width="8" height="8" rx="1"/>
           </svg>
           <span>측정 종료</span>
@@ -4038,7 +4045,7 @@ const INIT_DB={
         2,
         0
       ],
-      "previewType": "첫음단음",
+      "previewType": "없음",
       "previewBeats": 4,
       "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
     },
@@ -4058,7 +4065,7 @@ const INIT_DB={
         2,
         0
       ],
-      "previewType": "첫음단음",
+      "previewType": "없음",
       "previewBeats": 4,
       "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
     },
@@ -4078,7 +4085,7 @@ const INIT_DB={
         2,
         0
       ],
-      "previewType": "첫음단음",
+      "previewType": "없음",
       "previewBeats": 4,
       "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
     },
@@ -4168,7 +4175,7 @@ const INIT_DB={
         2,
         0
       ],
-      "previewType": "첫음단음",
+      "previewType": "없음",
       "previewBeats": 4,
       "note": "높은레(9, 4박 홀드) → 레-도-시-라-솔-파-미-레-도 하행"
     },
@@ -4192,7 +4199,7 @@ const INIT_DB={
         2,
         0
       ],
-      "previewType": "첫음단음",
+      "previewType": "없음",
       "previewBeats": 4,
       "note": "높은레(9, 4박 홀드) → 레-도-시-라-솔-파-미-레-도 하행"
     },
@@ -4216,7 +4223,7 @@ const INIT_DB={
         2,
         0
       ],
-      "previewType": "첫음단음",
+      "previewType": "없음",
       "previewBeats": 4,
       "note": "높은레(9, 4박 홀드) → 레-도-시-라-솔-파-미-레-도 하행"
     }
@@ -5623,7 +5630,7 @@ const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.fireba
 const TTS_CACHE_ALT_URL = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/tts-cache%2F'; /* alt=media URL prefix */
 const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
 
-async function _playFromCache(text, onEnd, callToken){
+async function _playFromCache(text, onEnd, callToken, isCoach){
   if (!TTS_MANIFEST_LOADED) return false;
   
   try {
@@ -5666,7 +5673,23 @@ async function _playFromCache(text, onEnd, callToken){
     }
     
     const audio = new Audio(entry.url);
+    /* 음량 적용 (코치=화이팅 멘트, 그 외=훈련안내) */
+    const targetVol = isCoach ? _volCoach : _volTTS;
+    /* 음량 0이면 재생 안 하고 즉시 onEnd (시퀀스 진행 보장) */
+    if (targetVol <= 0) {
+      _ttsCacheAudio = null;
+      if (callToken !== undefined && !_tokenValid(callToken)) return true;
+      if (onEnd) setTimeout(onEnd, 50);
+      return true;
+    }
+    /* 코치 멘트는 살짝 부스트 (1.8배), 단 1.0 초과 불가 */
+    const volRatio = targetVol / 100;
+    audio.volume = isCoach 
+      ? Math.max(0, Math.min(1, volRatio * 1.8))
+      : Math.max(0, Math.min(1, volRatio));
     _ttsCacheAudio = audio;
+    /* 어떤 종류 audio인지 표시 (슬라이더 변경 시 구분) */
+    audio._isCoach = !!isCoach;
     audio.onended = function(){
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
       if (callToken !== undefined && !_tokenValid(callToken)) return;
@@ -5736,7 +5759,7 @@ if(TTS_MANIFEST_LOADED){
   _stopCacheAudio();
   if(window.speechSynthesis)speechSynthesis.cancel();
   
-  _playFromCache(txt, _safeEnd, myToken).then(function(played){
+  _playFromCache(txt, _safeEnd, myToken, _isCoachFlag).then(function(played){
     if(played) return; /* 재생 성공 - 끝 */
     /* 캐시 미스 → 기존 ElevenLabs 로직 폴백 */
     if(EL.enabled&&EL.apiKey&&EL.voiceId){
@@ -6004,8 +6027,34 @@ var _volScale=50,_volTTS=50,_volCoach=10;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
-function _applyVolTTS(){_saveVolSettings();}
-function _applyVolCoach(){_saveVolSettings();}
+function _applyVolTTS(){
+  _saveVolSettings();
+  /* 재생 중인 캐시 audio가 일반 TTS면 즉시 반영 */
+  if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach) {
+    try {
+      if (_volTTS <= 0) {
+        _ttsCacheAudio.pause();
+        _ttsCacheAudio = null;
+      } else {
+        _ttsCacheAudio.volume = Math.max(0, Math.min(1, _volTTS / 100));
+      }
+    } catch(e){}
+  }
+}
+function _applyVolCoach(){
+  _saveVolSettings();
+  /* 재생 중인 캐시 audio가 코치면 즉시 반영 */
+  if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && _ttsCacheAudio._isCoach) {
+    try {
+      if (_volCoach <= 0) {
+        _ttsCacheAudio.pause();
+        _ttsCacheAudio = null;
+      } else {
+        _ttsCacheAudio.volume = Math.max(0, Math.min(1, (_volCoach / 100) * 1.8));
+      }
+    } catch(e){}
+  }
+}
 function openSettings(){var ss=document.getElementById('vol-scale-sl'),ts=document.getElementById('vol-tts-sl'),cs=document.getElementById('vol-coach-sl');if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}var m=document.getElementById('settings-modal');if(m)m.style.display='flex';}
 function closeSettings(){var m=document.getElementById('settings-modal');if(m)m.style.display='none';}
 let actx=null,mGain=null,cmp=null,rv=null;
@@ -10908,6 +10957,7 @@ let _ptStream = null;
 let _ptAnalyser = null;
 let _ptDetector = null;  /* pitchy detector */
 let _ptRunning = false;
+let _ptPaused = false;  /* 일시정지 상태 (측정 중이지만 분석 안 함) */
 let _ptRafId = null;
 let _ptLowFreq = null;   /* 최저 주파수 */
 let _ptHighFreq = null;  /* 최고 주파수 */
@@ -10986,6 +11036,7 @@ function _ptResetData(){
   _ptHighFreq = null;
   _ptDataPoints = [];
   _ptCurrentTone = null;
+  if(typeof _ptResultSaved !== 'undefined') _ptResultSaved = false;
 }
 
 /* 화면 닫을 때 정리 */
@@ -11048,6 +11099,7 @@ async function _startPitchTest(){
     _ptDetector.minVolumeDecibels = -50;
     
     _ptRunning = true;
+    _ptPaused = false;  /* 새 측정 시작 - 일시정지 상태 해제 */
     
     /* UI 변경: 모든 element 존재 체크 (새 화면 구조에 맞게) */
     const startBtn = document.getElementById('pt-start-btn');
@@ -11056,6 +11108,15 @@ async function _startPitchTest(){
     if(stopBtn) stopBtn.style.display = 'flex';
     const pitchCard = document.querySelector('.v2-pt-pitch-card');
     if(pitchCard) pitchCard.classList.add('measuring');
+    
+    /* 컨트롤 컨테이너 상태 리셋: 측정 중 컨트롤 표시, 종료 후 컨트롤 숨김 */
+    const ctrlRunning = document.getElementById('pt-controls-running');
+    const ctrlFinished = document.getElementById('pt-controls-finished');
+    if(ctrlRunning) ctrlRunning.style.display = 'flex';
+    if(ctrlFinished) ctrlFinished.style.display = 'none';
+    
+    /* 일시정지 버튼 상태도 초기화 (라벨/아이콘) */
+    _updatePauseBtnUI(false);
     
     /* 안내 변경 (있을 때만) */
     const notice = document.getElementById('pt-notice');
@@ -11088,6 +11149,12 @@ async function _startPitchTest(){
 /* 분석 루프 (실시간) */
 function _ptAnalyzeLoop(){
   if(!_ptRunning) return;
+  
+  /* 일시정지 상태면 분석 건너뛰고 계속 다음 프레임만 요청 */
+  if(_ptPaused){
+    _ptRafId = requestAnimationFrame(_ptAnalyzeLoop);
+    return;
+  }
   
   const buf = new Float32Array(_ptAnalyser.fftSize);
   _ptAnalyser.getFloatTimeDomainData(buf);
@@ -11266,20 +11333,23 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   /* F0 보정 (성별별로 다르게)
      남자: G3 이하 진성, E5 이상 가성 가능성 ↑
      여자: 음역 자체가 높으니 더 보수적으로 - mix 영역 넓게 잡기
-           F5 (698Hz) 이상부터 가성 보정 (남자보다 높게)
-           A5 (880Hz) 이상부터 강 보정 */
+           D4~F5 사이(294~698Hz, 알토/메조 핵심 영역)는 mix/chest 우선
+           G5 (784Hz) 이상부터 가성 보정 */
   const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
   if(isFemale){
-    /* 여자 - mix 영역을 훨씬 넓게 */
-    if(f0 < 220) score -= 1;        /* A3 이하 (드물지만) = 진성 보정 */
+    /* 여자 - mix 영역을 훨씬 넓게, 중음역 가성 오판 줄이기 */
+    if(f0 < 220) score -= 2;        /* A3 이하 = 진성 강 보정 */
+    else if(f0 < 294) score -= 1;   /* D4 이하 = 진성 보정 */
+    else if(f0 < 392) score -= 2;   /* G4 이하 = 진성/믹스 보정 (중음역 가성 오판 방지) */
+    else if(f0 < 523) score -= 1;   /* C5 이하 = 약간 진성 쪽으로 */
     else if(f0 > 988) score += 3;   /* B5 이상 = 가성 강 보정 */
     else if(f0 > 784) score += 2;   /* G5 이상 = 가성 보정 */
     else if(f0 > 698) score += 1;   /* F5 이상 = 약한 가성 보정 */
-    /* F5 이하는 F0 보정 없음 - mix/chest/falsetto는 다른 지표로만 판단 */
   } else {
-    /* 남자 - 기존 로직 유지 */
-    if(f0 < 165) score -= 2;        /* E3 이하 = 진성 강 보정 */
-    else if(f0 < 196) score -= 1;   /* G3 이하 = 진성 보정 */
+    /* 남자 - 중음역 가성 오판 줄이기 */
+    if(f0 < 165) score -= 3;        /* E3 이하 = 진성 강 보정 */
+    else if(f0 < 220) score -= 2;   /* A3 이하 = 진성 보정 */
+    else if(f0 < 294) score -= 1;   /* D4 이하 = 약한 진성 보정 (중음역) */
     else if(f0 > 880) score += 3;   /* A5 이상 = 가성 강 보정 */
     else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
   }
@@ -11297,13 +11367,25 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   
   /* === 생리학적 검증 ===
      가성(falsetto)은 성대 가장자리만 진동하는 발성으로,
-     낮은 음역에서는 물리적으로 불가능함.
-     - 남성: G3(196Hz) 이하에서는 가성 발성 불가
-     - 여성: D4(294Hz) 이하에서는 가성 발성 불가 */
+     낮은 음역에서는 물리적으로 매우 드물거나 불가능함.
+     - 남성: A3(220Hz) 이하에서는 가성 발성 불가 (G3에서 위로 상향)
+     - 여성: G4(392Hz) 이하에서는 가성 발성 매우 드뭄 (D4에서 G4로 상향)
+       → 알토/메조의 D4~G4는 흉성/믹스가 정상 */
   if(result === 'falsetto'){
-    const falsettoLowLimit = isFemale ? 294 : 196;
+    const falsettoLowLimit = isFemale ? 392 : 220;
     if(f0 < falsettoLowLimit){
       result = score <= -1 ? 'chest' : 'mix';
+    }
+  }
+  
+  /* === 추가 보수적 검증: 중음역에서는 가성 점수가 매우 높을 때만 인정 ===
+     여성: G4~F#5 (392~370Hz~F#5=740Hz) 사이는 점수가 +5 이상이어야 가성 인정
+     남성: G3~D#5 (196~622Hz) 사이는 점수가 +5 이상이어야 가성 인정 */
+  if(result === 'falsetto'){
+    if(isFemale && f0 < 740 && score < 5){
+      result = 'mix';  /* 중음역에서 점수 부족하면 mix로 */
+    } else if(!isFemale && f0 < 622 && score < 5){
+      result = 'mix';
     }
   }
   
@@ -11938,7 +12020,7 @@ function _stopPitchTest(){
   }
   
   /* 컨트롤 전환: 측정 중 → 측정 종료 후 (데이터가 있을 때만) */
-  if(_ptDataPoints.length >= 3){
+  if(_ptDataPoints.length >= 3 && !_ptResultSaved){
     const ctrlRunning = document.getElementById('pt-controls-running');
     const ctrlFinished = document.getElementById('pt-controls-finished');
     if(ctrlRunning) ctrlRunning.style.display = 'none';
@@ -11948,6 +12030,7 @@ function _stopPitchTest(){
     _ptLastResult = _ptAnalyzeResult();
     if(_ptLastResult){
       _ptSaveResult(_ptLastResult);
+      _ptResultSaved = true;  /* 중복 저장 방지 플래그 */
     }
   }
 }
@@ -11968,6 +12051,9 @@ function _resetPitchTest(){
   _ptDataPoints = [];
   _ptCurrentTone = null;  /* 현재 진행 중인 톤도 초기화 */
   _ptLastResult = null;
+  _ptResultSaved = false;  /* 다음 측정 위해 저장 플래그 리셋 */
+  _ptPaused = false;  /* 일시정지 상태도 초기화 */
+  _updatePauseBtnUI(false);
   const lo=document.getElementById('pt-low'); if(lo) lo.textContent = '—';
   const hi=document.getElementById('pt-high'); if(hi) hi.textContent = '—';
   const no=document.getElementById('pt-note'); if(no) no.textContent = '—';
@@ -11977,8 +12063,59 @@ function _resetPitchTest(){
   _ptCanvasDraw();
 }
 
+/* 일시정지 / 재개 토글 */
+function _togglePausePitchTest(){
+  if(!_ptRunning) return;  /* 측정 중이 아니면 무시 */
+  _ptPaused = !_ptPaused;
+  _updatePauseBtnUI(_ptPaused);
+  
+  /* 안내 텍스트 업데이트 */
+  const notice = document.getElementById('pt-notice');
+  if(notice){
+    const tx = notice.querySelector('.v2-pt-notice-text');
+    if(_ptPaused){
+      notice.style.background = '#fef3c7';
+      notice.style.borderColor = '#fcd34d';
+      const ic = notice.querySelector('.v2-pt-notice-icon');
+      if(ic) ic.textContent = '⏸';
+      if(tx) tx.innerHTML = '<strong>일시정지됨</strong><br>"계속" 버튼을 눌러 측정을 이어가세요.';
+    } else {
+      notice.style.background = '#dcfce7';
+      notice.style.borderColor = '#86efac';
+      const ic = notice.querySelector('.v2-pt-notice-icon');
+      if(ic) ic.textContent = '🎙';
+      if(tx) tx.innerHTML = '<strong>측정 중...</strong><br>마이크에 대고 천천히 낮은 음 → 높은 음으로 발성해보세요.';
+    }
+  }
+  
+  /* 일시정지 시 진행 중이던 톤은 폐기 (확정 처리 X)
+     이유: 일시정지는 '잠시 멈춤'이지 '완료'가 아니므로 누적된 톤은 무효화.
+     재개 후 다시 발성하면 새 톤으로 처리됨. 이미 확정된 데이터(_ptDataPoints)는 보존. */
+  if(_ptPaused){
+    _ptCurrentTone = null;
+  }
+}
+
+/* 일시정지 버튼 UI 업데이트 */
+function _updatePauseBtnUI(isPaused){
+  const icon = document.getElementById('pt-pause-icon');
+  const label = document.getElementById('pt-pause-label');
+  if(!icon || !label) return;
+  
+  if(isPaused){
+    /* 재생 아이콘 (▶) */
+    icon.innerHTML = '<path d="M3 2 L11 7 L3 12 Z"/>';
+    label.textContent = '계속';
+  } else {
+    /* 일시정지 아이콘 (∥) */
+    icon.innerHTML = '<rect x="3" y="2" width="3" height="10" rx="1"/><rect x="8" y="2" width="3" height="10" rx="1"/>';
+    label.textContent = '일시정지';
+  }
+}
+
 /* ==================== Phase 2: 결과 분석 + 표시 + 저장 ==================== */
 let _ptLastResult = null;  /* 마지막 측정 결과 캐시 */
+let _ptResultSaved = false;  /* 중복 저장 방지 플래그 */
 
 /* MIDI → 음정 이름 변환 (영문) */
 function _midiToNoteName(midi){
