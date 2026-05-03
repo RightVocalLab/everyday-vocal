@@ -1229,6 +1229,12 @@ input,select,button,textarea{font-family:inherit;}
       <div id="pt-result-desc" style="font-size:11px;color:#475569;margin-top:8px;line-height:1.5">—</div>
     </div>
     
+    <!-- PVR 그래프 -->
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding-left:4px">📈 PVR 그래프 (음정 × 강도)</div>
+      <canvas id="pt-result-canvas" width="600" height="700" style="width:100%;height:auto;display:block"></canvas>
+    </div>
+    
     <!-- 음역 분석 -->
     <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:12px">
       <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px">📊 음역 분석</div>
@@ -12023,6 +12029,217 @@ function _showPtResult(){
   /* 모달 표시 */
   const modal = document.getElementById('pt-result-modal');
   if(modal) modal.classList.add('active');
+  
+  /* PVR 그래프 그리기 - 단일 측정 (DOM 업데이트 후 다음 프레임에) */
+  setTimeout(() => {
+    _drawSinglePtToCanvas('pt-result-canvas', r);
+  }, 100);
+}
+
+/* 단일 측정 결과를 PVR 그래프로 그리기 (등고선 1개) */
+function _drawSinglePtToCanvas(canvasId, result){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas || !result) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width > 0 ? rect.width : 320;
+  const h = w * 700 / 600;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr, dpr);
+  canvas.style.height = h + 'px';
+  
+  const W = w, H = h;
+  const isFemale = result.gender === 'female';
+  const midiMin = isFemale ? 43 : 36;
+  const midiMax = isFemale ? 96 : 84;
+  const dbMin = 50, dbMax = 90;
+  const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
+  const y2px = (db) => ((dbMax - db) / (dbMax - dbMin)) * H;
+  
+  /* 배경 + 격자 */
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  /* dB 라벨 */
+  ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+  for(let db = dbMin; db <= dbMax; db += 10){
+    const y = y2px(db);
+    const txt = db + 'dB';
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3; ctx.strokeText(txt, 4, y - 3);
+    ctx.fillStyle = '#6b7280'; ctx.fillText(txt, 4, y - 3);
+  }
+  /* 옥타브 세로선 + 라벨 */
+  ctx.strokeStyle = '#f3f4f6';
+  const allOctaves = [{midi:36,label:'C2'},{midi:48,label:'C3'},{midi:60,label:'C4'},{midi:72,label:'C5'},{midi:84,label:'C6'},{midi:96,label:'C7'}];
+  const octs = allOctaves.filter(o => o.midi >= midiMin && o.midi <= midiMax);
+  octs.forEach(o => {
+    const x = x2px(o.midi);
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H - 30); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(o.label, x, H - 5);
+  });
+  
+  /* 성종별 표준 음역 박스 (배경에 연하게) */
+  const voiceTypes = isFemale ? [
+    {key:'contralto',     name:'콘트랄토',     low:48, high:72, color:'rgba(168,85,247,0.10)', stroke:'rgba(168,85,247,0.4)'},
+    {key:'alto',          name:'알토',         low:53, high:77, color:'rgba(59,130,246,0.10)', stroke:'rgba(59,130,246,0.4)'},
+    {key:'mezzo',         name:'메조소프라노', low:57, high:81, color:'rgba(14,165,233,0.10)', stroke:'rgba(14,165,233,0.4)'},
+    {key:'soprano',       name:'소프라노',     low:60, high:84, color:'rgba(236,72,153,0.10)', stroke:'rgba(236,72,153,0.4)'},
+    {key:'coloratura',    name:'콜로라투라',   low:62, high:89, color:'rgba(244,63,94,0.10)',  stroke:'rgba(244,63,94,0.4)'},
+  ] : [
+    {key:'bass',     name:'베이스',     low:40, high:64, color:'rgba(168,85,247,0.10)', stroke:'rgba(168,85,247,0.4)'},
+    {key:'baritone', name:'바리톤',     low:43, high:67, color:'rgba(59,130,246,0.10)', stroke:'rgba(59,130,246,0.4)'},
+    {key:'tenor',    name:'테너',       low:48, high:72, color:'rgba(236,72,153,0.10)', stroke:'rgba(236,72,153,0.4)'},
+  ];
+  
+  /* 성종 박스 그리기 (얇은 배경) */
+  voiceTypes.forEach((vt, idx) => {
+    const x1 = x2px(vt.low);
+    const x2 = x2px(vt.high);
+    const yTop = 12 + (idx * 14);
+    const boxH = 12;
+    ctx.fillStyle = vt.color;
+    ctx.fillRect(x1, yTop, x2 - x1, boxH);
+    ctx.strokeStyle = vt.stroke;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x1, yTop, x2 - x1, boxH);
+    /* 성종 이름 */
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(vt.name, x1 + 4, yTop + 9);
+  });
+  
+  /* Hull 헬퍼 함수들 */
+  function _hull(arr){
+    if(arr.length < 3) return arr.slice();
+    const sorted = arr.slice().sort((a,b) => a.x === b.x ? a.y - b.y : a.x - b.x);
+    const cross = (O, A, B) => (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+    const lower = [];
+    for(const p of sorted){
+      while(lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+      lower.push(p);
+    }
+    const upper = [];
+    for(let i = sorted.length - 1; i >= 0; i--){
+      const p = sorted[i];
+      while(upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    lower.pop(); upper.pop();
+    return lower.concat(upper);
+  }
+  function _expandHull(hullPts, padding){
+    if(hullPts.length < 3) return hullPts;
+    let cx = 0, cy = 0;
+    hullPts.forEach(p => { cx += p.x; cy += p.y; });
+    cx /= hullPts.length; cy /= hullPts.length;
+    return hullPts.map(p => {
+      const dx = p.x - cx, dy = p.y - cy;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      if(len < 0.01) return {x: p.x, y: p.y};
+      return {x: p.x + (dx/len)*padding, y: p.y + (dy/len)*padding};
+    });
+  }
+  function _drawSmoothPath(pts, fillStyle, strokeStyle, lineWidth){
+    if(pts.length < 3) return;
+    ctx.beginPath();
+    const n = pts.length;
+    ctx.moveTo((pts[n-1].x + pts[0].x)/2, (pts[n-1].y + pts[0].y)/2);
+    for(let i = 0; i < n; i++){
+      const curr = pts[i];
+      const next = pts[(i+1) % n];
+      ctx.quadraticCurveTo(curr.x, curr.y, (curr.x+next.x)/2, (curr.y+next.y)/2);
+    }
+    ctx.closePath();
+    if(fillStyle){ ctx.fillStyle = fillStyle; ctx.fill(); }
+    if(strokeStyle){ ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth; ctx.lineJoin = 'round'; ctx.stroke(); }
+  }
+  
+  /* 데이터 포인트 그리기 - register별로 색상 다르게 */
+  if(result.dataPoints && result.dataPoints.length >= 1){
+    /* register별 분류 */
+    const chestPts = result.dataPoints.filter(p => p.register === 'chest');
+    const mixPts = result.dataPoints.filter(p => p.register === 'mix');
+    const falsettoPts = result.dataPoints.filter(p => p.register === 'falsetto');
+    
+    /* 등고선: 가성 제외 (실용 음역) */
+    const realPts = result.dataPoints.filter(p => p.register !== 'falsetto');
+    if(realPts.length >= 3){
+      const points = realPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const hull = _expandHull(_hull(points), 8);
+      _drawSmoothPath(hull, 'rgba(59,130,246,0.20)', 'rgba(29,78,216,0.85)', 2.5);
+    }
+    
+    /* 가성 영역 (얇은 보라 등고선) */
+    if(falsettoPts.length >= 3){
+      const points = falsettoPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const hull = _expandHull(_hull(points), 6);
+      _drawSmoothPath(hull, 'rgba(139,92,246,0.15)', 'rgba(124,58,237,0.6)', 1.5);
+    }
+    
+    /* 개별 데이터 포인트 (작은 점) */
+    chestPts.forEach(p => {
+      ctx.fillStyle = '#3b82f6';  /* 진성: 파랑 */
+      ctx.beginPath();
+      ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
+      ctx.fill();
+    });
+    mixPts.forEach(p => {
+      ctx.fillStyle = '#0ea5e9';  /* 믹스: 하늘색 */
+      ctx.beginPath();
+      ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
+      ctx.fill();
+    });
+    falsettoPts.forEach(p => {
+      ctx.fillStyle = '#8b5cf6';  /* 가성: 보라 */
+      ctx.beginPath();
+      ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
+      ctx.fill();
+    });
+  } else {
+    /* fallback: dataPoints 없으면 통계로 타원 그리기 */
+    const lowMidi = result.realLow || result.lowMidi || 60;
+    const highMidi = result.realHigh || result.highMidi || 72;
+    const cx = (lowMidi + highMidi) / 2;
+    const semitoneRange = (highMidi - lowMidi) / 2;
+    const fakePts = [];
+    for(let i = 0; i < 16; i++){
+      const angle = (i / 16) * Math.PI * 2;
+      const midi = cx + Math.cos(angle) * semitoneRange;
+      const db = 75 + Math.sin(angle) * 10;
+      fakePts.push({x: x2px(midi), y: y2px(db)});
+    }
+    const hull = _expandHull(_hull(fakePts), 4);
+    _drawSmoothPath(hull, 'rgba(59,130,246,0.20)', 'rgba(29,78,216,0.85)', 2);
+  }
+  
+  /* 범례 (우측 하단) */
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'left';
+  const legendY = H - 70;
+  /* 진성 */
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath(); ctx.arc(W - 78, legendY, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#374151';
+  ctx.fillText('진성', W - 70, legendY + 3);
+  /* 믹스 */
+  ctx.fillStyle = '#0ea5e9';
+  ctx.beginPath(); ctx.arc(W - 78, legendY + 14, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#374151';
+  ctx.fillText('믹스', W - 70, legendY + 17);
+  /* 가성 */
+  ctx.fillStyle = '#8b5cf6';
+  ctx.beginPath(); ctx.arc(W - 78, legendY + 28, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#374151';
+  ctx.fillText('가성', W - 70, legendY + 31);
 }
 
 /* 결과 모달 닫기 */
