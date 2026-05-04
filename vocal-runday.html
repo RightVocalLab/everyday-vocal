@@ -3186,7 +3186,9 @@ return res.length>=2?res:null;
 
 let ttsV=null,ttsOn=false,descReading=false,coachAuto=true,stepAutoRead=true,cheerAuto=true;
 
-let EL={apiKey:atob('c2tfYzIyNWRlMTNlNzMyZDA0OTJhZWM1OTM2ZjE1N2MzMDU4NzdlMzg2MjBiY2ZiMWVh'),voiceId:'Mny3tJezAvDLdb8JlyUs',enabled:true,stability:0.95,speed:0.80};
+/* ⚠️ 보안: ElevenLabs 키는 Firebase Cloud Function (Secret Manager)에 보관, 브라우저에 노출 안 함 */
+const TTS_PROXY_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/ttsProxy';
+let EL={voiceId:'Mny3tJezAvDLdb8JlyUs',enabled:true,stability:0.95,speed:0.80};
 (function(){
 try{
 const s=localStorage.getItem('el_cfg');
@@ -3198,7 +3200,6 @@ if(d.speed) EL.speed=d.speed;
 }
 }catch(e){}
 
-EL.apiKey=atob('c2tfYzIyNWRlMTNlNzMyZDA0OTJhZWM1OTM2ZjE1N2MzMDU4NzdlMzg2MjBiY2ZiMWVh');
 EL.voiceId='Mny3tJezAvDLdb8JlyUs';
 EL.enabled=true;
 EL.stability=0.95;
@@ -3219,14 +3220,14 @@ const speedEl=document.getElementById('el-speed');
 const speedLbl=document.getElementById('el-speed-val');
 if(speedEl&&EL.speed){const spv=Math.round(EL.speed*100);speedEl.value=spv;if(speedLbl)speedLbl.textContent=(EL.speed).toFixed(2)+'x';}
 if(dot&&lbl){
-if(EL.enabled&&EL.apiKey){
+if(EL.enabled){
 dot.style.background='#22c55e';
 lbl.style.color='#16a34a';
 lbl.textContent='활성 (ElevenLabs AI 목소리)';
 } else {
 dot.style.background='#e5e7eb';
 lbl.style.color='var(--mu2)';
-lbl.textContent=EL.apiKey?'저장됨 (비활성)':'미설정 (브라우저 TTS)';
+lbl.textContent='비활성 (브라우저 TTS)';
 }
 }
 }
@@ -3241,7 +3242,6 @@ if(el){el.value=v;if(lbl)lbl.textContent=(v/100).toFixed(2)+'x';}
 }
 function saveElSettings(){
 
-EL.apiKey=atob('c2tfYzIyNWRlMTNlNzMyZDA0OTJhZWM1OTM2ZjE1N2MzMDU4NzdlMzg2MjBiY2ZiMWVh');
 EL.voiceId='Mny3tJezAvDLdb8JlyUs';
 EL.enabled=true;
 EL.stability=0.95;
@@ -3269,21 +3269,19 @@ function openVoiceLibrary(){
 window.open('https://elevenlabs.io/voice-library','_blank');
 }
 async function testElTTS(){
-const key=(document.getElementById('el-key-input')?.value||'').trim()||EL.apiKey;
 const vid=(document.getElementById('el-vid-input')?.value||'').trim()||EL.voiceId;
-if(!key){setElSt('❌ API 키를 입력하세요',true);return;}
 if(!vid){setElSt('❌ Voice ID를 입력하세요',true);return;}
 setElSt('⏳ 요청 중... (2~5초 소요)',false);
 const btn=document.querySelector('[onclick="testElTTS()"]');
 if(btn)btn.disabled=true;
 try{
-await _elSpeak('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!',key,vid);
+await _elSpeak('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!',null,vid);
 setElSt('✅ 테스트 성공! 이제 모든 멘트가 AI 목소리로 나옵니다.',false);
 }catch(err){
 console.error('ElevenLabs 오류:', err);
 let msg=err.message||String(err);
-if(msg.includes('401'))msg='API 키가 올바르지 않습니다. 키를 확인해주세요.';
-else if(msg.includes('402')||msg.includes('payment_required')||msg.includes('paid_plan'))msg='이 Voice ID는 유료 플랜 전용입니다. 위 기본 목소리(Adam/Josh 등)를 사용해주세요.';
+if(msg.includes('401'))msg='인증 실패. 잠시 후 다시 시도해주세요.';
+else if(msg.includes('402')||msg.includes('payment_required')||msg.includes('paid_plan'))msg='이 Voice ID는 유료 플랜 전용입니다.';
 else if(msg.includes('404'))msg='Voice ID를 찾을 수 없습니다. ID를 확인해주세요.';
 else if(msg.includes('429'))msg='요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
 else if(msg.includes('NetworkError')||msg.includes('Failed to fetch'))msg='네트워크 오류. 인터넷 연결을 확인해주세요.';
@@ -3632,9 +3630,9 @@ if(TTS_MANIFEST_LOADED){
   
   _playFromCache(txt, _safeEnd, myToken, _isCoachFlag).then(function(played){
     if(played) return; /* 재생 성공 - 끝 */
-    /* 캐시 미스 → 기존 ElevenLabs 로직 폴백 */
-    if(EL.enabled&&EL.apiKey&&EL.voiceId){
-      _elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(function(err){
+    /* 캐시 미스 → Cloud Function 통해 ElevenLabs 호출 */
+    if(EL.enabled&&EL.voiceId){
+      _elSpeak(txt,null,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(function(err){
         if(!_tokenValid(myToken))return;
         console.warn('EL 폴백도 실패:', err);
         const _ntxt=_normTTS(txt);
@@ -3654,10 +3652,10 @@ if(TTS_MANIFEST_LOADED){
   return;
 }
 
-if(EL.enabled&&EL.apiKey&&EL.voiceId){
+if(EL.enabled&&EL.voiceId){
 
 stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
-_elSpeak(txt,EL.apiKey,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(err=>{
+_elSpeak(txt,null,EL.voiceId,_safeEnd,_stab,_spd,myToken,_isCoachFlag).catch(err=>{
 if(!_tokenValid(myToken))return;
 const errMsg=err.message||String(err);
 console.warn('EL 실패:',errMsg);
@@ -3738,27 +3736,47 @@ if (_targetVol <= 0) {
 }
 const cleanTxt=_prepTxt(txt);
 
+/* 🔐 보안: Firebase Auth 토큰 가져와서 Cloud Function 호출 */
+let idToken = '';
+try {
+  if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+    idToken = await firebase.auth().currentUser.getIdToken();
+  }
+} catch(e) {
+  console.warn('Auth 토큰 가져오기 실패:', e);
+}
+
+if (!idToken) {
+  /* Auth 토큰 없으면 ElevenLabs 호출 불가 → 브라우저 TTS 폴백 */
+  console.warn('Firebase 인증 대기 중. 브라우저 TTS 사용.');
+  if(window.speechSynthesis){
+    const _u=mkUtt(_normTTS(cleanTxt),1.08);
+    if(_u){speechSynthesis.cancel();speechSynthesis.speak(_u);_u.onend=()=>{if(onEnd)onEnd();};}
+    else if(onEnd) setTimeout(onEnd, 50);
+  } else if(onEnd) setTimeout(onEnd, 50);
+  return;
+}
+
 const arrayBuf = await new Promise((resolve, reject)=>{
 const xhr = new XMLHttpRequest();
-xhr.open('POST', `https://api.elevenlabs.io/v1/text-to-speech/${vid}`, true);
-xhr.setRequestHeader('xi-api-key', key);
+xhr.open('POST', TTS_PROXY_URL, true);
+xhr.setRequestHeader('Authorization', 'Bearer ' + idToken);
 xhr.setRequestHeader('Content-Type', 'application/json');
 xhr.responseType = 'arraybuffer';
 xhr.onload = ()=>{
 if(xhr.status >= 200 && xhr.status < 300){
 resolve(xhr.response);
 } else {
-reject(new Error(`EL ${xhr.status}`));
+reject(new Error(`Proxy ${xhr.status}`));
 }
 };
 xhr.onerror = ()=>reject(new Error('Network error'));
 xhr.ontimeout = ()=>reject(new Error('Timeout'));
-xhr.timeout = 15000;
+xhr.timeout = 30000;
 xhr.send(JSON.stringify({
 text: cleanTxt,
-model_id: 'eleven_multilingual_v2',
-voice_settings: {stability:(_stab!==undefined?_stab:EL.stability)||0.95, similarity_boost:0.80, style:0, use_speaker_boost:true},
-output_format: 'mp3_44100_128',
+voiceId: vid || EL.voiceId,
+stability: (_stab!==undefined?_stab:EL.stability)||0.95,
 speed: (_spd!==undefined?_spd:EL.speed)||0.80
 }));
 });
@@ -3791,9 +3809,9 @@ setCoachTxt(txt);
 /* 음량 0이면 음성 출력 안 함 */
 if(_volTTS <= 0) return;
 
-if(EL.enabled&&EL.apiKey&&EL.voiceId){
+if(EL.enabled&&EL.voiceId){
 if(window.speechSynthesis)speechSynthesis.cancel();
-_elSpeak(txt,EL.apiKey,EL.voiceId).catch(err=>{
+_elSpeak(txt,null,EL.voiceId).catch(err=>{
 console.warn('EL TTS 실패, 브라우저 TTS 사용:',err);
 if(window.speechSynthesis){const _fb=mkUtt(txt,rate);if(_fb)speechSynthesis.speak(_fb);}
 });
@@ -7108,17 +7126,6 @@ let STUDENTS_DB = [
     "pw": "ye24",
     "homework": [
       {
-        "exId": "주먹말고 호흡 훈련 x10",
-        "exName": "주먹말고 호흡 훈련 x10",
-        "displayLabel": "주먹말고 호흡 훈련 x10",
-        "scaleId": "",
-        "repeat": 1,
-        "comment": "주먹을 말고 주먹에 입술을 전부 댄다고 생각하고 손을통해서 입으로만 마셨다가 뱉었다가 최대한 빠르고 강하게 하기!",
-        "active": true,
-        "num": 0,
-        "name": "주먹말고 호흡 훈련 x10"
-      },
-      {
         "exId": "S브레셔 x10",
         "exName": "S브레셔 x10",
         "displayLabel": "S브레셔 x10",
@@ -7126,19 +7133,30 @@ let STUDENTS_DB = [
         "repeat": 1,
         "comment": "25초 버티기! 바람이 거미줄뽑아내듯이 더 길고 일정하게 나갈 수있게! 18초로 줄었음!",
         "active": true,
-        "num": 1,
+        "num": 0,
         "name": "S브레셔 x10"
       },
       {
-        "exId": "립트릴 9도 흉성~높은두성",
-        "exName": "립트릴 9도 흉성~높은두성",
-        "displayLabel": "립트릴 9도 흉성~높은두성+9D-B",
-        "scaleId": "9D-B",
+        "exId": "립트릴 5도 하향",
+        "exName": "립트릴 5도 하향",
+        "displayLabel": "립트릴 5도 하향+5DN-A",
+        "scaleId": "5DN-A",
         "repeat": 1,
-        "comment": "시작은 가슴 맨위에는 뒷통수뒤에 마지막은 가슴! 자연스럽게 소리가 이동한다고 생각하면서! 대신 위에음 낼때 제자리에 있으면 안되! 안되는 음정부터는 위에서 당겨! 오늘 잘 됐어!",
+        "comment": "뒤에위에서 뒤에아래로 살짝 눌러주면서 뒤로위로 당긴다고 생각하면서 하기!",
+        "active": true,
+        "num": 1,
+        "name": "립트릴 5도 하향"
+      },
+      {
+        "exId": "립트릴 5도",
+        "exName": "립트릴 5도",
+        "displayLabel": "립트릴 5도+5H-B",
+        "scaleId": "5H-B",
+        "repeat": 1,
+        "comment": "아래 너무 생각하지말고 뒤로위로(위에서는 당기기) 올라갔다가 뒤로위로 당기면서 내려오기!(음정이 안나면 목이 안좋은거니 음정 내려고 하지 말고 당기려고 할 것!)",
         "active": true,
         "num": 2,
-        "name": "립트릴 9도 흉성~높은두성"
+        "name": "립트릴 5도"
       },
       {
         "exId": "Z브레셔 3도 흉성",
@@ -7150,28 +7168,6 @@ let STUDENTS_DB = [
         "active": true,
         "num": 3,
         "name": "Z브레셔 3도 흉성"
-      },
-      {
-        "exId": "후우 내려가기 5도 하행 중성~낮은두성",
-        "exName": "후우 내려가기 5도 하행 중성~낮은두성",
-        "displayLabel": "후우 내려가기 5도 하행 중성~낮은두성+5DN-A",
-        "scaleId": "5DN-A",
-        "repeat": 1,
-        "comment": "후우 내려가기는 공연 전 후로 한다고 생각하고 해 주고 연습할때 넣어주고! 뒤로위로 멀리 낸다고 생각해야되고 소리가 쎄게 낼수없어 절대! 당겨지는걸 더 느끼려고 하면서!",
-        "active": true,
-        "num": 4,
-        "name": "후우 내려가기 5도 하행 중성~낮은두성"
-      },
-      {
-        "exId": "NG 9번스케일 5도 하행 중성~낮은두성",
-        "exName": "NG 9번스케일 5도 하행 중성~낮은두성",
-        "displayLabel": "NG 9번스케일 5도 하행 중성~낮은두성+5DN-A",
-        "scaleId": "5DN-A",
-        "repeat": 1,
-        "comment": "진성인데 예은이가 좋아하는 진성 아니고 뒤에위에서 작게 나는 진성이라고 생각하면서 내려가기!",
-        "active": true,
-        "num": 5,
-        "name": "NG 9번스케일 5도 하행 중성~낮은두성"
       }
     ]
   },
@@ -7942,6 +7938,7 @@ const _FB_CONFIG = {
 let _fbApp = null;
 let _fbDb = null;
 let _fbReady = false;
+let _fbAuthUid = null;
 
 /* Firebase 초기화 */
 (function _initFirebase(){
@@ -7951,6 +7948,10 @@ let _fbReady = false;
     const script2 = document.createElement('script');
     script2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
     script2.onload = function(){
+      /* Firebase Auth 추가 (Cloud Function 인증용) */
+      const scriptAuth = document.createElement('script');
+      scriptAuth.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+      scriptAuth.onload = function(){
       try{
         if(!firebase.apps.length){
           _fbApp = firebase.initializeApp(_FB_CONFIG);
@@ -7960,6 +7961,19 @@ let _fbReady = false;
         _fbDb = firebase.database();
         _fbReady = true;
         console.log('✅ Firebase 연결 완료');
+        
+        /* Anonymous Auth: 익명 사용자 자동 로그인 (Cloud Function TTS Proxy 인증용) */
+        firebase.auth().onAuthStateChanged(function(user){
+          if(user){
+            _fbAuthUid = user.uid;
+            console.log('✅ 익명 사용자 ID:', user.uid.substring(0, 8) + '...');
+          }
+        });
+        /* 자동 익명 로그인 시도 */
+        firebase.auth().signInAnonymously().catch(function(e){
+          console.warn('익명 로그인 실패:', e.message);
+        });
+        
         /* 연결 후 관리자 현황 리프레시 */
         if(typeof refreshHwStatus === 'function') setTimeout(refreshHwStatus, 500);
         /* 관리자 메뉴 설정 동기화 */
@@ -7973,6 +7987,8 @@ let _fbReady = false;
           }
         });
       }catch(e){ console.warn('Firebase 초기화 실패:', e); }
+      };
+      document.head.appendChild(scriptAuth);
     };
     document.head.appendChild(script2);
   };
