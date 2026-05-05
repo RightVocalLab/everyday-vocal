@@ -918,7 +918,7 @@ input,select,button,textarea{font-family:inherit;}
     <input id="pw-input" type="password" placeholder="비밀번호"
       style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 14px;
         font-size:14px;text-align:center;margin-bottom:8px;letter-spacing:2px"
-      onkeydown="if(event.key===\'Enter\')checkPW()">
+      onkeydown="if(event.key==='Enter')checkPW()">
     <div id="pw-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ol" onclick="closePWModal()" style="flex:1;padding:11px">취소</button>
@@ -4402,9 +4402,19 @@ if(totalSec2 > 8){
     (function(t){
       coachT.push(setTimeout(function(){
         if(playing&&cheerAuto){
-          const _isLate=(ratio>=0.65);
-          _lastCheer2=_randCheer(_lastCheer2,_isLate);
-          speakEL(_lastCheer2, null, 0.40, 0.95, true);
+          /* 다른 멘트(설명/안내) 재생 중이면 기다렸다가 끝나면 화이팅 재생 */
+          const _tryPlayCheer=function(){
+            if(!playing||!cheerAuto) return;
+            /* 현재 재생 중이면 잠시 후 다시 체크 */
+            if(window._elSrc || (window.speechSynthesis && window.speechSynthesis.speaking)){
+              coachT.push(setTimeout(_tryPlayCheer, 500));
+              return;
+            }
+            const _isLate=(ratio>=0.65);
+            _lastCheer2=_randCheer(_lastCheer2,_isLate);
+            speakEL(_lastCheer2, null, 0.40, 0.95, true);
+          };
+          _tryPlayCheer();
         }
       }, t*1000));
     })(cSec);
