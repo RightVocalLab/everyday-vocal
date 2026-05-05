@@ -1233,6 +1233,7 @@ input,select,button,textarea{font-family:inherit;}
     <button class="v2-ios-modal-close" onclick="_closePtResult()" aria-label="닫기">✕</button>
     
     <div style="text-align:center;font-size:18px;font-weight:900;color:#1d4ed8;margin-bottom:6px">🎤 음역대 측정 결과</div>
+    <div id="pt-result-username" style="text-align:center;font-size:14px;font-weight:800;color:#475569;margin-bottom:2px">—</div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:18px" id="pt-result-time">측정일: -</div>
     
     <!-- 추정 성종 (메인) -->
@@ -12308,6 +12309,10 @@ function _showPtResult(){
   }
   
   const r = _ptLastResult;
+  
+  /* 측정자 이름 표시 */
+  const userName = r.userName || '익명';
+  document.getElementById('pt-result-username').textContent = `👤 ${userName}`;
   
   /* 시간 표시 */
   const d = new Date(r.timestamp);
