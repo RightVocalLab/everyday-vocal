@@ -5589,14 +5589,31 @@ async function _uploadToCacheAsync(originalText, arrayBuf){
     /* arrayBuffer 복사 (이미 호출 측에서 한 번 사용했을 수 있음) */
     const blobCopy = new Blob([arrayBuf], {type: 'audio/mpeg'});
     
+    /* 🔐 Firebase Auth 토큰 가져오기 (보안 규칙 통과용) */
+    let idToken = '';
+    try {
+      if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        idToken = await firebase.auth().currentUser.getIdToken();
+      }
+    } catch(e) {
+      console.warn('Auth 토큰 가져오기 실패 (캐싱 스킵):', e);
+      return;
+    }
+    if (!idToken) {
+      console.warn('Auth 토큰 없음 (캐싱 스킵)');
+      return;
+    }
+    
     /* Firebase Storage 업로드 (REST API 직접 호출, gs:// 형태 우회) */
-    /* Firebase Storage 업로드 - 응답에서 downloadToken 받아 토큰 URL 사용 */
     const uploadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' 
                      + encodeURIComponent('tts-cache/' + hash + '.mp3');
     
     const resp = await fetch(uploadUrl, {
       method: 'POST',
-      headers: {'Content-Type': 'audio/mpeg'},
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Authorization': 'Bearer ' + idToken
+      },
       body: blobCopy
     });
     
