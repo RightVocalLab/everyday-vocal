@@ -4040,7 +4040,7 @@ const INIT_DB={
       "bpm": 125,
       "pattern": [
         7,
-        { "hold": 4 },
+        { "hold": 6 },
         7,
         5,
         4,
@@ -4049,7 +4049,7 @@ const INIT_DB={
       ],
       "previewType": "없음",
       "previewBeats": 4,
-      "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
+      "note": "솔(6박 홀드) → 솔-파-미-레-도 하행"
     },
     {
       "id": "5DNH-B",
@@ -4060,7 +4060,7 @@ const INIT_DB={
       "bpm": 125,
       "pattern": [
         7,
-        { "hold": 4 },
+        { "hold": 6 },
         7,
         5,
         4,
@@ -4069,7 +4069,7 @@ const INIT_DB={
       ],
       "previewType": "없음",
       "previewBeats": 4,
-      "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
+      "note": "솔(6박 홀드) → 솔-파-미-레-도 하행"
     },
     {
       "id": "5DNH-C",
@@ -4080,7 +4080,7 @@ const INIT_DB={
       "bpm": 125,
       "pattern": [
         7,
-        { "hold": 4 },
+        { "hold": 6 },
         7,
         5,
         4,
@@ -4089,7 +4089,7 @@ const INIT_DB={
       ],
       "previewType": "없음",
       "previewBeats": 4,
-      "note": "솔(4박 홀드) → 솔-파-미-레-도 하행"
+      "note": "솔(6박 홀드) → 솔-파-미-레-도 하행"
     },
     {
       "id": "9DN-A",
@@ -8039,10 +8039,24 @@ if(thScroll){
         card.innerHTML = `
           <div class="v2-th-page-illust">${bookSvg}</div>
           <div class="v2-th-page-title">${t.title}</div>`;
-        card.onclick = () => {
+        card.onclick = ((theory) => () => {
+          /* 이론 상세 페이지 표시 (인라인 - 함수 안에 갇힌 _openTheoryDetail 우회) */
+          document.getElementById('th-title').textContent = theory.title;
+          const _thEl = document.getElementById('th-body');
+          _thEl.innerHTML = _md2html(theory.body || '');
+          _thEl.dataset.raw = theory.body || '';
+          ttsOn = true;
+          if(typeof _setTtsIcon === 'function') _setTtsIcon('playing');
+          const nn = document.getElementById('th-tts-notice');
+          if(nn) nn.classList.add('active');
+          speakEL(theory.body || '', function(){
+            ttsOn = false;
+            if(typeof _setTtsIcon === 'function') _setTtsIcon('stopped');
+            const nn2 = document.getElementById('th-tts-notice');
+            if(nn2) nn2.classList.remove('active');
+          });
           push('scr-theory-detail');
-          _openTheoryDetail(t);
-        };
+        })(t);
         page.appendChild(card);
       }
       thScroll.appendChild(page);
