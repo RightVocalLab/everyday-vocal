@@ -9245,7 +9245,7 @@ let STUDENTS_DB = [
   },
   {
     "name": "박지유",
-    "pw": "ji24",
+    "pw": "jiyu24",
     "homework": [
       {
         "exId": "S 브레셔 x10",
@@ -9499,7 +9499,7 @@ let STUDENTS_DB = [
   },
   {
     "name": "권나예",
-    "pw": "na24",
+    "pw": "ny24",
     "homework": [
       {
         "exId": "호흡훈련 주먹말고 서서 x10, 숙여서 x10",
@@ -11201,12 +11201,26 @@ function openPitchTest(){
 /* 성별 모달 열기/닫기 - 이름 입력칸도 자동 채우기 (마지막 사용 이름 기억) */
 function _openPtGenderModal(){
   const _gm1 = document.getElementById('pt-gender-modal'); if(_gm1) _gm1.classList.add('active');
-  /* 마지막 사용 이름 자동 입력 */
+  /* 이름 자동 입력: 학생 로그인 시 학생 이름, 아니면 마지막 사용 이름 */
   const nameInput = document.getElementById('pt-name-input');
   const nameErr = document.getElementById('pt-name-err');
   if(nameInput){
-    const lastName = localStorage.getItem('pt_last_name') || '';
-    nameInput.value = lastName;
+    /* 학생 로그인 상태면 학생 이름 강제 적용 (수정 불가) */
+    if(typeof curStudent !== 'undefined' && curStudent && curStudent.name){
+      nameInput.value = curStudent.name;
+      nameInput.readOnly = true;
+      nameInput.style.background = '#f3f4f6';
+      nameInput.style.color = '#6b7280';
+      nameInput.style.cursor = 'not-allowed';
+    } else {
+      /* 비로그인 - 마지막 사용 이름 자동 입력 */
+      nameInput.readOnly = false;
+      nameInput.style.background = '';
+      nameInput.style.color = '';
+      nameInput.style.cursor = '';
+      const lastName = localStorage.getItem('pt_last_name') || '';
+      nameInput.value = lastName;
+    }
     if(nameErr) nameErr.textContent = '';
   }
 }
@@ -12799,17 +12813,32 @@ function _ptSaveResult(result){
 async function _ptLoadHistory(){
   let list = [];
   
+  /* 현재 로그인한 학생 이름 (있으면) */
+  const currentStudentName = (typeof curStudent !== 'undefined' && curStudent) 
+    ? (curStudent.name || curStudent) 
+    : null;
+  
   /* 1. localStorage 이력 */
   try {
     const local = JSON.parse(localStorage.getItem('pt_history_local') || '[]');
-    list = list.concat(local);
+    /* 학생 로그인 상태면 해당 학생 이름으로 필터링 (한 기기에 여러 학생 측정 가능) */
+    if(currentStudentName){
+      const filtered = local.filter(r => {
+        const rUser = r.userName || '';
+        /* userName이 정확히 일치하거나, 비어있는 옛날 데이터는 포함 안 함 */
+        return rUser === currentStudentName;
+      });
+      list = list.concat(filtered);
+    } else {
+      /* 비로그인 상태 (관리자 또는 일반 측정) - 전부 표시 */
+      list = list.concat(local);
+    }
   } catch(e){}
   
   /* 2. Firebase 이력 (학생 로그인 시) */
-  if(typeof curStudent !== 'undefined' && curStudent && typeof firebase !== 'undefined'){
+  if(currentStudentName && typeof firebase !== 'undefined'){
     try {
-      const studentName = curStudent.name || curStudent;
-      const snap = await firebase.database().ref(`pt_history/${studentName}`).once('value');
+      const snap = await firebase.database().ref(`pt_history/${currentStudentName}`).once('value');
       const fbData = snap.val();
       if(fbData){
         const fbList = Object.values(fbData);
