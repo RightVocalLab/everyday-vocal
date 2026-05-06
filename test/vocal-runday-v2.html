@@ -666,12 +666,6 @@ input,select,button,textarea{font-family:inherit;}
       <span class="v2-hw-theory-link-text">음역대 측정 이력</span>
       <span class="v2-hw-theory-link-arrow">›</span>
     </button>
-    
-    <!-- 이전 측정 이력 가져오기 버튼 (비로그인 시 측정한 이력을 학생 계정으로) -->
-    <button onclick="_importLocalPtHistory()" style="width:100%;margin-top:8px;background:#fff;color:#0d9488;border:1.5px solid #5eead4;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-      <span>📥</span>
-      <span>이전 측정 이력 가져오기</span>
-    </button>
 
     <!-- 숙제 리스트 -->
     <div class="v2-section-header">
@@ -862,6 +856,40 @@ input,select,button,textarea{font-family:inherit;}
         <div id="hw-cal-detail" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:12px;color:#166534;line-height:1.9"></div>
       </div>
     </div>
+    </div>
+
+    <!-- 음역대 측정 데이터 관리 (관리자 전용) -->
+    <div class="v2-admin-acc" id="acc-pt-data">
+      <div class="v2-admin-acc-hdr" onclick="_toggleAdminAcc('acc-pt-data')">
+        <div class="v2-admin-acc-icon">📈</div>
+        <div class="v2-admin-acc-title">음역대 측정 데이터 관리</div>
+        <div class="v2-admin-acc-arrow">▼</div>
+      </div>
+      <div class="v2-admin-acc-body">
+        <div style="font-size:11px;color:var(--mu);line-height:1.6;margin-bottom:12px">
+          학생들이 모바일 또는 PC에서 측정한 데이터가 학생 계정에 저장되지 않은 경우, 이 기기의 localStorage 데이터를 학생 계정으로 이전할 수 있습니다.
+        </div>
+
+        <!-- 학생별 동기화 -->
+        <div style="background:#f0f9ff;border:1.5px solid #7dd3fc;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:8px">📤 이 기기 측정 이력 → 학생 계정 동기화</div>
+          <div style="font-size:10px;color:#0284c7;line-height:1.6;margin-bottom:8px">
+            이 기기에서 측정된 이력 중 학생 명단과 일치하는 데이터를 해당 학생 계정으로 자동 분류해 업로드합니다.
+          </div>
+          <button onclick="_adminSyncAllPtHistory()" style="width:100%;background:#0284c7;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer">
+            🔄 전체 학생 동기화 시작
+          </button>
+        </div>
+
+        <!-- 현황 -->
+        <div style="background:#fafaf9;border:1.5px solid #e7e5e4;border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:#57534e;margin-bottom:8px">📊 이 기기 localStorage 측정 이력</div>
+          <button onclick="_adminCheckLocalPtHistory()" style="width:100%;background:#fff;color:#57534e;border:1.5px solid #d6d3d1;border-radius:8px;padding:8px;font-size:11px;font-weight:700;cursor:pointer">
+            🔍 현황 확인
+          </button>
+          <div id="admin-pt-status" style="margin-top:8px;font-size:10px;color:#57534e;line-height:1.7"></div>
+        </div>
+      </div>
     </div>
 
         <!-- 관리자 로그아웃 버튼 -->
@@ -12780,7 +12808,10 @@ function _closePtResult(){
   if(modal) modal.classList.remove('active');
 }
 
-/* 결과 저장 (localStorage + Firebase 학생 로그인 시) */
+/* 결과 저장 (localStorage + Firebase 학생 이름이 있으면) 
+   - 학생 로그인 시: curStudent.name 우선
+   - 비로그인 시: 사용자가 입력한 userName으로 저장 (PC↔모바일 동기화 가능)
+*/
 function _ptSaveResult(result){
   if(!result) return;
   
@@ -12796,13 +12827,37 @@ function _ptSaveResult(result){
     console.warn('localStorage 저장 실패:', e);
   }
   
-  /* 2. Firebase에 저장 (학생 로그인 시) */
-  if(typeof curStudent !== 'undefined' && curStudent && typeof firebase !== 'undefined'){
+  /* 2. Firebase에 저장 - 학생 로그인 또는 학생 이름이 입력된 경우 모두 저장 
+     이렇게 하면 PC에서 측정한 데이터도 모바일에서 학생 로그인 시 가져올 수 있음 */
+  if(typeof firebase !== 'undefined'){
     try {
-      const db = firebase.database();
-      const studentName = curStudent.name || curStudent;
-      const ref = db.ref(`pt_history/${studentName}`).push();
-      ref.set(result).catch(e => console.warn('Firebase 저장 실패:', e));
+      /* 우선순위: 학생 로그인 이름 > 측정자가 입력한 userName */
+      let studentName = null;
+      if(typeof curStudent !== 'undefined' && curStudent){
+        studentName = curStudent.name || curStudent;
+      } else if(result.userName && result.userName !== '익명'){
+        /* 비로그인 측정 - 입력 이름이 학생 명단에 있는지 확인 */
+        if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
+          const matched = STUDENTS_DB.find(s => 
+            s.name === result.userName || 
+            s.name.replace(/\s/g, '') === result.userName.replace(/\s/g, '')
+          );
+          if(matched){
+            studentName = matched.name;
+            console.log('✅ 학생 명단 일치:', studentName, '- Firebase 저장');
+          }
+        }
+      }
+      
+      if(studentName){
+        const db = firebase.database();
+        const ref = db.ref(`pt_history/${studentName}`).push();
+        ref.set(result)
+          .then(() => console.log('✅ Firebase 저장 완료:', studentName))
+          .catch(e => console.warn('Firebase 저장 실패:', e));
+      } else {
+        console.log('ℹ️ 학생 이름 미일치 - Firebase 저장 건너뜀 (localStorage에만 저장)');
+      }
     } catch(e){
       console.warn('Firebase 저장 실패:', e);
     }
@@ -13628,6 +13683,143 @@ async function _importLocalPtHistory(){
   } else {
     alert(`✅ ${uploaded}개 이력을 학생 계정으로 가져왔습니다!\n\n'음역대 측정 이력' 메뉴에서 확인하실 수 있습니다.`);
   }
+}
+
+/* ========== 관리자 전용: 음역대 측정 데이터 관리 ========== */
+
+/* 이 기기 localStorage 측정 이력 현황 확인 (관리자) */
+function _adminCheckLocalPtHistory(){
+  const statusEl = document.getElementById('admin-pt-status');
+  if(!statusEl) return;
+  
+  const allList = _loadAllLocalPtHistory();
+  if(allList.length === 0){
+    statusEl.innerHTML = '<div style="color:#a8a29e">이 기기에 측정 이력이 없습니다.</div>';
+    return;
+  }
+  
+  /* 이름별로 그룹화 */
+  const byName = {};
+  allList.forEach(r => {
+    const name = r.userName || '(이름 없음)';
+    byName[name] = (byName[name] || 0) + 1;
+  });
+  
+  /* 학생 명단과 비교 */
+  let html = `<div style="margin-bottom:6px"><b>총 ${allList.length}건</b></div>`;
+  html += '<div style="display:flex;flex-direction:column;gap:3px">';
+  
+  for(const [name, count] of Object.entries(byName).sort((a,b) => b[1] - a[1])){
+    let inDB = false;
+    if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
+      inDB = STUDENTS_DB.some(s => 
+        s.name === name || s.name.replace(/\s/g, '') === name.replace(/\s/g, '')
+      );
+    }
+    const badge = inDB 
+      ? '<span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">학생</span>'
+      : '<span style="background:#fef2f2;color:#991b1b;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">미일치</span>';
+    html += `<div>• ${name}: ${count}건 ${badge}</div>`;
+  }
+  html += '</div>';
+  
+  statusEl.innerHTML = html;
+}
+
+/* 전체 학생 동기화 (관리자) - 학생 명단과 일치하는 모든 이력을 Firebase에 업로드 */
+async function _adminSyncAllPtHistory(){
+  if(typeof firebase === 'undefined' || !firebase.database){
+    alert('Firebase 연결이 필요합니다.');
+    return;
+  }
+  if(typeof STUDENTS_DB === 'undefined' || !Array.isArray(STUDENTS_DB)){
+    alert('학생 명단을 불러올 수 없습니다.');
+    return;
+  }
+  
+  const allList = _loadAllLocalPtHistory();
+  if(allList.length === 0){
+    alert('이 기기에 측정 이력이 없습니다.');
+    return;
+  }
+  
+  /* 학생 명단과 매칭되는 데이터만 추리기 */
+  const studentNames = STUDENTS_DB.map(s => s.name);
+  const matched = {};  /* {학생이름: [측정데이터 배열]} */
+  
+  allList.forEach(r => {
+    if(!r.userName) return;
+    const found = STUDENTS_DB.find(s => 
+      s.name === r.userName || s.name.replace(/\s/g, '') === r.userName.replace(/\s/g, '')
+    );
+    if(found){
+      const name = found.name;
+      if(!matched[name]) matched[name] = [];
+      matched[name].push(r);
+    }
+  });
+  
+  const totalMatched = Object.values(matched).reduce((sum, arr) => sum + arr.length, 0);
+  if(totalMatched === 0){
+    alert('학생 명단과 일치하는 측정 이력이 없습니다.\n\n측정 시 학생 이름을 정확히 입력했는지 확인해주세요.');
+    return;
+  }
+  
+  /* 사용자 확인 */
+  let summary = `학생별 측정 이력:\n`;
+  for(const [name, arr] of Object.entries(matched)){
+    summary += `• ${name}: ${arr.length}건\n`;
+  }
+  summary += `\n총 ${totalMatched}건을 학생 계정으로 동기화하시겠습니까?\n(이미 저장된 데이터는 자동 제외)`;
+  
+  if(!confirm(summary)) return;
+  
+  /* 학생별로 처리 */
+  const db = firebase.database();
+  let totalUploaded = 0, totalFailed = 0, totalSkipped = 0;
+  
+  for(const [studentName, records] of Object.entries(matched)){
+    /* 기존 Firebase 데이터의 timestamp 가져오기 */
+    let existingTimestamps = new Set();
+    try {
+      const snap = await db.ref(`pt_history/${studentName}`).once('value');
+      const fbData = snap.val();
+      if(fbData){
+        Object.values(fbData).forEach(r => {
+          if(r.timestamp) existingTimestamps.add(r.timestamp);
+        });
+      }
+    } catch(e){
+      console.warn(`${studentName} Firebase 조회 실패:`, e);
+    }
+    
+    /* 중복 제외 */
+    const newOnes = records.filter(r => !existingTimestamps.has(r.timestamp));
+    totalSkipped += records.length - newOnes.length;
+    
+    /* 업로드 */
+    for(const r of newOnes){
+      try {
+        const ref = db.ref(`pt_history/${studentName}`).push();
+        await ref.set(r);
+        totalUploaded++;
+      } catch(e){
+        console.warn(`${studentName} 업로드 실패:`, e);
+        totalFailed++;
+      }
+    }
+  }
+  
+  /* 결과 알림 */
+  let msg = `✅ 동기화 완료!\n\n`;
+  msg += `• 새로 업로드: ${totalUploaded}건\n`;
+  if(totalSkipped > 0) msg += `• 중복 제외: ${totalSkipped}건\n`;
+  if(totalFailed > 0) msg += `• 실패: ${totalFailed}건\n`;
+  msg += `\n학생들이 측정 이력을 다시 확인할 수 있습니다.`;
+  alert(msg);
+  
+  /* 현황 자동 새로고침 */
+  _adminCheckLocalPtHistory();
 }
 
 /* ========== 발전 자랑 게시판 (Community) ========== */
