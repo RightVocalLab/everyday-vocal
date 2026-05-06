@@ -11524,9 +11524,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
   /* === 점수 합산 (높을수록 가성, 낮을수록 진성) === */
   let score = 0;
   
-  /* H1-H2 점수 */
-  if(h1h2 > 7) score += 3;
-  else if(h1h2 > 3) score += 2;
+  /* H1-H2 점수 (가성의 핵심 신호 - 가중치 증가) */
+  if(h1h2 > 8) score += 4;       /* 매우 강한 가성 신호 */
+  else if(h1h2 > 5) score += 3;
+  else if(h1h2 > 2) score += 2;
   else if(h1h2 > -1) score += 1;
   else if(h1h2 < -5) score -= 3;
   else if(h1h2 < -2) score -= 2;
@@ -11567,12 +11568,13 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
     else if(f0 > 784) score += 2;   /* G5 이상 = 가성 보정 */
     else if(f0 > 698) score += 1;   /* F5 이상 = 약한 가성 보정 */
   } else {
-    /* 남자 - 중음역 가성 오판 줄이기 */
+    /* 남자 - 가성 판정 정밀화 */
     if(f0 < 165) score -= 3;        /* E3 이하 = 진성 강 보정 */
     else if(f0 < 220) score -= 2;   /* A3 이하 = 진성 보정 */
-    else if(f0 < 294) score -= 1;   /* D4 이하 = 약한 진성 보정 (중음역) */
+    /* C4(262)~B4(494) 중음역: 진성 보정 제거 - 사용자가 가성도 자주 사용 */
     else if(f0 > 880) score += 3;   /* A5 이상 = 가성 강 보정 */
     else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
+    else if(f0 > 523) score += 1;   /* C5 이상 = 약한 가성 보정 */
   }
   
   /* === 매번 독립 판정 (Hysteresis 제거) ===
@@ -11599,14 +11601,15 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
     }
   }
   
-  /* === 추가 보수적 검증: 중음역에서는 가성 점수가 매우 높을 때만 인정 ===
+  /* === 추가 보수적 검증: 중음역에서는 가성 점수가 충분히 높을 때만 인정 ===
      여성: G4~F#5 (392~370Hz~F#5=740Hz) 사이는 점수가 +5 이상이어야 가성 인정
-     남성: G3~D#5 (196~622Hz) 사이는 점수가 +5 이상이어야 가성 인정 */
+     남성: G3~B4 (196~494Hz) 사이는 점수가 +4 이상이면 가성 인정 (완화)
+           C5 이상은 점수가 낮아도 가성 인정 가능 */
   if(result === 'falsetto'){
     if(isFemale && f0 < 740 && score < 5){
-      result = 'mix';  /* 중음역에서 점수 부족하면 mix로 */
-    } else if(!isFemale && f0 < 622 && score < 5){
-      result = 'mix';
+      result = 'mix';  /* 여성 중음역: 점수 부족하면 mix */
+    } else if(!isFemale && f0 < 494 && score < 4){
+      result = 'mix';  /* 남성: B4 이하에서만 점수 4점 이상 요구 (이전 5점에서 완화) */
     }
   }
   
@@ -12087,13 +12090,14 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
 
 /* Canvas 점 추가 (지속 시간 추적 + 잡음 필터링) 
    현재 발성 중인 음정 버퍼에 누적하고, 음정이 바뀌거나 발성이 끊기면 
-   0.3초 이상 지속된 경우에만 정식 데이터 포인트로 확정 */
+   0.5초 이상 지속된 경우에만 정식 데이터 포인트로 확정 (잡노이즈 강화 차단) */
 let _ptCurrentTone = null;  /* {midi, dB합계, 카운트, 시작시각, 마지막시각} */
 const PT_MIDI_TOLERANCE = 0.6;  /* 같은 음정으로 간주 (반음 이내) */
 const PT_GAP_MS = 200;          /* 발성 끊김 판정 (마지막 입력 후 200ms 무입력 → 끊김) */
-const PT_MIN_DURATION_MS = 300; /* 0.3초 미만은 잡음(치찰음/파열음/짧은 외침)으로 무시
+const PT_MIN_DURATION_MS = 500; /* 0.5초 미만은 잡음/부정확한 측정으로 무시
+                                   (이전 0.3초 → 0.5초로 강화하여 의도된 발성만 인정)
                                    파열음(ㅂ,ㄷ,ㄱ): 5~30ms, 치찰음(ㅅ,ㅈ): 50~200ms,
-                                   짧은 외침: 200~300ms 까지 차단 / 의도된 발성은 250ms+ */
+                                   짧은 외침/숨소리: 200~400ms 까지 차단 */
 
 function _ptAddPoint(midi, dB, register){
   const now = Date.now();
