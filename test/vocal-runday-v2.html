@@ -11956,21 +11956,50 @@ function _ptCanvasDraw(){
       }
     }
     
+    /* 외딴 점(outlier) 필터링 헬퍼 - 등고선 계산용 (실시간 그래프)
+       음정/dB 기준으로 가까운 이웃이 부족한 점은 등고선에서 제외 */
+    function _filterOutliersRT(pts, neighborRadius, minNeighbors){
+      if(pts.length < 4) return pts;
+      return pts.filter((p, i) => {
+        let neighbors = 0;
+        for(let j = 0; j < pts.length; j++){
+          if(i === j) continue;
+          const dx = (pts[j].midi - p.midi);
+          const dy = (pts[j].dB - p.dB) / 5;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist < neighborRadius){
+            neighbors++;
+            if(neighbors >= minNeighbors) return true;
+          }
+        }
+        return false;
+      });
+    }
+    
     /* 등고선 그리기: 진성(진한 파랑) → 믹스(중간) → 가성(연한 회색빛) 순서로 (밑에 진한 게 깔리도록) */
     /* 가성: 연한 회색-라벤더 (가장 옅음) */
-    if(ptsFalsetto.length >= 3){
-      const hull = _expandHull(_hull(ptsFalsetto), 6);
-      _drawSmoothClosedPath(hull, 'rgba(196,181,253,0.22)', 'rgba(139,92,246,0.55)', 1.5);
+    if(ptsFalsetto.length >= 4){
+      const core = _filterOutliersRT(ptsFalsetto, 3.5, 2);
+      if(core.length >= 3){
+        const hull = _expandHull(_hull(core), 6);
+        _drawSmoothClosedPath(hull, 'rgba(196,181,253,0.22)', 'rgba(139,92,246,0.55)', 1.5);
+      }
     }
     /* 믹스: 중간 채도 파랑 */
-    if(ptsMix.length >= 3){
-      const hull = _expandHull(_hull(ptsMix), 6);
-      _drawSmoothClosedPath(hull, 'rgba(125,211,252,0.30)', 'rgba(14,165,233,0.75)', 1.8);
+    if(ptsMix.length >= 4){
+      const core = _filterOutliersRT(ptsMix, 3.5, 2);
+      if(core.length >= 3){
+        const hull = _expandHull(_hull(core), 6);
+        _drawSmoothClosedPath(hull, 'rgba(125,211,252,0.30)', 'rgba(14,165,233,0.75)', 1.8);
+      }
     }
     /* 진성: 진한 파랑 */
-    if(ptsChest.length >= 3){
-      const hull = _expandHull(_hull(ptsChest), 6);
-      _drawSmoothClosedPath(hull, 'rgba(59,130,246,0.35)', 'rgba(29,78,216,0.9)', 2);
+    if(ptsChest.length >= 4){
+      const core = _filterOutliersRT(ptsChest, 3.5, 2);
+      if(core.length >= 3){
+        const hull = _expandHull(_hull(core), 6);
+        _drawSmoothClosedPath(hull, 'rgba(59,130,246,0.35)', 'rgba(29,78,216,0.9)', 2);
+      }
     }
     
     /* 데이터 점 적을 때 점 자체로 표시 (각 register 색깔로) */
@@ -12796,31 +12825,58 @@ function _drawSinglePtToCanvas(canvasId, result){
     const mixPts = result.dataPoints.filter(p => p.register === 'mix');
     const falsettoPts = result.dataPoints.filter(p => p.register === 'falsetto');
     
-    /* 진성 등고선 (파란색) */
-    if(chestPts.length >= 3){
-      const points = chestPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
-      const hull = _expandHull(_hull(points), 6);
-      _drawSmoothPath(hull, 'rgba(59,130,246,0.18)', 'rgba(29,78,216,0.85)', 2);
+    /* 외딴 점(outlier) 필터링 헬퍼 - 등고선 계산용
+       각 점에 대해 일정 반경 내에 일정 개수 이상의 이웃 점이 있어야 본체로 인정
+       이웃 점이 부족한 외딴 점은 등고선 형성에서 제외 (점은 그대로 표시) */
+    function _filterOutliers(pts, neighborRadius, minNeighbors){
+      if(pts.length < 4) return pts;  /* 너무 적으면 필터 안 함 */
+      return pts.filter((p, i) => {
+        let neighbors = 0;
+        for(let j = 0; j < pts.length; j++){
+          if(i === j) continue;
+          const dx = (pts[j].midi - p.midi);  /* 음정 단위 (반음) */
+          const dy = (pts[j].dB - p.dB) / 5;  /* dB는 5dB = 1단위로 환산 */
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist < neighborRadius){
+            neighbors++;
+            if(neighbors >= minNeighbors) return true;
+          }
+        }
+        return false;  /* 이웃이 부족 → 외딴 점, 등고선 제외 */
+      });
     }
     
-    /* 믹스 등고선 (하늘색) */
-    if(mixPts.length >= 3){
-      const points = mixPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
-      const hull = _expandHull(_hull(points), 6);
-      _drawSmoothPath(hull, 'rgba(14,165,233,0.18)', 'rgba(2,132,199,0.85)', 2);
+    /* 진성 등고선 (파란색) - 본체만 */
+    if(chestPts.length >= 4){
+      const core = _filterOutliers(chestPts, 3.5, 2);  /* 반음 3.5개 이내에 점 2개 이상 */
+      if(core.length >= 3){
+        const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+        const hull = _expandHull(_hull(points), 6);
+        _drawSmoothPath(hull, 'rgba(59,130,246,0.18)', 'rgba(29,78,216,0.85)', 2);
+      }
     }
     
-    /* 가성 등고선 (보라색) */
-    if(falsettoPts.length >= 3){
-      const points = falsettoPts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
-      const hull = _expandHull(_hull(points), 6);
-      _drawSmoothPath(hull, 'rgba(139,92,246,0.18)', 'rgba(124,58,237,0.85)', 2);
+    /* 믹스 등고선 (하늘색) - 본체만 */
+    if(mixPts.length >= 4){
+      const core = _filterOutliers(mixPts, 3.5, 2);
+      if(core.length >= 3){
+        const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+        const hull = _expandHull(_hull(points), 6);
+        _drawSmoothPath(hull, 'rgba(14,165,233,0.18)', 'rgba(2,132,199,0.85)', 2);
+      }
     }
     
-    /* 데이터 포인트가 부족한 영역(<3개)도 점은 표시되도록 fallback */
-    /* 영역이 1~2개뿐이면 등고선 없이 점만 보임 */
+    /* 가성 등고선 (보라색) - 본체만 */
+    if(falsettoPts.length >= 4){
+      const core = _filterOutliers(falsettoPts, 3.5, 2);
+      if(core.length >= 3){
+        const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+        const hull = _expandHull(_hull(points), 6);
+        _drawSmoothPath(hull, 'rgba(139,92,246,0.18)', 'rgba(124,58,237,0.85)', 2);
+      }
+    }
     
-    /* 개별 데이터 포인트 (작은 점) - 등고선 위에 그려서 강조 */
+    /* 모든 데이터 포인트는 점으로 표시 (외딴 점도 포함 - 등고선 위에 그려져 강조) */
     chestPts.forEach(p => {
       ctx.fillStyle = '#1d4ed8';  /* 진성: 진한 파랑 */
       ctx.beginPath();
