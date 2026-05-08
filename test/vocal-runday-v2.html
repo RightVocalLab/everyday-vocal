@@ -3689,6 +3689,18 @@ const INIT_DB={
       "note": ""
     },
     {
+      "id": "5D-E",
+      "name": "5도 스케일",
+      "range": "흉성~높은두성",
+      "startNote": 57,
+      "endNote": 69,
+      "bpm": 130,
+      "pattern": [0, 2, 4, 5, 7, 5, 4, 2, 0],
+      "previewType": "5도화음",
+      "previewBeats": 4,
+      "note": "도-레-미-파-솔-파-미-레-도 (5도 도달, 흉성에서 높은 두성까지 광범위)"
+    },
+    {
       "id": "5H-A",
       "name": "5도 쉬고 내려오기",
       "range": "흉성",
@@ -10112,7 +10124,7 @@ let STUDENTS_DB = [
     ]
   },
   {
-    "name": "정다인",
+    "name": "강다인",
     "pw": "di24",
     "homework": [
       {
@@ -10138,15 +10150,15 @@ let STUDENTS_DB = [
         "name": "S브레셔 x10"
       },
       {
-        "exId": "학! 아~아~아~ x10",
-        "exName": "학! 아~아~아~ x10",
-        "displayLabel": "학! 아~아~아~ x10",
+        "exId": "학! 아~아~아~ x3",
+        "exName": "학! 아~아~아~ x3",
+        "displayLabel": "학! 아~아~아~ x3",
         "scaleId": "",
         "repeat": 1,
         "comment": "가슴에 입술이랑 성대가 있다고 생각하고",
         "active": true,
         "num": 2,
-        "name": "학! 아~아~아~ x10"
+        "name": "학! 아~아~아~ x3"
       },
       {
         "exId": "학! 아빡 3도흉성",
@@ -10154,7 +10166,7 @@ let STUDENTS_DB = [
         "displayLabel": "학! 아빡 3도흉성",
         "scaleId": "3D-A",
         "repeat": 1,
-        "comment": "학! 할때는 위치가 뜨지않게 가슴위치로 압축이 된다고 생각하면서 하고\n'아' 할때는 위에 압축시켜놓은걸 꾹꾹 버티면서 앞으로 잡아서 보내주려고 하고\n음정이 조금 높아져서 터질겉같으면 큰~헬륨풍선 끈을 잡아 내린다 생각하면서 버티기!\n오늘 낮은중성구 부분은 조금 터질랑 말랑 했지만 적응 잘 했음!",
+        "comment": "조금 얇아지긴 했는데 잘 했음! 처음에는 자꾸 학! 한거를 다 풀고 소리를 내려고 함! 절대 그렇게하면 안되! 학! 한거를 계속 유지하려고 해야 되!",
         "active": true,
         "num": 3,
         "name": "학! 아빡 3도흉성"
@@ -11531,8 +11543,8 @@ function _ptAnalyzeLoop(){
       if(highEl) highEl.textContent = noteInfo.note;
     }
     
-    /* H1-H2 측정 → 가성/믹스/진성 판정 */
-    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate);
+    /* H1-H2 측정 → 가성/믹스/진성 판정 (dB 정보 전달 - 작은 소리 보정) */
+    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB);
     
     /* PVR Canvas에 점 찍기 (register 정보 포함) */
     _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB, register);
@@ -11563,7 +11575,7 @@ function _ptAnalyzeLoop(){
    - 모호한 경우 mix로 (오판 방지가 더 중요)
    
    참고: Keating 2014, Sundberg, Childers&Lee, Lee 2021 등 음향학 표준 */
-function _ptDetectRegister(timeBuf, f0, sampleRate){
+function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   const N = timeBuf.length;
   
   /* Goertzel 알고리즘으로 특정 주파수 강도 계산 */
@@ -11655,12 +11667,23 @@ function _ptDetectRegister(timeBuf, f0, sampleRate){
            D4~F5 사이(294~698Hz, 알토/메조 핵심 영역)는 mix/chest 우선
            G5 (784Hz) 이상부터 가성 보정 */
   const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
+  
+  /* 작은 소리(낮은 dB) 보정: 음량이 작을수록 진성보다 믹스/가성일 가능성 ↑
+     성대 압축이 약한 작은 소리는 진성으로 내기 어려움
+     dB는 컴퓨터 dB이므로 절대값보단 상대비교 (보통 80~95: 일반, 70~80: 작은소리, ~70: 매우 작은소리) */
+  const _dB = (typeof dB === 'number') ? dB : 80;
+  if(_dB < 70) score += 1;       /* 매우 작은 소리는 믹스/가성 쪽으로 +1 */
+  else if(_dB < 78) score += 0.5; /* 작은 소리는 약하게 +0.5 */
+  
   if(isFemale){
     /* 여자 - mix 영역을 훨씬 넓게, 중음역 가성 오판 줄이기 */
-    if(f0 < 220) score -= 2;        /* A3 이하 = 진성 강 보정 */
-    else if(f0 < 294) score -= 1;   /* D4 이하 = 진성 보정 */
-    else if(f0 < 392) score -= 2;   /* G4 이하 = 진성/믹스 보정 (중음역 가성 오판 방지) */
-    else if(f0 < 523) score -= 1;   /* C5 이하 = 약간 진성 쪽으로 */
+    if(f0 < 175) score -= 2;        /* F3 이하 = 진성 강 보정 (저음 한계) */
+    else if(f0 < 220) score -= 1;   /* A3 이하 = 약한 진성 보정 (믹스도 가능하므로 완화) */
+    /* A3~D4 (220~294Hz): 보정 제거 - 알토 저음 믹스 가능 영역
+       이 구간은 흉성으로 강하게 내든 믹스로 살살 내든 둘 다 가능 → 음향 점수에 맡김 */
+    else if(f0 < 392) score -= 1;   /* G4 이하 = 약한 진성 보정 (이전 -2 → -1로 완화) */
+    /* C5(523) ~ F#5(740) 사이는 보정 제거 - 알토/메조 핵심 믹스 영역
+       이 구간은 작은 소리면 믹스, 큰 소리면 진성/믹스 자유롭게 분류 */
     else if(f0 > 988) score += 3;   /* B5 이상 = 가성 강 보정 */
     else if(f0 > 784) score += 2;   /* G5 이상 = 가성 보정 */
     else if(f0 > 698) score += 1;   /* F5 이상 = 약한 가성 보정 */
