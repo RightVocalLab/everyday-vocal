@@ -4031,6 +4031,12 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
       return;
     }
     if(idx >= finalChunks.length){ if(onEnd) onEnd(); return; }
+    /* 음량 0이면 폴링 (음량 올리면 자동 재개) */
+    const _vol = _isCoachFlag ? (typeof _volCoach !== 'undefined' ? _volCoach : 50) : (typeof _volTTS !== 'undefined' ? _volTTS : 50);
+    if(_vol <= 0){
+      setTimeout(_next, 500);
+      return;
+    }
     const chunk = finalChunks[idx++];
     speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
   }
