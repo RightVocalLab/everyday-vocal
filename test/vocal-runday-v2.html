@@ -1208,10 +1208,8 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
     
-    <!-- 비교 그래프 -->
-    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:12px">
-      <canvas id="comm-view-canvas" width="600" height="700" style="width:100%;height:auto;display:block"></canvas>
-    </div>
+    <!-- 비포&애프터 비교 그래프 영역 -->
+    <div id="comm-view-graph-area" style="margin-bottom:12px"></div>
     
     <!-- 변화 요약 -->
     <div id="comm-view-summary" style="margin-bottom:12px"></div>
@@ -14566,28 +14564,11 @@ async function _openCommunityView(postId){
     }
   }
   
-  /* 변화 요약 */
+  /* 변화 요약 (새 시각화에 통합되어 비활성화 - 중복 방지) */
   const summaryEl = document.getElementById('comm-view-summary');
   if(summaryEl){
-    const before = post.before || {};
-    const after = post.after || {};
-    const beforeRange = ((before.highMidi||0) - (before.lowMidi||0)) / 12;
-    const afterRange = ((after.highMidi||0) - (after.lowMidi||0)) / 12;
-    const lowDiff = (after.lowMidi||0) - (before.lowMidi||0);
-    const highDiff = (after.highMidi||0) - (before.highMidi||0);
-    const rangeDiff = afterRange - beforeRange;
-    const arrow = (n) => n > 0 ? '<span style="color:#16a34a;font-weight:800">↑</span>' : (n < 0 ? '<span style="color:#dc2626;font-weight:800">↓</span>' : '<span style="color:#9ca3af">→</span>');
-    
-    summaryEl.innerHTML = `
-      <div style="background:#f9fafb;border-radius:10px;padding:11px 13px;font-size:11.5px">
-        <div style="font-weight:800;color:#374151;margin-bottom:6px">📈 변화 요약</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:#475569;line-height:1.7">
-          <div>최저음: ${before.lowNote||'-'} → ${after.lowNote||'-'} ${arrow(-lowDiff)}</div>
-          <div>최고음: ${before.highNote||'-'} → ${after.highNote||'-'} ${arrow(highDiff)}</div>
-          <div style="grid-column:1/-1">음역 폭: ${beforeRange.toFixed(1)} → ${afterRange.toFixed(1)} 옥타브 ${arrow(rangeDiff)}</div>
-        </div>
-      </div>
-    `;
+    summaryEl.innerHTML = '';
+    summaryEl.style.display = 'none';
   }
   
   /* 좋아요 상태 */
@@ -14606,160 +14587,376 @@ async function _openCommunityView(postId){
   /* 모달 표시 + 그래프 그리기 */
   modal.classList.add('active');
   
-  /* 비교 그래프 - 기존 _drawPtCompare 재사용 */
+  /* 새 비포&애프터 시각화 (SVG 기반) */
   setTimeout(() => {
-    const colors = [
-      {fill:'rgba(239,68,68,0.20)',  stroke:'rgba(220,38,38,0.85)'},
-      {fill:'rgba(34,197,94,0.20)',  stroke:'rgba(22,163,74,0.85)'}
-    ];
-    const results = [post.before, post.after];
-    /* 캔버스 ID를 임시로 변경하기 위한 wrapper */
-    _drawCompareToCanvas('comm-view-canvas', results, colors);
+    _renderBeforeAfterGraph('comm-view-graph-area', post.before, post.after);
   }, 100);
   
   /* 댓글 로드 */
   _loadComments(postId);
 }
 
-/* 임의 캔버스에 비교 그래프 그리기 (_drawPtCompare 변형) */
-function _drawCompareToCanvas(canvasId, results, colors){
-  const canvas = document.getElementById(canvasId);
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const w = rect.width > 0 ? rect.width : 320;
-  const h = w * 700 / 600;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.scale(dpr, dpr);
-  canvas.style.height = h + 'px';
+/* ========================================================
+   비포&애프터 발전 자랑 시각화 (SVG 기반)
+   - PVR 그래프 (Before=점선, After=실선, 같은 좌표계)
+   - 피아노 건반 + 음역대 가로 막대 (4영역)
+   - 영역별 수치 비교표
+   - 종합 향상 요약 카드
+   ======================================================== */
+
+/* MIDI → 음 이름 변환 */
+function _bf_midiToName(m){
+  const notes = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  if(m == null || isNaN(m)) return '-';
+  return notes[m % 12] + Math.floor(m/12 - 1);
+}
+
+/* register별 점들의 min/max midi 추출 (없으면 null) */
+function _bf_getRegisterRange(dataPoints, register){
+  if(!dataPoints || !dataPoints.length) return null;
+  const pts = dataPoints.filter(p => p.register === register);
+  if(!pts.length) return null;
+  let lo = Infinity, hi = -Infinity;
+  for(const p of pts){
+    if(p.midi < lo) lo = p.midi;
+    if(p.midi > hi) hi = p.midi;
+  }
+  return {lo, hi};
+}
+
+/* Convex Hull 계산 (등고선용) */
+function _bf_convexHull(points){
+  if(points.length < 3) return points.slice();
+  const pts = points.slice().sort((a,b) => a.x - b.x || a.y - b.y);
+  const cross = (O,A,B) => (A.x-O.x)*(B.y-O.y) - (A.y-O.y)*(B.x-O.x);
+  const lower = [];
+  for(const p of pts){
+    while(lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for(let i = pts.length-1; i >= 0; i--){
+    const p = pts[i];
+    while(upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  return lower.slice(0,-1).concat(upper.slice(0,-1));
+}
+
+/* Hull을 SVG path로 변환 (smoothing) */
+function _bf_hullToPath(hull){
+  if(!hull.length) return '';
+  let d = `M${hull[0].x},${hull[0].y}`;
+  for(let i = 1; i < hull.length; i++){
+    d += ` L${hull[i].x},${hull[i].y}`;
+  }
+  d += ' Z';
+  return d;
+}
+
+/* register별 등고선 SVG path 생성 */
+function _bf_getRegisterContour(dataPoints, register, x2px, y2px){
+  if(!dataPoints || !dataPoints.length) return '';
+  const pts = dataPoints.filter(p => p.register === register);
+  if(pts.length < 3) return '';
+  const xy = pts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+  const hull = _bf_convexHull(xy);
+  return _bf_hullToPath(hull);
+}
+
+/* 메인: 비포&애프터 그래프 영역 그리기 */
+function _renderBeforeAfterGraph(containerId, before, after){
+  const container = document.getElementById(containerId);
+  if(!container) return;
   
-  const W = w, H = h;
-  const isFemale = results[0]?.gender === 'female';
-  const midiMin = isFemale ? 43 : 36;
-  const midiMax = isFemale ? 96 : 84;
-  const dbMin = 50, dbMax = 90;
-  const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
-  const y2px = (db) => ((dbMax - db) / (dbMax - dbMin)) * H;
+  /* 데이터 정규화 */
+  before = before || {};
+  after = after || {};
+  const isFemale = (before.gender || after.gender) === 'female';
   
-  /* 배경 */
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
-  for(let db = dbMin; db <= dbMax; db += 10){
+  /* MIDI 범위 (성별별) */
+  const midiMin = isFemale ? 50 : 36;  /* D3 / C2 */
+  const midiMax = isFemale ? 88 : 76;  /* E6 / E5 */
+  const dbMin = 40, dbMax = 110;
+  
+  /* SVG 크기 (모바일 친화) */
+  const W = 360, H = 280;
+  const PAD_L = 38, PAD_R = 14, PAD_T = 32, PAD_B = 38;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+  
+  const x2px = (midi) => PAD_L + ((midi - midiMin) / (midiMax - midiMin)) * plotW;
+  const y2px = (dB) => PAD_T + plotH - ((dB - dbMin) / (dbMax - dbMin)) * plotH;
+  
+  /* === 1. PVR 그래프 (SVG) === */
+  const colors = {
+    chest: {stroke:'#1d4ed8', fillBefore:'rgba(29,78,216,0.05)', fillAfter:'rgba(29,78,216,0.18)'},
+    mix:   {stroke:'#0ea5e9', fillBefore:'rgba(14,165,233,0.05)', fillAfter:'rgba(14,165,233,0.18)'},
+    falsetto:{stroke:'#a855f7', fillBefore:'rgba(168,85,247,0.05)', fillAfter:'rgba(168,85,247,0.18)'}
+  };
+  
+  /* 그리드 라인 (옥타브) */
+  let gridLines = '';
+  /* 세로선: C 음정마다 (C2=24, C3=36, ...) */
+  for(let m = Math.ceil(midiMin/12)*12; m <= midiMax; m += 12){
+    if(m < midiMin || m > midiMax) continue;
+    const x = x2px(m);
+    gridLines += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+plotH}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="2,2"/>`;
+    gridLines += `<text x="${x}" y="${H-PAD_B+12}" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="600">C${Math.floor(m/12-1)}</text>`;
+  }
+  /* 가로선: dB 단위 */
+  for(let db = 50; db <= 100; db += 20){
     const y = y2px(db);
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-  }
-  ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
-  for(let db = dbMin; db <= dbMax; db += 10){
-    const y = y2px(db);
-    const txt = db + 'dB';
-    ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3; ctx.strokeText(txt, 4, y - 3);
-    ctx.fillStyle = '#6b7280'; ctx.fillText(txt, 4, y - 3);
-  }
-  /* 옥타브 세로선 */
-  ctx.strokeStyle = '#f3f4f6';
-  const allOctaves = [{midi:36,label:'C2'},{midi:48,label:'C3'},{midi:60,label:'C4'},{midi:72,label:'C5'},{midi:84,label:'C6'},{midi:96,label:'C7'}];
-  const octs = allOctaves.filter(o => o.midi >= midiMin && o.midi <= midiMax);
-  octs.forEach(o => {
-    const x = x2px(o.midi);
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H - 30); ctx.stroke();
-    ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(o.label, x, H - 5);
-  });
-  
-  /* Hull 함수 (재사용) */
-  function _hull(arr){
-    if(arr.length < 3) return arr.slice();
-    const sorted = arr.slice().sort((a,b) => a.x === b.x ? a.y - b.y : a.x - b.x);
-    const cross = (O, A, B) => (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
-    const lower = [];
-    for(const p of sorted){
-      while(lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
-      lower.push(p);
-    }
-    const upper = [];
-    for(let i = sorted.length - 1; i >= 0; i--){
-      const p = sorted[i];
-      while(upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
-      upper.push(p);
-    }
-    lower.pop(); upper.pop();
-    return lower.concat(upper);
-  }
-  function _expandHull(hullPts, padding){
-    if(hullPts.length < 3) return hullPts;
-    let cx = 0, cy = 0;
-    hullPts.forEach(p => { cx += p.x; cy += p.y; });
-    cx /= hullPts.length; cy /= hullPts.length;
-    return hullPts.map(p => {
-      const dx = p.x - cx, dy = p.y - cy;
-      const len = Math.sqrt(dx*dx + dy*dy);
-      if(len < 0.01) return {x: p.x, y: p.y};
-      return {x: p.x + (dx/len)*padding, y: p.y + (dy/len)*padding};
-    });
-  }
-  function _drawSmoothPath(pts, fillStyle, strokeStyle, lineWidth){
-    if(pts.length < 3) return;
-    ctx.beginPath();
-    const n = pts.length;
-    ctx.moveTo((pts[n-1].x + pts[0].x)/2, (pts[n-1].y + pts[0].y)/2);
-    for(let i = 0; i < n; i++){
-      const curr = pts[i];
-      const next = pts[(i+1) % n];
-      ctx.quadraticCurveTo(curr.x, curr.y, (curr.x+next.x)/2, (curr.y+next.y)/2);
-    }
-    ctx.closePath();
-    if(fillStyle){ ctx.fillStyle = fillStyle; ctx.fill(); }
-    if(strokeStyle){ ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth; ctx.lineJoin = 'round'; ctx.stroke(); }
+    gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L+plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="2,2"/>`;
+    gridLines += `<text x="${PAD_L-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#9ca3af">${db}</text>`;
   }
   
-  /* 각 결과 등고선 */
-  results.forEach((r, idx) => {
-    const c = colors[idx];
-    if(r.dataPoints && r.dataPoints.length >= 3){
-      const realPts = r.dataPoints.filter(p => p.register !== 'falsetto');
-      const ptsToUse = realPts.length >= 3 ? realPts : r.dataPoints;
-      const points = ptsToUse.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
-      const hull = _expandHull(_hull(points), 6);
-      _drawSmoothPath(hull, c.fill, c.stroke, 2);
-    } else {
-      /* fallback */
-      const lowMidi = r.lowMidi || 60;
-      const highMidi = r.highMidi || 72;
-      const cx = (lowMidi + highMidi) / 2;
-      const semitoneRange = (highMidi - lowMidi) / 2;
-      const fakePts = [];
-      for(let i = 0; i < 16; i++){
-        const angle = (i / 16) * Math.PI * 2;
-        const midi = cx + Math.cos(angle) * semitoneRange;
-        const db = 75 + Math.sin(angle) * 10;
-        fakePts.push({x: x2px(midi), y: y2px(db)});
+  /* dB 라벨 */
+  gridLines += `<text x="${PAD_L-26}" y="${PAD_T+plotH/2}" text-anchor="middle" font-size="9" fill="#6b7280" font-weight="700" transform="rotate(-90 ${PAD_L-26} ${PAD_T+plotH/2})">dB</text>`;
+  
+  /* Before/After 등고선 */
+  let contours = '';
+  for(const reg of ['chest','mix','falsetto']){
+    const bPath = _bf_getRegisterContour(before.dataPoints, reg, x2px, y2px);
+    const aPath = _bf_getRegisterContour(after.dataPoints, reg, x2px, y2px);
+    const c = colors[reg];
+    /* Before: 점선 (얇은 채움) */
+    if(bPath){
+      contours += `<path d="${bPath}" fill="${c.fillBefore}" stroke="${c.stroke}" stroke-width="2.5" stroke-dasharray="6,4" stroke-linejoin="round" opacity="0.75"/>`;
+    }
+    /* After: 실선 (진한 채움) */
+    if(aPath){
+      contours += `<path d="${aPath}" fill="${c.fillAfter}" stroke="${c.stroke}" stroke-width="3" stroke-linejoin="round"/>`;
+    }
+  }
+  
+  /* 범례 */
+  const legend = `
+    <g transform="translate(${PAD_L+8}, ${PAD_T+6})">
+      <rect x="0" y="0" width="92" height="38" rx="5" fill="rgba(255,255,255,0.95)" stroke="#e5e7eb" stroke-width="0.5"/>
+      <line x1="6" y1="12" x2="20" y2="12" stroke="#475569" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <text x="24" y="15" font-size="9" fill="#475569" font-weight="700">Before</text>
+      <line x1="6" y1="28" x2="20" y2="28" stroke="#475569" stroke-width="3"/>
+      <text x="24" y="31" font-size="9" fill="#475569" font-weight="700">After</text>
+    </g>
+  `;
+  
+  /* 제목 */
+  const title = `<text x="${W/2}" y="18" text-anchor="middle" font-size="11" fill="#374151" font-weight="800">📊 PVR 그래프 (음역 × 음량)</text>`;
+  
+  const pvrSvg = `
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+      <rect width="${W}" height="${H}" fill="#fff"/>
+      ${title}
+      ${gridLines}
+      ${contours}
+      ${legend}
+    </svg>
+  `;
+  
+  /* === 2. 피아노 건반 + 음역대 가로 막대 (4영역) === */
+  /* 피아노 건반 영역: 전체 음역 시각적 표시 */
+  const PW = 360, PH = 200;
+  const PPAD_L = 100, PPAD_R = 14, PPAD_T = 30, PPAD_B = 24;
+  const pPlotW = PW - PPAD_L - PPAD_R;
+  const pPlotH = PH - PPAD_T - PPAD_B;
+  const px2px = (midi) => PPAD_L + ((midi - midiMin) / (midiMax - midiMin)) * pPlotW;
+  
+  /* 피아노 건반 그리기 (상단 작게) */
+  const KEY_Y = PPAD_T;
+  const KEY_H = 22;
+  const wKeyOffsets = [0,2,4,5,7,9,11];  /* C, D, E, F, G, A, B */
+  const bKeyOffsets = [1,3,6,8,10];      /* C#, D#, F#, G#, A# */
+  
+  let piano = '';
+  /* 흰 건반 */
+  for(let m = Math.ceil(midiMin); m <= midiMax; m++){
+    const semi = m % 12;
+    if(!wKeyOffsets.includes(semi)) continue;
+    const x = px2px(m);
+    const wKeyW = pPlotW / ((midiMax-midiMin)*7/12 + 1);
+    piano += `<rect x="${x - wKeyW/2}" y="${KEY_Y}" width="${wKeyW*0.9}" height="${KEY_H}" fill="#fff" stroke="#9ca3af" stroke-width="0.5"/>`;
+    /* C 음에만 라벨 */
+    if(semi === 0){
+      piano += `<text x="${x}" y="${KEY_Y+KEY_H+10}" text-anchor="middle" font-size="8" fill="#6b7280" font-weight="700">C${Math.floor(m/12-1)}</text>`;
+    }
+  }
+  /* 검은 건반 */
+  for(let m = Math.ceil(midiMin); m <= midiMax; m++){
+    const semi = m % 12;
+    if(!bKeyOffsets.includes(semi)) continue;
+    const x = px2px(m);
+    const bKeyW = (pPlotW / ((midiMax-midiMin)*7/12 + 1)) * 0.55;
+    piano += `<rect x="${x - bKeyW/2}" y="${KEY_Y}" width="${bKeyW}" height="${KEY_H*0.65}" fill="#1f2937" stroke="#000" stroke-width="0.3"/>`;
+  }
+  
+  /* 음역 막대 4개 (전체, 진성, 믹스, 가성) */
+  const BAR_Y_START = KEY_Y + KEY_H + 18;
+  const BAR_H = 20;
+  const BAR_GAP = 6;
+  
+  const ranges = [
+    {label:'전체',  beforeLo:before.lowMidi,  beforeHi:before.highMidi,  afterLo:after.lowMidi, afterHi:after.highMidi, color:'#6366f1'},
+    {label:'진성',  ...(_bf_getRegisterRange(before.dataPoints,'chest')||{}),  beforeLo:_bf_getRegisterRange(before.dataPoints,'chest')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'chest')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'chest')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'chest')?.hi, color:'#1d4ed8'},
+    {label:'믹스',  beforeLo:_bf_getRegisterRange(before.dataPoints,'mix')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'mix')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'mix')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'mix')?.hi, color:'#0ea5e9'},
+    {label:'가성',  beforeLo:_bf_getRegisterRange(before.dataPoints,'falsetto')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'falsetto')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'falsetto')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'falsetto')?.hi, color:'#a855f7'}
+  ];
+  
+  let bars = '';
+  ranges.forEach((r, i) => {
+    const y = BAR_Y_START + i * (BAR_H + BAR_GAP);
+    /* 라벨 */
+    bars += `<text x="${PPAD_L-8}" y="${y+BAR_H/2+3}" text-anchor="end" font-size="10" fill="#374151" font-weight="800">${r.label}</text>`;
+    /* 배경 */
+    bars += `<rect x="${PPAD_L}" y="${y}" width="${pPlotW}" height="${BAR_H}" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5" rx="3"/>`;
+    /* Before (회색 막대, 아래쪽) */
+    if(r.beforeLo != null && r.beforeHi != null){
+      const x1 = px2px(r.beforeLo);
+      const x2 = px2px(r.beforeHi);
+      bars += `<rect x="${x1}" y="${y+BAR_H/2}" width="${Math.max(2,x2-x1)}" height="${BAR_H/2-1}" fill="#9ca3af" opacity="0.7" rx="2"/>`;
+      bars += `<text x="${PPAD_L-8}" y="${y+BAR_H-1}" text-anchor="end" font-size="7" fill="#9ca3af" font-weight="700"></text>`;
+    }
+    /* After (컬러 막대, 위쪽) */
+    if(r.afterLo != null && r.afterHi != null){
+      const x1 = px2px(r.afterLo);
+      const x2 = px2px(r.afterHi);
+      bars += `<rect x="${x1}" y="${y+1}" width="${Math.max(2,x2-x1)}" height="${BAR_H/2-2}" fill="${r.color}" opacity="0.85" rx="2"/>`;
+      
+      /* 확장 영역 점선 박스 (After가 Before보다 넓을 때) */
+      if(r.beforeLo != null && r.beforeHi != null){
+        if(r.afterLo < r.beforeLo){
+          const ex1 = px2px(r.afterLo);
+          const ex2 = px2px(r.beforeLo);
+          bars += `<rect x="${ex1}" y="${y+1}" width="${ex2-ex1}" height="${BAR_H-2}" fill="none" stroke="${r.color}" stroke-width="1.2" stroke-dasharray="3,2" rx="2"/>`;
+        }
+        if(r.afterHi > r.beforeHi){
+          const ex1 = px2px(r.beforeHi);
+          const ex2 = px2px(r.afterHi);
+          bars += `<rect x="${ex1}" y="${y+1}" width="${ex2-ex1}" height="${BAR_H-2}" fill="none" stroke="${r.color}" stroke-width="1.2" stroke-dasharray="3,2" rx="2"/>`;
+        }
       }
-      const hull = _expandHull(_hull(fakePts), 4);
-      _drawSmoothPath(hull, c.fill, c.stroke, 2);
+    }
+    /* 데이터 없음 */
+    if(r.beforeLo == null && r.afterLo == null){
+      bars += `<text x="${PPAD_L+pPlotW/2}" y="${y+BAR_H/2+3}" text-anchor="middle" font-size="9" fill="#9ca3af">-</text>`;
     }
   });
   
-  /* 범례 (그래프 상단) */
-  ctx.font = 'bold 11px sans-serif';
-  ctx.textAlign = 'left';
-  /* Before */
-  ctx.fillStyle = colors[0].fill;
-  ctx.fillRect(W - 110, 6, 14, 10);
-  ctx.strokeStyle = colors[0].stroke;
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(W - 110, 6, 14, 10);
-  ctx.fillStyle = colors[0].stroke;
-  ctx.fillText('Before', W - 92, 15);
-  /* After */
-  ctx.fillStyle = colors[1].fill;
-  ctx.fillRect(W - 110, 22, 14, 10);
-  ctx.strokeStyle = colors[1].stroke;
-  ctx.strokeRect(W - 110, 22, 14, 10);
-  ctx.fillStyle = colors[1].stroke;
-  ctx.fillText('After', W - 92, 31);
+  /* 범례 (Before/After 색 안내) */
+  const barLegend = `
+    <g transform="translate(${PPAD_L}, 10)">
+      <rect x="0" y="0" width="14" height="6" fill="#9ca3af" opacity="0.7" rx="2"/>
+      <text x="18" y="6" font-size="9" fill="#475569" font-weight="700">Before</text>
+      <rect x="64" y="0" width="14" height="6" fill="#6366f1" opacity="0.85" rx="2"/>
+      <text x="82" y="6" font-size="9" fill="#475569" font-weight="700">After</text>
+      <text x="${pPlotW-30}" y="6" font-size="8" fill="#9ca3af" font-style="italic">━ ━ ━ 확장</text>
+    </g>
+  `;
+  
+  const pianoSvg = `
+    <svg viewBox="0 0 ${PW} ${PH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+      <rect width="${PW}" height="${PH}" fill="#fff"/>
+      <text x="${PW/2}" y="${PPAD_T-15}" text-anchor="middle" font-size="11" fill="#374151" font-weight="800">🎹 영역별 음역 비교</text>
+      ${barLegend}
+      ${piano}
+      ${bars}
+    </svg>
+  `;
+  
+  /* === 3. 영역별 수치 비교표 === */
+  const semiToOctave = (semi) => (semi/12).toFixed(1);
+  const arrow = (n, isPositiveGood) => {
+    if(n === 0) return '<span style="color:#9ca3af">→ 0</span>';
+    const isGood = isPositiveGood ? n > 0 : n < 0;
+    const color = isGood ? '#16a34a' : (n === 0 ? '#9ca3af' : '#dc2626');
+    const symbol = n > 0 ? '↑' : '↓';
+    return `<span style="color:${color};font-weight:800">${symbol} ${Math.abs(n)}</span>`;
+  };
+  
+  const beforeRangeSemi = (before.highMidi||0) - (before.lowMidi||0);
+  const afterRangeSemi = (after.highMidi||0) - (after.lowMidi||0);
+  const lowDiff = (after.lowMidi||0) - (before.lowMidi||0);
+  const highDiff = (after.highMidi||0) - (before.highMidi||0);
+  const rangeDiff = afterRangeSemi - beforeRangeSemi;
+  const beforePts = before.dataPoints?.length || 0;
+  const afterPts = after.dataPoints?.length || 0;
+  
+  const tableHTML = `
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;font-size:11.5px;margin-top:10px">
+      <div style="font-weight:800;color:#374151;margin-bottom:8px;font-size:12px">📈 상세 비교</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead>
+          <tr style="background:#f9fafb">
+            <th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:700">항목</th>
+            <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:700">Before</th>
+            <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:700">After</th>
+            <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:700">변화</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:6px 8px;font-weight:700;color:#374151">최저음</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569">${before.lowNote||'-'}</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569;font-weight:700">${after.lowNote||'-'}</td>
+            <td style="padding:6px 8px;text-align:center;font-size:10px">${arrow(-lowDiff, true)} 반음</td>
+          </tr>
+          <tr style="background:#fafafa">
+            <td style="padding:6px 8px;font-weight:700;color:#374151">최고음</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569">${before.highNote||'-'}</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569;font-weight:700">${after.highNote||'-'}</td>
+            <td style="padding:6px 8px;text-align:center;font-size:10px">${arrow(highDiff, true)} 반음</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;font-weight:700;color:#374151">전체 음역</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569">${semiToOctave(beforeRangeSemi)} 옥타브</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569;font-weight:700">${semiToOctave(afterRangeSemi)} 옥타브</td>
+            <td style="padding:6px 8px;text-align:center;font-size:10px">${arrow(rangeDiff, true)} 반음</td>
+          </tr>
+          <tr style="background:#fafafa">
+            <td style="padding:6px 8px;font-weight:700;color:#374151">측정 데이터</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569">${beforePts}개</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569;font-weight:700">${afterPts}개</td>
+            <td style="padding:6px 8px;text-align:center;font-size:10px">${arrow(afterPts-beforePts, true)} 개</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  /* === 4. 종합 향상 요약 카드 === */
+  const improvedCount = (lowDiff < 0 ? 1 : 0) + (highDiff > 0 ? 1 : 0) + (rangeDiff > 0 ? 1 : 0);
+  const improvementText = improvedCount === 3 
+    ? '🎉 모든 영역이 향상되었어요!'
+    : improvedCount === 2
+    ? '👏 큰 발전이 있었어요!'
+    : improvedCount === 1
+    ? '👍 한 가지 영역에서 발전했어요!'
+    : rangeDiff === 0 && lowDiff === 0 && highDiff === 0
+    ? '📊 음역에 변화는 없지만 꾸준한 훈련이 중요해요!'
+    : '💪 다른 영역에서 변화가 있었어요. 계속 노력해봐요!';
+  
+  const summaryCard = `
+    <div style="background:linear-gradient(135deg,#ddd6fe,#fce7f3);border-radius:12px;padding:14px;margin-top:10px;text-align:center">
+      <div style="font-size:13px;font-weight:900;color:#7c2d92;margin-bottom:4px">${improvementText}</div>
+      <div style="font-size:10.5px;color:#6b21a8">
+        ${rangeDiff > 0 ? `음역이 <b>${rangeDiff}반음 (${(rangeDiff/12).toFixed(1)}옥타브)</b> 늘어났어요. ` : ''}
+        ${lowDiff < 0 ? `최저음 <b>${Math.abs(lowDiff)}반음 ↓</b>. ` : ''}
+        ${highDiff > 0 ? `최고음 <b>${highDiff}반음 ↑</b>. ` : ''}
+      </div>
+    </div>
+  `;
+  
+  /* === 합치기 === */
+  container.innerHTML = `
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:10px">
+      ${pvrSvg}
+    </div>
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:10px">
+      ${pianoSvg}
+    </div>
+    ${tableHTML}
+    ${summaryCard}
+  `;
 }
 
 function _closeCommunityView(){
