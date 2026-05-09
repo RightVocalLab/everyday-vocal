@@ -420,6 +420,21 @@ input,select,button,textarea{font-family:inherit;}
     <div class="v2-th-body-card">
       <div class="v2-th-body" id="th-body"></div>
     </div>
+    <!-- 음량 조절 슬라이더 -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--tx)">🔊 음량</div>
+          <div style="font-size:10px;color:var(--mu);margin-top:1px">이론 본문 읽기 음량</div>
+        </div>
+        <div style="font-size:14px;font-weight:900;color:var(--or);min-width:32px;text-align:right" id="vol-th-val">50</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--mu)">0</span>
+        <input type="range" min="0" max="100" value="50" id="vol-th-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="_setTheoryVol(this.value)">
+        <span style="font-size:11px;color:var(--mu)">100</span>
+      </div>
+    </div>
     <!-- 의료 면책 안내 -->
     <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:14px;display:flex;gap:8px;align-items:flex-start">
       <div style="font-size:14px;flex-shrink:0;line-height:1.5">ℹ️</div>
@@ -6310,6 +6325,30 @@ var _volScale=50,_volTTS=50,_volCoach=10;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
+/* 발성 이론 화면의 음량 슬라이더 → 전역 _volTTS 변경 + 학생 슬라이더 동기화 + 즉시 반영 */
+function _setTheoryVol(val){
+  const v = parseInt(val);
+  _volTTS = v;
+  /* 발성 이론 슬라이더 값 표시 갱신 */
+  const thVal = document.getElementById('vol-th-val');
+  if(thVal) thVal.textContent = v;
+  /* 학생 화면 슬라이더(설정)도 동기화 */
+  const stSl = document.getElementById('vol-tts-sl');
+  if(stSl) stSl.value = v;
+  const stVal = document.getElementById('vol-tts-val');
+  if(stVal) stVal.textContent = v;
+  /* 즉시 음량 반영 + 저장 */
+  _applyVolTTS();
+}
+
+/* 발성 이론 화면 진입 시 슬라이더를 현재 _volTTS 값으로 동기화 */
+function _syncTheoryVolSlider(){
+  const sl = document.getElementById('vol-th-sl');
+  const val = document.getElementById('vol-th-val');
+  if(sl) sl.value = _volTTS;
+  if(val) val.textContent = _volTTS;
+}
+
 function _applyVolTTS(){
   _saveVolSettings();
   
@@ -8225,6 +8264,7 @@ if(thScroll){
             if(nn2) nn2.classList.remove('active');
           });
           push('scr-theory-detail');
+  if(typeof _syncTheoryVolSlider==='function') _syncTheoryVolSlider();
         })(t);
         page.appendChild(card);
       }
@@ -8305,6 +8345,7 @@ function _openTheoryDetail(t){
     if(nn2)nn2.classList.remove('active');
   });
   push('scr-theory-detail');
+  if(typeof _syncTheoryVolSlider==='function') _syncTheoryVolSlider();
 }
 
 /* 큰 카드 만들기 (홈 화면 스타일) */
@@ -10714,6 +10755,7 @@ function _openHwTheory(theoryId){
     if(nn2) nn2.classList.remove('active');
   });
   push('scr-theory-detail');
+  if(typeof _syncTheoryVolSlider==='function') _syncTheoryVolSlider();
 }
 
 function moveHw(i, dir){
