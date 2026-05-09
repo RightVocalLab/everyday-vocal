@@ -4031,12 +4031,6 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
       return;
     }
     if(idx >= finalChunks.length){ if(onEnd) onEnd(); return; }
-    /* 음량 0이면 폴링 (음량 올리면 자동 재개) */
-    const _vol = _isCoachFlag ? (typeof _volCoach !== 'undefined' ? _volCoach : 50) : (typeof _volTTS !== 'undefined' ? _volTTS : 50);
-    if(_vol <= 0){
-      setTimeout(_next, 500);
-      return;
-    }
     const chunk = finalChunks[idx++];
     speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
   }
@@ -4124,17 +4118,26 @@ var _volScale=50,_volTTS=50,_volCoach=10;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
-/* 발성 이론 화면의 음량 슬라이더 → 전역 _volTTS 변경 + 학생 슬라이더 동기화 + 즉시 반영 */
+/* 발성 이론 화면 슬라이더 → 단순 음량 조절 (정지 X, 차단 X) */
 function _setTheoryVol(val){
   const v = parseInt(val);
-  _volTTS = v;
   const thVal = document.getElementById('vol-th-val');
   if(thVal) thVal.textContent = v;
+  /* 진행중 audio 볼륨 즉시 반영 (정지/차단/토큰무효화 일절 없음) */
+  const ratio = Math.max(0, Math.min(1, v / 100));
+  if(typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach){
+    try { _ttsCacheAudio.volume = ratio; } catch(e){}
+  }
+  if(window._elGain && !window._elIsCoach){
+    try { window._elGain.gain.value = ratio; } catch(e){}
+  }
+  /* _volTTS는 최소 1로 보장 → 다음 청크 재생 시 차단 로직 우회 */
+  _volTTS = Math.max(1, v);
+  if(typeof _saveVolSettings === 'function') _saveVolSettings();
   const stSl = document.getElementById('vol-tts-sl');
-  if(stSl) stSl.value = v;
+  if(stSl) stSl.value = _volTTS;
   const stVal = document.getElementById('vol-tts-val');
-  if(stVal) stVal.textContent = v;
-  _applyVolTTS();
+  if(stVal) stVal.textContent = _volTTS;
 }
 
 /* 발성 이론 화면 진입 시 슬라이더를 현재 _volTTS 값으로 동기화 */
