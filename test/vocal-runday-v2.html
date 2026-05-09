@@ -6009,6 +6009,58 @@ _withFallback(u,(_ntxt.length/5)*1000);
 }
 }
 
+/* 긴 텍스트를 문단/문장 단위로 나눠 순차 재생 (ElevenLabs 긴 텍스트 음량 감쇠 방지)
+   ~250자 이하 청크로 분할 → 각 청크별 균일 음량 + 캐시 적중률 향상 */
+function _speakChunked(txt, onEnd, _isCoachFlag){
+  if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
+  
+  /* 문단(\n\n) 단위로 1차 분할 */
+  let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
+  
+  /* 각 문단이 250자 초과면 마침표/물음표/느낌표/줄바꿈 단위로 추가 분할 */
+  const MAX_LEN = 250;
+  const finalChunks = [];
+  for(const c of chunks){
+    if(c.length <= MAX_LEN){
+      finalChunks.push(c);
+      continue;
+    }
+    /* 문장 단위로 쪼개기 (마침표/줄바꿈 기준) */
+    const sentences = c.split(/(?<=[.!?。])\s+|\n/).filter(s => s.trim());
+    let buf = '';
+    for(const s of sentences){
+      if((buf + ' ' + s).trim().length <= MAX_LEN){
+        buf = (buf + ' ' + s).trim();
+      } else {
+        if(buf) finalChunks.push(buf);
+        buf = s.trim();
+      }
+    }
+    if(buf) finalChunks.push(buf);
+  }
+  
+  if(!finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
+  
+  /* 토큰 캡쳐: 도중에 화면 떠나면 중단 */
+  const _myToken = (typeof _ttsToken !== 'undefined') ? _ttsToken : 0;
+  
+  let idx = 0;
+  function _next(){
+    /* 토큰 무효화되면 중단 (화면 전환, 정지 버튼 등) */
+    if(typeof _ttsToken !== 'undefined' && _ttsToken !== _myToken){
+      if(onEnd) onEnd();
+      return;
+    }
+    if(idx >= finalChunks.length){
+      if(onEnd) onEnd();
+      return;
+    }
+    const chunk = finalChunks[idx++];
+    speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
+  }
+  _next();
+}
+
 function _normTTS(txt){
 txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
 txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
@@ -8233,58 +8285,6 @@ const micIllust = `<svg viewBox="0 0 64 64" fill="none">
 </svg>`;
 
 /* 클릭 핸들러 */
-/* 긴 텍스트를 문단/문장 단위로 나눠 순차 재생 (ElevenLabs 긴 텍스트 음량 감쇠 방지)
-   ~250자 이하 청크로 분할 → 각 청크별 균일 음량 + 캐시 적중률 향상 */
-function _speakChunked(txt, onEnd, _isCoachFlag){
-  if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
-  
-  /* 문단(\n\n) 단위로 1차 분할 */
-  let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
-  
-  /* 각 문단이 250자 초과면 마침표/물음표/느낌표/줄바꿈 단위로 추가 분할 */
-  const MAX_LEN = 250;
-  const finalChunks = [];
-  for(const c of chunks){
-    if(c.length <= MAX_LEN){
-      finalChunks.push(c);
-      continue;
-    }
-    /* 문장 단위로 쪼개기 (마침표/줄바꿈 기준) */
-    const sentences = c.split(/(?<=[.!?。])\s+|\n/).filter(s => s.trim());
-    let buf = '';
-    for(const s of sentences){
-      if((buf + ' ' + s).trim().length <= MAX_LEN){
-        buf = (buf + ' ' + s).trim();
-      } else {
-        if(buf) finalChunks.push(buf);
-        buf = s.trim();
-      }
-    }
-    if(buf) finalChunks.push(buf);
-  }
-  
-  if(!finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
-  
-  /* 토큰 캡쳐: 도중에 화면 떠나면 중단 */
-  const _myToken = (typeof _ttsToken !== 'undefined') ? _ttsToken : 0;
-  
-  let idx = 0;
-  function _next(){
-    /* 토큰 무효화되면 중단 (화면 전환, 정지 버튼 등) */
-    if(typeof _ttsToken !== 'undefined' && _ttsToken !== _myToken){
-      if(onEnd) onEnd();
-      return;
-    }
-    if(idx >= finalChunks.length){
-      if(onEnd) onEnd();
-      return;
-    }
-    const chunk = finalChunks[idx++];
-    speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
-  }
-  _next();
-}
-
 function _openTheoryDetail(t){
   document.getElementById('th-title').textContent=t.title;
   const _thEl=document.getElementById('th-body');
