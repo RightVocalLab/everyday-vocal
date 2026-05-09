@@ -6072,14 +6072,6 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
       if(onEnd) onEnd();
       return;
     }
-    /* 음량이 0이면 청크 진행 일시 정지 (음량 올리면 자동 재개)
-       speakEL이 음량 0일 때 즉시 return하므로 무한 루프 방지를 위해 폴링 사용 */
-    const _vol = _isCoachFlag ? (typeof _volCoach !== 'undefined' ? _volCoach : 50) : (typeof _volTTS !== 'undefined' ? _volTTS : 50);
-    if(_vol <= 0){
-      /* 0.5초 후 재시도 (사용자가 음량 올릴 때까지 대기) */
-      setTimeout(_next, 500);
-      return;
-    }
     const chunk = finalChunks[idx++];
     speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
   }
@@ -6333,20 +6325,31 @@ var _volScale=50,_volTTS=50,_volCoach=10;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
-/* 발성 이론 화면의 음량 슬라이더 → 전역 _volTTS 변경 + 학생 슬라이더 동기화 + 즉시 반영 */
+/* 발성 이론 화면 슬라이더 → 단순 음량 조절 (정지 X, 차단 X)
+   학생 화면 _volTTS와는 완전히 별개로 동작.
+   슬라이더 표시값은 그대로 사용하되, 진행 중 audio의 .volume 값만 즉시 반영. */
 function _setTheoryVol(val){
   const v = parseInt(val);
-  _volTTS = v;
-  /* 발성 이론 슬라이더 값 표시 갱신 */
+  /* 발성 이론 슬라이더 표시 갱신 */
   const thVal = document.getElementById('vol-th-val');
   if(thVal) thVal.textContent = v;
-  /* 학생 화면 슬라이더(설정)도 동기화 */
+  /* 진행 중인 일반 TTS audio의 볼륨만 즉시 반영 (정지/차단/토큰무효화 일절 없음) */
+  const ratio = Math.max(0, Math.min(1, v / 100));
+  if(typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach){
+    try { _ttsCacheAudio.volume = ratio; } catch(e){}
+  }
+  if(window._elGain && !window._elIsCoach){
+    try { window._elGain.gain.value = ratio; } catch(e){}
+  }
+  /* _volTTS는 최소 1로 보장 → 다음 청크 재생 시 차단 로직 우회
+     사용자가 0으로 내려도 청크 시퀀스 진행 + 무음 효과 (audio.volume=0) */
+  _volTTS = Math.max(1, v);
+  if(typeof _saveVolSettings === 'function') _saveVolSettings();
+  /* 학생 화면 슬라이더 동기화 (이론 화면 슬라이더 값 반영) */
   const stSl = document.getElementById('vol-tts-sl');
-  if(stSl) stSl.value = v;
+  if(stSl) stSl.value = _volTTS;
   const stVal = document.getElementById('vol-tts-val');
-  if(stVal) stVal.textContent = v;
-  /* 즉시 음량 반영 + 저장 */
-  _applyVolTTS();
+  if(stVal) stVal.textContent = _volTTS;
 }
 
 /* 발성 이론 화면 진입 시 슬라이더를 현재 _volTTS 값으로 동기화 */
