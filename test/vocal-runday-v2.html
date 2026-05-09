@@ -5684,6 +5684,7 @@ window._elSrc=null;
 
 function cancelTTS(){
 _ttsToken++;
+if(typeof _chunkSession !== 'undefined') _chunkSession++; /* 청크 재생도 중단 */
 stopEL();
 if(typeof _stopCacheAudio==='function')_stopCacheAudio();
 if(window.speechSynthesis)speechSynthesis.cancel();
@@ -6011,6 +6012,7 @@ _withFallback(u,(_ntxt.length/5)*1000);
 
 /* 긴 텍스트를 문단/문장 단위로 나눠 순차 재생 (ElevenLabs 긴 텍스트 음량 감쇠 방지)
    ~250자 이하 청크로 분할 → 각 청크별 균일 음량 + 캐시 적중률 향상 */
+let _chunkSession = 0; /* 청크 재생 세션 ID. 새 _speakChunked 호출 또는 cancelTTS 시 증가 → 이전 세션 무효화 */
 function _speakChunked(txt, onEnd, _isCoachFlag){
   if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
   
@@ -6041,13 +6043,13 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
   
   if(!finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
   
-  /* 토큰 캡쳐: 도중에 화면 떠나면 중단 */
-  const _myToken = (typeof _ttsToken !== 'undefined') ? _ttsToken : 0;
+  /* 새 세션 시작: 이전 청크 재생 자동 무효화 */
+  const mySession = ++_chunkSession;
   
   let idx = 0;
   function _next(){
-    /* 토큰 무효화되면 중단 (화면 전환, 정지 버튼 등) */
-    if(typeof _ttsToken !== 'undefined' && _ttsToken !== _myToken){
+    /* 새 세션이 시작되면(다른 _speakChunked 호출 또는 cancelTTS) 중단 */
+    if(_chunkSession !== mySession){
       if(onEnd) onEnd();
       return;
     }
