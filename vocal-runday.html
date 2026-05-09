@@ -291,7 +291,17 @@ input,select,button,textarea{font-family:inherit;}
 <!-- THEORY LIST -->
 <div id="scr-theory-list" class="scr hidden">
   <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">이론 및 훈련설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px" id="theory-list"></div></div>
+  <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:8px">
+    <!-- 의료 면책 안내 -->
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start">
+      <div style="font-size:14px;flex-shrink:0;line-height:1.5">ℹ️</div>
+      <div style="font-size:11px;color:#78350f;line-height:1.55">
+        <strong>본 이론은 발성 훈련 보조용 정보</strong>이며, 의학적 진단이나 치료를 대신할 수 없습니다.
+        음성·성대 관련 의학적 우려가 있으시면 <strong>이비인후과 전문의 상담</strong>을 권장합니다.
+      </div>
+    </div>
+    <div id="theory-list" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div></div>
 </div>
 
 <!-- THEORY DETAIL -->
@@ -309,6 +319,14 @@ input,select,button,textarea{font-family:inherit;}
   </div>
   <div class="body"><div class="inner">
 <div style="font-size:14px;line-height:1.95;color:var(--tx)" id="th-body"></div>
+    <!-- 의료 면책 안내 -->
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:14px;display:flex;gap:8px;align-items:flex-start">
+      <div style="font-size:14px;flex-shrink:0;line-height:1.5">ℹ️</div>
+      <div style="font-size:11px;color:#78350f;line-height:1.55">
+        <strong>본 이론은 발성 훈련 보조용 정보</strong>이며, 의학적 진단이나 치료를 대신할 수 없습니다.
+        음성·성대 관련 의학적 우려가 있으시면 <strong>이비인후과 전문의 상담</strong>을 권장합니다.
+      </div>
+    </div>
     <div style="height:28px"></div>
   </div></div>
 </div>
@@ -3967,6 +3985,41 @@ cancelTTS();
 ttsOn=false;descReading=false;
 const b=document.getElementById('tts-btn');if(b)b.textContent='▶';
 }
+/* 긴 텍스트를 문단/문장 단위로 나눠 순차 재생 (ElevenLabs 긴 텍스트 음량 감쇠 방지) */
+function _speakChunked(txt, onEnd, _isCoachFlag){
+  if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
+  let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
+  const MAX_LEN = 250;
+  const finalChunks = [];
+  for(const c of chunks){
+    if(c.length <= MAX_LEN){ finalChunks.push(c); continue; }
+    const sentences = c.split(/(?<=[.!?。])\s+|\n/).filter(s => s.trim());
+    let buf = '';
+    for(const s of sentences){
+      if((buf + ' ' + s).trim().length <= MAX_LEN){
+        buf = (buf + ' ' + s).trim();
+      } else {
+        if(buf) finalChunks.push(buf);
+        buf = s.trim();
+      }
+    }
+    if(buf) finalChunks.push(buf);
+  }
+  if(!finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
+  const _myToken = (typeof _ttsToken !== 'undefined') ? _ttsToken : 0;
+  let idx = 0;
+  function _next(){
+    if(typeof _ttsToken !== 'undefined' && _ttsToken !== _myToken){
+      if(onEnd) onEnd();
+      return;
+    }
+    if(idx >= finalChunks.length){ if(onEnd) onEnd(); return; }
+    const chunk = finalChunks[idx++];
+    speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
+  }
+  _next();
+}
+
 function toggleTTS(){
 if(ttsOn){
 stopTTS();stopEL();
@@ -3976,7 +4029,8 @@ const txt=document.getElementById('th-body').dataset.raw||document.getElementByI
 ttsOn=true;document.getElementById('tts-btn').textContent='⏹';
 const n=document.getElementById('th-tts-notice');
 if(n)n.style.display='block';
-speakEL(txt,()=>{
+/* 청크 단위 순차 재생 (긴 본문 끝부분 음량 감쇠 방지) */
+_speakChunked(txt,()=>{
 ttsOn=false;
 const b=document.getElementById('tts-btn');if(b)b.textContent='▶';
 const n2=document.getElementById('th-tts-notice');if(n2)n2.style.display='none';
@@ -5779,7 +5833,8 @@ const _thEl=document.getElementById('th-body');_thEl.innerHTML=_md2html(t.body||
 ttsOn=true;document.getElementById('tts-btn').textContent='⏹';
 const nn=document.getElementById('th-tts-notice');
 if(nn)nn.style.display='block';
-speakEL(t.body||'',function(){
+/* 청크 단위 순차 재생 (긴 본문 끝부분 음량 감쇠 방지) */
+_speakChunked(t.body||'',function(){
 ttsOn=false;const b=document.getElementById('tts-btn');if(b)b.textContent='▶';
 const nn2=document.getElementById('th-tts-notice');if(nn2)nn2.style.display='none';
 });
