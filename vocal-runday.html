@@ -3443,9 +3443,8 @@ if(window.speechSynthesis)window.speechSynthesis.addEventListener('voiceschanged
 if(window.speechSynthesis)[100,300,600,1200,2000].forEach(t=>setTimeout(_loadV,t));
 function mkUtt(txt,rate=1.08,pitch=0.70){
 if(!window.SpeechSynthesisUtterance)return null;
-if(_volTTS<=0)return null;  /* 음량 0이면 utterance 자체를 안 만듦 */
 const u=new window.SpeechSynthesisUtterance(txt);
-u.lang='ko-KR';u.rate=rate;u.pitch=pitch;u.volume=_volTTS/100;
+u.lang='ko-KR';u.rate=rate;u.pitch=pitch;u.volume=Math.max(0,Math.min(1,_volTTS/100));
 if(ttsV)u.voice=ttsV;return u;
 }
 
@@ -3703,14 +3702,9 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     }
     
     const audio = new Audio(entry.url);
-    /* 음량 적용 (코치=화이팅, 그 외=훈련안내) */
+    /* 음량 적용 (코치=화이팅, 그 외=훈련안내)
+       음량 0이어도 재생 진행 (audio.volume=0으로 무음 효과 - 시퀀스 보존) */
     const targetVol = isCoach ? _volCoach : _volTTS;
-    if (targetVol <= 0) {
-      _ttsCacheAudio = null;
-      if (callToken !== undefined && !_tokenValid(callToken)) return true;
-      if (onEnd) setTimeout(onEnd, 50);
-      return true;
-    }
     const volRatio = targetVol / 100;
     audio.volume = isCoach 
       ? Math.max(0, Math.min(1, volRatio * 1.8))
@@ -3759,15 +3753,8 @@ function speakEL(txt,onEnd,_stab,_spd,_isCoachFlag){
 
 if(!txt){if(onEnd)setTimeout(onEnd,0);return;}
 
-/* 음량이 0이면 음성 출력 자체를 건너뜀 (시퀀스는 진행)
-   - 일반 TTS: _volTTS=0이면 스킵
-   - 코치 멘트: _volCoach=0이면 스킵
-   훈련안내 음량을 0으로 설정한 사용자가 어떤 경로로도 TTS를 듣지 않도록 강력 차단 */
-const _checkVol = _isCoachFlag ? _volCoach : _volTTS;
-if(_checkVol <= 0){
-  if(onEnd) setTimeout(onEnd, 50);
-  return;
-}
+/* 음량 0 차단 제거: 슬라이더 0이어도 재생은 진행 (audio.volume=0으로 무음 효과)
+   완전 차단이 필요하면 화이팅OFF/설명OFF 토글 또는 정지 버튼 사용 */
 
 const myToken=_newToken();
 
@@ -3896,12 +3883,7 @@ return line;
 }
 
 async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken,_isCoachFlag){
-/* 음량 0이면 호출 안 하고 즉시 시퀀스 진행 (비용 절약 + 음량 0 보장) */
-const _targetVol = _isCoachFlag ? _volCoach : _volTTS;
-if (_targetVol <= 0) {
-  if (onEnd) setTimeout(onEnd, 50);
-  return;
-}
+/* 음량 0 차단 제거: 슬라이더 0이어도 호출 진행 (gainNode.value=0으로 무음 효과) */
 const cleanTxt=_prepTxt(txt);
 
 /* 🔐 보안: Firebase Auth 토큰 가져와서 Cloud Function 호출 */
@@ -3974,8 +3956,7 @@ function speak(txt,rate=1.08){
 if(!txt)return;
 setCoachTxt(txt);
 
-/* 음량 0이면 음성 출력 안 함 */
-if(_volTTS <= 0) return;
+/* 음량 0이어도 재생 진행 (audio.volume=0으로 무음). 완전 차단은 토글 사용 */
 
 if(EL.enabled&&EL.voiceId){
 if(window.speechSynthesis)speechSynthesis.cancel();
@@ -4151,69 +4132,25 @@ function _syncTheoryVolSlider(){
 function _applyVolTTS(){
   _saveVolSettings();
   
-  /* 음량 0이면 모든 진행 중인 TTS 음성을 강제 정지
-     (이미 재생 중이거나 큐에 들어간 음성도 모두 차단) */
-  if (_volTTS <= 0) {
-    /* 캐시 mp3 (일반 TTS만) */
-    if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach) {
-      try { _ttsCacheAudio.pause(); _ttsCacheAudio.currentTime = 0; } catch(e){}
-      _ttsCacheAudio = null;
-    }
-    /* ElevenLabs WebAudio (일반 TTS만) */
-    if (window._elGain && !window._elIsCoach) {
-      try { 
-        if (window._elSrc) { window._elSrc.onended = null; window._elSrc.stop(); }
-      } catch(e){}
-      window._elSrc = null;
-      window._elGain = null;
-    }
-    /* 브라우저 TTS - 일반/코치 구분 안 되므로 모두 정지 */
-    if (window.speechSynthesis && speechSynthesis.speaking) {
-      try { speechSynthesis.cancel(); } catch(e){}
-    }
-    /* 토큰 무효화로 큐에 들어간 다음 음성도 차단 */
-    if (typeof _ttsToken !== 'undefined') _ttsToken++;
-    return;
-  }
-  
-  /* 음량 > 0: 재생 중인 audio들의 볼륨 즉시 반영 */
-  /* 1. 캐시 mp3 (Audio element) */
+  /* 단순 볼륨 조절: 진행 중 audio들의 .volume만 즉시 반영
+     완전 차단은 토글(설명OFF/화이팅OFF) 또는 정지 버튼 사용 */
+  const ratio = Math.max(0, Math.min(1, _volTTS / 100));
   if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach) {
-    try {
-      _ttsCacheAudio.volume = Math.max(0, Math.min(1, _volTTS / 100));
-    } catch(e){}
+    try { _ttsCacheAudio.volume = ratio; } catch(e){}
   }
-  /* 2. ElevenLabs WebAudio (BufferSource → GainNode) */
   if (window._elGain && !window._elIsCoach) {
-    try {
-      window._elGain.gain.value = Math.max(0, Math.min(1, _volTTS / 100));
-    } catch(e){}
+    try { window._elGain.gain.value = ratio; } catch(e){}
   }
 }
 function _applyVolCoach(){
   _saveVolSettings();
-  /* 1. 캐시 mp3 - 코치 audio */
+  /* 단순 볼륨 조절: 진행중 화이팅 멘트 audio의 .volume만 즉시 반영 */
+  const ratio = Math.max(0, Math.min(1, (_volCoach / 100) * 1.8));
   if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && _ttsCacheAudio._isCoach) {
-    try {
-      if (_volCoach <= 0) {
-        _ttsCacheAudio.pause();
-        _ttsCacheAudio = null;
-      } else {
-        _ttsCacheAudio.volume = Math.max(0, Math.min(1, (_volCoach / 100) * 1.8));
-      }
-    } catch(e){}
+    try { _ttsCacheAudio.volume = ratio; } catch(e){}
   }
-  /* 2. ElevenLabs WebAudio - 코치 */
   if (window._elGain && window._elIsCoach) {
-    try {
-      if (_volCoach <= 0) {
-        if (window._elSrc) { try { window._elSrc.onended = null; window._elSrc.stop(); } catch(e){} }
-        window._elSrc = null;
-        window._elGain = null;
-      } else {
-        window._elGain.gain.value = Math.max(0, Math.min(1, (_volCoach / 100) * 1.8));
-      }
-    } catch(e){}
+    try { window._elGain.gain.value = ratio; } catch(e){}
   }
 }
 function openSettings(){var ss=document.getElementById('vol-scale-sl'),ts=document.getElementById('vol-tts-sl'),cs=document.getElementById('vol-coach-sl');if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}var m=document.getElementById('settings-modal');if(m)m.style.display='flex';}
