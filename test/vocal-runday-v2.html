@@ -6177,6 +6177,14 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
 function _normTTS(txt){
 txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
 txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
+/* 숫자 사이의 물결표(~, 〜, ∼)를 '에서'로 변환 (예: 17~24mm → 17 에서 24mm) */
+txt=txt.replace(/(\d)\s*[~〜∼]\s*(\d)/g, '$1 에서 $2');
+/* 한자(CJK Unified Ideographs) 제거: 한글 발성 이론에서 한자 병기는 안 읽음
+   예: 이희조희(二喜交喜) → 이희조희(), 그 후 빈 괄호 정리 → 이희조희 */
+txt=txt.replace(/[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+/g, '');
+/* 빈 괄호/공백만 남은 괄호 제거: '단어( )' 또는 '단어()' → '단어' */
+txt=txt.replace(/\(\s*\)/g, '');
+txt=txt.replace(/（\s*）/g, '');  /* 전각 괄호도 동일 처리 */
 var _nm={'C':'씨','D':'디','E':'이','F':'에프','G':'쥐','A':'에이','B':'비','c':'씨','d':'디','e':'이','f':'에프','g':'쥐','a':'에이','b':'비'};
 var _om={'0':'제로','1':'원','2':'투','3':'쓰리','4':'풔','5':'파이브','6':'식스','7':'세븐','8':'에잇','9':'나인'};
 txt=txt.replace(/([A-Ga-g])#([0-9])/g,function(_,n,o){return (_nm[n]||n)+'샾'+(_om[o]||o);});
@@ -6366,29 +6374,89 @@ function toggleCoachAuto(){
 /* 레거시 — 하위호환 */
 coachAuto=!coachAuto;
 }
-function playTrainDesc(){
-if(!curMod) return;
-const btn=document.getElementById('desc-play-btn');
-if(window._descPlaying){cancelTTS();stopEL();window._descPlaying=false;if(btn)btn.textContent='설명▶';return;}
-const edEl=document.getElementById('ex-desc');
-const rawTxt=(edEl&&edEl.dataset.raw)?edEl.dataset.raw:(edEl?edEl.textContent:'');
-const txt=rawTxt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';}).trim();
-if(!txt||txt==='—'){setCoachTxt('훈련 설명이 없습니다.');return;}
-cancelTTS();window._descPlaying=true;if(btn)btn.textContent='설명⏹';
-speakEL(txt,function(){window._descPlaying=false;if(btn)btn.textContent='설명▶';},0.75,0.80,false);
+/* ===== 훈련 설명 자동 재생 토글 (영구 저장) =====
+   ⏹ = ON (모든 훈련 시작 시 설명 자동 재생됨)
+   ▶ = OFF (자동 재생 안 함)
+   ▶ 클릭 시: ON 전환 + 즉시 현재 훈련 설명 재생
+   ⏹ 클릭 시: OFF 전환 + 현재 재생 중이면 즉시 멈춤 */
+let descAutoPlay = true; /* 기본값 ON */
+try {
+  const _saved = localStorage.getItem('desc_auto_play');
+  if(_saved !== null) descAutoPlay = (_saved === '1' || _saved === 'true');
+} catch(e){}
+
+/* 버튼 라벨 갱신 (현재 상태 반영) */
+function _syncDescBtnLabel(){
+  const btn = document.getElementById('desc-play-btn');
+  if(!btn) return;
+  btn.textContent = descAutoPlay ? '설명⏹' : '설명▶';
 }
 
-/* 자동 설명 재생 (노스케일 훈련 진입 시) - 버튼 상태 동기화
-   재생 중에는 ⏹, 끝나면 ▶로 표시. 사용자가 ⏹ 클릭하면 즉시 멈춤 (playTrainDesc에서 처리). */
-function _autoPlayDescTTS(text, onComplete){
-  if(!text) { if(onComplete) onComplete(); return; }
+/* 현재 훈련의 설명 텍스트 가져오기 (정규화 포함) */
+function _getCurrentDescText(){
+  const edEl = document.getElementById('ex-desc');
+  if(!edEl) return '';
+  const rawTxt = edEl.dataset.raw || edEl.textContent || '';
+  const txt = rawTxt
+    .replace(/\*\*/g,'')
+    .replace(/\n\n+/g,' ')
+    .replace(/\n/g,' ')
+    .replace(/[xX]\s*(\d+)/g, function(_,n){return n+'번 반복';})
+    .trim();
+  /* 노스케일 훈련용 — _pendingNoScaleTTS가 있으면 그것도 시도 */
+  if((!txt || txt==='—') && window._pendingNoScaleTTS && window._pendingNoScaleTTS.text){
+    return window._pendingNoScaleTTS.text;
+  }
+  return txt;
+}
+
+function playTrainDesc(){
+  /* 토글: 현재 상태 반전 + localStorage 저장 */
+  descAutoPlay = !descAutoPlay;
+  try { localStorage.setItem('desc_auto_play', descAutoPlay ? '1' : '0'); } catch(e){}
+  
   const btn = document.getElementById('desc-play-btn');
-  window._descPlaying = true;
+  
+  if(!descAutoPlay){
+    /* OFF로 전환 → 현재 재생 중인 설명 즉시 멈춤 */
+    if(window._descPlaying){
+      cancelTTS();
+      stopEL();
+      window._descPlaying = false;
+    }
+    if(btn) btn.textContent = '설명▶';
+    return;
+  }
+  
+  /* ON으로 전환 → 즉시 현재 훈련 설명 재생 시작 */
   if(btn) btn.textContent = '설명⏹';
+  if(!curMod){
+    /* 훈련 컨텍스트 없으면 라벨만 바꿈 (다음 훈련부터 자동재생 적용) */
+    return;
+  }
+  const txt = _getCurrentDescText();
+  if(!txt || txt === '—'){
+    /* 텍스트 없으면 라벨만 ON, 다음 훈련부터 자동재생 */
+    return;
+  }
+  cancelTTS();
+  window._descPlaying = true;
+  speakEL(txt, function(){
+    window._descPlaying = false;
+    /* 재생이 끝나도 토글 상태(ON)는 유지 → 라벨도 ⏹ 그대로 */
+  }, 0.75, 0.80, false);
+}
+
+/* 자동 설명 재생 (노스케일 훈련 진입 시 등 호출됨)
+   descAutoPlay가 OFF면 재생하지 않고 onComplete만 호출 */
+function _autoPlayDescTTS(text, onComplete){
+  if(!text || !descAutoPlay){
+    if(onComplete) onComplete();
+    return;
+  }
+  window._descPlaying = true;
   speakEL(text, function(){
     window._descPlaying = false;
-    const btn2 = document.getElementById('desc-play-btn');
-    if(btn2) btn2.textContent = '설명▶';
     if(onComplete) onComplete();
   }, 0.75, 0.80, false);
 }
@@ -6908,10 +6976,12 @@ if(hwComment && curStudent){
   const spb_hw = 60 / (curBpm || mod.bpm || 60);
   const patLen_hw = (mod.pattern||[]).filter(p=>typeof p==='number').length || 1;
   const totalSec_hw = steps_hw * patLen_hw * spb_hw * 1.05;
-  /* 20%, 50%, 80% 구간에 균등 배분 */
+  /* 20%, 50%, 80% 구간에 균등 배분 (descAutoPlay 토글 OFF면 재생 스킵) */
   [0.20, 0.50, 0.80].forEach(function(ratio){
     const t = Math.max(8, totalSec_hw * ratio);
-    coachT.push(setTimeout(()=>{if(playing)speakEL(hwComment);}, t*1000));
+    coachT.push(setTimeout(()=>{
+      if(playing && (typeof descAutoPlay === 'undefined' || descAutoPlay)) speakEL(hwComment);
+    }, t*1000));
   });
 }
 
@@ -6956,6 +7026,8 @@ if(totalSec2 > 8){
 
 function prepTrain(mod){
 stopEngine();curMod=mod;
+/* 설명 자동재생 토글 버튼 라벨 동기화 (훈련 화면 진입 시마다) */
+if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
 /* 스킵 버튼 제어 */
 const _skipBtn=document.getElementById('skip-step-btn');
 if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
