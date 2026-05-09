@@ -3590,9 +3590,12 @@ const _uploadInProgress = {}; /* 동시 중복 업로드 방지 (해시별 lock)
 
 async function _uploadToCacheAsync(originalText, arrayBuf, isCoach){
   /* 정규화된 텍스트의 해시로 파일명 결정.
-     화이팅 멘트(isCoach=true)는 'cheer-' prefix로 보이스 분리 */
+     - 일반 멘트: '{hash}.mp3'
+     - 화이팅 멘트(동적 캐싱): 'cheer-{hash}-1.mp3' (변형 1번으로 저장)
+       → cache_tts.py로 사전 캐싱 안 된 새 화이팅이 있으면 변형 1번 자리만 채움.
+       나머지 변형 2,3은 cache_tts.py 다음 실행 시 채워짐. */
   const baseHash = await _ttsHashText(originalText);
-  const hash = isCoach ? ('cheer-' + baseHash) : baseHash;
+  const hash = isCoach ? ('cheer-' + baseHash + '-1') : baseHash;
   
   /* 이미 매니페스트에 있으면 스킵 */
   if (TTS_MANIFEST[hash]) return;
@@ -3663,17 +3666,92 @@ const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.fireba
 const TTS_CACHE_ALT_URL = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/tts-cache%2F'; /* alt=media URL prefix */
 const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
 
+/* 화이팅 멘트 변형 개수 (cache_tts.py의 CHEER_VARIATION_COUNT와 일치 필수) */
+const CHEER_VARIATION_COUNT = 3;
+/* 마지막 사용한 변형 번호 (같은 멘트가 연속해서 같은 변형으로 재생되지 않게) */
+const _lastCheerVariation = {};
+
+/* 화이팅 멘트의 캐시 키 후보 목록 생성
+   - 변형 1~N을 랜덤 순서로 시도 (마지막에 쓴 변형은 우선순위 낮춤)
+   - 변형이 모두 없으면 옛 단일 'cheer-{hash}' 형식도 폴백 */
+function _ptCheerCandidates(baseHash){
+  const candidates = [];
+  const nums = [];
+  for(let i=1; i<=CHEER_VARIATION_COUNT; i++) nums.push(i);
+  /* Fisher-Yates 셔플 */
+  for(let i=nums.length-1; i>0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  /* 마지막 사용한 변형은 맨 뒤로 (연속 같은 톤 방지) */
+  const last = _lastCheerVariation[baseHash];
+  if(last){
+    const lastIdx = nums.indexOf(last);
+    if(lastIdx >= 0 && nums.length > 1){
+      nums.splice(lastIdx, 1);
+      nums.push(last);
+    }
+  }
+  for(const n of nums) candidates.push({key:`cheer-${baseHash}-${n}`, variation:n});
+  /* 옛 단일 형식 폴백 */
+  candidates.push({key:`cheer-${baseHash}`, variation:null});
+  return candidates;
+}
+
 async function _playFromCache(text, onEnd, callToken, isCoach){
   if (!TTS_MANIFEST_LOADED) return false;
   
   try {
     const baseHash = await _ttsHashText(text);
-    /* 화이팅 멘트(isCoach=true)는 별도 보이스 → 캐시 키와 파일명에 'cheer-' prefix */
-    const hash = isCoach ? ('cheer-' + baseHash) : baseHash;
+    
+    /* 화이팅 멘트(isCoach=true)는 변형 1~N 중 랜덤 선택, 없으면 다음 후보로 폴백.
+       일반 멘트는 단일 캐시 키. */
+    let hash;
+    let cheerVariation = null;
+    if(isCoach){
+      const candidates = _ptCheerCandidates(baseHash);
+      hash = null;
+      for(const cand of candidates){
+        const ck = cand.key;
+        if(TTS_MANIFEST[ck] && TTS_MANIFEST[ck].url){
+          hash = ck;
+          cheerVariation = cand.variation;
+          break;
+        }
+        if(_ttsHeadCheckCache[ck] === true){
+          hash = ck;
+          cheerVariation = cand.variation;
+          if(!TTS_MANIFEST[ck]){
+            TTS_MANIFEST[ck] = {url: TTS_CACHE_ALT_URL + ck + '.mp3?alt=media', dynamic: true};
+          }
+          break;
+        }
+        if(_ttsHeadCheckCache[ck] === undefined){
+          try {
+            const altUrl = TTS_CACHE_ALT_URL + ck + '.mp3?alt=media';
+            const headResp = await fetch(altUrl, {method: 'HEAD'});
+            _ttsHeadCheckCache[ck] = headResp.ok;
+            if(headResp.ok){
+              hash = ck;
+              cheerVariation = cand.variation;
+              TTS_MANIFEST[ck] = {url: altUrl, dynamic: true};
+              break;
+            }
+          } catch(e) {
+            _ttsHeadCheckCache[ck] = false;
+          }
+        }
+      }
+      if(!hash) return false;
+      if(cheerVariation) _lastCheerVariation[baseHash] = cheerVariation;
+    } else {
+      hash = baseHash;
+    }
+    
     const fileBase = hash;
     let entry = TTS_MANIFEST[hash];
     
-    /* 매니페스트 미스 → HEAD 요청으로 Storage 직접 확인 (동적 캐싱 결과 활용) */
+    /* 매니페스트 미스 → HEAD 요청으로 Storage 직접 확인 (일반 멘트만 도달) */
     if (!entry || !entry.url) {
       /* 같은 해시 HEAD 요청 결과 세션 내 재사용 */
       if (_ttsHeadCheckCache[hash] === false) return false;
