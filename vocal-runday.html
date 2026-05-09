@@ -3330,6 +3330,8 @@ let ttsV=null,ttsOn=false,descReading=false,coachAuto=true,stepAutoRead=true,che
 
 /* ⚠️ 보안: ElevenLabs 키는 Firebase Cloud Function (Secret Manager)에 보관, 브라우저에 노출 안 함 */
 const TTS_PROXY_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/ttsProxy';
+/* 화이팅 멘트 전용 보이스 ID (선생님 본인 목소리 클로닝) */
+const EL_VOICE_CHEER = 'Qn32lGMcT0Ni8avpZKD1';
 let EL={voiceId:'Mny3tJezAvDLdb8JlyUs',enabled:true,stability:0.95,speed:0.80};
 (function(){
 try{
@@ -3586,9 +3588,11 @@ async function _ttsHashText(text){
 /* === 동적 캐싱 업로드 — ElevenLabs 응답을 Firebase Storage에 자동 저장 === */
 const _uploadInProgress = {}; /* 동시 중복 업로드 방지 (해시별 lock) */
 
-async function _uploadToCacheAsync(originalText, arrayBuf){
-  /* 정규화된 텍스트의 해시로 파일명 결정 */
-  const hash = await _ttsHashText(originalText);
+async function _uploadToCacheAsync(originalText, arrayBuf, isCoach){
+  /* 정규화된 텍스트의 해시로 파일명 결정.
+     화이팅 멘트(isCoach=true)는 'cheer-' prefix로 보이스 분리 */
+  const baseHash = await _ttsHashText(originalText);
+  const hash = isCoach ? ('cheer-' + baseHash) : baseHash;
   
   /* 이미 매니페스트에 있으면 스킵 */
   if (TTS_MANIFEST[hash]) return;
@@ -3663,7 +3667,10 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
   if (!TTS_MANIFEST_LOADED) return false;
   
   try {
-    const hash = await _ttsHashText(text);
+    const baseHash = await _ttsHashText(text);
+    /* 화이팅 멘트(isCoach=true)는 별도 보이스 → 캐시 키와 파일명에 'cheer-' prefix */
+    const hash = isCoach ? ('cheer-' + baseHash) : baseHash;
+    const fileBase = hash;
     let entry = TTS_MANIFEST[hash];
     
     /* 매니페스트 미스 → HEAD 요청으로 Storage 직접 확인 (동적 캐싱 결과 활용) */
@@ -3674,7 +3681,7 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       if (_ttsHeadCheckCache[hash] === undefined) {
         try {
           /* alt=media URL로 HEAD - 토큰 없이도 (public read 규칙) 접근 가능 */
-          const altUrl = TTS_CACHE_ALT_URL + hash + '.mp3?alt=media';
+          const altUrl = TTS_CACHE_ALT_URL + fileBase + '.mp3?alt=media';
           const headResp = await fetch(altUrl, {method: 'HEAD'});
           _ttsHeadCheckCache[hash] = headResp.ok;
           if (!headResp.ok) return false;
@@ -3687,7 +3694,7 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
         }
       } else if (_ttsHeadCheckCache[hash] === true) {
         /* 이전에 HEAD 확인됐으면 매니페스트 복원 */
-        entry = {url: TTS_CACHE_ALT_URL + hash + '.mp3?alt=media', dynamic: true};
+        entry = {url: TTS_CACHE_ALT_URL + fileBase + '.mp3?alt=media', dynamic: true};
         TTS_MANIFEST[hash] = entry;
       }
     }
@@ -3886,6 +3893,9 @@ async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken,_isCoachFlag){
 /* 음량 0 차단 제거: 슬라이더 0이어도 호출 진행 (gainNode.value=0으로 무음 효과) */
 const cleanTxt=_prepTxt(txt);
 
+/* 화이팅 멘트(isCoach=true)는 별도 보이스 ID 사용 (선생님 본인 목소리) */
+const useVid = _isCoachFlag ? EL_VOICE_CHEER : (vid || EL.voiceId);
+
 /* 🔐 보안: Firebase Auth 토큰 가져와서 Cloud Function 호출 */
 let idToken = '';
 try {
@@ -3925,15 +3935,15 @@ xhr.ontimeout = ()=>reject(new Error('Timeout'));
 xhr.timeout = 30000;
 xhr.send(JSON.stringify({
 text: cleanTxt,
-voiceId: vid || EL.voiceId,
+voiceId: useVid,
 stability: (_stab!==undefined?_stab:EL.stability)||0.95,
 speed: (_spd!==undefined?_spd:EL.speed)||0.80
 }));
 });
 const ctx=gCtx();
-/* 동적 캐싱: ElevenLabs 응답 mp3를 Firebase Storage에 백그라운드 업로드 */
-/* (재생을 막지 않도록 비동기, 실패해도 무시) */
-_uploadToCacheAsync(txt, arrayBuf).catch(function(e){
+/* 동적 캐싱: ElevenLabs 응답 mp3를 Firebase Storage에 백그라운드 업로드
+   화이팅 멘트는 cheer- prefix로 별도 저장 (보이스 분리) */
+_uploadToCacheAsync(txt, arrayBuf, _isCoachFlag).catch(function(e){
   console.warn('동적 캐싱 업로드 실패(무시):', e);
 });
 
