@@ -14346,17 +14346,16 @@ function _renderCommunityPosts(){
     const after = p.after || {};
     const lowChange = (after.lowMidi || 0) - (before.lowMidi || 0);
     const highChange = (after.highMidi || 0) - (before.highMidi || 0);
-    /* 최저음 화살표: 음수(낮아짐 = 발전)면 초록 ↓, 양수면 빨강 ↑ */
-    const lowArrow = lowChange < 0 ? '<span style="color:#16a34a">↓</span>' : (lowChange > 0 ? '<span style="color:#dc2626">↑</span>' : '<span style="color:#9ca3af">→</span>');
-    /* 최고음 화살표: 양수(높아짐 = 발전)면 초록 ↑, 음수면 빨강 ↓ */
-    const highArrow = highChange > 0 ? '<span style="color:#16a34a">↑</span>' : (highChange < 0 ? '<span style="color:#dc2626">↓</span>' : '<span style="color:#9ca3af">→</span>');
+    /* 한국식 색상: ↑(상승) = 빨강, ↓(하강) = 파랑, → (변화없음) = 회색 */
+    const lowArrow = lowChange < 0 ? '<span style="color:#2563eb">↓</span>' : (lowChange > 0 ? '<span style="color:#dc2626">↑</span>' : '<span style="color:#9ca3af">→</span>');
+    const highArrow = highChange > 0 ? '<span style="color:#dc2626">↑</span>' : (highChange < 0 ? '<span style="color:#2563eb">↓</span>' : '<span style="color:#9ca3af">→</span>');
     /* 음역 폭 변화 */
     const beforeRange = ((before.highMidi || 0) - (before.lowMidi || 0)) / 12;
     const afterRange = ((after.highMidi || 0) - (after.lowMidi || 0)) / 12;
     const rangeDiff = (afterRange - beforeRange).toFixed(1);
     const rangeNum = parseFloat(rangeDiff);
     const rangeStr = rangeNum > 0 ? '+' + rangeDiff : rangeDiff;
-    const rangeArrow = rangeNum > 0 ? '<span style="color:#16a34a">↑</span>' : (rangeNum < 0 ? '<span style="color:#dc2626">↓</span>' : '');
+    const rangeArrow = rangeNum > 0 ? '<span style="color:#dc2626">↑</span>' : (rangeNum < 0 ? '<span style="color:#2563eb">↓</span>' : '');
     
     const likes = p.likes || 0;
     const comments = p.commentCount || 0;
@@ -14810,8 +14809,8 @@ function _renderBeforeAfterGraph(containerId, before, after){
   
   /* === 2. 피아노 건반 + 음역대 가로 막대 (4영역, 위아래 분리, 가운데 정렬) === */
   /* 더 큰 SVG 크기로 명확하게 */
-  const PW = 360, PH = 380;
-  const PPAD_L = 56, PPAD_R = 18, PPAD_T = 30, PPAD_B = 18;
+  const PW = 360, PH = 460;
+  const PPAD_L = 56, PPAD_R = 18, PPAD_T = 56, PPAD_B = 18;
   const pPlotW = PW - PPAD_L - PPAD_R;
   const px2px = (midi) => PPAD_L + ((midi - midiMin) / (midiMax - midiMin)) * pPlotW;
   
@@ -14842,10 +14841,10 @@ function _renderBeforeAfterGraph(containerId, before, after){
   
   /* 음역 막대: 각 영역마다 Before(위)/After(아래) 위아래로 분리 + 가운데 정렬 */
   const BAR_Y_START = KEY_Y + KEY_H + 26;  /* 피아노 + 라벨 + 여백 */
-  const SUB_BAR_H = 14;        /* Before/After 각 막대 높이 (크게) */
-  const SUB_BAR_GAP = 3;       /* B/A 사이 간격 */
+  const SUB_BAR_H = 18;        /* Before/After 각 막대 높이 (더 크게) */
+  const SUB_BAR_GAP = 6;       /* B/A 사이 간격 (더 띄움) */
   const BAR_GROUP_H = SUB_BAR_H * 2 + SUB_BAR_GAP;  /* 한 영역 그룹 전체 높이 */
-  const BAR_GAP = 14;          /* 영역 간 간격 */
+  const BAR_GAP = 18;          /* 영역 간 간격 (더 띄움) */
   
   const ranges = [
     {label:'전체',  beforeLo:before.lowMidi,  beforeHi:before.highMidi,  afterLo:after.lowMidi, afterHi:after.highMidi, color:'#6366f1'},
@@ -14903,9 +14902,9 @@ function _renderBeforeAfterGraph(containerId, before, after){
     }
   });
   
-  /* 범례 (Before/After 색 안내, 가운데 정렬) */
+  /* 범례 (Before/After 색 안내, 제목 아래로 분리, 가운데 정렬) */
   const barLegend = `
-    <g transform="translate(${PW/2 - 90}, 10)">
+    <g transform="translate(${PW/2 - 95}, 32)">
       <rect x="0" y="0" width="14" height="6" fill="#9ca3af" opacity="0.85" rx="2"/>
       <text x="18" y="6" font-size="9" fill="#475569" font-weight="700">Before</text>
       <rect x="64" y="0" width="14" height="6" fill="#6366f1" opacity="0.9" rx="2"/>
@@ -14917,7 +14916,7 @@ function _renderBeforeAfterGraph(containerId, before, after){
   const pianoSvg = `
     <svg viewBox="0 0 ${PW} ${PH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
       <rect width="${PW}" height="${PH}" fill="#fff"/>
-      <text x="${PW/2}" y="${PPAD_T-15}" text-anchor="middle" font-size="11" fill="#374151" font-weight="800">🎹 영역별 음역 비교</text>
+      <text x="${PW/2}" y="18" text-anchor="middle" font-size="12" fill="#374151" font-weight="800">🎹 영역별 음역 비교</text>
       ${barLegend}
       ${piano}
       ${bars}
