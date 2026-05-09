@@ -383,7 +383,17 @@ input,select,button,textarea{font-family:inherit;}
 <!-- THEORY LIST -->
 <div id="scr-theory-list" class="scr hidden">
   <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb">발성 이론 및 훈련 설명</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner" style="padding-bottom:24px" id="theory-list"></div></div>
+  <div class="body"><div class="inner" style="padding-bottom:24px">
+    <!-- 의료 면책 안내 -->
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin:0 0 14px 0;display:flex;gap:8px;align-items:flex-start">
+      <div style="font-size:14px;flex-shrink:0;line-height:1.5">ℹ️</div>
+      <div style="font-size:11px;color:#78350f;line-height:1.55">
+        <strong>본 이론은 발성 훈련 보조용 정보</strong>이며, 의학적 진단이나 치료를 대신할 수 없습니다.
+        음성·성대 관련 의학적 우려가 있으시면 <strong>이비인후과 전문의 상담</strong>을 권장합니다.
+      </div>
+    </div>
+    <div id="theory-list"></div>
+  </div></div>
 </div>
 
 <!-- THEORY DETAIL -->
@@ -409,6 +419,14 @@ input,select,button,textarea{font-family:inherit;}
     <!-- 본문 카드 -->
     <div class="v2-th-body-card">
       <div class="v2-th-body" id="th-body"></div>
+    </div>
+    <!-- 의료 면책 안내 -->
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:14px;display:flex;gap:8px;align-items:flex-start">
+      <div style="font-size:14px;flex-shrink:0;line-height:1.5">ℹ️</div>
+      <div style="font-size:11px;color:#78350f;line-height:1.55">
+        <strong>본 이론은 발성 훈련 보조용 정보</strong>이며, 의학적 진단이나 치료를 대신할 수 없습니다.
+        음성·성대 관련 의학적 우려가 있으시면 <strong>이비인후과 전문의 상담</strong>을 권장합니다.
+      </div>
     </div>
   </div></div>
 </div>
@@ -6166,7 +6184,8 @@ const txt=document.getElementById('th-body').dataset.raw||document.getElementByI
 ttsOn=true;_setTtsIcon('playing');
 const n=document.getElementById('th-tts-notice');
 if(n)n.style.display='block';
-speakEL(txt,()=>{
+/* 청크 단위 순차 재생 (긴 본문 끝부분 음량 감쇠 방지) */
+_speakChunked(txt,()=>{
 ttsOn=false;
 const b=document.getElementById('tts-btn');if(b)_setTtsIcon('stopped');
 const n2=document.getElementById('th-tts-notice');if(n2)n2.style.display='none';
@@ -8144,7 +8163,8 @@ if(thScroll){
           if(typeof _setTtsIcon === 'function') _setTtsIcon('playing');
           const nn = document.getElementById('th-tts-notice');
           if(nn) nn.classList.add('active');
-          speakEL(theory.body || '', function(){
+          /* 청크 단위 순차 재생 (긴 본문 끝부분 음량 감쇠 방지) */
+          _speakChunked(theory.body || '', function(){
             ttsOn = false;
             if(typeof _setTtsIcon === 'function') _setTtsIcon('stopped');
             const nn2 = document.getElementById('th-tts-notice');
@@ -8213,6 +8233,58 @@ const micIllust = `<svg viewBox="0 0 64 64" fill="none">
 </svg>`;
 
 /* 클릭 핸들러 */
+/* 긴 텍스트를 문단/문장 단위로 나눠 순차 재생 (ElevenLabs 긴 텍스트 음량 감쇠 방지)
+   ~250자 이하 청크로 분할 → 각 청크별 균일 음량 + 캐시 적중률 향상 */
+function _speakChunked(txt, onEnd, _isCoachFlag){
+  if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
+  
+  /* 문단(\n\n) 단위로 1차 분할 */
+  let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
+  
+  /* 각 문단이 250자 초과면 마침표/물음표/느낌표/줄바꿈 단위로 추가 분할 */
+  const MAX_LEN = 250;
+  const finalChunks = [];
+  for(const c of chunks){
+    if(c.length <= MAX_LEN){
+      finalChunks.push(c);
+      continue;
+    }
+    /* 문장 단위로 쪼개기 (마침표/줄바꿈 기준) */
+    const sentences = c.split(/(?<=[.!?。])\s+|\n/).filter(s => s.trim());
+    let buf = '';
+    for(const s of sentences){
+      if((buf + ' ' + s).trim().length <= MAX_LEN){
+        buf = (buf + ' ' + s).trim();
+      } else {
+        if(buf) finalChunks.push(buf);
+        buf = s.trim();
+      }
+    }
+    if(buf) finalChunks.push(buf);
+  }
+  
+  if(!finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
+  
+  /* 토큰 캡쳐: 도중에 화면 떠나면 중단 */
+  const _myToken = (typeof _ttsToken !== 'undefined') ? _ttsToken : 0;
+  
+  let idx = 0;
+  function _next(){
+    /* 토큰 무효화되면 중단 (화면 전환, 정지 버튼 등) */
+    if(typeof _ttsToken !== 'undefined' && _ttsToken !== _myToken){
+      if(onEnd) onEnd();
+      return;
+    }
+    if(idx >= finalChunks.length){
+      if(onEnd) onEnd();
+      return;
+    }
+    const chunk = finalChunks[idx++];
+    speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
+  }
+  _next();
+}
+
 function _openTheoryDetail(t){
   document.getElementById('th-title').textContent=t.title;
   const _thEl=document.getElementById('th-body');
@@ -8222,7 +8294,8 @@ function _openTheoryDetail(t){
   _setTtsIcon('playing');
   const nn=document.getElementById('th-tts-notice');
   if(nn)nn.classList.add('active');
-  speakEL(t.body||'',function(){
+  /* 청크 단위 순차 재생 (긴 본문 끝부분 음량 감쇠 방지) */
+  _speakChunked(t.body||'',function(){
     ttsOn=false;
     const b=document.getElementById('tts-btn');
     if(b)_setTtsIcon('stopped');
@@ -10631,7 +10704,8 @@ function _openHwTheory(theoryId){
   if(typeof _setTtsIcon === 'function') _setTtsIcon('playing');
   const nn = document.getElementById('th-tts-notice');
   if(nn) nn.classList.add('active');
-  speakEL(t.body || '', function(){
+  /* 청크 단위 순차 재생 (긴 본문 끝부분 음량 감쇠 방지) */
+  _speakChunked(t.body || '', function(){
     ttsOn = false;
     if(typeof _setTtsIcon === 'function') _setTtsIcon('stopped');
     const nn2 = document.getElementById('th-tts-notice');
