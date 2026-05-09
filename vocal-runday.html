@@ -4146,6 +4146,21 @@ cancelTTS();window._descPlaying=true;if(btn)btn.textContent='설명⏹';
 speakEL(txt,function(){window._descPlaying=false;if(btn)btn.textContent='설명▶';},0.75,0.80,false);
 }
 
+/* 자동 설명 재생 (노스케일 훈련 진입 시) - 버튼 상태 동기화
+   재생 중에는 ⏹, 끝나면 ▶로 표시. 사용자가 ⏹ 클릭하면 즉시 멈춤 (playTrainDesc에서 처리). */
+function _autoPlayDescTTS(text, onComplete){
+  if(!text) { if(onComplete) onComplete(); return; }
+  const btn = document.getElementById('desc-play-btn');
+  window._descPlaying = true;
+  if(btn) btn.textContent = '설명⏹';
+  speakEL(text, function(){
+    window._descPlaying = false;
+    const btn2 = document.getElementById('desc-play-btn');
+    if(btn2) btn2.textContent = '설명▶';
+    if(onComplete) onComplete();
+  }, 0.75, 0.80, false);
+}
+
 function toggleCoachDesc(){
 /* 훈련 설명 토글 */
 coachAuto=!coachAuto;
@@ -4967,7 +4982,7 @@ const _goN=()=>{
     const ok=scrStack[scrStack.length-1]==='scr-train';
     if(seqList[seqIdx]&&seqList[seqIdx].noScale){
       const _p=window._pendingNoScaleTTS;
-      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){_autoPlayDescTTS(_p.text,function(){schedCoach(_p.mod);});},300);}
     } else { if(!playing&&ok)startEngine(); }
   });
 };
@@ -5033,7 +5048,7 @@ function freeSkipTrain(){
     const ok=scrStack[scrStack.length-1]==='scr-train';
     if(seqList[seqIdx]&&seqList[seqIdx].noScale){
       const _p=window._pendingNoScaleTTS;
-      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+      if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){_autoPlayDescTTS(_p.text,function(){schedCoach(_p.mod);});},300);}
     } else {if(!playing&&ok)startEngine();}
   });
 }
@@ -5091,7 +5106,7 @@ speakEL(msg,function(){
 const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
 if(seqList[0]&&seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){_autoPlayDescTTS(_p.text,function(){schedCoach(_p.mod);});},300);}
 } else { if(!playing&&onTrainScreen)startEngine(); }
 });
 }
@@ -8327,7 +8342,7 @@ speakEL(msg,function(){
 const ok=scrStack[scrStack.length-1]==='scr-train';
 if(seqList[0]&&seqList[0].noScale){
   const _p=window._pendingNoScaleTTS;
-  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){speakEL(_p.text,function(){schedCoach(_p.mod);},0.75,0.80,false);},300);}
+  if(_p&&_p.text){window._pendingNoScaleTTS=null;setTimeout(function(){_autoPlayDescTTS(_p.text,function(){schedCoach(_p.mod);});},300);}
 } else { if(!playing&&ok)startEngine(); }
 });
 }
