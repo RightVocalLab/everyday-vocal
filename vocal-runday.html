@@ -3508,6 +3508,7 @@ window._elSrc=null;
 
 function cancelTTS(){
 _ttsToken++;
+if(typeof _chunkSession !== 'undefined') _chunkSession++; /* 청크 재생도 중단 */
 stopEL();
 if(typeof _stopCacheAudio==='function')_stopCacheAudio();
 if(window.speechSynthesis)speechSynthesis.cancel();
@@ -3986,6 +3987,7 @@ ttsOn=false;descReading=false;
 const b=document.getElementById('tts-btn');if(b)b.textContent='▶';
 }
 /* 긴 텍스트를 문단/문장 단위로 나눠 순차 재생 (ElevenLabs 긴 텍스트 음량 감쇠 방지) */
+let _chunkSession = 0;
 function _speakChunked(txt, onEnd, _isCoachFlag){
   if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
   let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
@@ -4006,10 +4008,10 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
     if(buf) finalChunks.push(buf);
   }
   if(!finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
-  const _myToken = (typeof _ttsToken !== 'undefined') ? _ttsToken : 0;
+  const mySession = ++_chunkSession;
   let idx = 0;
   function _next(){
-    if(typeof _ttsToken !== 'undefined' && _ttsToken !== _myToken){
+    if(_chunkSession !== mySession){
       if(onEnd) onEnd();
       return;
     }
