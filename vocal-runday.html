@@ -752,8 +752,8 @@ input,select,button,textarea{font-family:inherit;}
   <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:16px;font-weight:900">🔊 음량 설정</div><button onclick="closeSettings()" style="background:none;border:none;font-size:22px;color:var(--mu);cursor:pointer;line-height:1">✕</button></div>
     <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎹 스케일 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">피아노 반주 크기</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-scale-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-scale-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-scale-val').textContent=this.value;_volScale=parseInt(this.value);_applyVolScale()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
-    <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-tts-val').textContent=this.value;_volTTS=parseInt(this.value);_applyVolTTS()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
-    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">10</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="10" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="document.getElementById('vol-coach-val').textContent=this.value;_volCoach=parseInt(this.value);_applyVolCoach()"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:24px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">🎙 훈련안내 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 설명 · 시작 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-tts-val">50</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="50" id="vol-tts-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="_setStudentTtsVol(this.value)"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">10</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="10" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="_setStudentCoachVol(this.value)"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:16px">변경 즉시 자동 저장됩니다</div>
   </div>
 </div>
@@ -4099,26 +4099,55 @@ var _volScale=50,_volTTS=50,_volCoach=10;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
-/* 발성 이론 화면 슬라이더 → 단순 음량 조절 (정지 X, 차단 X) */
-function _setTheoryVol(val){
-  const v = parseInt(val);
-  const thVal = document.getElementById('vol-th-val');
-  if(thVal) thVal.textContent = v;
-  /* 진행중 audio 볼륨 즉시 반영 (정지/차단/토큰무효화 일절 없음) */
-  const ratio = Math.max(0, Math.min(1, v / 100));
-  if(typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach){
-    try { _ttsCacheAudio.volume = ratio; } catch(e){}
-  }
-  if(window._elGain && !window._elIsCoach){
-    try { window._elGain.gain.value = ratio; } catch(e){}
-  }
-  /* _volTTS는 최소 1로 보장 → 다음 청크 재생 시 차단 로직 우회 */
-  _volTTS = Math.max(1, v);
+/* 학생 화면 훈련안내 음량 슬라이더 → 시퀀스 끊기지 않도록 안전 처리
+   - 표시값은 0~100 그대로
+   - _volTTS는 항상 ≥1 보장 → 다음 음성 호출 시 차단 로직 우회
+   - audio.volume / gainNode는 실제 슬라이더 값 0으로 무음 효과 */
+function _setStudentTtsVol(val){
+  const displayVal = parseInt(val);
+  const valEl = document.getElementById('vol-tts-val');
+  if(valEl) valEl.textContent = displayVal;
+  _volTTS = Math.max(1, displayVal);
   if(typeof _saveVolSettings === 'function') _saveVolSettings();
-  const stSl = document.getElementById('vol-tts-sl');
-  if(stSl) stSl.value = _volTTS;
-  const stVal = document.getElementById('vol-tts-val');
-  if(stVal) stVal.textContent = _volTTS;
+  const realRatio = Math.max(0, Math.min(1, displayVal / 100));
+  if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach) {
+    try { _ttsCacheAudio.volume = realRatio; } catch(e){}
+  }
+  if (window._elGain && !window._elIsCoach) {
+    try { window._elGain.gain.value = realRatio; } catch(e){}
+  }
+  if (typeof actx !== 'undefined' && actx && actx.state === 'suspended') {
+    try { actx.resume(); } catch(e){}
+  }
+  /* 발성 이론 슬라이더 동기화 */
+  const thSl = document.getElementById('vol-th-sl');
+  if(thSl) thSl.value = displayVal;
+  const thVal = document.getElementById('vol-th-val');
+  if(thVal) thVal.textContent = displayVal;
+}
+
+/* 학생 화면 화이팅 멘트 음량 슬라이더 → 동일한 안전 처리 */
+function _setStudentCoachVol(val){
+  const displayVal = parseInt(val);
+  const valEl = document.getElementById('vol-coach-val');
+  if(valEl) valEl.textContent = displayVal;
+  _volCoach = Math.max(1, displayVal);
+  if(typeof _saveVolSettings === 'function') _saveVolSettings();
+  const realRatio = Math.max(0, Math.min(1, (displayVal / 100) * 1.8));
+  if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && _ttsCacheAudio._isCoach) {
+    try { _ttsCacheAudio.volume = realRatio; } catch(e){}
+  }
+  if (window._elGain && window._elIsCoach) {
+    try { window._elGain.gain.value = realRatio; } catch(e){}
+  }
+  if (typeof actx !== 'undefined' && actx && actx.state === 'suspended') {
+    try { actx.resume(); } catch(e){}
+  }
+}
+
+/* 발성 이론 화면 슬라이더 → 학생 화면과 동일 동작 (위임) */
+function _setTheoryVol(val){
+  _setStudentTtsVol(val);
 }
 
 /* 발성 이론 화면 진입 시 슬라이더를 현재 _volTTS 값으로 동기화 */
