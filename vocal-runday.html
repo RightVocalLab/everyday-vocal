@@ -3926,6 +3926,13 @@ txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
 txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
 /* 숫자 사이의 물결표(~, 〜, ∼)를 '에서'로 변환 (예: 17~24mm → 17 에서 24mm) */
 txt=txt.replace(/(\d)\s*[~〜∼]\s*(\d)/g, '$1 에서 $2');
+/* 숫자 뒤 단위를 한국어로 변환 (다음 글자가 영문자가 아닐 때만 → 영단어 보호) */
+txt=txt.replace(/(\d)\s*Hz(?![A-Za-z])/g, '$1헤르츠');
+txt=txt.replace(/(\d)\s*dB(?![A-Za-z])/g, '$1데시벨');
+txt=txt.replace(/(\d)\s*kg(?![A-Za-z])/g, '$1킬로그램');
+txt=txt.replace(/(\d)\s*mm(?![A-Za-z])/g, '$1밀리미터');
+txt=txt.replace(/(\d)\s*cm(?![A-Za-z])/g, '$1센티미터');
+txt=txt.replace(/(\d)\s*ml(?![A-Za-z])/g, '$1밀리리터');
 /* 한자(CJK Unified Ideographs) 제거: 한글 발성 이론에서 한자 병기는 안 읽음
    예: 이희조희(二喜交喜) → 이희조희(), 그 후 빈 괄호 정리 → 이희조희 */
 txt=txt.replace(/[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+/g, '');
