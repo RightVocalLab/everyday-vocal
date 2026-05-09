@@ -1156,17 +1156,19 @@ input,select,button,textarea{font-family:inherit;}
     <!-- Before 선택 -->
     <div style="margin-bottom:10px">
       <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">Before (이전 측정) <span style="color:#dc2626">*</span></label>
-      <select id="comm-before" style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;background:#fff">
-        <option value="">측정 이력에서 선택...</option>
-      </select>
+      <div id="comm-before-list" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;border:1.5px solid #d1d5db;border-radius:8px;padding:8px;background:#fafafa">
+        <div style="text-align:center;font-size:11px;color:#9ca3af;padding:8px">측정 이력 로딩 중...</div>
+      </div>
+      <input type="hidden" id="comm-before-idx" value="">
     </div>
     
     <!-- After 선택 -->
     <div style="margin-bottom:12px">
       <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">After (최근 측정) <span style="color:#dc2626">*</span></label>
-      <select id="comm-after" style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;background:#fff">
-        <option value="">측정 이력에서 선택...</option>
-      </select>
+      <div id="comm-after-list" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;border:1.5px solid #d1d5db;border-radius:8px;padding:8px;background:#fafafa">
+        <div style="text-align:center;font-size:11px;color:#9ca3af;padding:8px">측정 이력 로딩 중...</div>
+      </div>
+      <input type="hidden" id="comm-after-idx" value="">
     </div>
     
     <!-- 제목 -->
@@ -14419,22 +14421,43 @@ function _openCommunityWrite(){
   const nickInput = document.getElementById('comm-nickname');
   if(nickInput) nickInput.value = lastNick;
   
-  /* before/after 옵션 채우기 */
-  const beforeSel = document.getElementById('comm-before');
-  const afterSel = document.getElementById('comm-after');
-  if(beforeSel && afterSel){
+  /* before/after 카드 버튼 채우기 (선택하면 즉시 적용 효과) */
+  const beforeList = document.getElementById('comm-before-list');
+  const afterList = document.getElementById('comm-after-list');
+  const beforeIdxInput = document.getElementById('comm-before-idx');
+  const afterIdxInput = document.getElementById('comm-after-idx');
+  
+  if(beforeList && afterList){
     /* 시간순 (옛날 → 최신) */
     const sorted = [...allList].sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-    const optionsHtml = '<option value="">측정 이력에서 선택...</option>' + sorted.map((r, idx) => {
+    /* 전역 캐시: submit 시 바로 사용 */
+    window._commSortedHistory = sorted;
+    
+    /* 카드 버튼 HTML 생성 */
+    const makeButtons = (selectedIdx, type) => sorted.map((r, idx) => {
       const d = new Date(r.timestamp);
       const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-      return `<option value="${idx}">${dateStr} · ${r.userName || '익명'} · ${r.lowNote}~${r.highNote}</option>`;
+      const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const isSelected = idx === selectedIdx;
+      return `<button type="button" onclick="_commSelectHistory('${type}', ${idx})" 
+        data-type="${type}" data-idx="${idx}"
+        style="background:${isSelected ? '#fef3c7' : '#fff'};border:${isSelected ? '2px' : '1px'} solid ${isSelected ? '#f59e0b' : '#e5e7eb'};border-radius:7px;padding:8px 10px;font-size:11.5px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="font-weight:${isSelected ? '900' : '600'};color:#374151">📅 ${dateStr} ${timeStr}</div>
+          <div style="font-size:10px;color:#6b7280">👤 ${r.userName || '익명'} · 🎵 ${r.lowNote}~${r.highNote}</div>
+        </div>
+        <div style="${isSelected ? 'color:#f59e0b;font-weight:900;font-size:14px' : ''}">${isSelected ? '✓' : ''}</div>
+      </button>`;
     }).join('');
-    beforeSel.innerHTML = optionsHtml;
-    afterSel.innerHTML = optionsHtml;
-    /* 자동 선택: 첫 번째(가장 옛날) Before, 마지막(최신) After */
-    beforeSel.value = '0';
-    afterSel.value = String(sorted.length - 1);
+    
+    /* 자동 선택: Before=첫(가장 옛날), After=마지막(최신) */
+    const beforeAutoIdx = 0;
+    const afterAutoIdx = sorted.length - 1;
+    beforeIdxInput.value = String(beforeAutoIdx);
+    afterIdxInput.value = String(afterAutoIdx);
+    
+    beforeList.innerHTML = makeButtons(beforeAutoIdx, 'before');
+    afterList.innerHTML = makeButtons(afterAutoIdx, 'after');
   }
   
   /* 에러 초기화 */
@@ -14449,14 +14472,53 @@ function _closeCommunityWrite(){
   if(modal) modal.classList.remove('active');
 }
 
+/* 측정 이력 카드 선택 (Before/After) - 즉시 적용 */
+function _commSelectHistory(type, idx){
+  const sorted = window._commSortedHistory || [];
+  if(!sorted[idx]) return;
+  
+  /* hidden input 값 변경 */
+  const idxInput = document.getElementById(`comm-${type}-idx`);
+  if(idxInput) idxInput.value = String(idx);
+  
+  /* 해당 리스트의 모든 카드 시각적 갱신 (선택된 카드만 강조) */
+  const list = document.getElementById(`comm-${type}-list`);
+  if(!list) return;
+  
+  const buttons = list.querySelectorAll('button[data-type]');
+  buttons.forEach(btn => {
+    const btnIdx = parseInt(btn.dataset.idx);
+    const isSelected = btnIdx === idx;
+    /* 스타일 토글 */
+    btn.style.background = isSelected ? '#fef3c7' : '#fff';
+    btn.style.border = isSelected ? '2px solid #f59e0b' : '1px solid #e5e7eb';
+    /* 내용 갱신 (체크 마크) */
+    const r = sorted[btnIdx];
+    const d = new Date(r.timestamp);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    btn.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font-weight:${isSelected ? '900' : '600'};color:#374151">📅 ${dateStr} ${timeStr}</div>
+        <div style="font-size:10px;color:#6b7280">👤 ${r.userName || '익명'} · 🎵 ${r.lowNote}~${r.highNote}</div>
+      </div>
+      ${isSelected ? '<div style="color:#f59e0b;font-weight:900;font-size:14px">✓</div>' : ''}
+    `;
+  });
+  
+  /* 에러 메시지 클리어 */
+  const errEl = document.getElementById('comm-write-err');
+  if(errEl) errEl.textContent = '';
+}
+
 /* 게시글 등록 */
 async function _submitCommunityPost(){
   const errEl = document.getElementById('comm-write-err');
   const setErr = (msg) => { if(errEl) errEl.textContent = msg; };
   
   const nickname = document.getElementById('comm-nickname').value.trim();
-  const beforeIdx = document.getElementById('comm-before').value;
-  const afterIdx = document.getElementById('comm-after').value;
+  const beforeIdx = document.getElementById('comm-before-idx').value;
+  const afterIdx = document.getElementById('comm-after-idx').value;
   const title = document.getElementById('comm-title').value.trim();
   const content = document.getElementById('comm-content').value.trim();
   
@@ -14697,21 +14759,17 @@ function _renderBeforeAfterGraph(containerId, before, after){
   
   /* 그리드 라인 (옥타브) */
   let gridLines = '';
-  /* 세로선: C 음정마다 (C2=24, C3=36, ...) */
   for(let m = Math.ceil(midiMin/12)*12; m <= midiMax; m += 12){
     if(m < midiMin || m > midiMax) continue;
     const x = x2px(m);
     gridLines += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+plotH}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="2,2"/>`;
     gridLines += `<text x="${x}" y="${H-PAD_B+12}" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="600">C${Math.floor(m/12-1)}</text>`;
   }
-  /* 가로선: dB 단위 */
   for(let db = 50; db <= 100; db += 20){
     const y = y2px(db);
     gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L+plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="2,2"/>`;
     gridLines += `<text x="${PAD_L-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#9ca3af">${db}</text>`;
   }
-  
-  /* dB 라벨 */
   gridLines += `<text x="${PAD_L-26}" y="${PAD_T+plotH/2}" text-anchor="middle" font-size="9" fill="#6b7280" font-weight="700" transform="rotate(-90 ${PAD_L-26} ${PAD_T+plotH/2})">dB</text>`;
   
   /* Before/After 등고선 */
@@ -14720,17 +14778,14 @@ function _renderBeforeAfterGraph(containerId, before, after){
     const bPath = _bf_getRegisterContour(before.dataPoints, reg, x2px, y2px);
     const aPath = _bf_getRegisterContour(after.dataPoints, reg, x2px, y2px);
     const c = colors[reg];
-    /* Before: 점선 (얇은 채움) */
     if(bPath){
       contours += `<path d="${bPath}" fill="${c.fillBefore}" stroke="${c.stroke}" stroke-width="2.5" stroke-dasharray="6,4" stroke-linejoin="round" opacity="0.75"/>`;
     }
-    /* After: 실선 (진한 채움) */
     if(aPath){
       contours += `<path d="${aPath}" fill="${c.fillAfter}" stroke="${c.stroke}" stroke-width="3" stroke-linejoin="round"/>`;
     }
   }
   
-  /* 범례 */
   const legend = `
     <g transform="translate(${PAD_L+8}, ${PAD_T+6})">
       <rect x="0" y="0" width="92" height="38" rx="5" fill="rgba(255,255,255,0.95)" stroke="#e5e7eb" stroke-width="0.5"/>
@@ -14741,7 +14796,6 @@ function _renderBeforeAfterGraph(containerId, before, after){
     </g>
   `;
   
-  /* 제목 */
   const title = `<text x="${W/2}" y="18" text-anchor="middle" font-size="11" fill="#374151" font-weight="800">📊 PVR 그래프 (음역 × 음량)</text>`;
   
   const pvrSvg = `
@@ -14754,34 +14808,30 @@ function _renderBeforeAfterGraph(containerId, before, after){
     </svg>
   `;
   
-  /* === 2. 피아노 건반 + 음역대 가로 막대 (4영역) === */
-  /* 피아노 건반 영역: 전체 음역 시각적 표시 */
-  const PW = 360, PH = 200;
-  const PPAD_L = 100, PPAD_R = 14, PPAD_T = 30, PPAD_B = 24;
+  /* === 2. 피아노 건반 + 음역대 가로 막대 (4영역, 위아래 분리, 가운데 정렬) === */
+  /* 더 큰 SVG 크기로 명확하게 */
+  const PW = 360, PH = 380;
+  const PPAD_L = 56, PPAD_R = 18, PPAD_T = 30, PPAD_B = 18;
   const pPlotW = PW - PPAD_L - PPAD_R;
-  const pPlotH = PH - PPAD_T - PPAD_B;
   const px2px = (midi) => PPAD_L + ((midi - midiMin) / (midiMax - midiMin)) * pPlotW;
   
-  /* 피아노 건반 그리기 (상단 작게) */
+  /* 피아노 건반 (상단) */
   const KEY_Y = PPAD_T;
-  const KEY_H = 22;
-  const wKeyOffsets = [0,2,4,5,7,9,11];  /* C, D, E, F, G, A, B */
-  const bKeyOffsets = [1,3,6,8,10];      /* C#, D#, F#, G#, A# */
+  const KEY_H = 26;
+  const wKeyOffsets = [0,2,4,5,7,9,11];
+  const bKeyOffsets = [1,3,6,8,10];
   
   let piano = '';
-  /* 흰 건반 */
   for(let m = Math.ceil(midiMin); m <= midiMax; m++){
     const semi = m % 12;
     if(!wKeyOffsets.includes(semi)) continue;
     const x = px2px(m);
     const wKeyW = pPlotW / ((midiMax-midiMin)*7/12 + 1);
     piano += `<rect x="${x - wKeyW/2}" y="${KEY_Y}" width="${wKeyW*0.9}" height="${KEY_H}" fill="#fff" stroke="#9ca3af" stroke-width="0.5"/>`;
-    /* C 음에만 라벨 */
     if(semi === 0){
-      piano += `<text x="${x}" y="${KEY_Y+KEY_H+10}" text-anchor="middle" font-size="8" fill="#6b7280" font-weight="700">C${Math.floor(m/12-1)}</text>`;
+      piano += `<text x="${x}" y="${KEY_Y+KEY_H+11}" text-anchor="middle" font-size="9" fill="#6b7280" font-weight="700">C${Math.floor(m/12-1)}</text>`;
     }
   }
-  /* 검은 건반 */
   for(let m = Math.ceil(midiMin); m <= midiMax; m++){
     const semi = m % 12;
     if(!bKeyOffsets.includes(semi)) continue;
@@ -14790,66 +14840,77 @@ function _renderBeforeAfterGraph(containerId, before, after){
     piano += `<rect x="${x - bKeyW/2}" y="${KEY_Y}" width="${bKeyW}" height="${KEY_H*0.65}" fill="#1f2937" stroke="#000" stroke-width="0.3"/>`;
   }
   
-  /* 음역 막대 4개 (전체, 진성, 믹스, 가성) */
-  const BAR_Y_START = KEY_Y + KEY_H + 18;
-  const BAR_H = 20;
-  const BAR_GAP = 6;
+  /* 음역 막대: 각 영역마다 Before(위)/After(아래) 위아래로 분리 + 가운데 정렬 */
+  const BAR_Y_START = KEY_Y + KEY_H + 26;  /* 피아노 + 라벨 + 여백 */
+  const SUB_BAR_H = 14;        /* Before/After 각 막대 높이 (크게) */
+  const SUB_BAR_GAP = 3;       /* B/A 사이 간격 */
+  const BAR_GROUP_H = SUB_BAR_H * 2 + SUB_BAR_GAP;  /* 한 영역 그룹 전체 높이 */
+  const BAR_GAP = 14;          /* 영역 간 간격 */
   
   const ranges = [
     {label:'전체',  beforeLo:before.lowMidi,  beforeHi:before.highMidi,  afterLo:after.lowMidi, afterHi:after.highMidi, color:'#6366f1'},
-    {label:'진성',  ...(_bf_getRegisterRange(before.dataPoints,'chest')||{}),  beforeLo:_bf_getRegisterRange(before.dataPoints,'chest')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'chest')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'chest')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'chest')?.hi, color:'#1d4ed8'},
+    {label:'진성',  beforeLo:_bf_getRegisterRange(before.dataPoints,'chest')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'chest')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'chest')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'chest')?.hi, color:'#1d4ed8'},
     {label:'믹스',  beforeLo:_bf_getRegisterRange(before.dataPoints,'mix')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'mix')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'mix')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'mix')?.hi, color:'#0ea5e9'},
     {label:'가성',  beforeLo:_bf_getRegisterRange(before.dataPoints,'falsetto')?.lo, beforeHi:_bf_getRegisterRange(before.dataPoints,'falsetto')?.hi, afterLo:_bf_getRegisterRange(after.dataPoints,'falsetto')?.lo, afterHi:_bf_getRegisterRange(after.dataPoints,'falsetto')?.hi, color:'#a855f7'}
   ];
   
   let bars = '';
   ranges.forEach((r, i) => {
-    const y = BAR_Y_START + i * (BAR_H + BAR_GAP);
-    /* 라벨 */
-    bars += `<text x="${PPAD_L-8}" y="${y+BAR_H/2+3}" text-anchor="end" font-size="10" fill="#374151" font-weight="800">${r.label}</text>`;
-    /* 배경 */
-    bars += `<rect x="${PPAD_L}" y="${y}" width="${pPlotW}" height="${BAR_H}" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5" rx="3"/>`;
-    /* Before (회색 막대, 아래쪽) */
+    const groupY = BAR_Y_START + i * (BAR_GROUP_H + BAR_GAP);
+    const beforeY = groupY;                         /* Before: 위쪽 */
+    const afterY = groupY + SUB_BAR_H + SUB_BAR_GAP; /* After: 아래쪽 */
+    const groupCenterY = groupY + BAR_GROUP_H/2;    /* 영역 라벨 중앙 */
+    
+    /* 영역 라벨 (왼쪽, 그룹 가운데 정렬) */
+    bars += `<text x="${PPAD_L-12}" y="${groupCenterY+4}" text-anchor="end" font-size="11" fill="#374151" font-weight="800">${r.label}</text>`;
+    
+    /* === Before (위쪽) === */
+    /* "B" 라벨 (영역 라벨 옆) */
+    bars += `<text x="${PPAD_L-2}" y="${beforeY+SUB_BAR_H/2+3}" text-anchor="end" font-size="8" fill="#9ca3af" font-weight="700">B</text>`;
+    /* 배경 트랙 */
+    bars += `<rect x="${PPAD_L}" y="${beforeY}" width="${pPlotW}" height="${SUB_BAR_H}" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="0.5" rx="3"/>`;
     if(r.beforeLo != null && r.beforeHi != null){
       const x1 = px2px(r.beforeLo);
       const x2 = px2px(r.beforeHi);
-      bars += `<rect x="${x1}" y="${y+BAR_H/2}" width="${Math.max(2,x2-x1)}" height="${BAR_H/2-1}" fill="#9ca3af" opacity="0.7" rx="2"/>`;
-      bars += `<text x="${PPAD_L-8}" y="${y+BAR_H-1}" text-anchor="end" font-size="7" fill="#9ca3af" font-weight="700"></text>`;
+      bars += `<rect x="${x1}" y="${beforeY+1}" width="${Math.max(2,x2-x1)}" height="${SUB_BAR_H-2}" fill="#9ca3af" opacity="0.85" rx="2"/>`;
+    } else {
+      bars += `<text x="${PPAD_L+pPlotW/2}" y="${beforeY+SUB_BAR_H/2+3}" text-anchor="middle" font-size="9" fill="#9ca3af">데이터 없음</text>`;
     }
-    /* After (컬러 막대, 위쪽) */
+    
+    /* === After (아래쪽) === */
+    bars += `<text x="${PPAD_L-2}" y="${afterY+SUB_BAR_H/2+3}" text-anchor="end" font-size="8" fill="${r.color}" font-weight="800">A</text>`;
+    bars += `<rect x="${PPAD_L}" y="${afterY}" width="${pPlotW}" height="${SUB_BAR_H}" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5" rx="3"/>`;
     if(r.afterLo != null && r.afterHi != null){
       const x1 = px2px(r.afterLo);
       const x2 = px2px(r.afterHi);
-      bars += `<rect x="${x1}" y="${y+1}" width="${Math.max(2,x2-x1)}" height="${BAR_H/2-2}" fill="${r.color}" opacity="0.85" rx="2"/>`;
+      bars += `<rect x="${x1}" y="${afterY+1}" width="${Math.max(2,x2-x1)}" height="${SUB_BAR_H-2}" fill="${r.color}" opacity="0.9" rx="2"/>`;
       
-      /* 확장 영역 점선 박스 (After가 Before보다 넓을 때) */
+      /* 확장 영역 점선 박스 - After 막대에만 표시 */
       if(r.beforeLo != null && r.beforeHi != null){
         if(r.afterLo < r.beforeLo){
           const ex1 = px2px(r.afterLo);
           const ex2 = px2px(r.beforeLo);
-          bars += `<rect x="${ex1}" y="${y+1}" width="${ex2-ex1}" height="${BAR_H-2}" fill="none" stroke="${r.color}" stroke-width="1.2" stroke-dasharray="3,2" rx="2"/>`;
+          bars += `<rect x="${ex1}" y="${afterY-1}" width="${ex2-ex1}" height="${SUB_BAR_H+2}" fill="none" stroke="${r.color}" stroke-width="1.5" stroke-dasharray="3,2" rx="3"/>`;
         }
         if(r.afterHi > r.beforeHi){
           const ex1 = px2px(r.beforeHi);
           const ex2 = px2px(r.afterHi);
-          bars += `<rect x="${ex1}" y="${y+1}" width="${ex2-ex1}" height="${BAR_H-2}" fill="none" stroke="${r.color}" stroke-width="1.2" stroke-dasharray="3,2" rx="2"/>`;
+          bars += `<rect x="${ex1}" y="${afterY-1}" width="${ex2-ex1}" height="${SUB_BAR_H+2}" fill="none" stroke="${r.color}" stroke-width="1.5" stroke-dasharray="3,2" rx="3"/>`;
         }
       }
-    }
-    /* 데이터 없음 */
-    if(r.beforeLo == null && r.afterLo == null){
-      bars += `<text x="${PPAD_L+pPlotW/2}" y="${y+BAR_H/2+3}" text-anchor="middle" font-size="9" fill="#9ca3af">-</text>`;
+    } else {
+      bars += `<text x="${PPAD_L+pPlotW/2}" y="${afterY+SUB_BAR_H/2+3}" text-anchor="middle" font-size="9" fill="#9ca3af">데이터 없음</text>`;
     }
   });
   
-  /* 범례 (Before/After 색 안내) */
+  /* 범례 (Before/After 색 안내, 가운데 정렬) */
   const barLegend = `
-    <g transform="translate(${PPAD_L}, 10)">
-      <rect x="0" y="0" width="14" height="6" fill="#9ca3af" opacity="0.7" rx="2"/>
+    <g transform="translate(${PW/2 - 90}, 10)">
+      <rect x="0" y="0" width="14" height="6" fill="#9ca3af" opacity="0.85" rx="2"/>
       <text x="18" y="6" font-size="9" fill="#475569" font-weight="700">Before</text>
-      <rect x="64" y="0" width="14" height="6" fill="#6366f1" opacity="0.85" rx="2"/>
+      <rect x="64" y="0" width="14" height="6" fill="#6366f1" opacity="0.9" rx="2"/>
       <text x="82" y="6" font-size="9" fill="#475569" font-weight="700">After</text>
-      <text x="${pPlotW-30}" y="6" font-size="8" fill="#9ca3af" font-style="italic">━ ━ ━ 확장</text>
+      <text x="125" y="6" font-size="8" fill="#9ca3af" font-style="italic">━ ━ ━ 확장</text>
     </g>
   `;
   
@@ -14863,14 +14924,19 @@ function _renderBeforeAfterGraph(containerId, before, after){
     </svg>
   `;
   
-  /* === 3. 영역별 수치 비교표 === */
-  const semiToOctave = (semi) => (semi/12).toFixed(1);
+  /* === 3. 영역별 수치 비교표 (소수점 0.00까지만) === */
+  const fmt = (n) => Number(n).toFixed(2).replace(/\.?0+$/, '') || '0';  /* 0.00 → 0, 1.50 → 1.5 */
+  const fmtFixed = (n) => Number(n).toFixed(2);  /* 항상 0.00 표시 */
+  
+  /* 한국식 색상: 상승(↑)=빨강(#dc2626), 하강(↓)=파랑(#2563eb), 변화 없음=회색 */
   const arrow = (n, isPositiveGood) => {
     if(n === 0) return '<span style="color:#9ca3af">→ 0</span>';
-    const isGood = isPositiveGood ? n > 0 : n < 0;
-    const color = isGood ? '#16a34a' : (n === 0 ? '#9ca3af' : '#dc2626');
     const symbol = n > 0 ? '↑' : '↓';
-    return `<span style="color:${color};font-weight:800">${symbol} ${Math.abs(n)}</span>`;
+    const color = n > 0 ? '#dc2626' : '#2563eb';  /* 상승=빨강, 하강=파랑 */
+    /* 소수점 정수면 그대로, 아니면 0.00까지 */
+    const absN = Math.abs(n);
+    const display = Number.isInteger(absN) ? String(absN) : fmtFixed(absN);
+    return `<span style="color:${color};font-weight:800">${symbol} ${display}</span>`;
   };
   
   const beforeRangeSemi = (before.highMidi||0) - (before.lowMidi||0);
@@ -14908,8 +14974,8 @@ function _renderBeforeAfterGraph(containerId, before, after){
           </tr>
           <tr>
             <td style="padding:6px 8px;font-weight:700;color:#374151">전체 음역</td>
-            <td style="padding:6px 8px;text-align:center;color:#475569">${semiToOctave(beforeRangeSemi)} 옥타브</td>
-            <td style="padding:6px 8px;text-align:center;color:#475569;font-weight:700">${semiToOctave(afterRangeSemi)} 옥타브</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569">${fmtFixed(beforeRangeSemi/12)} 옥타브</td>
+            <td style="padding:6px 8px;text-align:center;color:#475569;font-weight:700">${fmtFixed(afterRangeSemi/12)} 옥타브</td>
             <td style="padding:6px 8px;text-align:center;font-size:10px">${arrow(rangeDiff, true)} 반음</td>
           </tr>
           <tr style="background:#fafafa">
@@ -14923,7 +14989,7 @@ function _renderBeforeAfterGraph(containerId, before, after){
     </div>
   `;
   
-  /* === 4. 종합 향상 요약 카드 === */
+  /* === 4. 종합 향상 요약 카드 (소수점 0.00까지만) === */
   const improvedCount = (lowDiff < 0 ? 1 : 0) + (highDiff > 0 ? 1 : 0) + (rangeDiff > 0 ? 1 : 0);
   const improvementText = improvedCount === 3 
     ? '🎉 모든 영역이 향상되었어요!'
@@ -14935,18 +15001,20 @@ function _renderBeforeAfterGraph(containerId, before, after){
     ? '📊 음역에 변화는 없지만 꾸준한 훈련이 중요해요!'
     : '💪 다른 영역에서 변화가 있었어요. 계속 노력해봐요!';
   
+  /* 변화 메시지: 정수면 그대로, 소수면 0.00까지 */
+  const fmtSemi = (n) => Number.isInteger(n) ? String(n) : fmtFixed(n);
   const summaryCard = `
     <div style="background:linear-gradient(135deg,#ddd6fe,#fce7f3);border-radius:12px;padding:14px;margin-top:10px;text-align:center">
       <div style="font-size:13px;font-weight:900;color:#7c2d92;margin-bottom:4px">${improvementText}</div>
       <div style="font-size:10.5px;color:#6b21a8">
-        ${rangeDiff > 0 ? `음역이 <b>${rangeDiff}반음 (${(rangeDiff/12).toFixed(1)}옥타브)</b> 늘어났어요. ` : ''}
-        ${lowDiff < 0 ? `최저음 <b>${Math.abs(lowDiff)}반음 ↓</b>. ` : ''}
-        ${highDiff > 0 ? `최고음 <b>${highDiff}반음 ↑</b>. ` : ''}
+        ${rangeDiff > 0 ? `음역이 <b>${fmtSemi(rangeDiff)}반음 (${fmtFixed(rangeDiff/12)}옥타브)</b> 늘어났어요. ` : ''}
+        ${lowDiff < 0 ? `최저음 <b>${fmtSemi(Math.abs(lowDiff))}반음 ↓</b>. ` : ''}
+        ${highDiff > 0 ? `최고음 <b>${fmtSemi(highDiff)}반음 ↑</b>. ` : ''}
       </div>
     </div>
   `;
   
-  /* === 합치기 === */
+  /* === 합치기 (모든 카드 가운데 정렬) === */
   container.innerHTML = `
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:10px">
       ${pvrSvg}
