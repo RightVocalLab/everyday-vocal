@@ -1307,11 +1307,15 @@ input,select,button,textarea{font-family:inherit;}
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:18px" id="pt-result-time">측정일: -</div>
     
     <!-- 추정 성종 (메인) -->
-    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #93c5fd;border-radius:14px;padding:16px;margin-bottom:14px;text-align:center">
+    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #93c5fd;border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;position:relative">
+      <!-- 신뢰도 배지 (우측 상단) -->
+      <div id="pt-result-confidence" style="position:absolute;top:10px;right:10px;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:10px;display:none">—</div>
       <div style="font-size:11px;color:#1e40af;font-weight:700;margin-bottom:4px">추정 성종</div>
       <div id="pt-result-voicetype" style="font-size:24px;font-weight:900;color:#1e3a8a;margin-bottom:4px">—</div>
       <div id="pt-result-match" style="font-size:12px;color:#3b82f6;font-weight:600">매칭도: —%</div>
       <div id="pt-result-desc" style="font-size:11px;color:#475569;margin-top:8px;line-height:1.5">—</div>
+      <!-- 종합 코멘트 (Phase2 신규) -->
+      <div id="pt-result-comment" style="display:none;font-size:11px;color:#1e3a8a;margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.7);border-radius:8px;line-height:1.55;text-align:left;border-left:3px solid #3b82f6">—</div>
     </div>
     
     <!-- PVR 그래프 -->
@@ -1332,10 +1336,14 @@ input,select,button,textarea{font-family:inherit;}
       <div id="pt-result-register" style="font-size:11.5px;color:#475569;line-height:1.85">—</div>
     </div>
     
-    <!-- 다른 가능성 -->
-    <div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px">📌 다른 가능성</div>
-      <div id="pt-result-others" style="font-size:11px;color:#6b7280;line-height:1.7">—</div>
+    <!-- 성종 비교 분석 (Phase2 확장) -->
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:4px">📌 성종별 비교 분석</div>
+      <div style="font-size:9.5px;color:#9ca3af;margin-bottom:10px;line-height:1.5">
+        <span style="display:inline-block;width:10px;height:4px;background:#cbd5e1;border-radius:1px;margin-right:3px;vertical-align:middle"></span>표준 음역
+        <span style="display:inline-block;width:10px;height:4px;background:#3b82f6;border-radius:1px;margin-left:8px;margin-right:3px;vertical-align:middle"></span>내 음역
+      </div>
+      <div id="pt-result-others" style="font-size:11px;color:#475569;line-height:1.5">—</div>
     </div>
     
     <!-- 면책 안내 -->
@@ -1347,6 +1355,11 @@ input,select,button,textarea{font-family:inherit;}
     <!-- 저장 안내 -->
     <div id="pt-result-save-info" style="background:#ecfdf5;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:10.5px;color:#047857;line-height:1.5;display:none">
       ✅ 측정 결과가 저장되었습니다.
+    </div>
+    
+    <!-- Phase2: 신뢰도 낮을 때 안내 -->
+    <div id="pt-result-low-conf" style="display:none;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:10.5px;color:#9a3412;line-height:1.55">
+      —
     </div>
     
     <!-- 닫기 버튼 -->
@@ -12705,6 +12718,152 @@ function _midiToNoteName(midi){
   return names[r % 12] + oct;
 }
 
+/* ============ Phase2 헬퍼 함수들 ============ */
+
+/* 음역 분포 가중 중심값 계산 (밀집도 반영)
+   끝점만 보지 않고 자주 발성하는 영역에 가중치 */
+function _ptWeightedCenter(points){
+  if(!points || points.length === 0) return null;
+  /* 각 점의 가중치 = 1 (단순 평균) — 향후 dB 가중치도 가능 */
+  const sum = points.reduce((a,p) => a + p.midi, 0);
+  return sum / points.length;
+}
+
+/* 측정 데이터의 신뢰도 계산 (0~100)
+   데이터 개수 / 음역 폭 / register 다양성 기반 */
+function _ptCalcConfidence(points, rangeOct){
+  if(!points || points.length < 3) return 0;
+  
+  /* (1) 데이터 개수 점수 (최대 40점) */
+  let countScore = 0;
+  if(points.length >= 30) countScore = 40;
+  else if(points.length >= 20) countScore = 32;
+  else if(points.length >= 15) countScore = 25;
+  else if(points.length >= 10) countScore = 18;
+  else if(points.length >= 7) countScore = 10;
+  else countScore = 5;
+  
+  /* (2) 음역 폭 점수 (최대 30점) */
+  let rangeScore = 0;
+  if(rangeOct >= 2.0) rangeScore = 30;
+  else if(rangeOct >= 1.5) rangeScore = 25;
+  else if(rangeOct >= 1.2) rangeScore = 20;
+  else if(rangeOct >= 0.8) rangeScore = 12;
+  else rangeScore = 5;
+  
+  /* (3) register 다양성 점수 (최대 30점) */
+  const regs = new Set(points.map(p => p.register));
+  let regScore = 0;
+  if(regs.size >= 3) regScore = 30;
+  else if(regs.size === 2) regScore = 20;
+  else regScore = 10;
+  
+  return Math.min(100, countScore + rangeScore + regScore);
+}
+
+/* 신뢰도 → 텍스트 라벨 + 색상 */
+function _ptConfidenceLabel(conf){
+  if(conf >= 75) return {label:'높음', color:'#16a34a', bg:'#dcfce7', icon:'✓'};
+  if(conf >= 50) return {label:'보통', color:'#ca8a04', bg:'#fef9c3', icon:'~'};
+  return {label:'낮음', color:'#dc2626', bg:'#fee2e2', icon:'!'};
+}
+
+/* 갭 → 사람이 읽을 수 있는 문구 */
+function _ptGapText(measureLow, measureHigh, stdLow, stdHigh){
+  const lowGap = stdLow - measureLow;   /* +: 저음 부족 / -: 여유 */
+  const highGap = stdHigh - measureHigh; /* +: 고음 부족 / -: 여유 */
+  const parts = [];
+  if(Math.abs(lowGap) <= 0.5) parts.push('저음 일치');
+  else if(lowGap > 0) parts.push(`저음 ${Math.round(lowGap)}반음 부족`);
+  else parts.push(`저음 ${Math.round(-lowGap)}반음 여유`);
+  if(Math.abs(highGap) <= 0.5) parts.push('고음 일치');
+  else if(highGap > 0) parts.push(`고음 ${Math.round(highGap)}반음 부족`);
+  else parts.push(`고음 ${Math.round(-highGap)}반음 여유`);
+  return parts.join(' · ');
+}
+
+/* 코멘트 생성 — 1순위와 2순위의 매칭 차이로 명확/혼합 성향 판정 */
+function _ptGenerateComment(matches, isFemale, regRatios){
+  if(!matches || matches.length === 0) return '';
+  const top = matches[0];
+  const second = matches[1] || null;
+  const diff = second ? (top.match - second.match) : 100;
+  
+  /* 한글 받침 체크 (마지막 글자에 받침 있으면 '과', 없으면 '와') */
+  function _waGwa(word){
+    if(!word) return '와';
+    const lastChar = word.charCodeAt(word.length - 1);
+    if(lastChar < 0xAC00 || lastChar > 0xD7A3) return '와'; /* 한글이 아니면 기본 */
+    return ((lastChar - 0xAC00) % 28 === 0) ? '와' : '과';
+  }
+  
+  let mainMsg = '';
+  if(diff >= 15){
+    mainMsg = `${top.name} 성향이 뚜렷하게 나타납니다.`;
+  } else if(diff >= 7){
+    mainMsg = `${top.name}에 가까우며, ${second.name} 영역도 안정적입니다.`;
+  } else if(second){
+    /* 거의 비슷 → 혼합 성향 */
+    const josa = _waGwa(top.name);
+    mainMsg = `${top.name}${josa} ${second.name}의 중간 성향입니다.`;
+  } else {
+    mainMsg = `${top.name} 성향입니다.`;
+  }
+  
+  /* register 비율 기반 추가 코멘트 */
+  let regMsg = '';
+  const {chestRatio:cr, mixRatio:mr, falsettoRatio:fr} = regRatios;
+  if(cr >= 0.55) regMsg = ' 진성(흉성) 사용 비율이 높아 두꺼운 음색이 강점입니다.';
+  else if(fr >= 0.40) regMsg = ' 가성(두성) 사용 비율이 높아 고음 영역이 강점입니다.';
+  else if(mr >= 0.40) regMsg = ' 믹스 보이스 활용도가 높아 음역 전환이 부드럽습니다.';
+  
+  return mainMsg + regMsg;
+}
+
+/* 성종 비교 막대 SVG 생성
+   각 성종의 표준 음역(회색 막대) 위에 측정 음역(컬러 막대) 오버레이
+   measureLow/High: 측정 MIDI값
+   stdLow/High: 표준 MIDI값
+   isPrimary: 1순위 여부 (강조 표시)
+   chartLow/High: 그래프 전체 범위 (보통 36~84) */
+function _ptRenderVoiceBar(vt, measureLow, measureHigh, isPrimary, chartLow, chartHigh){
+  const w = 100; /* SVG viewBox width % */
+  const h = 18;
+  const range = chartHigh - chartLow;
+  /* 표준 음역 (회색 배경 막대) */
+  const stdX = ((vt.low - chartLow) / range) * w;
+  const stdW = ((vt.high - vt.low) / range) * w;
+  /* 측정 음역 (컬러 막대) - 표준 음역과 겹치는 부분만 강조 */
+  const mLow = Math.max(measureLow, chartLow);
+  const mHigh = Math.min(measureHigh, chartHigh);
+  const measX = ((mLow - chartLow) / range) * w;
+  const measW = ((mHigh - mLow) / range) * w;
+  
+  /* 표준 음역 양 끝 음표 라벨 */
+  const lowLabel = _midiToNoteName(vt.low);
+  const highLabel = _midiToNoteName(vt.high);
+  
+  /* 색상 (1순위는 진하게, 나머지는 연하게) */
+  const stdColor = isPrimary ? '#cbd5e1' : '#e5e7eb';
+  const measColor = isPrimary ? '#3b82f6' : '#94a3b8';
+  
+  return `<svg viewBox="0 0 100 ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;display:block">
+    <!-- 표준 음역 (회색 배경) -->
+    <rect x="${stdX}" y="6" width="${stdW}" height="6" fill="${stdColor}" rx="2" ry="2"/>
+    <!-- 표준 양 끝 라벨 -->
+    <text x="${stdX}" y="4" font-size="3" fill="#94a3b8" text-anchor="start" font-family="system-ui,sans-serif">${lowLabel}</text>
+    <text x="${stdX+stdW}" y="4" font-size="3" fill="#94a3b8" text-anchor="end" font-family="system-ui,sans-serif">${highLabel}</text>
+    <!-- 측정 음역 (컬러) -->
+    ${measW > 0 ? `<rect x="${measX}" y="6" width="${measW}" height="6" fill="${measColor}" rx="2" ry="2" opacity="${isPrimary?1:0.7}"/>` : ''}
+    <!-- 측정 양 끝점 마커 (작은 세로선) -->
+    ${measW > 0 ? `<line x1="${measX}" y1="2" x2="${measX}" y2="16" stroke="${measColor}" stroke-width="0.4"/>` : ''}
+    ${measW > 0 ? `<line x1="${measX+measW}" y1="2" x2="${measX+measW}" y2="16" stroke="${measColor}" stroke-width="0.4"/>` : ''}
+  </svg>`;
+}
+
+/* ============ End Phase2 헬퍼 ============ */
+
+
 /* 측정 데이터 분석 → 결과 객체 생성 */
 function _ptAnalyzeResult(){
   if(!_ptDataPoints || _ptDataPoints.length < 3) return null;
@@ -12745,19 +12904,27 @@ function _ptAnalyzeResult(){
   ];
   
   /* 각 성종별 매칭 점수 (0~100)
-     - 측정 음역이 표준 음역에 얼마나 들어가는가
-     - 측정 중심값이 표준 중심값과 얼마나 가까운가 */
+     Phase2 개선: 분포 가중 중심값 + 갭 계산 추가
+     - 측정 음역이 표준 음역에 얼마나 들어가는가 (overlap)
+     - 측정 끝점 중심값이 표준 중심값과 얼마나 가까운가 (centerScore)
+     - 자주 발성하는 영역(가중 중심값)도 표준에 가까운가 (densityScore) */
+  const measureCenterEndpoints = (realLow + realHigh) / 2; /* 끝점 평균 */
+  const measureCenterWeighted = _ptWeightedCenter(realPts) || measureCenterEndpoints; /* 분포 가중 평균 */
+  
   const matches = voiceTypes.map(vt => {
     const measureLow = realLow;
     const measureHigh = realHigh;
     const stdLow = vt.low;
     const stdHigh = vt.high;
     const stdCenter = (stdLow + stdHigh) / 2;
-    const measureCenter = (measureLow + measureHigh) / 2;
     
-    /* 중심값 거리 (가까울수록 점수 높음, 최대 12 semitones = 1옥타브 차이) */
-    const centerDist = Math.abs(measureCenter - stdCenter);
-    const centerScore = Math.max(0, 100 - centerDist * 8); /* 1 semitone당 8점 감점 */
+    /* 중심값 거리 (끝점 기반) */
+    const centerDist = Math.abs(measureCenterEndpoints - stdCenter);
+    const centerScore = Math.max(0, 100 - centerDist * 8);
+    
+    /* 분포 가중 중심값 거리 (자주 발성하는 영역 기반) */
+    const densityDist = Math.abs(measureCenterWeighted - stdCenter);
+    const densityScore = Math.max(0, 100 - densityDist * 8);
     
     /* 음역 겹침 (overlap) */
     const overlapLow = Math.max(measureLow, stdLow);
@@ -12766,13 +12933,29 @@ function _ptAnalyzeResult(){
     const stdRange = stdHigh - stdLow;
     const overlapScore = (overlap / stdRange) * 100;
     
-    /* 종합 점수: 중심값 60% + 겹침 40% */
-    const total = Math.round(centerScore * 0.6 + overlapScore * 0.4);
-    return {...vt, match: Math.min(100, Math.max(0, total))};
+    /* 종합 점수: 끝점 중심 35% + 가중 중심 30% + 겹침 35% */
+    const total = Math.round(centerScore * 0.35 + densityScore * 0.30 + overlapScore * 0.35);
+    
+    /* 갭 정보 */
+    const gapLow = stdLow - measureLow;   /* +면 저음 부족 */
+    const gapHigh = stdHigh - measureHigh; /* +면 고음 부족 */
+    const gapText = _ptGapText(measureLow, measureHigh, stdLow, stdHigh);
+    
+    return {
+      ...vt,
+      match: Math.min(100, Math.max(0, total)),
+      gapLow, gapHigh, gapText,
+    };
   });
   
   /* 매칭 점수 내림차순 정렬 */
   matches.sort((a,b) => b.match - a.match);
+  
+  /* Phase2: 신뢰도 계산 */
+  const confidence = _ptCalcConfidence(_ptDataPoints, rangeOctaves);
+  
+  /* Phase2: 종합 코멘트 생성 */
+  const comment = _ptGenerateComment(matches, isFemale, {chestRatio, mixRatio, falsettoRatio});
   
   return {
     timestamp: Date.now(),
@@ -12787,7 +12970,11 @@ function _ptAnalyzeResult(){
     chestRatio, mixRatio, falsettoRatio,
     primary: matches[0],
     others: matches.slice(1),
+    allMatches: matches, /* Phase2: 전체 성종 비교 표시용 */
     dataCount: total,
+    confidence, /* Phase2: 신뢰도 0~100 */
+    comment,    /* Phase2: 종합 코멘트 */
+    measureCenterWeighted, /* Phase2: 자주 발성하는 영역 중심값 */
     /* 비교 그래프를 위한 raw 데이터 (간소화) */
     dataPoints: _ptDataPoints.map(p => ({
       midi: Math.round(p.midi * 10) / 10,
@@ -12871,12 +13058,79 @@ function _showPtResult(){
   `;
   document.getElementById('pt-result-register').innerHTML = regHtml;
   
-  /* 다른 가능성 (Top 2~3) - 구버전 데이터 호환 */
-  const others = (r.others && Array.isArray(r.others)) ? r.others : [];
-  const othersHtml = others.slice(0, 3).map(o => 
-    `<span style="display:inline-block;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:3px 9px;margin:2px;font-size:10.5px"><strong>${o.name}</strong> ${o.match}%</span>`
-  ).join(' ');
+  /* Phase2: 성종별 비교 분석 (전체 성종 막대 + 갭 정보)
+     allMatches가 있으면 사용, 없으면 primary+others 합쳐서 사용 (구버전 호환) */
+  let allMatches = (r.allMatches && Array.isArray(r.allMatches)) ? r.allMatches : null;
+  if(!allMatches){
+    allMatches = [];
+    if(r.primary) allMatches.push(r.primary);
+    if(r.others && Array.isArray(r.others)) allMatches.push(...r.others);
+  }
+  
+  /* 성별에 따라 차트 범위 결정 (남=36~72, 여=48~84 정도가 자연스러움) */
+  const isFemaleR = (r.gender === 'female');
+  const chartLowR = isFemaleR ? 45 : 36;  /* A2(45) ~ : 여성, C2(36) ~ : 남성 */
+  const chartHighR = isFemaleR ? 90 : 75;  /* ~F#6(90) : 여성, ~D#5(75) : 남성 */
+  
+  /* 측정 음역 (가성 제외) */
+  const mLow = (typeof r.realLow === 'number') ? r.realLow : (r.lowMidi || chartLowR);
+  const mHigh = (typeof r.realHigh === 'number') ? r.realHigh : (r.highMidi || chartHighR);
+  
+  /* 매칭도 색상: 1순위=파랑, 2순위=하늘, 3+=회색 */
+  function _matchColor(rank, match){
+    if(rank === 0) return {bg:'#dbeafe', text:'#1e40af'};
+    if(rank === 1) return {bg:'#e0f2fe', text:'#0369a1'};
+    return {bg:'#f1f5f9', text:'#64748b'};
+  }
+  
+  const othersHtml = allMatches.map((vt, idx) => {
+    const isPrimary = (idx === 0);
+    const c = _matchColor(idx, vt.match);
+    const bar = (typeof _ptRenderVoiceBar === 'function')
+      ? _ptRenderVoiceBar(vt, mLow, mHigh, isPrimary, chartLowR, chartHighR)
+      : '';
+    const gapTxt = vt.gapText || '';
+    return `
+      <div style="${idx>0?'margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb':''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:${isPrimary?800:600};color:${c.text};font-size:${isPrimary?12:11}px">
+            ${isPrimary?'⭐ ':''}${vt.name}
+          </span>
+          <span style="background:${c.bg};color:${c.text};font-weight:700;font-size:10px;padding:2px 7px;border-radius:6px">
+            ${vt.match}%
+          </span>
+        </div>
+        ${bar}
+        ${gapTxt ? `<div style="font-size:9.5px;color:#6b7280;margin-top:3px;padding-left:2px">${gapTxt}</div>` : ''}
+      </div>
+    `;
+  }).join('');
   document.getElementById('pt-result-others').innerHTML = othersHtml || '—';
+  
+  /* Phase2: 신뢰도 배지 표시 */
+  const confEl = document.getElementById('pt-result-confidence');
+  if(confEl && typeof r.confidence === 'number'){
+    const cl = (typeof _ptConfidenceLabel === 'function') 
+      ? _ptConfidenceLabel(r.confidence) 
+      : {label:'—', color:'#6b7280', bg:'#f3f4f6', icon:''};
+    confEl.style.background = cl.bg;
+    confEl.style.color = cl.color;
+    confEl.textContent = `신뢰도 ${cl.label}`;
+    confEl.style.display = 'inline-block';
+  } else if(confEl){
+    confEl.style.display = 'none';
+  }
+  
+  /* Phase2: 종합 코멘트 표시 */
+  const commentEl = document.getElementById('pt-result-comment');
+  if(commentEl){
+    if(r.comment){
+      commentEl.textContent = r.comment;
+      commentEl.style.display = 'block';
+    } else {
+      commentEl.style.display = 'none';
+    }
+  }
   
   /* 저장 안내 (학생 로그인 시 메시지 표시) */
   const saveInfo = document.getElementById('pt-result-save-info');
@@ -12887,6 +13141,23 @@ function _showPtResult(){
     } else {
       saveInfo.innerHTML = `💾 측정 결과가 이 기기에 저장되었습니다.`;
       saveInfo.style.display = 'block';
+    }
+  }
+  
+  /* Phase2: 신뢰도 낮을 때 추가 안내 */
+  const lowConfEl = document.getElementById('pt-result-low-conf');
+  if(lowConfEl){
+    if(typeof r.confidence === 'number' && r.confidence < 50){
+      const reasons = [];
+      if((r.dataCount||0) < 10) reasons.push('측정 데이터 부족');
+      if((r.rangeOctaves||0) < 0.8) reasons.push('음역 폭 좁음');
+      const regSet = new Set((r.dataPoints||[]).map(p=>p.register));
+      if(regSet.size < 2) reasons.push('진성/믹스/가성 다양성 부족');
+      const reasonTxt = reasons.length > 0 ? `(${reasons.join(', ')})` : '';
+      lowConfEl.innerHTML = `⚠️ 측정 신뢰도가 낮습니다 ${reasonTxt}.<br>저음~고음을 천천히 골고루 발성해주시면 더 정확합니다.`;
+      lowConfEl.style.display = 'block';
+    } else {
+      lowConfEl.style.display = 'none';
     }
   }
   
