@@ -1247,6 +1247,15 @@ input,select,button,textarea{font-family:inherit;}
       </button>
     </div>
     
+    <!-- 쉰목소리/허스키 보이스 모드 (선택) -->
+    <div style="margin-top:14px;padding:10px 12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px">
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:11.5px;color:#78350f;line-height:1.5">
+        <input type="checkbox" id="pt-husky-checkbox" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;cursor:pointer" onchange="_ptHuskyMode=this.checked">
+        <span><strong>쉰목소리 / 허스키 보이스 모드</strong><br>
+        <span style="font-size:10px;color:#92400e">목소리에 노이즈가 많거나 허스키한 경우 체크해주세요. 가성 판정 정확도가 향상됩니다.</span></span>
+      </label>
+    </div>
+    
     <div style="font-size:10px;color:var(--mu);text-align:center;margin-top:12px;line-height:1.6">
       *입력하신 정보는 이 기기에만 저장됩니다.<br>
       *성별에 따라 표준 음역 기준이 다르게 표시됩니다.<br>
@@ -11360,6 +11369,7 @@ function _closePtGenderModal(){
 
 /* 성별 선택 → 측정 시작 (이름 검증 포함) */
 let _ptGender = null;
+let _ptHuskyMode = false; /* 쉰목소리/허스키 보이스 모드 - 노이즈 많은 발성 정확도 향상 */
 let _ptUserName = null;  /* 측정자 이름 (필수) */
 function _selectGender(g){
   /* 이름 검증 */
@@ -11645,10 +11655,32 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   /* H1, H2, H3, H4 측정 */
   const h1 = _goertzelMag(f0);
   const h2 = _goertzelMag(f0 * 2);
+  const h3 = _goertzelMag(f0 * 3);
   const h4 = _goertzelMag(f0 * 4);
+  const h5 = _goertzelMag(f0 * 5);
   
   /* 고주파 에너지: 2~4 kHz 대역 (싱어 포만트 영역, 진성에서 풍부) */
   const highBand = _bandMag(3000, 1000);
+  
+  /* === HNR (Harmonics-to-Noise Ratio) 추정 ===
+     배음 위치(H1~H5)와 비배음 위치의 에너지 비율로 노이즈 정도 추정.
+     - 깨끗한 발성: HNR 높음 (배음 위주)
+     - 쉰목소리/허스키: HNR 낮음 (노이즈 많음)
+     비배음 영역: 배음 사이 중간점들에서 측정 */
+  const harmonicEnergy = h1 + h2 + h3 + h4 + h5;
+  let noiseEnergy = 0;
+  /* 배음 사이 중간점 (예: H1.5, H2.5, H3.5, H4.5) - 이론적으론 0이어야 함 */
+  for(let mult of [1.5, 2.5, 3.5, 4.5]){
+    const f = f0 * mult;
+    if(f < sampleRate / 2 - 100){
+      noiseEnergy += _goertzelMag(f);
+    }
+  }
+  noiseEnergy = noiseEnergy / 4;
+  /* HNR (dB) = 10 * log10(harmonic / noise) */
+  const hnr = (noiseEnergy > 1e-8 && harmonicEnergy > 1e-8) 
+    ? 10 * Math.log10(harmonicEnergy / (noiseEnergy * 5))  /* 5는 비배음 4개 vs 배음 5개 정규화 */
+    : 25;
   
   /* 데이터 부족 시 mix (안전한 기본값) */
   if(h1 < 1e-8 || h2 < 1e-8) return 'mix';
@@ -11710,13 +11742,39 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   if(_dB < 70) score += 1;       /* 매우 작은 소리는 믹스/가성 쪽으로 +1 */
   else if(_dB < 78) score += 0.5; /* 작은 소리는 약하게 +0.5 */
   
+  /* === 쉰목소리/허스키 보이스 보정 (HNR 기반) ===
+     HNR이 낮으면 노이즈가 많은 발성 (쉰목, 허스키, 성대결절 등)
+     이런 발성은 고주파 노이즈가 진성처럼 보일 수 있어 가중치 조정 필요 */
+  const isHusky = (typeof _ptHuskyMode !== 'undefined' && _ptHuskyMode === true);
+  const isLowHnr = hnr < 12;  /* HNR 12 dB 미만 = 노이즈 많음 */
+  
+  if(isHusky || isLowHnr){
+    /* 쉰목소리 모드: 고주파 에너지 점수를 약하게 (노이즈가 진성처럼 오인) */
+    if(highRatio > -25 && highRatio <= -12){
+      /* 진성 보정 절반 완화 */
+      score += 1;  /* 위에서 깎인 점수 일부 복원 */
+    }
+  }
+  
+  /* === 작은 소리 + 강한 H1-H2 = 가성 강력 신호 ===
+     여성 D4~G4 가성은 작은 소리이고 H1-H2가 매우 강한 특성이 있음.
+     이 조합은 흉성/믹스로는 거의 나타나지 않으므로 가성 보너스 부여 */
+  const isLowVolume = _dB < 75;
+  const isStrongH1H2 = h1h2 > 6;
+  if(isLowVolume && isStrongH1H2){
+    score += 2;  /* 작은소리 + 강한 H1-H2 = 가성 강력 신호 */
+  }
+  if(_dB < 70 && h1h2 > 8){
+    score += 1;  /* 매우 작은 소리 + 매우 강한 H1-H2 = 추가 보너스 */
+  }
+  
   if(isFemale){
     /* 여자 - mix 영역을 훨씬 넓게, 중음역 가성 오판 줄이기 */
     if(f0 < 175) score -= 2;        /* F3 이하 = 진성 강 보정 (저음 한계) */
     else if(f0 < 220) score -= 1;   /* A3 이하 = 약한 진성 보정 (믹스도 가능하므로 완화) */
     /* A3~D4 (220~294Hz): 보정 제거 - 알토 저음 믹스 가능 영역
        이 구간은 흉성으로 강하게 내든 믹스로 살살 내든 둘 다 가능 → 음향 점수에 맡김 */
-    else if(f0 < 392) score -= 1;   /* G4 이하 = 약한 진성 보정 (이전 -2 → -1로 완화) */
+    else if(f0 < 392) score -= 0.5; /* G4 이하 = 매우 약한 진성 보정 (-1→-0.5, D4~G4 가성 가능성 보존) */
     /* C5(523) ~ F#5(740) 사이는 보정 제거 - 알토/메조 핵심 믹스 영역
        이 구간은 작은 소리면 믹스, 큰 소리면 진성/믹스 자유롭게 분류 */
     else if(f0 > 988) score += 3;   /* B5 이상 = 가성 강 보정 */
@@ -11747,24 +11805,28 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      가성(falsetto)은 성대 가장자리만 진동하는 발성으로,
      낮은 음역에서는 물리적으로 매우 드물거나 불가능함.
      - 남성: A3(220Hz) 이하에서는 가성 발성 불가 (G3에서 위로 상향)
-     - 여성: G4(392Hz) 이하에서는 가성 발성 매우 드뭄 (D4에서 G4로 상향)
-       → 알토/메조의 D4~G4는 흉성/믹스가 정상 */
+     - 여성: F4(349Hz) 이하에서는 가성 발성 매우 드뭄 (이전 G4=392Hz에서 약간 하향)
+       → D4~F4의 작은소리+강한H1H2 가성은 인정해야 함 */
   if(result === 'falsetto'){
-    const falsettoLowLimit = isFemale ? 392 : 220;
+    const falsettoLowLimit = isFemale ? 349 : 220;  /* 여성: G4(392) → F4(349) 완화 */
     if(f0 < falsettoLowLimit){
       result = score <= -1 ? 'chest' : 'mix';
     }
   }
   
   /* === 추가 보수적 검증: 중음역에서는 가성 점수가 충분히 높을 때만 인정 ===
-     여성: G4~F#5 (392~370Hz~F#5=740Hz) 사이는 점수가 +5 이상이어야 가성 인정
+     여성: G4~F#5 (392~370Hz~F#5=740Hz) 사이는 점수가 +4 이상이어야 가성 인정
+           단, 작은소리+강한H1H2 패턴이면 면제 (D4~F4 가성 정확히 잡기 위해)
      남성: G3~B4 (196~494Hz) 사이는 점수가 +4 이상이면 가성 인정 (완화)
            C5 이상은 점수가 낮아도 가성 인정 가능 */
   if(result === 'falsetto'){
-    if(isFemale && f0 < 740 && score < 5){
-      result = 'mix';  /* 여성 중음역: 점수 부족하면 mix */
-    } else if(!isFemale && f0 < 494 && score < 4){
-      result = 'mix';  /* 남성: B4 이하에서만 점수 4점 이상 요구 (이전 5점에서 완화) */
+    /* 작은소리+강한H1H2+높은HNR 패턴은 명확한 가성 신호 → 보수적 검증 면제 */
+    const isClearFalsettoPattern = (isLowVolume && isStrongH1H2);
+    
+    if(isFemale && f0 < 740 && score < 4 && !isClearFalsettoPattern){
+      result = 'mix';  /* 여성 중음역: 점수 부족하면 mix (단, 명확한 가성 패턴이면 통과) */
+    } else if(!isFemale && f0 < 494 && score < 4 && !isClearFalsettoPattern){
+      result = 'mix';  /* 남성: B4 이하에서만 점수 4점 이상 요구 */
     }
   }
   
