@@ -6072,6 +6072,14 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
       if(onEnd) onEnd();
       return;
     }
+    /* 음량이 0이면 청크 진행 일시 정지 (음량 올리면 자동 재개)
+       speakEL이 음량 0일 때 즉시 return하므로 무한 루프 방지를 위해 폴링 사용 */
+    const _vol = _isCoachFlag ? (typeof _volCoach !== 'undefined' ? _volCoach : 50) : (typeof _volTTS !== 'undefined' ? _volTTS : 50);
+    if(_vol <= 0){
+      /* 0.5초 후 재시도 (사용자가 음량 올릴 때까지 대기) */
+      setTimeout(_next, 500);
+      return;
+    }
     const chunk = finalChunks[idx++];
     speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
   }
