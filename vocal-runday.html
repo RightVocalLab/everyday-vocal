@@ -4802,7 +4802,8 @@ if(mod.noScale){
   const _rtts=((mod.hwComment||mod.comment||mod.desc||'').replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ').replace(/[xX]\s*(\d+)/g,(_,n)=>n+'회 반복').replace(/\+/g,' 플러스')).trim();
   window._pendingNoScaleTTS={text:_rtts,mod:mod};
   window._savedSch=null;window._pausedSch=null;
-  window._descPlaying=false;const _dBtn=document.getElementById('desc-play-btn');if(_dBtn)_dBtn.textContent='설명▶';
+  window._descPlaying=false;
+  if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
   return;
 } else {
   cancelTTS();if(typeof stopEL==='function')stopEL();
@@ -4814,7 +4815,8 @@ if(mod.noScale){
   const _exDC2=document.getElementById('ex-desc')?.closest('.card');if(_exDC2)_exDC2.style.display='';
   const _pp2=document.getElementById('pp');if(_pp2){_pp2.textContent='▶';_pp2.style.fontSize='';_pp2.style.padding='';_pp2.onclick=()=>togglePlay();}
   window._savedSch=null;window._pausedSch=null;
-  window._descPlaying=false;const _dBtn2=document.getElementById('desc-play-btn');if(_dBtn2)_dBtn2.textContent='설명▶';
+  window._descPlaying=false;
+  if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
 curBpm=mod.bpm||60;
 const sn=m2n(mod.startNote),en=m2n(mod.endNote);
