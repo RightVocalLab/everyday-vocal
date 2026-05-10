@@ -13795,10 +13795,22 @@ function _ptInitEditModeUI(result, historyId){
   const hint = document.getElementById('pt-edit-hint');
   const actions = document.getElementById('pt-edit-actions');
   
-  if(editBtn) editBtn.style.display = (typeof _isAdminLoggedIn === 'function' && _isAdminLoggedIn()) ? '' : 'none';
-  if(editBtn) editBtn.textContent = '🛠 점 편집';
-  if(editBtn) editBtn.style.background = '#f1f5f9';
-  if(editBtn) editBtn.style.color = '#475569';
+  /* 편집 가능 조건: 관리자 + 결과에 dataPoints 있음 (옛 데이터엔 없을 수 있음) */
+  const isAdmin = (typeof _isAdminLoggedIn === 'function' && _isAdminLoggedIn());
+  const hasDataPoints = result && result.dataPoints && Array.isArray(result.dataPoints) && result.dataPoints.length > 0;
+  const canEdit = isAdmin && hasDataPoints;
+  
+  if(editBtn){
+    editBtn.style.display = isAdmin ? '' : 'none';
+    editBtn.textContent = '🛠 점 편집';
+    editBtn.style.background = '#f1f5f9';
+    editBtn.style.color = '#475569';
+    /* 옛 데이터(dataPoints 없음)엔 편집 불가 표시 */
+    editBtn.disabled = !canEdit;
+    editBtn.style.opacity = canEdit ? '1' : '0.5';
+    editBtn.style.cursor = canEdit ? 'pointer' : 'not-allowed';
+    editBtn.title = canEdit ? '' : '이 측정에는 점 데이터가 없어 편집할 수 없습니다';
+  }
   if(hint) hint.style.display = 'none';
   if(actions) actions.style.display = 'none';
   
@@ -13818,6 +13830,11 @@ function _ptToggleEditMode(){
   }
   if(!window._ptCurrentResult){
     alert('편집할 결과가 없습니다.');
+    return;
+  }
+  /* dataPoints 없는 옛 데이터는 편집 불가 (점 좌표를 알 수 없음) */
+  if(!window._ptCurrentResult.dataPoints || !Array.isArray(window._ptCurrentResult.dataPoints) || window._ptCurrentResult.dataPoints.length === 0){
+    alert('이 측정에는 점 데이터가 없어 편집할 수 없습니다.\n(구버전 측정 데이터)');
     return;
   }
   
