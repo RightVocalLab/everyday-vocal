@@ -12099,7 +12099,8 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     /* 남자 - 가성 판정 정밀화 */
     if(f0 < 165) score -= 3;        /* E3 이하 = 진성 강 보정 */
     else if(f0 < 220) score -= 2;   /* A3 이하 = 진성 보정 */
-    /* C4(262)~B4(494) 중음역: 진성 보정 제거 - 사용자가 가성도 자주 사용 */
+    /* C4(262)~E4(330) 중저음역: 진성 보정 제거 - 사용자가 가성도 자주 사용 */
+    else if(f0 >= 349 && f0 < 494) score += 0.5;  /* F4~B4 = 약한 가성 보정 (믹스→가성 전환 영역) */
     else if(f0 > 880) score += 3;   /* A5 이상 = 가성 강 보정 */
     else if(f0 > 659) score += 2;   /* E5 이상 = 가성 보정 */
     else if(f0 > 523) score += 1;   /* C5 이상 = 약한 가성 보정 */
@@ -12132,16 +12133,16 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   /* === 추가 보수적 검증: 중음역에서는 가성 점수가 충분히 높을 때만 인정 ===
      여성: G4~F#5 (392~370Hz~F#5=740Hz) 사이는 점수가 +4 이상이어야 가성 인정
            단, 작은소리+강한H1H2 패턴이면 면제 (D4~F4 가성 정확히 잡기 위해)
-     남성: G3~B4 (196~494Hz) 사이는 점수가 +4 이상이면 가성 인정 (완화)
-           C5 이상은 점수가 낮아도 가성 인정 가능 */
+     남성: C4~F4 (262~349Hz) 사이만 점수 +4 이상 요구 (저음역 가성 오판 방지)
+           F#4(370Hz) 이상은 일반 임계값(+3) 적용 - 믹스→가성 전환 영역에서 더 잘 잡힘 */
   if(result === 'falsetto'){
     /* 작은소리+강한H1H2+높은HNR 패턴은 명확한 가성 신호 → 보수적 검증 면제 */
     const isClearFalsettoPattern = (isLowVolume && isStrongH1H2);
     
     if(isFemale && f0 < 740 && score < 4 && !isClearFalsettoPattern){
       result = 'mix';  /* 여성 중음역: 점수 부족하면 mix (단, 명확한 가성 패턴이면 통과) */
-    } else if(!isFemale && f0 < 494 && score < 4 && !isClearFalsettoPattern){
-      result = 'mix';  /* 남성: B4 이하에서만 점수 4점 이상 요구 */
+    } else if(!isFemale && f0 < 349 && score < 4 && !isClearFalsettoPattern){
+      result = 'mix';  /* 남성 C4~E4(262~329Hz)에서만 점수 4점 이상 요구 (F4 이상은 +3 임계값 그대로) */
     }
   }
   
@@ -12717,10 +12718,17 @@ function _ptFinalizeCurrentTone(){
     if(totalCount > 0 && maxCount / totalCount < 0.5){
       finalReg = 'mix';
     }
+    /* === 자동 이상치 필터 ===
+       (1) dB 절대 기준: 50dB 미만은 측정 노이즈로 간주, 데이터에 추가 안 함 */
+    const _avgDB = _ptCurrentTone.dBSum / _ptCurrentTone.count;
+    if(_avgDB < 50){
+      _ptCurrentTone = null;
+      return;
+    }
     /* 0.3초 이상 지속됐으면 데이터 포인트로 추가 */
     _ptDataPoints.push({
       midi: _ptCurrentTone.midi,
-      dB: _ptCurrentTone.dBSum / _ptCurrentTone.count,
+      dB: _avgDB,
       duration: dur,
       register: finalReg,  /* 'chest' | 'mix' | 'falsetto' */
       time: _ptCurrentTone.lastTime
@@ -13058,8 +13066,65 @@ function _ptRenderVoiceBar(vt, measureLow, measureHigh, isPrimary, chartLow, cha
 
 
 /* 측정 데이터 분석 → 결과 객체 생성 */
+/* === 통계적 이상치(outlier) 자동 감지/제거 ===
+   기준: 음정(midi) 기준으로 다른 점들과 너무 멀리 떨어진 점 제거.
+   - midi 평균에서 2.5 표준편차 이상 떨어진 점은 이상치
+   - 단, 데이터가 5개 미만이면 적용 안 함 (통계적 의미 X)
+   - dB가 평균보다 15dB 이상 낮으면서 음정 outlier도 함께면 가중치 ↑ */
+function _ptFilterOutliers(points){
+  if(!points || points.length < 5) return {kept: points, removed: []};
+  
+  const midis = points.map(p => p.midi);
+  const dBs = points.map(p => p.dB);
+  
+  /* 평균/표준편차 계산 */
+  const meanMidi = midis.reduce((a,b) => a+b, 0) / midis.length;
+  const meanDB = dBs.reduce((a,b) => a+b, 0) / dBs.length;
+  const varMidi = midis.reduce((a,b) => a + (b-meanMidi)**2, 0) / midis.length;
+  const stdMidi = Math.sqrt(varMidi);
+  
+  /* 이상치 판정: 음정이 평균에서 2.5 표준편차 이상 + 표준편차 자체가 의미있는 크기일 때만
+     (모든 점이 비슷한 음정이면 stdMidi가 작아져서 일반 점도 outlier로 잘못 잡힘)
+     stdMidi가 3 semitones 이상일 때만 outlier 검사 */
+  const kept = [];
+  const removed = [];
+  
+  if(stdMidi < 3){
+    /* 데이터가 좁은 음역대에 모여있으면 이상치 검사 안 함 */
+    return {kept: points, removed: []};
+  }
+  
+  for(const p of points){
+    const midiDist = Math.abs(p.midi - meanMidi) / stdMidi;
+    const dBLowGap = meanDB - p.dB;  /* 양수 = 평균보다 낮음 */
+    
+    /* 이상치 판정 조건:
+       (1) 음정이 평균에서 2.5σ 이상 멀고
+       (2) dB가 평균보다 12dB 이상 낮음 (잘못 측정된 약한 신호 가능성)
+       두 조건 모두 만족할 때만 제거 (보수적 판단) */
+    if(midiDist > 2.5 && dBLowGap > 12){
+      removed.push(p);
+    } else {
+      kept.push(p);
+    }
+  }
+  return {kept, removed};
+}
+
 function _ptAnalyzeResult(){
   if(!_ptDataPoints || _ptDataPoints.length < 3) return null;
+  
+  /* === 0. 자동 이상치 필터링 ===
+     음정과 dB가 모두 비정상인 outlier 제거 후 분석 진행 */
+  const {kept: filteredPoints, removed: removedOutliers} = _ptFilterOutliers(_ptDataPoints);
+  if(removedOutliers.length > 0){
+    console.log(`[PVR] 이상치 ${removedOutliers.length}개 자동 제거됨:`, 
+      removedOutliers.map(p => `MIDI ${p.midi.toFixed(1)} / ${p.dB.toFixed(1)}dB`).join(', '));
+    /* 이상치 제거된 데이터로 _ptDataPoints 갱신 (등고선/저장에도 반영) */
+    _ptDataPoints = filteredPoints;
+  }
+  
+  if(_ptDataPoints.length < 3) return null;
   
   /* 1. 음정 통계 */
   const midis = _ptDataPoints.map(p => p.midi);
