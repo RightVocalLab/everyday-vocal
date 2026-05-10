@@ -12991,10 +12991,18 @@ function _ptConfidenceLabel(conf){
   return {label:'낮음', color:'#dc2626', bg:'#fee2e2', icon:'!'};
 }
 
-/* 갭 → 사람이 읽을 수 있는 문구 */
+/* 갭 → 사람이 읽을 수 있는 문구
+   - 저음: 측정값이 표준보다 더 낮은 음까지 가면 '여유', 더 높은 음에서 멈추면 '부족'
+   - 고음: 측정값이 표준보다 더 높은 음까지 가면 '여유', 더 낮은 음에서 멈추면 '부족' */
 function _ptGapText(measureLow, measureHigh, stdLow, stdHigh){
-  const lowGap = stdLow - measureLow;   /* +: 저음 부족 / -: 여유 */
-  const highGap = stdHigh - measureHigh; /* +: 고음 부족 / -: 여유 */
+  /* 저음 갭: measureLow - stdLow
+     양수 = 측정값이 표준보다 높음 = 저음 부족 (더 낮은 음까지 못 감)
+     음수 = 측정값이 표준보다 낮음 = 저음 여유 */
+  const lowGap = measureLow - stdLow;
+  /* 고음 갭: stdHigh - measureHigh
+     양수 = 측정값이 표준보다 낮음 = 고음 부족 (더 높은 음까지 못 감)
+     음수 = 측정값이 표준보다 높음 = 고음 여유 */
+  const highGap = stdHigh - measureHigh;
   const parts = [];
   if(Math.abs(lowGap) <= 0.5) parts.push('저음 일치');
   else if(lowGap > 0) parts.push(`저음 ${Math.round(lowGap)}반음 부족`);
@@ -13619,7 +13627,7 @@ function _drawSinglePtToCanvas(canvasId, result){
        각 점에 대해 일정 반경 내에 일정 개수 이상의 이웃 점이 있어야 본체로 인정
        이웃 점이 부족한 외딴 점은 등고선 형성에서 제외 (점은 그대로 표시) */
     function _filterOutliers(pts, neighborRadius, minNeighbors){
-      if(pts.length < 4) return pts;  /* 너무 적으면 필터 안 함 */
+      if(pts.length < 6) return pts;  /* 너무 적으면 필터 안 함 (모든 점 등고선에 포함) */
       return pts.filter((p, i) => {
         let neighbors = 0;
         for(let j = 0; j < pts.length; j++){
@@ -13636,9 +13644,10 @@ function _drawSinglePtToCanvas(canvasId, result){
       });
     }
     
-    /* 진성 등고선 (파란색) - 본체만 */
+    /* 진성 등고선 (파란색) - 본체만
+       반경 5반음, 이웃 1개로 완화 → 점 분포가 넓어도 등고선이 점에 잘 닿음 */
     if(chestPts.length >= 4){
-      const core = _filterOutliers(chestPts, 3.5, 2);  /* 반음 3.5개 이내에 점 2개 이상 */
+      const core = _filterOutliers(chestPts, 5, 1);
       if(core.length >= 3){
         const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
         const hull = _expandHull(_hull(points), 6);
@@ -13648,7 +13657,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     
     /* 믹스 등고선 (하늘색) - 본체만 */
     if(mixPts.length >= 4){
-      const core = _filterOutliers(mixPts, 3.5, 2);
+      const core = _filterOutliers(mixPts, 5, 1);
       if(core.length >= 3){
         const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
         const hull = _expandHull(_hull(points), 6);
@@ -13658,7 +13667,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     
     /* 가성 등고선 (보라색) - 본체만 */
     if(falsettoPts.length >= 4){
-      const core = _filterOutliers(falsettoPts, 3.5, 2);
+      const core = _filterOutliers(falsettoPts, 5, 1);
       if(core.length >= 3){
         const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
         const hull = _expandHull(_hull(points), 6);
