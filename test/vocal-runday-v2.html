@@ -1320,8 +1320,30 @@ input,select,button,textarea{font-family:inherit;}
     
     <!-- PVR 그래프 -->
     <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding-left:4px">📈 PVR 그래프 (음정 × 강도)</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-left:4px">
+        <div style="font-size:12px;font-weight:800;color:#374151">📈 PVR 그래프 (음정 × 강도)</div>
+        <!-- 관리자 전용: 점 편집 모드 -->
+        <button id="pt-edit-toggle-btn" onclick="_ptToggleEditMode()" 
+                style="display:none;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;cursor:pointer">
+          🛠 점 편집
+        </button>
+      </div>
+      <!-- 편집 모드 안내 (관리자 + 편집모드 ON 시 표시) -->
+      <div id="pt-edit-hint" style="display:none;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10.5px;color:#92400e;line-height:1.5">
+        💡 점을 탭하면 제거 표시(✕)됩니다. 다시 탭하면 복원. 완료 후 "적용" 버튼을 누르세요.
+      </div>
       <canvas id="pt-result-canvas" width="600" height="700" style="width:100%;height:auto;display:block"></canvas>
+      <!-- 편집 모드 액션 버튼 (관리자 + 편집모드 ON + 변경사항 있을 때) -->
+      <div id="pt-edit-actions" style="display:none;justify-content:flex-end;gap:6px;margin-top:8px">
+        <button onclick="_ptCancelEdit()" 
+                style="font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#64748b;cursor:pointer;font-weight:600">
+          취소
+        </button>
+        <button onclick="_ptApplyEdit()" 
+                style="font-size:11px;padding:6px 14px;border-radius:6px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-weight:700">
+          <span id="pt-edit-apply-label">적용</span>
+        </button>
+      </div>
     </div>
     
     <!-- 음역 분석 -->
@@ -13427,6 +13449,11 @@ function _showPtResult(){
   setTimeout(() => {
     _drawSinglePtToCanvas('pt-result-canvas', r);
   }, 100);
+  
+  /* 점 편집 모드 UI 초기화 (관리자만 편집 버튼 표시) */
+  if(typeof _ptInitEditModeUI === 'function'){
+    _ptInitEditModeUI(r);
+  }
 }
 
 /* 단일 측정 결과를 PVR 그래프로 그리기 (등고선 1개 + 피아노 건반) */
@@ -13578,10 +13605,15 @@ function _drawSinglePtToCanvas(canvasId, result){
   
   /* 데이터 포인트 그리기 - register별로 색상 다르게 */
   if(result.dataPoints && result.dataPoints.length >= 1){
-    /* register별 분류 */
-    const chestPts = result.dataPoints.filter(p => p.register === 'chest');
-    const mixPts = result.dataPoints.filter(p => p.register === 'mix');
-    const falsettoPts = result.dataPoints.filter(p => p.register === 'falsetto');
+    /* 편집모드에서 제거 표시된 인덱스는 등고선 계산에서 제외 */
+    const _editingForContour = (window._ptEditMode === true);
+    const _removedForContour = window._ptRemovedIdx || new Set();
+    const isKept = (idx) => !_editingForContour || !_removedForContour.has(idx);
+    
+    /* register별 분류 (제거 표시 점 제외) */
+    const chestPts = result.dataPoints.filter((p, idx) => p.register === 'chest' && isKept(idx));
+    const mixPts = result.dataPoints.filter((p, idx) => p.register === 'mix' && isKept(idx));
+    const falsettoPts = result.dataPoints.filter((p, idx) => p.register === 'falsetto' && isKept(idx));
     
     /* 외딴 점(outlier) 필터링 헬퍼 - 등고선 계산용
        각 점에 대해 일정 반경 내에 일정 개수 이상의 이웃 점이 있어야 본체로 인정
@@ -13635,23 +13667,43 @@ function _drawSinglePtToCanvas(canvasId, result){
     }
     
     /* 모든 데이터 포인트는 점으로 표시 (외딴 점도 포함 - 등고선 위에 그려져 강조) */
-    chestPts.forEach(p => {
-      ctx.fillStyle = '#1d4ed8';  /* 진성: 진한 파랑 */
-      ctx.beginPath();
-      ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
-      ctx.fill();
-    });
-    mixPts.forEach(p => {
-      ctx.fillStyle = '#0284c7';  /* 믹스: 진한 하늘색 */
-      ctx.beginPath();
-      ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
-      ctx.fill();
-    });
-    falsettoPts.forEach(p => {
-      ctx.fillStyle = '#7c3aed';  /* 가성: 진한 보라 */
-      ctx.beginPath();
-      ctx.arc(x2px(p.midi), y2px(p.dB), 2.5, 0, Math.PI*2);
-      ctx.fill();
+    /* === 편집모드 지원: 모든 점의 화면 좌표 추적 (클릭 시 가장 가까운 점 찾기 위함) ===
+       _ptPointPositions = [{idx, x, y, register, midi, dB}, ...]
+       idx는 원본 result.dataPoints 배열 내 인덱스 (제거 시 식별자) */
+    window._ptPointPositions = [];
+    const _editing = (window._ptEditMode === true);
+    const _removed = window._ptRemovedIdx || new Set();
+    
+    /* 모든 점을 register 색상으로 그리되, 편집모드에서 제거 표시된 점은 X 표시 */
+    result.dataPoints.forEach((p, idx) => {
+      const px = x2px(p.midi);
+      const py = y2px(p.dB);
+      window._ptPointPositions.push({idx, x: px, y: py, register: p.register, midi: p.midi, dB: p.dB});
+      
+      let color = '#0284c7';  /* 기본 mix */
+      if(p.register === 'chest') color = '#1d4ed8';
+      else if(p.register === 'falsetto') color = '#7c3aed';
+      
+      if(_editing && _removed.has(idx)){
+        /* 제거 표시: 회색 점 + 빨간 X */
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.arc(px, py, 3.5, 0, Math.PI*2);
+        ctx.fill();
+        /* 빨간 X */
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(px-4, py-4); ctx.lineTo(px+4, py+4);
+        ctx.moveTo(px+4, py-4); ctx.lineTo(px-4, py+4);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        /* 편집모드 시 점 살짝 크게 (탭 영역 시각화) */
+        ctx.arc(px, py, _editing ? 3.5 : 2.5, 0, Math.PI*2);
+        ctx.fill();
+      }
     });
   } else {
     /* fallback: dataPoints 없으면 통계로 타원 그리기 */
@@ -13692,6 +13744,294 @@ function _drawSinglePtToCanvas(canvasId, result){
   
   /* ========== 피아노 건반 그리기 (그래프 아래) ========== */
   _drawResultPianoKeyboard(ctx, W, H, totalH, midiMin, midiMax, PIANO_H, PIANO_LABEL_H);
+}
+
+/* ========== PVR 결과 모달: 점 편집 모드 (관리자 전용) ==========
+   - _ptEditMode: 편집 활성 여부
+   - _ptRemovedIdx: 제거 표시된 점 인덱스 Set (result.dataPoints 기준)
+   - _ptEditOrigResult: 편집 시작 시점의 원본 result (취소용)
+   - _ptEditTargetHistoryId: Firebase 측정 이력 업데이트용 키 */
+window._ptEditMode = false;
+window._ptRemovedIdx = new Set();
+window._ptEditOrigResult = null;
+window._ptEditTargetHistoryId = null;
+window._ptCurrentResult = null;       /* 현재 모달에 표시 중인 result (편집용 참조) */
+
+/* 결과 모달 열릴 때 호출 - 관리자면 편집 버튼 표시, 아니면 숨김 */
+function _ptInitEditModeUI(result, historyId){
+  window._ptCurrentResult = result;
+  window._ptEditTargetHistoryId = historyId || null;
+  window._ptEditMode = false;
+  window._ptRemovedIdx = new Set();
+  window._ptEditOrigResult = null;
+  
+  const editBtn = document.getElementById('pt-edit-toggle-btn');
+  const hint = document.getElementById('pt-edit-hint');
+  const actions = document.getElementById('pt-edit-actions');
+  
+  if(editBtn) editBtn.style.display = (typeof _isAdminLoggedIn === 'function' && _isAdminLoggedIn()) ? '' : 'none';
+  if(editBtn) editBtn.textContent = '🛠 점 편집';
+  if(editBtn) editBtn.style.background = '#f1f5f9';
+  if(editBtn) editBtn.style.color = '#475569';
+  if(hint) hint.style.display = 'none';
+  if(actions) actions.style.display = 'none';
+  
+  /* 캔버스 클릭 핸들러 등록 (한 번만) */
+  const canvas = document.getElementById('pt-result-canvas');
+  if(canvas && !canvas._ptEditClickBound){
+    canvas.addEventListener('click', _ptHandleCanvasClick);
+    canvas._ptEditClickBound = true;
+  }
+}
+
+/* 편집 모드 토글 */
+function _ptToggleEditMode(){
+  if(typeof _isAdminLoggedIn !== 'function' || !_isAdminLoggedIn()){
+    alert('관리자만 사용할 수 있습니다.');
+    return;
+  }
+  if(!window._ptCurrentResult){
+    alert('편집할 결과가 없습니다.');
+    return;
+  }
+  
+  window._ptEditMode = !window._ptEditMode;
+  const editBtn = document.getElementById('pt-edit-toggle-btn');
+  const hint = document.getElementById('pt-edit-hint');
+  const actions = document.getElementById('pt-edit-actions');
+  const canvas = document.getElementById('pt-result-canvas');
+  
+  if(window._ptEditMode){
+    /* 편집 시작 */
+    window._ptRemovedIdx = new Set();
+    /* deep copy 원본 보관 (취소용) */
+    window._ptEditOrigResult = JSON.parse(JSON.stringify(window._ptCurrentResult));
+    if(editBtn){
+      editBtn.textContent = '✕ 편집 종료';
+      editBtn.style.background = '#fef2f2';
+      editBtn.style.color = '#dc2626';
+    }
+    if(hint) hint.style.display = '';
+    if(actions) actions.style.display = 'flex';
+    if(canvas) canvas.style.cursor = 'pointer';
+  } else {
+    /* 편집 종료 (취소와 동일 효과) */
+    _ptCancelEdit();
+  }
+  
+  /* 캔버스 다시 그리기 */
+  _drawSinglePtToCanvas('pt-result-canvas', window._ptCurrentResult);
+  _ptUpdateApplyLabel();
+}
+
+/* 캔버스 클릭 핸들러 - 편집모드에서만 동작 */
+function _ptHandleCanvasClick(evt){
+  if(!window._ptEditMode) return;
+  if(!window._ptPointPositions || window._ptPointPositions.length === 0) return;
+  
+  const canvas = evt.currentTarget;
+  const rect = canvas.getBoundingClientRect();
+  const x = evt.clientX - rect.left;
+  const y = evt.clientY - rect.top;
+  
+  /* 가장 가까운 점 찾기 (반경 22px 내) */
+  const HIT_RADIUS = 22;
+  let nearest = null;
+  let minDist = Infinity;
+  for(const pt of window._ptPointPositions){
+    const dx = pt.x - x;
+    const dy = pt.y - y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < HIT_RADIUS && dist < minDist){
+      minDist = dist;
+      nearest = pt;
+    }
+  }
+  
+  if(!nearest) return;  /* 빈 곳 클릭 - 무시 */
+  
+  /* 토글: 이미 제거 표시면 복원, 아니면 제거 표시 */
+  if(window._ptRemovedIdx.has(nearest.idx)){
+    window._ptRemovedIdx.delete(nearest.idx);
+  } else {
+    window._ptRemovedIdx.add(nearest.idx);
+  }
+  
+  /* 캔버스 다시 그리기 (등고선도 자동으로 갱신됨 - 제거된 점 빠진 채로) */
+  _drawSinglePtToCanvas('pt-result-canvas', window._ptCurrentResult);
+  _ptUpdateApplyLabel();
+}
+
+/* "적용" 버튼 라벨 갱신 (제거 표시된 점 개수 표시) */
+function _ptUpdateApplyLabel(){
+  const lbl = document.getElementById('pt-edit-apply-label');
+  if(!lbl) return;
+  const n = window._ptRemovedIdx ? window._ptRemovedIdx.size : 0;
+  lbl.textContent = n > 0 ? `적용 (${n}개 제거)` : '적용';
+}
+
+/* 편집 취소 */
+function _ptCancelEdit(){
+  window._ptEditMode = false;
+  window._ptRemovedIdx = new Set();
+  window._ptEditOrigResult = null;
+  
+  const editBtn = document.getElementById('pt-edit-toggle-btn');
+  const hint = document.getElementById('pt-edit-hint');
+  const actions = document.getElementById('pt-edit-actions');
+  const canvas = document.getElementById('pt-result-canvas');
+  
+  if(editBtn){
+    editBtn.textContent = '🛠 점 편집';
+    editBtn.style.background = '#f1f5f9';
+    editBtn.style.color = '#475569';
+  }
+  if(hint) hint.style.display = 'none';
+  if(actions) actions.style.display = 'none';
+  if(canvas) canvas.style.cursor = '';
+  
+  /* 원본 결과로 다시 그리기 */
+  if(window._ptCurrentResult){
+    _drawSinglePtToCanvas('pt-result-canvas', window._ptCurrentResult);
+  }
+}
+
+/* 편집 적용: 제거 표시된 점들 실제로 빼고 분석 다시 → 결과 갱신 */
+async function _ptApplyEdit(){
+  if(!window._ptCurrentResult || !window._ptRemovedIdx || window._ptRemovedIdx.size === 0){
+    /* 변경사항 없음 - 그냥 종료 */
+    _ptCancelEdit();
+    return;
+  }
+  
+  const result = window._ptCurrentResult;
+  const removedIdx = window._ptRemovedIdx;
+  
+  /* 제거된 점 빼고 새 dataPoints 만들기 */
+  const newDataPoints = result.dataPoints.filter((p, idx) => !removedIdx.has(idx));
+  
+  if(newDataPoints.length < 3){
+    alert('남은 점이 너무 적습니다 (최소 3개 필요). 일부 점을 복원해주세요.');
+    return;
+  }
+  
+  /* _ptDataPoints에 임시로 새 데이터 넣고 _ptAnalyzeResult 호출 → 다시 분석 */
+  const _origDataPoints = _ptDataPoints;
+  const _origGender = _ptGender;
+  const _origUserName = _ptUserName;
+  
+  /* 분석 함수가 사용하는 전역 변수에 새 데이터 주입 */
+  _ptDataPoints = newDataPoints.map(p => ({...p}));  /* 복사본 */
+  _ptGender = result.gender;
+  _ptUserName = result.userName;
+  
+  let newResult;
+  try {
+    newResult = _ptAnalyzeResult();
+  } finally {
+    /* 전역 변수 복원 (다음 측정에 영향 없게) */
+    _ptDataPoints = _origDataPoints;
+    _ptGender = _origGender;
+    _ptUserName = _origUserName;
+  }
+  
+  if(!newResult){
+    alert('분석에 실패했습니다. 점을 더 남겨주세요.');
+    return;
+  }
+  
+  /* 원본 timestamp 유지 (이력 식별용) */
+  newResult.timestamp = result.timestamp;
+  
+  /* 모달 갱신 - 새 결과로 다시 표시 */
+  window._ptCurrentResult = newResult;
+  window._ptEditMode = false;
+  window._ptRemovedIdx = new Set();
+  
+  const editBtn = document.getElementById('pt-edit-toggle-btn');
+  const hint = document.getElementById('pt-edit-hint');
+  const actions = document.getElementById('pt-edit-actions');
+  const canvas = document.getElementById('pt-result-canvas');
+  
+  if(editBtn){
+    editBtn.textContent = '🛠 점 편집';
+    editBtn.style.background = '#f1f5f9';
+    editBtn.style.color = '#475569';
+  }
+  if(hint) hint.style.display = 'none';
+  if(actions) actions.style.display = 'none';
+  if(canvas) canvas.style.cursor = '';
+  
+  /* 결과 모달 전체 리렌더 (매칭/신뢰도/코멘트 등 갱신) */
+  _ptRenderResultDetails(newResult);
+  
+  /* localStorage 이력에서도 갱신 */
+  try {
+    _ptUpdateHistoryItem(newResult);
+  } catch(e){ console.warn('이력 업데이트 실패:', e); }
+  
+  /* Firebase에서도 갱신 (학생 이름 매칭되면) */
+  try {
+    await _ptUpdateFirebaseHistory(newResult);
+  } catch(e){ console.warn('Firebase 업데이트 실패:', e); }
+  
+  alert('적용되었습니다. 측정 이력도 갱신되었습니다.');
+}
+
+/* localStorage 측정 이력에서 해당 timestamp 항목 갱신 */
+function _ptUpdateHistoryItem(newResult){
+  if(!newResult || !newResult.timestamp) return;
+  try {
+    const KEY = 'pt_history';
+    const arr = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const idx = arr.findIndex(x => x && x.timestamp === newResult.timestamp);
+    if(idx >= 0){
+      arr[idx] = newResult;
+      localStorage.setItem(KEY, JSON.stringify(arr));
+      console.log('[PVR] localStorage 이력 갱신 완료');
+    }
+  } catch(e){
+    console.warn('localStorage 이력 갱신 실패:', e);
+  }
+}
+
+/* Firebase에서 해당 측정 이력 갱신 (학생 이름이 STUDENTS_DB와 일치하면) */
+async function _ptUpdateFirebaseHistory(newResult){
+  if(!newResult || !newResult.timestamp) return;
+  if(typeof firebase === 'undefined' || !firebase.database) return;
+  
+  /* 학생 이름 결정 */
+  let studentName = null;
+  if(typeof curStudent !== 'undefined' && curStudent){
+    studentName = curStudent.name || curStudent;
+  } else if(newResult.userName && newResult.userName !== '익명'){
+    if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
+      const matched = STUDENTS_DB.find(s => 
+        s.name === newResult.userName || 
+        s.name.replace(/\s/g, '') === newResult.userName.replace(/\s/g, '')
+      );
+      if(matched) studentName = matched.name;
+    }
+  }
+  if(!studentName) return;  /* 학생 매칭 안 되면 Firebase 갱신 X */
+  
+  const ref = firebase.database().ref(`pt_history/${studentName}/${newResult.timestamp}`);
+  await ref.set(newResult);
+  console.log(`[PVR] Firebase 이력 갱신 완료: ${studentName} / ${newResult.timestamp}`);
+}
+
+/* 결과 상세를 다시 렌더링 — _ptLastResult 갈아끼우고 _showPtResult 재호출
+   (편집 적용 후 매칭/신뢰도/코멘트/그래프 모두 자동 갱신) */
+function _ptRenderResultDetails(r){
+  if(!r) return;
+  /* _showPtResult가 _ptLastResult를 사용하므로 그걸 갈아끼움 */
+  _ptLastResult = r;
+  /* 모달은 이미 열려있으므로 _showPtResult 호출하면 내용만 다시 렌더됨 */
+  _showPtResult();
+  /* 편집 UI 다시 초기화 (관리자 버튼 표시) */
+  if(typeof _ptInitEditModeUI === 'function'){
+    _ptInitEditModeUI(r);
+  }
 }
 
 /* 결과지용 피아노 건반 그리기 (정확한 흰/검은 건반 너비) */
