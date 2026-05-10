@@ -13377,7 +13377,11 @@ function _showPtResult(){
     const bar = (typeof _ptRenderVoiceBar === 'function')
       ? _ptRenderVoiceBar(vt, mLow, mHigh, isPrimary, chartLowR, chartHighR)
       : '';
-    const gapTxt = vt.gapText || '';
+    /* 갭 텍스트는 항상 최신 로직으로 새로 계산 (저장된 옛 텍스트는 무시)
+       → 옛 측정 데이터에서도 올바른 부족/여유 표시 */
+    const gapTxt = (typeof _ptGapText === 'function' && typeof vt.low === 'number' && typeof vt.high === 'number')
+      ? _ptGapText(mLow, mHigh, vt.low, vt.high)
+      : (vt.gapText || '');
     return `
       <div style="${idx>0?'margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb':''}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -13624,30 +13628,43 @@ function _drawSinglePtToCanvas(canvasId, result){
     const falsettoPts = result.dataPoints.filter((p, idx) => p.register === 'falsetto' && isKept(idx));
     
     /* 외딴 점(outlier) 필터링 헬퍼 - 등고선 계산용
-       각 점에 대해 일정 반경 내에 일정 개수 이상의 이웃 점이 있어야 본체로 인정
-       이웃 점이 부족한 외딴 점은 등고선 형성에서 제외 (점은 그대로 표시) */
+       - 점들의 음정/dB 중앙값 기준으로 멀리 떨어진 점 제외
+       - 음정은 반음 단위, dB는 5dB=1단위로 정규화
+       - 점이 적으면 (5개 미만) 필터 안 함 */
     function _filterOutliers(pts, neighborRadius, minNeighbors){
-      if(pts.length < 6) return pts;  /* 너무 적으면 필터 안 함 (모든 점 등고선에 포함) */
-      return pts.filter((p, i) => {
+      if(pts.length < 5) return pts;  /* 너무 적으면 모두 포함 */
+      
+      /* 1차: 이웃 기반 필터 */
+      const passed = pts.filter((p, i) => {
         let neighbors = 0;
         for(let j = 0; j < pts.length; j++){
           if(i === j) continue;
-          const dx = (pts[j].midi - p.midi);  /* 음정 단위 (반음) */
-          const dy = (pts[j].dB - p.dB) / 5;  /* dB는 5dB = 1단위로 환산 */
+          const dx = (pts[j].midi - p.midi);
+          const dy = (pts[j].dB - p.dB) / 5;
           const dist = Math.sqrt(dx*dx + dy*dy);
           if(dist < neighborRadius){
             neighbors++;
             if(neighbors >= minNeighbors) return true;
           }
         }
-        return false;  /* 이웃이 부족 → 외딴 점, 등고선 제외 */
+        return false;
       });
+      
+      if(passed.length < 3) return pts;  /* 너무 많이 잘리면 원본 사용 */
+      
+      /* 2차: dB 중앙값 대비 너무 낮은 점 추가 제외
+         (등고선이 아래로 늘어지는 현상 방지) */
+      const sortedDBs = passed.map(p => p.dB).sort((a,b) => a-b);
+      const medianDB = sortedDBs[Math.floor(sortedDBs.length / 2)];
+      /* 중앙값보다 12dB 이상 낮으면 제외 */
+      const filtered = passed.filter(p => (medianDB - p.dB) <= 12);
+      
+      return filtered.length >= 3 ? filtered : passed;
     }
     
-    /* 진성 등고선 (파란색) - 본체만
-       반경 5반음, 이웃 1개로 완화 → 점 분포가 넓어도 등고선이 점에 잘 닿음 */
+    /* 진성 등고선 (파란색) - 본체만 */
     if(chestPts.length >= 4){
-      const core = _filterOutliers(chestPts, 5, 1);
+      const core = _filterOutliers(chestPts, 4, 2);
       if(core.length >= 3){
         const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
         const hull = _expandHull(_hull(points), 6);
@@ -13657,7 +13674,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     
     /* 믹스 등고선 (하늘색) - 본체만 */
     if(mixPts.length >= 4){
-      const core = _filterOutliers(mixPts, 5, 1);
+      const core = _filterOutliers(mixPts, 4, 2);
       if(core.length >= 3){
         const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
         const hull = _expandHull(_hull(points), 6);
@@ -13667,7 +13684,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     
     /* 가성 등고선 (보라색) - 본체만 */
     if(falsettoPts.length >= 4){
-      const core = _filterOutliers(falsettoPts, 5, 1);
+      const core = _filterOutliers(falsettoPts, 4, 2);
       if(core.length >= 3){
         const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
         const hull = _expandHull(_hull(points), 6);
