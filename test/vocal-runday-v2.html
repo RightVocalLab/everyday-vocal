@@ -11958,6 +11958,8 @@ function _showLoginSelect(){
     sel.classList.remove('hidden');
     scrStack = ['scr-login-select'];
   }
+  /* SNS 로그인 버튼 상태 리셋 (로그아웃 후 깔끔하게) */
+  if(typeof _resetSnsButtons === 'function') _resetSnsButtons();
 }
 
 /* 학생 로그인 카드 클릭 - 페이지 이동 없이 바로 모달 표시
@@ -11976,6 +11978,52 @@ function _openGeneralLogin(){
     sel.classList.remove('hidden');
     scrStack = ['scr-general-login'];
   }
+  /* SNS 로그인 버튼 상태 리셋 (이전 시도/취소 잔여물 정리) */
+  _resetSnsButtons();
+}
+
+/* 카카오/네이버 로그인 버튼을 초기 상태로 복원
+   - 로그아웃 후 로그인 화면 재진입 시 호출
+   - 로그인 도중 취소/실패 후 잔여 상태 정리용
+   - 페이지 첫 로드 시 원본 innerHTML을 캐시해두고 복원 */
+function _resetSnsButtons(){
+  /* 카카오 버튼 */
+  const kakaoBtn = document.querySelector('button[onclick="_loginWithKakao()"]');
+  if(kakaoBtn){
+    kakaoBtn.disabled = false;
+    kakaoBtn.style.opacity = '1';
+    if(kakaoBtn._originalHtml){
+      kakaoBtn.innerHTML = kakaoBtn._originalHtml;
+    }
+  }
+  /* 네이버 버튼 */
+  const naverBtn = document.querySelector('button[onclick="_loginWithNaver()"]');
+  if(naverBtn){
+    naverBtn.disabled = false;
+    naverBtn.style.opacity = '1';
+    if(naverBtn._originalHtml){
+      naverBtn.innerHTML = naverBtn._originalHtml;
+    }
+  }
+}
+
+/* 페이지 로드 시 SNS 버튼 원본 HTML 캐시 (한 번만) */
+function _cacheSnsButtonsOriginal(){
+  const kakaoBtn = document.querySelector('button[onclick="_loginWithKakao()"]');
+  if(kakaoBtn && !kakaoBtn._originalHtml){
+    kakaoBtn._originalHtml = kakaoBtn.innerHTML;
+  }
+  const naverBtn = document.querySelector('button[onclick="_loginWithNaver()"]');
+  if(naverBtn && !naverBtn._originalHtml){
+    naverBtn._originalHtml = naverBtn.innerHTML;
+  }
+}
+
+/* DOM 준비되면 즉시 캐시 (DOM이 이미 로드되어 있으면 바로 실행) */
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', _cacheSnsButtonsOriginal);
+} else {
+  _cacheSnsButtonsOriginal();
 }
 
 /* 로그인 선택 화면으로 돌아가기 (일반 로그인 → 뒤로가기) */
@@ -12964,34 +13012,57 @@ function _openMyPage(){
   const modal = document.getElementById('mypage-modal');
   if(!modal) return;
   
-  /* 정보 채우기 */
+  /* 정보 채우기 (Firebase Auth 데이터 우선) */
   const nickEl = document.getElementById('mypage-nickname');
   const emailEl = document.getElementById('mypage-email');
   const createdEl = document.getElementById('mypage-created');
   if(nickEl) nickEl.textContent = u.nickname || '-';
-  if(emailEl) emailEl.textContent = u.email || '-';
+  if(emailEl) emailEl.textContent = u.email || '조회 중...';
   if(createdEl) createdEl.textContent = '조회 중...';
   
   modal.style.display = 'flex';
   
-  /* Firebase에서 가입 정보 추가 조회 */
+  /* Realtime DB에서 추가 정보 조회 (이메일, 가입일, 가입 방식)
+     카카오/네이버 사용자는 Firebase Auth에 이메일 없음 → DB에서 조회 */
   if(_fbDb && u.uid){
     _fbDb.ref('users/' + u.uid).once('value').then(function(snap){
       const data = snap.val();
       if(data){
+        /* 이메일: Firebase Auth에 없으면 DB에서 가져옴 */
+        if(emailEl){
+          const dbEmail = data.email || null;
+          if(dbEmail){
+            emailEl.textContent = dbEmail;
+          } else {
+            /* 카카오 등 이메일 미수집 사용자 */
+            emailEl.textContent = '-';
+            emailEl.style.opacity = '0.5';
+          }
+          /* 캐시 갱신 */
+          if(dbEmail && !u.email){
+            window._generalUser.email = dbEmail;
+          }
+        }
+        /* 가입일 */
         if(createdEl && data.createdAt){
           const d = new Date(data.createdAt);
           createdEl.textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 가입';
         } else if(createdEl){
           createdEl.textContent = '-';
         }
+      } else {
+        /* DB에 정보 없음 (이론상 발생 안 함) */
+        if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
+        if(createdEl) createdEl.textContent = '-';
       }
     }).catch(function(e){
       console.warn('마이페이지 정보 조회 실패:', e);
+      if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
       if(createdEl) createdEl.textContent = '-';
     });
-  } else if(createdEl){
-    createdEl.textContent = '-';
+  } else {
+    if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
+    if(createdEl) createdEl.textContent = '-';
   }
 }
 
