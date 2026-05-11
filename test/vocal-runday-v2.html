@@ -383,7 +383,7 @@ input,select,button,textarea{font-family:inherit;}
 </div>
 
 <!-- ========== 이메일 로그인/가입 화면 ========== -->
-<div id="scr-email-auth" class="scr hidden" style="background:#fafafa;min-height:100vh;padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+<div id="scr-email-auth" class="scr hidden" style="background:#fafafa;padding:0;">
   <!-- 상단 바: 뒤로가기 -->
   <div style="padding:16px 20px;display:flex;align-items:center;gap:12px;background:#fff;border-bottom:1px solid #f1f5f9">
     <button onclick="_backToGeneralLogin()" 
@@ -408,8 +408,9 @@ input,select,button,textarea{font-family:inherit;}
     </button>
   </div>
   
-  <!-- 본문 컨테이너 -->
-  <div style="padding:32px 24px 24px;max-width:400px;margin:0 auto">
+  <!-- 본문 컨테이너 (스크롤 가능 영역) -->
+  <div style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:32px 24px 48px;">
+    <div style="max-width:400px;margin:0 auto">
     
     <!-- 로그인 폼 -->
     <div id="email-form-login" style="display:block">
@@ -550,7 +551,8 @@ input,select,button,textarea{font-family:inherit;}
       </button>
     </div>
     
-  </div>
+    </div><!-- /max-width inner -->
+  </div><!-- /scroll container -->
 </div>
 
 <!-- ========== 약관·방침 모달 (재사용) ========== -->
@@ -650,6 +652,70 @@ input,select,button,textarea{font-family:inherit;}
   </div>
 </div>
 
+<!-- ========== 마이페이지 모달 (일반 사용자 정보) ========== -->
+<div id="mypage-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;width:100%;max-width:380px;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+    <!-- 헤더 -->
+    <div style="padding:20px 22px;background:linear-gradient(135deg,#f1f5f9 0%,#cbd5e1 100%);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#334155">내 계정 정보</div>
+        <div style="font-size:11px;color:#475569;opacity:0.8;margin-top:2px">바른발성연구소</div>
+      </div>
+      <button onclick="_closeMyPage()" 
+              style="width:32px;height:32px;border:none;background:#fff;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center"
+              aria-label="닫기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M6 6l12 12M6 18l12-12" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- 본문 -->
+    <div style="padding:22px;display:flex;flex-direction:column;gap:14px">
+      <!-- 닉네임 -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.3px;margin-bottom:4px">닉네임</div>
+        <div id="mypage-nickname" style="font-size:15px;font-weight:700;color:#334155">-</div>
+      </div>
+      
+      <!-- 이메일 -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.3px;margin-bottom:4px">이메일</div>
+        <div id="mypage-email" style="font-size:14px;color:#475569;word-break:break-all">-</div>
+      </div>
+      
+      <!-- 가입일 -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.3px;margin-bottom:4px">가입일</div>
+        <div id="mypage-created" style="font-size:13px;color:#64748b">-</div>
+      </div>
+      
+      <!-- 구독 상태 (출시 후 유료화 시 사용) -->
+      <div style="margin-top:4px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#94a3b8" stroke-width="1.5"/>
+            <path d="M12 8v4l3 2" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span style="font-size:12px;color:#64748b;line-height:1.5">현재 무료 플랜 사용 중입니다.<br>모든 기능 미리 체험 가능.</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 하단 버튼 -->
+    <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fafafa;display:flex;gap:8px">
+      <button onclick="_logoutGeneralUser()" 
+              style="flex:1;height:46px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#dc2626">
+        로그아웃
+      </button>
+      <button onclick="_closeMyPage()" 
+              style="flex:1;height:46px;background:#475569;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;color:#fff">
+        확인
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="scr-home" class="scr hidden">
   <div class="topbar">
     <div style="width:38px"></div>
@@ -662,6 +728,12 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:4px">
+      <button class="ico" id="topbar-user-btn" onclick="_handleUserBtn()" title="내 계정" style="display:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="8" r="4" stroke="#c2410c" stroke-width="2" fill="none"/>
+          <path d="M4 21 C4 16, 7 13, 12 13 C17 13, 20 16, 20 21" stroke="#c2410c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </button>
       <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="ico" onclick="openAdminPW()">⚙</button>
     </div>
@@ -11286,19 +11358,41 @@ _completeStudentLogin(student);
 
 /* 학생 로그인 실제 진행 (동의 완료 후 호출됨) */
 function _completeStudentLogin(student){
-curStudent = student;
-closeStudentLogin();
-_updateHwMenuSub();
-buildHome(); /* v2: 메인 화면에 훈련 설명 섹션 표시 */
-openHomework();
+  /* 다른 모드(일반) 로그인 상태였다면 정리 - 권한 분리 원칙
+     단, Firebase signOut은 게시판 등 익명 기능을 위해 익명 재로그인 처리 */
+  if(window._generalUser){
+    if(typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser && !firebase.auth().currentUser.isAnonymous){
+      firebase.auth().signOut().then(function(){
+        firebase.auth().signInAnonymously().catch(function(e){
+          console.warn('학생 모드 진입 시 익명 재로그인 실패:', e.message);
+        });
+      }).catch(function(e){ console.warn('일반사용자 자동 로그아웃 실패:', e); });
+    }
+    window._generalUser = null;
+    try {
+      localStorage.removeItem('general_user_uid');
+      localStorage.removeItem('general_user_name');
+    } catch(e){}
+  }
+  
+  curStudent = student;
+  window._userType = 'student';
+  closeStudentLogin();
+  _updateHwMenuSub();
+  buildHome(); /* v2: 메인 화면에 훈련 설명 섹션 표시 */
+  if(typeof _updateUserBtn === 'function') _updateUserBtn();
+  openHomework();
 }
 function logoutStudent(){
 
 _saveHwList();
 curStudent = null;
 hwList = [];
+window._userType = null;
+try { localStorage.removeItem('auto_student_name'); } catch(e){}
 _updateHwMenuSub();
 buildHome(); /* v2: 메인 화면에서 훈련 설명 섹션 숨김 */
+if(typeof _updateUserBtn === 'function') _updateUserBtn();
 pop();
 }
 
@@ -11696,10 +11790,12 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
                   email: user.email,
                   nickname: user.displayName || user.email,
                 };
+                window._userType = 'general';
                 try {
                   localStorage.setItem('general_user_uid', user.uid);
                   if(user.displayName) localStorage.setItem('general_user_name', user.displayName);
                 } catch(e){}
+                if(typeof _updateUserBtn === 'function') _updateUserBtn();
                 /* 인트로/로그인 선택 화면이 보이는 상태면 홈으로 자동 이동 */
                 const introVis = !document.getElementById('scr-intro')?.classList.contains('hidden');
                 const loginSelVis = !document.getElementById('scr-login-select')?.classList.contains('hidden');
@@ -11886,7 +11982,14 @@ function _autoStartIntro(){
         intro.style.transition = '';
         /* 자동 로그인 체크: 이전 로그인 상태가 남아있으면 바로 홈으로 */
         if(_checkAutoLogin()){
+          /* userType 설정 (자동 로그인) */
+          if(typeof curStudent !== 'undefined' && curStudent && curStudent.name){
+            window._userType = 'student';
+          } else if(window._generalUser){
+            window._userType = 'general';
+          }
           goHome();
+          if(typeof _updateUserBtn === 'function') setTimeout(_updateUserBtn, 100);
         } else {
           _showLoginSelect();
         }
@@ -12326,6 +12429,14 @@ function _firebaseAuthErrorMessage(err){
 
 /* 이메일 인증 성공 후 처리 (회원가입/로그인 공통) */
 function _onEmailAuthSuccess(user){
+  /* 다른 모드(학생) 로그인 상태였다면 정리 - 권한 분리 원칙 */
+  if(typeof curStudent !== 'undefined' && curStudent){
+    curStudent = null;
+    if(typeof hwList !== 'undefined') hwList = [];
+    try { localStorage.removeItem('auto_student_name'); } catch(e){}
+    if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
+  }
+  
   /* 일반 사용자 세션 저장 (자동 로그인용) */
   try {
     localStorage.setItem('general_user_uid', user.uid);
@@ -12340,10 +12451,12 @@ function _onEmailAuthSuccess(user){
     email: user.email,
     nickname: user.displayName || user.email,
   };
+  window._userType = 'general';
   
   /* 홈으로 이동 */
   document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
   if(typeof goHome === 'function') goHome();
+  if(typeof _updateUserBtn === 'function') _updateUserBtn();
   
   /* 환영 메시지 */
   setTimeout(function(){
@@ -12361,16 +12474,173 @@ function _logoutGeneralUser(){
       localStorage.removeItem('general_user_name');
     } catch(e){}
     window._generalUser = null;
+    window._userType = null;
     /* 로그아웃 후 다시 익명 로그인 (게시판 권한 유지용) */
     firebase.auth().signInAnonymously().catch(function(e){
       console.warn('익명 재로그인 실패:', e.message);
     });
+    if(typeof _updateUserBtn === 'function') _updateUserBtn();
     /* 로그인 선택 화면으로 */
     if(typeof _showLoginSelect === 'function') _showLoginSelect();
   }).catch(function(err){
     console.warn('로그아웃 실패:', err);
     alert('로그아웃 중 오류가 발생했습니다.');
   });
+}
+
+/* ============================================================
+   권한 시스템 (학생/일반 분리)
+   - 비즈니스 모델: 출시 후 6개월+ 유료화 예정
+   - 학생 = 모든 기능 무료
+   - 일반 = 자유연습만 무료, 결제 시 모든 기능
+   ============================================================ */
+
+/* 현재 사용자 타입 반환: 'student' | 'general' | null */
+function _getUserType(){
+  if(typeof curStudent !== 'undefined' && curStudent && curStudent.name) return 'student';
+  if(window._generalUser && window._generalUser.uid) return 'general';
+  return null;
+}
+
+/* 학생 로그인 상태인지 (모든 기능 무료) */
+function _isStudent(){ return _getUserType() === 'student'; }
+
+/* 일반 로그인 상태인지 */
+function _isGeneralUser(){ return _getUserType() === 'general'; }
+
+/* 일반 사용자의 유료 결제 상태 (Phase 4 시점에는 항상 false, 추후 결제 시스템 연동) */
+function _isPaidUser(){
+  /* TODO: 추후 결제 시스템 연동 후 Firebase에서 유료 상태 조회
+     예: window._generalUser && window._generalUser.subscription === 'active' */
+  return false;
+}
+
+/* 기능별 접근 권한 체크
+   - feature: 'homework' | 'free_practice' | 'pvr' | 'theory' | 'community' 등
+   - 반환: { allowed: boolean, reason: string | null } */
+function _checkFeatureAccess(feature){
+  const userType = _getUserType();
+  
+  /* 미로그인 - 자유연습만 허용 (홈 화면 접근 자체는 가능) */
+  if(!userType){
+    if(feature === 'free_practice') return { allowed: true, reason: null };
+    return { allowed: false, reason: '로그인이 필요한 기능입니다.' };
+  }
+  
+  /* 학생 - 모든 기능 허용 */
+  if(userType === 'student') return { allowed: true, reason: null };
+  
+  /* 일반 사용자 */
+  if(userType === 'general'){
+    /* 자유연습은 무료 */
+    if(feature === 'free_practice') return { allowed: true, reason: null };
+    /* 그 외는 유료 (Phase 4 현재는 모두 허용, 추후 결제 체크) */
+    if(_isPaidUser()) return { allowed: true, reason: null };
+    /* TODO: 출시 후 유료화 시 아래 주석 해제
+       return { allowed: false, reason: '유료 결제가 필요한 기능입니다.' }; */
+    return { allowed: true, reason: null }; /* 현재는 허용 */
+  }
+  
+  return { allowed: false, reason: null };
+}
+
+/* ============================================================
+   마이페이지 (일반 사용자 정보)
+   ============================================================ */
+
+function _openMyPage(){
+  if(!_isGeneralUser()){
+    alert('일반 회원만 이용 가능합니다.');
+    return;
+  }
+  const u = window._generalUser;
+  const modal = document.getElementById('mypage-modal');
+  if(!modal) return;
+  
+  /* 정보 채우기 */
+  const nickEl = document.getElementById('mypage-nickname');
+  const emailEl = document.getElementById('mypage-email');
+  const createdEl = document.getElementById('mypage-created');
+  if(nickEl) nickEl.textContent = u.nickname || '-';
+  if(emailEl) emailEl.textContent = u.email || '-';
+  if(createdEl) createdEl.textContent = '조회 중...';
+  
+  modal.style.display = 'flex';
+  
+  /* Firebase에서 가입 정보 추가 조회 */
+  if(_fbDb && u.uid){
+    _fbDb.ref('users/' + u.uid).once('value').then(function(snap){
+      const data = snap.val();
+      if(data){
+        if(createdEl && data.createdAt){
+          const d = new Date(data.createdAt);
+          createdEl.textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 가입';
+        } else if(createdEl){
+          createdEl.textContent = '-';
+        }
+      }
+    }).catch(function(e){
+      console.warn('마이페이지 정보 조회 실패:', e);
+      if(createdEl) createdEl.textContent = '-';
+    });
+  } else if(createdEl){
+    createdEl.textContent = '-';
+  }
+}
+
+function _closeMyPage(){
+  const modal = document.getElementById('mypage-modal');
+  if(modal) modal.style.display = 'none';
+}
+
+/* 토픽바 사용자 버튼 클릭 핸들러
+   - 학생 로그인: 학생 정보 모달 (이름 + 로그아웃)
+   - 일반 로그인: 마이페이지 모달
+   - 비로그인: 로그인 선택 화면으로 */
+function _handleUserBtn(){
+  const type = _getUserType();
+  if(type === 'student'){
+    /* 학생 정보 + 로그아웃 안내 */
+    if(confirm(curStudent.name + '님으로 로그인 중입니다.\n\n로그아웃 하시겠습니까?')){
+      logoutStudent();
+      if(typeof _showLoginSelect === 'function') _showLoginSelect();
+    }
+  } else if(type === 'general'){
+    _openMyPage();
+  } else {
+    /* 비로그인 - 로그인 선택 화면으로 */
+    if(typeof _showLoginSelect === 'function') _showLoginSelect();
+  }
+}
+
+/* 토픽바 사용자 버튼 표시/숨김 + 아이콘 색 갱신 
+   사용자 타입이 바뀔 때마다 호출 (로그인/로그아웃 시점) */
+function _updateUserBtn(){
+  const btn = document.getElementById('topbar-user-btn');
+  if(!btn) return;
+  const type = _getUserType();
+  
+  if(type === 'student'){
+    btn.style.display = '';
+    btn.title = (typeof curStudent !== 'undefined' && curStudent && curStudent.name) ? curStudent.name + '님 (학생)' : '학생';
+    /* 학생 = 주황 색조 */
+    const svg = btn.querySelector('svg');
+    if(svg){
+      svg.querySelectorAll('circle, path').forEach(el => el.setAttribute('stroke', '#c2410c'));
+    }
+  } else if(type === 'general'){
+    btn.style.display = '';
+    const nick = (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname : '회원';
+    btn.title = nick + '님 (일반)';
+    /* 일반 = 회색 색조 */
+    const svg = btn.querySelector('svg');
+    if(svg){
+      svg.querySelectorAll('circle, path').forEach(el => el.setAttribute('stroke', '#475569'));
+    }
+  } else {
+    /* 비로그인 - 버튼 숨김 (또는 표시 옵션) */
+    btn.style.display = 'none';
+  }
 }
 
 /* ===== 약관·방침 모달 시스템 =====
