@@ -219,6 +219,437 @@ input,select,button,textarea{font-family:inherit;}
 }
 </style>
 
+<!-- ========== 로그인 선택 화면 (intro 직후) ========== -->
+<div id="scr-login-select" class="scr hidden" style="background:linear-gradient(160deg, #fff7ed 0%, #ffedd5 60%, #fed7aa 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;">
+  <!-- 로고 -->
+  <div style="margin-bottom:48px;text-align:center">
+    <div style="font-size:28px;font-weight:900;color:#c2410c;letter-spacing:-0.5px;margin-bottom:6px">바른발성연구소</div>
+    <div style="font-size:13px;font-weight:600;color:#f97316;letter-spacing:1.5px">RightVocalLab</div>
+  </div>
+  
+  <!-- 로그인 선택 카드 (대등한 두 카드) -->
+  <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px">
+    
+    <!-- 학생 로그인 카드 -->
+    <button onclick="_openStudentLogin()" 
+            style="background:#fff;border:2px solid #fdba74;border-radius:18px;padding:24px 20px;cursor:pointer;text-align:left;box-shadow:0 4px 12px rgba(249,115,22,0.08);transition:transform 0.15s, box-shadow 0.15s"
+            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(249,115,22,0.15)'"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(249,115,22,0.08)'">
+      <div style="display:flex;align-items:center;gap:14px">
+        <!-- 학생 일러스트: 마이크 + 음표 (수업 컨셉) -->
+        <div style="width:56px;height:56px;flex-shrink:0;background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border-radius:14px;display:flex;align-items:center;justify-content:center">
+          <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- 마이크 본체 -->
+            <rect x="19" y="8" width="10" height="20" rx="5" fill="#c2410c"/>
+            <rect x="21" y="11" width="6" height="14" rx="3" fill="#fdba74" opacity="0.5"/>
+            <!-- 마이크 스탠드 -->
+            <path d="M14 24 C14 30, 18 34, 24 34 C30 34, 34 30, 34 24" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <line x1="24" y1="34" x2="24" y2="40" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="18" y1="40" x2="30" y2="40" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- 음표 (학생 = 배우는 사람) -->
+            <circle cx="38" cy="14" r="2.5" fill="#f97316"/>
+            <line x1="40.5" y1="14" x2="40.5" y2="6" stroke="#f97316" stroke-width="2" stroke-linecap="round"/>
+            <path d="M40.5 6 Q43 7, 43 10" stroke="#f97316" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:800;color:#9a3412;margin-bottom:3px">학생 로그인</div>
+          <div style="font-size:12px;font-weight:500;color:#9a3412;opacity:0.7;line-height:1.4">
+            등록된 학생용<br>숙제 확인 + 음역대 측정
+          </div>
+        </div>
+        <div style="font-size:20px;color:#fdba74">›</div>
+      </div>
+    </button>
+    
+    <!-- 일반 로그인 카드 -->
+    <button onclick="_openGeneralLogin()" 
+            style="background:#fff;border:2px solid #cbd5e1;border-radius:18px;padding:24px 20px;cursor:pointer;text-align:left;box-shadow:0 4px 12px rgba(100,116,139,0.08);transition:transform 0.15s, box-shadow 0.15s"
+            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(100,116,139,0.15)'"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(100,116,139,0.08)'">
+      <div style="display:flex;align-items:center;gap:14px">
+        <!-- 일반 사용자 일러스트: 음파 + 사용자 실루엣 -->
+        <div style="width:56px;height:56px;flex-shrink:0;background:linear-gradient(135deg,#f1f5f9 0%,#cbd5e1 100%);border-radius:14px;display:flex;align-items:center;justify-content:center">
+          <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- 사용자 헤드 (원) -->
+            <circle cx="24" cy="16" r="6" fill="#475569"/>
+            <!-- 사용자 어깨 -->
+            <path d="M14 36 C14 30, 18 26, 24 26 C30 26, 34 30, 34 36" fill="#475569"/>
+            <!-- 음파 (왼쪽) -->
+            <path d="M8 18 Q5 22, 8 26" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M5 16 Q1 22, 5 28" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+            <!-- 음파 (오른쪽) -->
+            <path d="M40 18 Q43 22, 40 26" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M43 16 Q47 22, 43 28" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:800;color:#334155;margin-bottom:3px">일반 로그인</div>
+          <div style="font-size:12px;font-weight:500;color:#334155;opacity:0.7;line-height:1.4">
+            카카오 · 네이버 · 이메일<br>음역대 측정 + 발성 이론
+          </div>
+        </div>
+        <div style="font-size:20px;color:#cbd5e1">›</div>
+      </div>
+    </button>
+    
+  </div>
+  
+  <!-- 하단 안내 -->
+  <div style="position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:#9a3412;opacity:0.6;line-height:1.6">
+    회원가입 시 음성 데이터 수집 동의 필요<br>
+    개인정보처리방침 · 이용약관
+  </div>
+</div>
+
+<!-- ========== 일반 로그인 화면 (카카오/네이버/이메일) ========== -->
+<div id="scr-general-login" class="scr hidden" style="background:linear-gradient(160deg, #fafafa 0%, #f1f5f9 100%);min-height:100vh;padding:0;">
+  <!-- 상단 바: 뒤로가기 -->
+  <div style="padding:16px 20px;display:flex;align-items:center;gap:12px">
+    <button onclick="_backToLoginSelect()" 
+            style="width:38px;height:38px;border-radius:10px;border:none;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.08)"
+            aria-label="뒤로가기">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18l-6-6 6-6" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div style="font-size:15px;font-weight:700;color:#334155">로그인</div>
+  </div>
+  
+  <!-- 본문: 중앙 정렬 컨테이너 -->
+  <div style="padding:48px 24px 24px;display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 70px)">
+    
+    <!-- 로고 + 환영 메시지 -->
+    <div style="margin-bottom:48px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#c2410c;letter-spacing:-0.5px;margin-bottom:6px">바른발성연구소</div>
+      <div style="font-size:13px;font-weight:500;color:#64748b;margin-top:10px">간편하게 시작하세요</div>
+    </div>
+    
+    <!-- 소셜 로그인 버튼 영역 -->
+    <div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:11px">
+      
+      <!-- 카카오 로그인 (메인) -->
+      <button onclick="_loginWithKakao()" 
+              style="width:100%;height:54px;background:#FEE500;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;color:#191919;transition:opacity 0.15s"
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'">
+        <!-- 카카오톡 아이콘 (말풍선) -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.33 4.66 6.77L5.5 21.5l4.27-2.7c.73.13 1.47.2 2.23.2 5.52 0 10-3.58 10-8s-4.48-8-10-8z" fill="#191919"/>
+        </svg>
+        <span>카카오로 시작하기</span>
+      </button>
+      
+      <!-- 네이버 로그인 -->
+      <button onclick="_loginWithNaver()" 
+              style="width:100%;height:54px;background:#03C75A;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700;color:#fff;transition:opacity 0.15s"
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'">
+        <!-- 네이버 N 로고 -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z" fill="#fff"/>
+        </svg>
+        <span>네이버로 시작하기</span>
+      </button>
+      
+      <!-- 구분선 -->
+      <div style="display:flex;align-items:center;gap:12px;margin:8px 0;color:#cbd5e1;font-size:11px;font-weight:600">
+        <div style="flex:1;height:1px;background:#e2e8f0"></div>
+        <span>또는</span>
+        <div style="flex:1;height:1px;background:#e2e8f0"></div>
+      </div>
+      
+      <!-- 이메일 로그인/가입 -->
+      <button onclick="_openEmailLogin()" 
+              style="width:100%;height:50px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:600;color:#475569;transition:border-color 0.15s, background 0.15s"
+              onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#f8fafc'"
+              onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <!-- 이메일 아이콘 -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="5" width="18" height="14" rx="2" stroke="#475569" stroke-width="1.8"/>
+          <path d="M3 7l9 6 9-6" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>이메일로 시작하기</span>
+      </button>
+      
+    </div>
+    
+    <!-- 하단 안내 -->
+    <div style="margin-top:auto;padding-top:32px;text-align:center;font-size:11px;color:#94a3b8;line-height:1.7">
+      시작 시 <a href="#" onclick="_showTerms();return false;" style="color:#64748b;text-decoration:underline">이용약관</a> · 
+      <a href="#" onclick="_showPrivacy();return false;" style="color:#64748b;text-decoration:underline">개인정보처리방침</a> 동의로 간주
+    </div>
+  </div>
+</div>
+
+<!-- ========== 이메일 로그인/가입 화면 ========== -->
+<div id="scr-email-auth" class="scr hidden" style="background:#fafafa;min-height:100vh;padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <!-- 상단 바: 뒤로가기 -->
+  <div style="padding:16px 20px;display:flex;align-items:center;gap:12px;background:#fff;border-bottom:1px solid #f1f5f9">
+    <button onclick="_backToGeneralLogin()" 
+            style="width:38px;height:38px;border-radius:10px;border:none;background:#f8fafc;cursor:pointer;display:flex;align-items:center;justify-content:center"
+            aria-label="뒤로가기">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18l-6-6 6-6" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div style="font-size:15px;font-weight:700;color:#334155">이메일로 시작하기</div>
+  </div>
+  
+  <!-- 탭 (로그인 / 회원가입) -->
+  <div style="display:flex;background:#fff;border-bottom:1px solid #f1f5f9">
+    <button id="email-tab-login" onclick="_switchEmailTab('login')" 
+            style="flex:1;height:48px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:700;color:#c2410c;border-bottom:2.5px solid #c2410c;transition:all 0.15s">
+      로그인
+    </button>
+    <button id="email-tab-signup" onclick="_switchEmailTab('signup')" 
+            style="flex:1;height:48px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:600;color:#94a3b8;border-bottom:2.5px solid transparent;transition:all 0.15s">
+      회원가입
+    </button>
+  </div>
+  
+  <!-- 본문 컨테이너 -->
+  <div style="padding:32px 24px 24px;max-width:400px;margin:0 auto">
+    
+    <!-- 로그인 폼 -->
+    <div id="email-form-login" style="display:block">
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">이메일</label>
+        <input type="email" id="login-email-input" 
+               placeholder="example@email.com"
+               autocomplete="email"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+      </div>
+      
+      <div style="margin-bottom:8px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">비밀번호</label>
+        <input type="password" id="login-pw-input" 
+               placeholder="비밀번호 입력"
+               autocomplete="current-password"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+      </div>
+      
+      <!-- 비밀번호 찾기 링크 -->
+      <div style="text-align:right;margin-bottom:24px">
+        <a href="#" onclick="_resetPassword();return false;" 
+           style="font-size:12px;color:#64748b;text-decoration:none">비밀번호를 잊으셨나요?</a>
+      </div>
+      
+      <button onclick="_submitEmailLogin()" 
+              style="width:100%;height:52px;background:#c2410c;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;transition:opacity 0.15s"
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'">
+        로그인
+      </button>
+    </div>
+    
+    <!-- 회원가입 폼 -->
+    <div id="email-form-signup" style="display:none">
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">이메일 *</label>
+        <input type="email" id="signup-email-input" 
+               placeholder="example@email.com"
+               autocomplete="email"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+        <div id="signup-email-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+      </div>
+      
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">비밀번호 * (8자 이상)</label>
+        <input type="password" id="signup-pw-input" 
+               placeholder="8자 이상 입력"
+               autocomplete="new-password"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+        <div id="signup-pw-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+      </div>
+      
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">비밀번호 확인 *</label>
+        <input type="password" id="signup-pw2-input" 
+               placeholder="비밀번호 다시 입력"
+               autocomplete="new-password"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+        <div id="signup-pw2-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+      </div>
+      
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">닉네임 * (2~12자)</label>
+        <input type="text" id="signup-name-input" 
+               placeholder="앱 내 표시될 이름"
+               maxlength="12"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+        <div id="signup-name-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+      </div>
+      
+      <!-- 약관 동의 체크박스 -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:20px">
+        <!-- 전체 동의 -->
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding-bottom:10px;border-bottom:1px solid #e2e8f0;margin-bottom:10px">
+          <input type="checkbox" id="agree-all" onclick="_toggleAllAgreements()" 
+                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c">
+          <span style="font-size:13px;font-weight:700;color:#334155">전체 동의</span>
+        </label>
+        
+        <!-- 개별 동의 -->
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="agree-terms" class="agree-item" onchange="_syncAllAgreement()" 
+                 style="width:16px;height:16px;cursor:pointer;accent-color:#c2410c;margin-top:2px">
+          <span style="flex:1;font-size:12.5px;color:#475569;line-height:1.5">
+            <strong style="color:#dc2626">[필수]</strong> 이용약관 동의 
+            <a href="#" onclick="_showTerms();return false;event.stopPropagation();" 
+               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
+          </span>
+        </label>
+        
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="agree-privacy" class="agree-item" onchange="_syncAllAgreement()" 
+                 style="width:16px;height:16px;cursor:pointer;accent-color:#c2410c;margin-top:2px">
+          <span style="flex:1;font-size:12.5px;color:#475569;line-height:1.5">
+            <strong style="color:#dc2626">[필수]</strong> 개인정보처리방침 동의 
+            <a href="#" onclick="_showPrivacy();return false;event.stopPropagation();" 
+               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
+          </span>
+        </label>
+        
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="agree-voice" class="agree-item" onchange="_syncAllAgreement()" 
+                 style="width:16px;height:16px;cursor:pointer;accent-color:#c2410c;margin-top:2px">
+          <span style="flex:1;font-size:12.5px;color:#475569;line-height:1.5">
+            <strong style="color:#dc2626">[필수]</strong> 음성 데이터 수집·이용 동의 
+            <a href="#" onclick="_showVoiceConsent();return false;event.stopPropagation();" 
+               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
+          </span>
+        </label>
+        
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="agree-marketing" class="agree-item" onchange="_syncAllAgreement()" 
+                 style="width:16px;height:16px;cursor:pointer;accent-color:#c2410c;margin-top:2px">
+          <span style="flex:1;font-size:12.5px;color:#475569;line-height:1.5">
+            <span style="color:#64748b">[선택]</span> 마케팅·알림 수신 동의
+          </span>
+        </label>
+      </div>
+      
+      <button onclick="_submitEmailSignup()" 
+              style="width:100%;height:52px;background:#c2410c;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;color:#fff;transition:opacity 0.15s"
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'">
+        가입하기
+      </button>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ========== 약관·방침 모달 (재사용) ========== -->
+<div id="legal-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;width:100%;max-width:480px;max-height:88vh;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+    <!-- 헤더 -->
+    <div style="padding:18px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px">
+      <div id="legal-title" style="flex:1;font-size:16px;font-weight:800;color:#1e293b">이용약관</div>
+      <button onclick="_closeLegalModal()" 
+              style="width:32px;height:32px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center"
+              aria-label="닫기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 6l12 12M6 18L18 6" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <!-- 본문 (스크롤) -->
+    <div id="legal-body" style="flex:1;overflow-y:auto;padding:20px 22px;font-size:13px;line-height:1.65;color:#334155;-webkit-overflow-scrolling:touch">
+      <!-- 동적 채워짐 -->
+    </div>
+    <!-- 푸터 -->
+    <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fafafa">
+      <button onclick="_closeLegalModal()" 
+              style="width:100%;height:46px;background:#c2410c;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;color:#fff">
+        확인
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 학생 첫 로그인 동의 모달 ========== -->
+<div id="student-consent-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;width:100%;max-width:420px;max-height:88vh;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+    <!-- 헤더 -->
+    <div style="padding:20px 22px 14px;background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%)">
+      <div style="font-size:18px;font-weight:900;color:#9a3412;margin-bottom:4px">서비스 이용 안내</div>
+      <div style="font-size:12px;font-weight:500;color:#9a3412;opacity:0.7">처음 사용 시 한 번만 동의해주세요</div>
+    </div>
+    <!-- 본문 -->
+    <div style="flex:1;overflow-y:auto;padding:18px 22px;-webkit-overflow-scrolling:touch">
+      <div style="font-size:13px;line-height:1.6;color:#475569;margin-bottom:18px">
+        바른발성연구소 학생 앱에서는 발성 훈련을 위해 다음 항목에 대한 동의가 필요합니다. 
+        앱 사용 중 언제든지 화면을 종료하실 수 있습니다.
+      </div>
+      
+      <!-- 동의 항목 -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="stu-agree-terms" class="stu-agree" 
+                 onchange="_syncStudentAgreement()"
+                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c;margin-top:1px">
+          <span style="flex:1;font-size:13px;color:#334155;line-height:1.5">
+            <strong style="color:#dc2626">[필수]</strong> 서비스 이용약관 동의 
+            <a href="#" onclick="_showTerms();return false;event.stopPropagation();" 
+               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
+          </span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="stu-agree-privacy" class="stu-agree" 
+                 onchange="_syncStudentAgreement()"
+                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c;margin-top:1px">
+          <span style="flex:1;font-size:13px;color:#334155;line-height:1.5">
+            <strong style="color:#dc2626">[필수]</strong> 개인정보 수집·이용 동의 
+            <a href="#" onclick="_showPrivacy();return false;event.stopPropagation();" 
+               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
+          </span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
+          <input type="checkbox" id="stu-agree-voice" class="stu-agree" 
+                 onchange="_syncStudentAgreement()"
+                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c;margin-top:1px">
+          <span style="flex:1;font-size:13px;color:#334155;line-height:1.5">
+            <strong style="color:#dc2626">[필수]</strong> 음성 데이터 수집·이용 동의 
+            <a href="#" onclick="_showVoiceConsent();return false;event.stopPropagation();" 
+               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
+          </span>
+        </label>
+      </div>
+      
+      <!-- 만 14세 미만 안내 -->
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11.5px;color:#92400e;line-height:1.5">
+        💡 <strong>만 14세 미만</strong>은 법정대리인(보호자)의 동의가 필요합니다. 
+        계속 진행 시 보호자가 동의한 것으로 간주됩니다.
+      </div>
+    </div>
+    <!-- 푸터 -->
+    <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fafafa;display:flex;gap:8px">
+      <button onclick="_declineStudentConsent()" 
+              style="flex:1;height:46px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:#64748b">
+        취소
+      </button>
+      <button id="stu-consent-confirm-btn" onclick="_acceptStudentConsent()" disabled
+              style="flex:2;height:46px;background:#cbd5e1;border:none;border-radius:10px;cursor:not-allowed;font-size:14px;font-weight:700;color:#fff;transition:background 0.15s">
+        동의하고 시작하기
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="scr-home" class="scr hidden">
   <div class="topbar">
     <div style="width:38px"></div>
@@ -10831,6 +11262,30 @@ document.getElementById('student-err').textContent = '이름 또는 비밀번호
 document.getElementById('student-pw-input').value = '';
 return;
 }
+
+/* 첫 로그인 여부 확인 - 동의 안 했으면 동의 모달 먼저 */
+if(typeof _hasStudentConsent === 'function' && !_hasStudentConsent(student.name)){
+  /* 동의 모달 표시. 수락 시 실제 로그인 진행, 거부 시 로그인 취소 */
+  _showStudentConsentModal(
+    function onAccept(){
+      _saveStudentConsent(student.name);
+      _completeStudentLogin(student);
+    },
+    function onDecline(){
+      /* 거부 - 비밀번호 입력 화면에 머무름 */
+      document.getElementById('student-pw-input').value = '';
+      document.getElementById('student-err').textContent = '서비스 이용을 위해서는 약관 동의가 필요합니다.';
+    }
+  );
+  return;
+}
+
+/* 이미 동의한 학생 - 바로 로그인 */
+_completeStudentLogin(student);
+}
+
+/* 학생 로그인 실제 진행 (동의 완료 후 호출됨) */
+function _completeStudentLogin(student){
 curStudent = student;
 closeStudentLogin();
 _updateHwMenuSub();
@@ -11227,17 +11682,41 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
           _fbReady = true;
           console.log('✅ Firebase 연결 완료');
           
-          /* Anonymous Auth: 익명 사용자 자동 로그인 (게시판 권한용) */
+          /* Auth 상태 변경 감지: 익명/일반 사용자 모두 처리 */
           firebase.auth().onAuthStateChanged(function(user){
             if(user){
               _fbAuthUid = user.uid;
-              console.log('✅ 익명 사용자 ID:', user.uid.substring(0, 8) + '...');
+              if(user.isAnonymous){
+                console.log('✅ 익명 사용자 ID:', user.uid.substring(0, 8) + '...');
+              } else {
+                /* 이메일 로그인 사용자 - 자동 로그인 복원 */
+                console.log('✅ 이메일 사용자 ID:', user.uid.substring(0, 8) + '...');
+                window._generalUser = {
+                  uid: user.uid,
+                  email: user.email,
+                  nickname: user.displayName || user.email,
+                };
+                try {
+                  localStorage.setItem('general_user_uid', user.uid);
+                  if(user.displayName) localStorage.setItem('general_user_name', user.displayName);
+                } catch(e){}
+                /* 인트로/로그인 선택 화면이 보이는 상태면 홈으로 자동 이동 */
+                const introVis = !document.getElementById('scr-intro')?.classList.contains('hidden');
+                const loginSelVis = !document.getElementById('scr-login-select')?.classList.contains('hidden');
+                if(loginSelVis && !introVis){
+                  /* 사용자가 명시적으로 로그인 후라면 홈으로 이미 이동되었을 것
+                     이 코드는 새로고침 직후 자동 복원 시나리오를 위함 */
+                  if(typeof goHome === 'function') goHome();
+                }
+              }
             }
           });
-          /* 자동 익명 로그인 시도 */
-          firebase.auth().signInAnonymously().catch(function(e){
-            console.warn('익명 로그인 실패:', e.message);
-          });
+          /* 자동 익명 로그인 시도 (이메일 사용자가 없을 때만) */
+          if(!firebase.auth().currentUser){
+            firebase.auth().signInAnonymously().catch(function(e){
+              console.warn('익명 로그인 실패:', e.message);
+            });
+          }
           
           /* 연결 후 관리자 현황 리프레시 */
           if(typeof refreshHwStatus === 'function') setTimeout(refreshHwStatus, 500);
@@ -11390,7 +11869,8 @@ function _autoStartIntro(){
   /* 현재 인트로가 화면에 보이는 상태 */
   scrStack = ['scr-intro'];
   
-  /* 4초 카운트다운 후 홈으로 자동 전환 */
+  /* 4초 카운트다운 후 로그인 선택 화면으로 자동 전환
+     (이미 로그인된 사용자는 바로 홈으로) */
   let elapsed = 0;
   const loadingTxts = ['로딩 중...','준비 중...','거의 다 됐어요!','시작합니다!'];
   const txtEl = document.getElementById('intro-loading-txt');
@@ -11404,10 +11884,722 @@ function _autoStartIntro(){
       setTimeout(()=>{
         intro.style.opacity = '';
         intro.style.transition = '';
-        goHome();
+        /* 자동 로그인 체크: 이전 로그인 상태가 남아있으면 바로 홈으로 */
+        if(_checkAutoLogin()){
+          goHome();
+        } else {
+          _showLoginSelect();
+        }
       }, 400);
     }
   }, 1000);
+}
+
+/* 자동 로그인 체크 - localStorage에서 이전 로그인 상태 복원
+   학생 자동로그인: 'auto_student_name'에 학생 이름 저장됨
+   일반 자동로그인: Firebase Auth가 자동 처리 (Phase 2에서 구현) */
+function _checkAutoLogin(){
+  try {
+    /* 학생 자동로그인 체크 (우선순위 높음) */
+    const autoStudent = localStorage.getItem('auto_student_name');
+    if(autoStudent && typeof STUDENTS_DB !== 'undefined'){
+      const matched = (STUDENTS_DB || []).find(s => s.name === autoStudent);
+      if(matched){
+        curStudent = matched;
+        return true;  /* 학생 자동 로그인 성공 */
+      }
+    }
+    
+    /* 일반 사용자 자동로그인 체크 - Firebase Auth가 세션 자동 유지
+       general_user_uid가 있고 Firebase에 현재 사용자가 있으면 자동 로그인 */
+    const generalUid = localStorage.getItem('general_user_uid');
+    if(generalUid && typeof firebase !== 'undefined' && firebase.auth){
+      const currentUser = firebase.auth().currentUser;
+      /* 익명 사용자는 자동 로그인 대상 아님, 이메일 가입 사용자만 */
+      if(currentUser && !currentUser.isAnonymous && currentUser.uid === generalUid){
+        window._generalUser = {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          nickname: currentUser.displayName || currentUser.email,
+        };
+        return true;  /* 일반 사용자 자동 로그인 성공 */
+      }
+      /* Firebase Auth 비동기 초기화 중일 수 있음 - onAuthStateChanged에서 처리되도록 */
+    }
+  } catch(e){}
+  return false;
+}
+
+/* 로그인 선택 화면 표시 (intro 직후) */
+function _showLoginSelect(){
+  /* 모든 화면 숨김 후 로그인 선택만 표시 */
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  const sel = document.getElementById('scr-login-select');
+  if(sel){
+    sel.classList.remove('hidden');
+    scrStack = ['scr-login-select'];
+  }
+}
+
+/* 학생 로그인 카드 클릭 - 홈으로 이동 후 학생 로그인 모달 자동 표시 */
+function _openStudentLogin(){
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  goHome();
+  /* 홈 화면 렌더 완료 후 학생 로그인 모달 열기 */
+  setTimeout(() => {
+    if(typeof openStudentLogin === 'function'){
+      openStudentLogin();
+    }
+  }, 250);
+}
+
+/* 일반 로그인 카드 클릭 - 일반 로그인 화면(scr-general-login)으로 이동 */
+function _openGeneralLogin(){
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  const sel = document.getElementById('scr-general-login');
+  if(sel){
+    sel.classList.remove('hidden');
+    scrStack = ['scr-general-login'];
+  }
+}
+
+/* 로그인 선택 화면으로 돌아가기 (일반 로그인 → 뒤로가기) */
+function _backToLoginSelect(){
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  const sel = document.getElementById('scr-login-select');
+  if(sel){
+    sel.classList.remove('hidden');
+    scrStack = ['scr-login-select'];
+  }
+}
+
+/* 카카오 로그인 (Phase 3에서 실제 연동, 현재는 안내) */
+function _loginWithKakao(){
+  alert('카카오 로그인은 곧 추가됩니다!\n\n현재 가능한 것:\n• 학생 로그인\n\n준비 중:\n• 카카오 · 네이버 · 이메일 회원가입');
+}
+
+/* 네이버 로그인 (Phase 3에서 실제 연동, 현재는 안내) */
+function _loginWithNaver(){
+  alert('네이버 로그인은 곧 추가됩니다!\n\n현재 가능한 것:\n• 학생 로그인\n\n준비 중:\n• 카카오 · 네이버 · 이메일 회원가입');
+}
+
+/* 이메일 로그인 화면 열기 */
+function _openEmailLogin(){
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  const sel = document.getElementById('scr-email-auth');
+  if(sel){
+    sel.classList.remove('hidden');
+    scrStack = ['scr-email-auth'];
+    /* 기본 탭: 로그인 */
+    _switchEmailTab('login');
+    /* 입력 필드 초기화 */
+    ['login-email-input','login-pw-input','signup-email-input','signup-pw-input','signup-pw2-input','signup-name-input'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+    /* 에러 메시지 초기화 */
+    ['signup-email-err','signup-pw-err','signup-pw2-err','signup-name-err'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el){ el.textContent = ''; el.style.display = 'none'; }
+    });
+    /* 체크박스 초기화 */
+    ['agree-all','agree-terms','agree-privacy','agree-voice','agree-marketing'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.checked = false;
+    });
+  }
+}
+
+/* 일반 로그인 화면으로 돌아가기 (이메일 화면 → 뒤로) */
+function _backToGeneralLogin(){
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  const sel = document.getElementById('scr-general-login');
+  if(sel){
+    sel.classList.remove('hidden');
+    scrStack = ['scr-general-login'];
+  }
+}
+
+/* 로그인/회원가입 탭 전환 */
+function _switchEmailTab(tab){
+  const tabLogin = document.getElementById('email-tab-login');
+  const tabSignup = document.getElementById('email-tab-signup');
+  const formLogin = document.getElementById('email-form-login');
+  const formSignup = document.getElementById('email-form-signup');
+  if(!tabLogin || !tabSignup) return;
+  
+  if(tab === 'login'){
+    tabLogin.style.color = '#c2410c';
+    tabLogin.style.fontWeight = '700';
+    tabLogin.style.borderBottomColor = '#c2410c';
+    tabSignup.style.color = '#94a3b8';
+    tabSignup.style.fontWeight = '600';
+    tabSignup.style.borderBottomColor = 'transparent';
+    if(formLogin) formLogin.style.display = 'block';
+    if(formSignup) formSignup.style.display = 'none';
+  } else {
+    tabLogin.style.color = '#94a3b8';
+    tabLogin.style.fontWeight = '600';
+    tabLogin.style.borderBottomColor = 'transparent';
+    tabSignup.style.color = '#c2410c';
+    tabSignup.style.fontWeight = '700';
+    tabSignup.style.borderBottomColor = '#c2410c';
+    if(formLogin) formLogin.style.display = 'none';
+    if(formSignup) formSignup.style.display = 'block';
+  }
+}
+
+/* 전체 동의 체크박스 토글 - 개별 체크박스 동기화 */
+function _toggleAllAgreements(){
+  const allChk = document.getElementById('agree-all');
+  if(!allChk) return;
+  const items = document.querySelectorAll('.agree-item');
+  items.forEach(it => { it.checked = allChk.checked; });
+}
+
+/* 개별 체크박스 변경 시 전체 동의 상태 갱신 (모두 체크되면 전체동의 ON) */
+function _syncAllAgreement(){
+  const items = document.querySelectorAll('.agree-item');
+  const allChecked = Array.from(items).every(it => it.checked);
+  const allChk = document.getElementById('agree-all');
+  if(allChk) allChk.checked = allChecked;
+}
+
+/* 이메일 형식 검증 */
+function _isValidEmail(email){
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+/* 비밀번호 강도 검증 (8자 이상) */
+function _isValidPassword(pw){
+  return typeof pw === 'string' && pw.length >= 8;
+}
+
+/* 닉네임 검증 (2~12자) */
+function _isValidNickname(name){
+  return typeof name === 'string' && name.trim().length >= 2 && name.trim().length <= 12;
+}
+
+/* 에러 표시 헬퍼 */
+function _showFieldError(errId, msg){
+  const el = document.getElementById(errId);
+  if(el){
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+}
+
+/* 이메일 로그인 제출 (Phase 2에서 Firebase Auth 실제 연동) */
+function _submitEmailLogin(){
+  const email = (document.getElementById('login-email-input')?.value || '').trim();
+  const pw = document.getElementById('login-pw-input')?.value || '';
+  
+  if(!email){ alert('이메일을 입력해주세요.'); return; }
+  if(!_isValidEmail(email)){ alert('이메일 형식이 올바르지 않습니다.'); return; }
+  if(!pw){ alert('비밀번호를 입력해주세요.'); return; }
+  
+  /* Firebase Auth 사용 가능한지 체크 */
+  if(typeof firebase === 'undefined' || !firebase.auth){
+    alert('서버 연결이 필요합니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  
+  /* 로그인 버튼 비활성화 (중복 클릭 방지) */
+  const btn = document.querySelector('#email-form-login button[onclick*="_submitEmailLogin"]');
+  if(btn){ btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '로그인 중...'; }
+  
+  firebase.auth().signInWithEmailAndPassword(email, pw)
+    .then(function(result){
+      console.log('✅ 이메일 로그인 성공:', result.user.uid.substring(0,8)+'...');
+      _onEmailAuthSuccess(result.user);
+    })
+    .catch(function(err){
+      console.warn('이메일 로그인 실패:', err.code, err.message);
+      const msg = _firebaseAuthErrorMessage(err);
+      alert(msg);
+    })
+    .finally(function(){
+      if(btn){ btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '로그인'; }
+    });
+}
+
+/* 이메일 회원가입 제출 (Firebase Auth 실제 연동) */
+function _submitEmailSignup(){
+  /* 에러 초기화 */
+  ['signup-email-err','signup-pw-err','signup-pw2-err','signup-name-err'].forEach(id => _showFieldError(id, ''));
+  
+  const email = (document.getElementById('signup-email-input')?.value || '').trim();
+  const pw = document.getElementById('signup-pw-input')?.value || '';
+  const pw2 = document.getElementById('signup-pw2-input')?.value || '';
+  const name = (document.getElementById('signup-name-input')?.value || '').trim();
+  
+  /* 유효성 검사 */
+  let hasError = false;
+  if(!email){
+    _showFieldError('signup-email-err', '이메일을 입력해주세요.');
+    hasError = true;
+  } else if(!_isValidEmail(email)){
+    _showFieldError('signup-email-err', '이메일 형식이 올바르지 않습니다.');
+    hasError = true;
+  }
+  
+  if(!pw){
+    _showFieldError('signup-pw-err', '비밀번호를 입력해주세요.');
+    hasError = true;
+  } else if(!_isValidPassword(pw)){
+    _showFieldError('signup-pw-err', '비밀번호는 8자 이상이어야 합니다.');
+    hasError = true;
+  }
+  
+  if(pw && pw2 !== pw){
+    _showFieldError('signup-pw2-err', '비밀번호가 일치하지 않습니다.');
+    hasError = true;
+  }
+  
+  if(!name){
+    _showFieldError('signup-name-err', '닉네임을 입력해주세요.');
+    hasError = true;
+  } else if(!_isValidNickname(name)){
+    _showFieldError('signup-name-err', '닉네임은 2~12자로 입력해주세요.');
+    hasError = true;
+  }
+  
+  /* 필수 약관 동의 검사 */
+  const termsOk = document.getElementById('agree-terms')?.checked;
+  const privacyOk = document.getElementById('agree-privacy')?.checked;
+  const voiceOk = document.getElementById('agree-voice')?.checked;
+  
+  if(!termsOk || !privacyOk || !voiceOk){
+    if(!hasError){
+      alert('필수 약관에 모두 동의해주세요.\n\n• 이용약관\n• 개인정보처리방침\n• 음성 데이터 수집·이용');
+    }
+    hasError = true;
+  }
+  
+  if(hasError) return;
+  
+  const marketingOk = document.getElementById('agree-marketing')?.checked || false;
+  
+  /* Firebase Auth 사용 가능한지 체크 */
+  if(typeof firebase === 'undefined' || !firebase.auth){
+    alert('서버 연결이 필요합니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  
+  /* 가입 버튼 비활성화 */
+  const btn = document.querySelector('#email-form-signup button[onclick*="_submitEmailSignup"]');
+  if(btn){ btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '가입 중...'; }
+  
+  /* 익명 사용자가 있으면 linkWithCredential로 업그레이드, 없으면 새 계정 생성 */
+  const currentUser = firebase.auth().currentUser;
+  const isAnonymous = currentUser && currentUser.isAnonymous;
+  
+  const credential = firebase.auth.EmailAuthProvider.credential(email, pw);
+  
+  let signupPromise;
+  if(isAnonymous){
+    /* 익명 → 이메일 계정 업그레이드 (게시판 등에서 쌓은 데이터 유지) */
+    signupPromise = currentUser.linkWithCredential(credential)
+      .then(function(usercred){ return usercred.user; });
+  } else {
+    /* 새 계정 생성 */
+    signupPromise = firebase.auth().createUserWithEmailAndPassword(email, pw)
+      .then(function(usercred){ return usercred.user; });
+  }
+  
+  signupPromise
+    .then(function(user){
+      console.log('✅ 회원가입 성공:', user.uid.substring(0,8)+'...');
+      /* 닉네임을 displayName에 저장 */
+      return user.updateProfile({ displayName: name }).then(function(){ return user; });
+    })
+    .then(function(user){
+      /* Realtime DB에 사용자 정보 저장 (선택 정보 포함) */
+      if(_fbDb){
+        return _fbDb.ref('users/' + user.uid).set({
+          nickname: name,
+          email: email,
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          agreedTerms: true,
+          agreedPrivacy: true,
+          agreedVoice: true,
+          agreedMarketing: marketingOk,
+          agreedAt: firebase.database.ServerValue.TIMESTAMP,
+        }).then(function(){ return user; });
+      }
+      return user;
+    })
+    .then(function(user){
+      _onEmailAuthSuccess(user);
+    })
+    .catch(function(err){
+      console.warn('회원가입 실패:', err.code, err.message);
+      const msg = _firebaseAuthErrorMessage(err);
+      /* 필드별 에러 표시 */
+      if(err.code === 'auth/email-already-in-use'){
+        _showFieldError('signup-email-err', '이미 가입된 이메일입니다.');
+      } else if(err.code === 'auth/weak-password'){
+        _showFieldError('signup-pw-err', '비밀번호가 너무 약합니다. 8자 이상의 영문/숫자 조합을 사용하세요.');
+      } else if(err.code === 'auth/invalid-email'){
+        _showFieldError('signup-email-err', '이메일 형식이 올바르지 않습니다.');
+      } else {
+        alert(msg);
+      }
+    })
+    .finally(function(){
+      if(btn){ btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '가입하기'; }
+    });
+}
+
+/* 비밀번호 재설정 이메일 발송 */
+function _resetPassword(){
+  const email = (document.getElementById('login-email-input')?.value || '').trim();
+  
+  if(!email){
+    const inputEmail = prompt('비밀번호를 재설정할 이메일 주소를 입력해주세요:');
+    if(!inputEmail) return;
+    if(!_isValidEmail(inputEmail.trim())){
+      alert('이메일 형식이 올바르지 않습니다.');
+      return;
+    }
+    _sendPasswordReset(inputEmail.trim());
+    return;
+  }
+  
+  if(!_isValidEmail(email)){
+    alert('이메일 형식이 올바르지 않습니다.');
+    return;
+  }
+  
+  if(!confirm(email + '\n\n위 주소로 비밀번호 재설정 메일을 발송할까요?')) return;
+  _sendPasswordReset(email);
+}
+
+/* 실제 재설정 메일 발송 */
+function _sendPasswordReset(email){
+  if(typeof firebase === 'undefined' || !firebase.auth){
+    alert('서버 연결이 필요합니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(function(){
+      alert('비밀번호 재설정 메일을 발송했습니다.\n\n메일함을 확인해주세요. (스팸함도 확인)');
+    })
+    .catch(function(err){
+      console.warn('비밀번호 재설정 실패:', err.code, err.message);
+      alert(_firebaseAuthErrorMessage(err));
+    });
+}
+
+/* Firebase Auth 에러 코드 → 한글 메시지 변환 */
+function _firebaseAuthErrorMessage(err){
+  if(!err || !err.code) return '알 수 없는 오류가 발생했습니다.';
+  switch(err.code){
+    case 'auth/email-already-in-use':
+      return '이미 가입된 이메일입니다.\n로그인 탭에서 로그인해주세요.';
+    case 'auth/invalid-email':
+      return '이메일 형식이 올바르지 않습니다.';
+    case 'auth/operation-not-allowed':
+      return '이메일/비밀번호 로그인이 비활성화되어 있습니다.\n관리자에게 문의해주세요.';
+    case 'auth/weak-password':
+      return '비밀번호가 너무 약합니다.\n8자 이상의 영문/숫자 조합을 사용해주세요.';
+    case 'auth/user-disabled':
+      return '비활성화된 계정입니다.\n관리자에게 문의해주세요.';
+    case 'auth/user-not-found':
+      return '가입되지 않은 이메일입니다.\n회원가입을 먼저 진행해주세요.';
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return '비밀번호가 올바르지 않습니다.';
+    case 'auth/too-many-requests':
+      return '너무 많은 시도가 있었습니다.\n잠시 후 다시 시도해주세요.';
+    case 'auth/network-request-failed':
+      return '네트워크 연결을 확인해주세요.';
+    case 'auth/missing-email':
+      return '이메일을 입력해주세요.';
+    case 'auth/credential-already-in-use':
+      return '이미 다른 계정에서 사용 중인 이메일입니다.';
+    default:
+      return '오류가 발생했습니다.\n(' + err.code + ')';
+  }
+}
+
+/* 이메일 인증 성공 후 처리 (회원가입/로그인 공통) */
+function _onEmailAuthSuccess(user){
+  /* 일반 사용자 세션 저장 (자동 로그인용) */
+  try {
+    localStorage.setItem('general_user_uid', user.uid);
+    if(user.displayName){
+      localStorage.setItem('general_user_name', user.displayName);
+    }
+  } catch(e){}
+  
+  /* 전역 변수에 일반 사용자 정보 저장 */
+  window._generalUser = {
+    uid: user.uid,
+    email: user.email,
+    nickname: user.displayName || user.email,
+  };
+  
+  /* 홈으로 이동 */
+  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+  if(typeof goHome === 'function') goHome();
+  
+  /* 환영 메시지 */
+  setTimeout(function(){
+    alert((user.displayName || '회원') + '님, 환영합니다! 🎉\n\n이메일: ' + (user.email || ''));
+  }, 200);
+}
+
+/* 일반 사용자 로그아웃 */
+function _logoutGeneralUser(){
+  if(typeof firebase === 'undefined' || !firebase.auth) return;
+  if(!confirm('로그아웃 하시겠습니까?')) return;
+  firebase.auth().signOut().then(function(){
+    try {
+      localStorage.removeItem('general_user_uid');
+      localStorage.removeItem('general_user_name');
+    } catch(e){}
+    window._generalUser = null;
+    /* 로그아웃 후 다시 익명 로그인 (게시판 권한 유지용) */
+    firebase.auth().signInAnonymously().catch(function(e){
+      console.warn('익명 재로그인 실패:', e.message);
+    });
+    /* 로그인 선택 화면으로 */
+    if(typeof _showLoginSelect === 'function') _showLoginSelect();
+  }).catch(function(err){
+    console.warn('로그아웃 실패:', err);
+    alert('로그아웃 중 오류가 발생했습니다.');
+  });
+}
+
+/* ===== 약관·방침 모달 시스템 =====
+   _showTerms / _showPrivacy / _showVoiceConsent: 각 본문을 모달로 표시
+   _closeLegalModal: 모달 닫기 */
+
+/* 법적 문서 본문 (실제 출시 전 법무 검토 필요) */
+const LEGAL_CONTENT = {
+  terms: {
+    title: '서비스 이용약관',
+    body: `
+<p><strong>제1조 (목적)</strong></p>
+<p>본 약관은 바른발성연구소(이하 "회사")가 제공하는 발성 훈련 서비스(이하 "서비스")의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+
+<p style="margin-top:14px"><strong>제2조 (서비스 이용)</strong></p>
+<p>회원은 회사가 제공하는 서비스를 본인의 발성 훈련 및 학습 목적으로만 이용해야 하며, 다음 행위를 해서는 안 됩니다:</p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>타인의 개인정보를 도용하는 행위</li>
+  <li>서비스의 운영을 방해하는 행위</li>
+  <li>저작권 등 타인의 권리를 침해하는 행위</li>
+  <li>음란물·폭력물 등 부적절한 콘텐츠를 게시·전송하는 행위</li>
+</ul>
+
+<p style="margin-top:14px"><strong>제3조 (서비스의 변경 및 중단)</strong></p>
+<p>회사는 서비스의 내용·운영상·기술상 사양 등을 변경하거나 일시 중단할 수 있으며, 이 경우 변경 사항을 사전에 공지합니다.</p>
+
+<p style="margin-top:14px"><strong>제4조 (책임 제한)</strong></p>
+<p>본 서비스의 발성 훈련 콘텐츠는 일반 학습 목적으로 제공되며, 의학적 진단이나 치료를 대신하지 않습니다. 음성·성대 관련 의학적 문제가 있는 경우 이비인후과 전문의 상담을 권장합니다.</p>
+
+<p style="margin-top:14px"><strong>제5조 (회원 탈퇴)</strong></p>
+<p>회원은 언제든지 서비스 이용을 중단하고 탈퇴할 수 있으며, 회사는 회원의 개인정보를 즉시 삭제 또는 분리 보관합니다(관련 법령에 따른 보존 기간 제외).</p>
+
+<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 6월 1일 (예정)</p>
+`
+  },
+  privacy: {
+    title: '개인정보처리방침',
+    body: `
+<p><strong>1. 수집하는 개인정보 항목</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li><strong>필수</strong>: 이메일, 비밀번호, 닉네임</li>
+  <li><strong>소셜 로그인 시</strong>: 카카오/네이버 식별자, 이메일</li>
+  <li><strong>서비스 이용 중 자동 수집</strong>: 음성 데이터(음역대 측정 시), 훈련 기록, 접속 로그</li>
+</ul>
+
+<p style="margin-top:14px"><strong>2. 개인정보의 수집·이용 목적</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>회원 식별 및 본인 확인</li>
+  <li>발성 훈련 서비스 제공 (음역대 분석, 학습 기록 관리)</li>
+  <li>서비스 개선 및 통계 분석 (익명화)</li>
+  <li>고객 문의 응대</li>
+</ul>
+
+<p style="margin-top:14px"><strong>3. 개인정보의 보유 및 이용 기간</strong></p>
+<p>회원 탈퇴 시 즉시 파기합니다. 단, 다음의 경우 관련 법령에 따라 일정 기간 보관합니다:</p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>전자상거래법: 결제 기록 5년</li>
+  <li>통신비밀보호법: 접속 로그 3개월</li>
+</ul>
+
+<p style="margin-top:14px"><strong>4. 개인정보의 제3자 제공</strong></p>
+<p>회사는 회원의 동의 없이 개인정보를 외부에 제공하지 않습니다. 다만 법령에 의거하거나 수사기관의 요청이 있는 경우 예외로 합니다.</p>
+
+<p style="margin-top:14px"><strong>5. 개인정보의 안전성 확보 조치</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>비밀번호 암호화 저장</li>
+  <li>전송 데이터 HTTPS 암호화</li>
+  <li>접근 권한 최소화 및 접근 기록 관리</li>
+</ul>
+
+<p style="margin-top:14px"><strong>6. 이용자의 권리</strong></p>
+<p>회원은 언제든지 개인정보 열람·정정·삭제·처리정지를 요구할 수 있습니다.</p>
+
+<p style="margin-top:14px"><strong>7. 개인정보 보호책임자</strong></p>
+<p>문의: <a href="mailto:contact@rightvocallab.com" style="color:#c2410c">contact@rightvocallab.com</a></p>
+
+<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 6월 1일 (예정)</p>
+`
+  },
+  voice: {
+    title: '음성 데이터 수집·이용 동의서',
+    body: `
+<p><strong>1. 수집 항목</strong></p>
+<p>음역대 측정(PVR) 시 마이크를 통해 입력되는 음성 데이터 (음정·강도 정보)</p>
+
+<p style="margin-top:14px"><strong>2. 수집·이용 목적</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>실시간 음역대 측정 및 분석</li>
+  <li>성종 추정 및 발성 훈련 추천</li>
+  <li>학습 진도 추적 (선생님 공유)</li>
+</ul>
+
+<p style="margin-top:14px"><strong>3. 처리 방식</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>음성은 분석 후 <strong>수치 데이터(음정·dB)</strong>로만 저장됩니다</li>
+  <li>원본 음성 녹음 파일은 저장하지 않습니다</li>
+  <li>수치 데이터는 회원 본인의 이력 관리용으로만 사용됩니다</li>
+</ul>
+
+<p style="margin-top:14px"><strong>4. 보유 기간</strong></p>
+<p>회원 탈퇴 시 즉시 삭제됩니다. 회원이 원할 경우 언제든 측정 이력을 개별 삭제할 수 있습니다.</p>
+
+<p style="margin-top:14px"><strong>5. 동의 거부 시 영향</strong></p>
+<p>본 항목에 동의하지 않을 경우 음역대 측정 기능을 이용할 수 없습니다. 다만 다른 서비스(발성 이론, 훈련 가이드 등)는 이용 가능합니다.</p>
+
+<p style="margin-top:14px"><strong>6. 의료 목적이 아님</strong></p>
+<p>음역대 측정은 발성 학습 보조용이며, 음성·성대 관련 의학적 진단을 대신할 수 없습니다. 의학적 우려가 있으시면 이비인후과 전문의 상담을 권장합니다.</p>
+
+<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 6월 1일 (예정)</p>
+`
+  }
+};
+
+/* 약관/방침 모달 열기 (재사용 가능) */
+function _showLegalModal(type){
+  const data = LEGAL_CONTENT[type];
+  if(!data){
+    console.warn('Unknown legal type:', type);
+    return;
+  }
+  const modal = document.getElementById('legal-modal');
+  const title = document.getElementById('legal-title');
+  const body = document.getElementById('legal-body');
+  if(!modal || !title || !body) return;
+  
+  title.textContent = data.title;
+  body.innerHTML = data.body;
+  body.scrollTop = 0;  /* 스크롤 위쪽으로 */
+  modal.style.display = 'flex';
+}
+
+function _closeLegalModal(){
+  const modal = document.getElementById('legal-modal');
+  if(modal) modal.style.display = 'none';
+}
+
+/* 음성 데이터 수집 동의서 모달 */
+function _showVoiceConsent(){
+  _showLegalModal('voice');
+}
+
+/* 이용약관 모달 */
+function _showTerms(){
+  _showLegalModal('terms');
+}
+
+/* 개인정보처리방침 모달 */
+function _showPrivacy(){
+  _showLegalModal('privacy');
+}
+
+/* ===== 학생 첫 로그인 동의 모달 ===== */
+
+/* 학생이 동의를 마쳤는지 확인 (localStorage) */
+function _hasStudentConsent(studentName){
+  if(!studentName) return false;
+  try {
+    const consents = JSON.parse(localStorage.getItem('student_consents') || '{}');
+    return consents[studentName] === true;
+  } catch(e){ return false; }
+}
+
+/* 학생 동의 저장 */
+function _saveStudentConsent(studentName){
+  try {
+    const consents = JSON.parse(localStorage.getItem('student_consents') || '{}');
+    consents[studentName] = true;
+    consents[studentName + '_date'] = new Date().toISOString();
+    localStorage.setItem('student_consents', JSON.stringify(consents));
+  } catch(e){
+    console.warn('Failed to save student consent:', e);
+  }
+}
+
+/* 학생 동의 모달 표시 — 콜백으로 결과 전달 */
+let _pendingStudentLoginCallback = null;
+
+function _showStudentConsentModal(onAccept, onDecline){
+  _pendingStudentLoginCallback = { onAccept, onDecline };
+  
+  /* 체크박스 초기화 */
+  document.querySelectorAll('.stu-agree').forEach(el => { el.checked = false; });
+  
+  /* 확인 버튼 비활성화 */
+  const confirmBtn = document.getElementById('stu-consent-confirm-btn');
+  if(confirmBtn){
+    confirmBtn.disabled = true;
+    confirmBtn.style.background = '#cbd5e1';
+    confirmBtn.style.cursor = 'not-allowed';
+  }
+  
+  const modal = document.getElementById('student-consent-modal');
+  if(modal) modal.style.display = 'flex';
+}
+
+/* 학생 동의 체크박스 변경 시 - 모두 체크되면 확인 버튼 활성화 */
+function _syncStudentAgreement(){
+  const items = document.querySelectorAll('.stu-agree');
+  const allChecked = Array.from(items).every(it => it.checked);
+  const btn = document.getElementById('stu-consent-confirm-btn');
+  if(btn){
+    btn.disabled = !allChecked;
+    btn.style.background = allChecked ? '#c2410c' : '#cbd5e1';
+    btn.style.cursor = allChecked ? 'pointer' : 'not-allowed';
+  }
+}
+
+/* 동의 수락 */
+function _acceptStudentConsent(){
+  const modal = document.getElementById('student-consent-modal');
+  if(modal) modal.style.display = 'none';
+  
+  if(_pendingStudentLoginCallback && typeof _pendingStudentLoginCallback.onAccept === 'function'){
+    const cb = _pendingStudentLoginCallback.onAccept;
+    _pendingStudentLoginCallback = null;
+    cb();
+  }
+}
+
+/* 동의 거부 (취소) */
+function _declineStudentConsent(){
+  const modal = document.getElementById('student-consent-modal');
+  if(modal) modal.style.display = 'none';
+  
+  if(_pendingStudentLoginCallback && typeof _pendingStudentLoginCallback.onDecline === 'function'){
+    const cb = _pendingStudentLoginCallback.onDecline;
+    _pendingStudentLoginCallback = null;
+    cb();
+  }
 }
 
 /* 백그라운드 전환 감지 */
