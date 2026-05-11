@@ -583,74 +583,6 @@ input,select,button,textarea{font-family:inherit;}
   </div>
 </div>
 
-<!-- ========== 학생 첫 로그인 동의 모달 ========== -->
-<div id="student-consent-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;width:100%;max-width:420px;max-height:88vh;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
-    <!-- 헤더 -->
-    <div style="padding:20px 22px 14px;background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%)">
-      <div style="font-size:18px;font-weight:900;color:#9a3412;margin-bottom:4px">서비스 이용 안내</div>
-      <div style="font-size:12px;font-weight:500;color:#9a3412;opacity:0.7">처음 사용 시 한 번만 동의해주세요</div>
-    </div>
-    <!-- 본문 -->
-    <div style="flex:1;overflow-y:auto;padding:18px 22px;-webkit-overflow-scrolling:touch">
-      <div style="font-size:13px;line-height:1.6;color:#475569;margin-bottom:18px">
-        바른발성연구소 학생 앱에서는 발성 훈련을 위해 다음 항목에 대한 동의가 필요합니다. 
-        앱 사용 중 언제든지 화면을 종료하실 수 있습니다.
-      </div>
-      
-      <!-- 동의 항목 -->
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
-          <input type="checkbox" id="stu-agree-terms" class="stu-agree" 
-                 onchange="_syncStudentAgreement()"
-                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c;margin-top:1px">
-          <span style="flex:1;font-size:13px;color:#334155;line-height:1.5">
-            <strong style="color:#dc2626">[필수]</strong> 서비스 이용약관 동의 
-            <a href="#" onclick="_showTerms();return false;event.stopPropagation();" 
-               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
-          </span>
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
-          <input type="checkbox" id="stu-agree-privacy" class="stu-agree" 
-                 onchange="_syncStudentAgreement()"
-                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c;margin-top:1px">
-          <span style="flex:1;font-size:13px;color:#334155;line-height:1.5">
-            <strong style="color:#dc2626">[필수]</strong> 개인정보 수집·이용 동의 
-            <a href="#" onclick="_showPrivacy();return false;event.stopPropagation();" 
-               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
-          </span>
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0">
-          <input type="checkbox" id="stu-agree-voice" class="stu-agree" 
-                 onchange="_syncStudentAgreement()"
-                 style="width:18px;height:18px;cursor:pointer;accent-color:#c2410c;margin-top:1px">
-          <span style="flex:1;font-size:13px;color:#334155;line-height:1.5">
-            <strong style="color:#dc2626">[필수]</strong> 음성 데이터 수집·이용 동의 
-            <a href="#" onclick="_showVoiceConsent();return false;event.stopPropagation();" 
-               style="color:#64748b;text-decoration:underline;margin-left:4px">보기</a>
-          </span>
-        </label>
-      </div>
-      
-      <!-- 만 14세 미만 안내 -->
-      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11.5px;color:#92400e;line-height:1.5">
-        💡 <strong>만 14세 미만</strong>은 법정대리인(보호자)의 동의가 필요합니다. 
-        계속 진행 시 보호자가 동의한 것으로 간주됩니다.
-      </div>
-    </div>
-    <!-- 푸터 -->
-    <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fafafa;display:flex;gap:8px">
-      <button onclick="_declineStudentConsent()" 
-              style="flex:1;height:46px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:#64748b">
-        취소
-      </button>
-      <button id="stu-consent-confirm-btn" onclick="_acceptStudentConsent()" disabled
-              style="flex:2;height:46px;background:#cbd5e1;border:none;border-radius:10px;cursor:not-allowed;font-size:14px;font-weight:700;color:#fff;transition:background 0.15s">
-        동의하고 시작하기
-      </button>
-    </div>
-  </div>
-</div>
 
 <!-- ========== 마이페이지 모달 (일반 사용자 정보) ========== -->
 <div id="mypage-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:16px">
@@ -3672,7 +3604,7 @@ input,select,button,textarea{font-family:inherit;}
 <div class="modal-bg" id="student-login-modal">
   <div class="modal-box" style="max-width:340px;text-align:center">
     <div style="font-size:32px;margin-bottom:8px">📚</div>
-    <div style="font-size:16px;font-weight:900;margin-bottom:4px">숙제 로그인</div>
+    <div style="font-size:16px;font-weight:900;margin-bottom:4px">학생 로그인</div>
     <div style="font-size:12px;color:var(--mu);margin-bottom:18px">선생님께 받은 이름과 비밀번호를 입력하세요</div>
     <input id="student-name-input" type="text" placeholder="이름 (예: 김동현)"
       style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:10px 14px;font-size:14px;text-align:center;margin-bottom:8px"
@@ -11335,24 +11267,8 @@ document.getElementById('student-pw-input').value = '';
 return;
 }
 
-/* 첫 로그인 여부 확인 - 동의 안 했으면 동의 모달 먼저 */
-if(typeof _hasStudentConsent === 'function' && !_hasStudentConsent(student.name)){
-  /* 동의 모달 표시. 수락 시 실제 로그인 진행, 거부 시 로그인 취소 */
-  _showStudentConsentModal(
-    function onAccept(){
-      _saveStudentConsent(student.name);
-      _completeStudentLogin(student);
-    },
-    function onDecline(){
-      /* 거부 - 비밀번호 입력 화면에 머무름 */
-      document.getElementById('student-pw-input').value = '';
-      document.getElementById('student-err').textContent = '서비스 이용을 위해서는 약관 동의가 필요합니다.';
-    }
-  );
-  return;
-}
-
-/* 이미 동의한 학생 - 바로 로그인 */
+/* 개인 레슨생 대상 학생 앱이라 별도 약관 동의 절차 없음.
+   바로 로그인 진행 */
 _completeStudentLogin(student);
 }
 
@@ -12044,16 +11960,12 @@ function _showLoginSelect(){
   }
 }
 
-/* 학생 로그인 카드 클릭 - 홈으로 이동 후 학생 로그인 모달 자동 표시 */
+/* 학생 로그인 카드 클릭 - 페이지 이동 없이 바로 모달 표시
+   (이전: 홈으로 이동 후 모달 → 첫 화면 깜빡임 발생) */
 function _openStudentLogin(){
-  document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
-  goHome();
-  /* 홈 화면 렌더 완료 후 학생 로그인 모달 열기 */
-  setTimeout(() => {
-    if(typeof openStudentLogin === 'function'){
-      openStudentLogin();
-    }
-  }, 250);
+  if(typeof openStudentLogin === 'function'){
+    openStudentLogin();
+  }
 }
 
 /* 일반 로그인 카드 클릭 - 일반 로그인 화면(scr-general-login)으로 이동 */
@@ -12467,7 +12379,13 @@ function _onEmailAuthSuccess(user){
 /* 일반 사용자 로그아웃 */
 function _logoutGeneralUser(){
   if(typeof firebase === 'undefined' || !firebase.auth) return;
-  if(!confirm('로그아웃 하시겠습니까?')) return;
+  /* 마이페이지 모달이 열려있다면 confirm 전에 먼저 닫기 (시각적 잔여 방지) */
+  if(typeof _closeMyPage === 'function') _closeMyPage();
+  if(!confirm('로그아웃 하시겠습니까?')){
+    /* 취소 시 마이페이지 모달 다시 열기 (사용자가 그대로 닫지 않고 취소만 한 경우) */
+    if(typeof _openMyPage === 'function') _openMyPage();
+    return;
+  }
   firebase.auth().signOut().then(function(){
     try {
       localStorage.removeItem('general_user_uid');
@@ -12794,86 +12712,6 @@ function _showTerms(){
 /* 개인정보처리방침 모달 */
 function _showPrivacy(){
   _showLegalModal('privacy');
-}
-
-/* ===== 학생 첫 로그인 동의 모달 ===== */
-
-/* 학생이 동의를 마쳤는지 확인 (localStorage) */
-function _hasStudentConsent(studentName){
-  if(!studentName) return false;
-  try {
-    const consents = JSON.parse(localStorage.getItem('student_consents') || '{}');
-    return consents[studentName] === true;
-  } catch(e){ return false; }
-}
-
-/* 학생 동의 저장 */
-function _saveStudentConsent(studentName){
-  try {
-    const consents = JSON.parse(localStorage.getItem('student_consents') || '{}');
-    consents[studentName] = true;
-    consents[studentName + '_date'] = new Date().toISOString();
-    localStorage.setItem('student_consents', JSON.stringify(consents));
-  } catch(e){
-    console.warn('Failed to save student consent:', e);
-  }
-}
-
-/* 학생 동의 모달 표시 — 콜백으로 결과 전달 */
-let _pendingStudentLoginCallback = null;
-
-function _showStudentConsentModal(onAccept, onDecline){
-  _pendingStudentLoginCallback = { onAccept, onDecline };
-  
-  /* 체크박스 초기화 */
-  document.querySelectorAll('.stu-agree').forEach(el => { el.checked = false; });
-  
-  /* 확인 버튼 비활성화 */
-  const confirmBtn = document.getElementById('stu-consent-confirm-btn');
-  if(confirmBtn){
-    confirmBtn.disabled = true;
-    confirmBtn.style.background = '#cbd5e1';
-    confirmBtn.style.cursor = 'not-allowed';
-  }
-  
-  const modal = document.getElementById('student-consent-modal');
-  if(modal) modal.style.display = 'flex';
-}
-
-/* 학생 동의 체크박스 변경 시 - 모두 체크되면 확인 버튼 활성화 */
-function _syncStudentAgreement(){
-  const items = document.querySelectorAll('.stu-agree');
-  const allChecked = Array.from(items).every(it => it.checked);
-  const btn = document.getElementById('stu-consent-confirm-btn');
-  if(btn){
-    btn.disabled = !allChecked;
-    btn.style.background = allChecked ? '#c2410c' : '#cbd5e1';
-    btn.style.cursor = allChecked ? 'pointer' : 'not-allowed';
-  }
-}
-
-/* 동의 수락 */
-function _acceptStudentConsent(){
-  const modal = document.getElementById('student-consent-modal');
-  if(modal) modal.style.display = 'none';
-  
-  if(_pendingStudentLoginCallback && typeof _pendingStudentLoginCallback.onAccept === 'function'){
-    const cb = _pendingStudentLoginCallback.onAccept;
-    _pendingStudentLoginCallback = null;
-    cb();
-  }
-}
-
-/* 동의 거부 (취소) */
-function _declineStudentConsent(){
-  const modal = document.getElementById('student-consent-modal');
-  if(modal) modal.style.display = 'none';
-  
-  if(_pendingStudentLoginCallback && typeof _pendingStudentLoginCallback.onDecline === 'function'){
-    const cb = _pendingStudentLoginCallback.onDecline;
-    _pendingStudentLoginCallback = null;
-    cb();
-  }
 }
 
 /* 백그라운드 전환 감지 */
