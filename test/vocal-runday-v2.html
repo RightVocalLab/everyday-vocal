@@ -12023,7 +12023,8 @@ function _loadKakaoSdk(){
     _kakaoSdkLoading = true;
     
     const script = document.createElement('script');
-    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
+    /* v1 SDK 사용: Kakao.Auth.login() 팝업 방식 지원 (v2는 authorize 방식만 지원) */
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/1.43.6/kakao.min.js';
     script.crossOrigin = 'anonymous';
     script.onload = function(){
       try {
