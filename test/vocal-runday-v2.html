@@ -11988,14 +11988,192 @@ function _backToLoginSelect(){
   }
 }
 
-/* 카카오 로그인 (Phase 3에서 실제 연동, 현재는 안내) */
-function _loginWithKakao(){
-  alert('카카오 로그인은 곧 추가됩니다!\n\n현재 가능한 것:\n• 학생 로그인\n\n준비 중:\n• 카카오 · 네이버 · 이메일 회원가입');
+/* ============================================================
+   카카오 로그인 시스템 (Phase 3)
+   - 카카오 SDK 동적 로드 (첫 호출 시)
+   - 카카오 로그인 → 액세스 토큰 → Cloud Function (kakaoLogin)
+   - Cloud Function이 Firebase Custom Token 반환
+   - signInWithCustomToken으로 Firebase Auth 로그인 완료
+   ============================================================ */
+
+/* 카카오 SDK 설정 */
+const _KAKAO_JS_KEY = 'c34798f32fc7dbc5fed035d7330a103c';
+const _KAKAO_LOGIN_FN = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/kakaoLogin';
+let _kakaoSdkLoaded = false;
+let _kakaoSdkLoading = false;
+
+/* 카카오 SDK 동적 로드 (1회만) */
+function _loadKakaoSdk(){
+  return new Promise((resolve, reject) => {
+    /* 이미 로드돼 있으면 바로 resolve */
+    if(_kakaoSdkLoaded && typeof Kakao !== 'undefined' && Kakao.isInitialized()){
+      return resolve();
+    }
+    /* 로딩 중이면 폴링으로 대기 */
+    if(_kakaoSdkLoading){
+      const wait = setInterval(() => {
+        if(_kakaoSdkLoaded){
+          clearInterval(wait);
+          resolve();
+        }
+      }, 100);
+      setTimeout(() => { clearInterval(wait); reject(new Error('카카오 SDK 로드 타임아웃')); }, 10000);
+      return;
+    }
+    _kakaoSdkLoading = true;
+    
+    const script = document.createElement('script');
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
+    script.crossOrigin = 'anonymous';
+    script.onload = function(){
+      try {
+        if(typeof Kakao === 'undefined'){
+          _kakaoSdkLoading = false;
+          return reject(new Error('Kakao 객체를 찾을 수 없습니다.'));
+        }
+        if(!Kakao.isInitialized()){
+          Kakao.init(_KAKAO_JS_KEY);
+        }
+        _kakaoSdkLoaded = true;
+        _kakaoSdkLoading = false;
+        console.log('✅ 카카오 SDK 로드 완료');
+        resolve();
+      } catch(e){
+        _kakaoSdkLoading = false;
+        reject(e);
+      }
+    };
+    script.onerror = function(){
+      _kakaoSdkLoading = false;
+      reject(new Error('카카오 SDK 다운로드 실패. 네트워크를 확인해주세요.'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
-/* 네이버 로그인 (Phase 3에서 실제 연동, 현재는 안내) */
+/* 카카오 로그인 메인 함수 */
+async function _loginWithKakao(){
+  /* 카카오 로그인 버튼 비활성화 (중복 클릭 방지) */
+  const btn = document.querySelector('button[onclick="_loginWithKakao()"]');
+  const originalContent = btn ? btn.innerHTML : null;
+  if(btn){
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.innerHTML = '<span style="font-size:14px">카카오 로그인 중...</span>';
+  }
+  
+  const restoreBtn = () => {
+    if(btn){
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      if(originalContent) btn.innerHTML = originalContent;
+    }
+  };
+  
+  try {
+    /* 1. 카카오 SDK 로드 */
+    await _loadKakaoSdk();
+    
+    /* 2. 카카오 로그인 (팝업 방식) */
+    const kakaoAccessToken = await new Promise((resolve, reject) => {
+      Kakao.Auth.login({
+        scope: 'profile_nickname',
+        success: function(authObj){
+          if(authObj && authObj.access_token){
+            resolve(authObj.access_token);
+          } else {
+            reject(new Error('카카오 액세스 토큰을 받지 못했습니다.'));
+          }
+        },
+        fail: function(err){
+          reject(new Error('카카오 로그인 취소 또는 실패'));
+        },
+      });
+    });
+    
+    console.log('✅ 카카오 액세스 토큰 받음');
+    
+    /* 3. Cloud Function 호출 → Firebase Custom Token 받기 */
+    const fnResponse = await fetch(_KAKAO_LOGIN_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: kakaoAccessToken }),
+    });
+    
+    if(!fnResponse.ok){
+      const errData = await fnResponse.json().catch(() => ({}));
+      throw new Error(errData.error || `서버 오류 (${fnResponse.status})`);
+    }
+    
+    const { firebaseToken, uid, nickname } = await fnResponse.json();
+    
+    if(!firebaseToken){
+      throw new Error('Firebase 토큰을 받지 못했습니다.');
+    }
+    
+    console.log('✅ Firebase Custom Token 받음');
+    
+    /* 4. Firebase Auth 로그인 */
+    if(typeof firebase === 'undefined' || !firebase.auth){
+      throw new Error('Firebase가 초기화되지 않았습니다.');
+    }
+    
+    const userCredential = await firebase.auth().signInWithCustomToken(firebaseToken);
+    const user = userCredential.user;
+    
+    console.log('✅ Firebase 로그인 완료 (카카오):', user.uid.substring(0, 12) + '...');
+    
+    /* 5. displayName 설정 (Custom Token에 없는 경우) */
+    if(!user.displayName){
+      await user.updateProfile({ displayName: nickname });
+    }
+    
+    /* 6. Realtime DB에 사용자 정보 저장/업데이트 (최초 로그인 시만 createdAt 추가) */
+    if(_fbDb){
+      const userRef = _fbDb.ref('users/' + user.uid);
+      const snap = await userRef.once('value');
+      if(snap.exists()){
+        /* 기존 사용자 - 닉네임만 업데이트 */
+        await userRef.update({
+          nickname: nickname,
+          lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
+        });
+      } else {
+        /* 신규 사용자 - 전체 정보 저장 */
+        await userRef.set({
+          nickname: nickname,
+          provider: 'kakao',
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
+          agreedTerms: true,
+          agreedPrivacy: true,
+          agreedVoice: true,
+          agreedMarketing: false,
+          agreedAt: firebase.database.ServerValue.TIMESTAMP,
+        });
+      }
+    }
+    
+    /* 7. 공통 성공 처리 (이메일 로그인과 동일) */
+    _onEmailAuthSuccess(user);
+    
+  } catch(err){
+    console.warn('카카오 로그인 실패:', err);
+    restoreBtn();
+    
+    /* 사용자 취소는 알림 안 띄움 */
+    const msg = err.message || String(err);
+    if(msg.includes('취소')){
+      return; /* 조용히 종료 */
+    }
+    
+    alert('카카오 로그인 실패\n' + msg);
+  }
+}
+
+/* 네이버 로그인 (Phase 3 다음 단계 - Client Secret 등록 후 진행) */
 function _loginWithNaver(){
-  alert('네이버 로그인은 곧 추가됩니다!\n\n현재 가능한 것:\n• 학생 로그인\n\n준비 중:\n• 카카오 · 네이버 · 이메일 회원가입');
+  alert('네이버 로그인은 곧 추가됩니다!\n\n현재 가능한 것:\n• 학생 로그인\n• 이메일 회원가입\n• 카카오 로그인\n\n준비 중:\n• 네이버 로그인');
 }
 
 /* 이메일 로그인 화면 열기 */
