@@ -5524,12 +5524,7 @@ if(_fbReady){
 function _debugFirebase(){
   if(!_fbReady){alert('Firebase 미연결');return;}
   const today=_fbDateKey();
-  Promise.all([
-    _fbDb.ref('hwDone').once('value'),
-    _fbDb.ref('hwHistory').once('value')
-  ]).then(function(snaps){
-    const allDone=snaps[0].val()||{};
-    const allHist=snaps[1].val()||{};
+  _fbLoadAllStudentsRoot(function(allDone,allHist){
     let out='📅 오늘 날짜 key: '+today+'\n';
     out+='🕐 현재시간: '+new Date().toLocaleString('ko-KR')+'\n\n';
     out+='=== hwDone 전체 (최근날짜) ===\n';
@@ -5586,7 +5581,7 @@ function _debugFirebase(){
     pre.textContent=out;
     ov.appendChild(header);ov.appendChild(pre);
     document.body.appendChild(ov);
-  }).catch(function(e){alert('오류: '+e.message);});
+  });
 }
 function renderAdminResetBtns(){
 const c=document.getElementById('admin-reset-btns');if(!c)return;c.innerHTML='';
@@ -5605,16 +5600,12 @@ renderAdminResetBtns();
 /* 항상 Firebase에서 최신 데이터 로드 */
 if(_fbReady){
   const key=_fbDateKey();
-  Promise.all([
-    _fbDb.ref('hwDone').once('value'),
-    _fbDb.ref('hwHistory').once('value')
-  ]).then(function(snaps){
-    const allDone=snaps[0].val()||{},allHist=snaps[1].val()||{};
+  _fbLoadAllStudentsRoot(function(allDone,allHist){
     const today={},todayHist={};
     Object.keys(allDone).forEach(function(sName){today[sName]=allDone[sName][key]||[];});
     Object.keys(allHist).forEach(function(sName){todayHist[sName]=allHist[sName][key]||null;});
     _renderHwStatusWithData(today,todayHist);
-  }).catch(function(){_renderHwStatusWithData({},{});});
+  });
 } else {
   refreshHwStatus();
 }
@@ -5733,11 +5724,7 @@ if(title)title.textContent=_hwCalYear+'년 '+(_hwCalMonth+1)+'월';
 if(!_fbReady){_renderAllStudentsCal({},{});return;}
 const students=STUDENTS_DB||[];
 if(!students.length){_renderAllStudentsCal({},{});return;}
-Promise.all([
-  _fbDb.ref('hwDone').once('value'),
-  _fbDb.ref('hwHistory').once('value')
-]).then(function(snaps){
-  const allDoneRaw=snaps[0].val()||{},allHistRaw=snaps[1].val()||{};
+_fbLoadAllStudentsRoot(function(allDoneRaw,allHistRaw){
   const allData={},allHist={};
   students.forEach(s=>{
     const sKey=s.name.replace(/\s/g,'_');
@@ -5745,7 +5732,7 @@ Promise.all([
     allHist[s.name]=allHistRaw[sKey]||{};
   });
   _renderAllStudentsCal(allData,allHist);
-}).catch(function(){_renderAllStudentsCal({},{});});
+});
 }
 
 function _renderHwStatusWithData(fbData,histData){
@@ -8898,18 +8885,38 @@ function _fbLoadStudentMonth(studentName, year, month, callback){
   }catch(e){ callback({}); }
 }
 
+
+/* === FIX: 보안 규칙 우회 — 학생별로 따로 로드해서 루트 객체로 합침 === */
+function _fbLoadAllStudentsRoot(callback){
+  if(!_fbReady){ callback({},{}); return; }
+  const students=(STUDENTS_DB||[]);
+  if(!students.length){ callback({},{}); return; }
+  const allDone={}, allHist={};
+  const promises=[];
+  students.forEach(function(s){
+    const sKey=s.name.replace(/\s/g,'_');
+    promises.push(_fbDb.ref('hwDone/'+sKey).once('value').then(function(snap){
+      const v=snap.val(); if(v) allDone[sKey]=v;
+    }).catch(function(){}));
+    promises.push(_fbDb.ref('hwHistory/'+sKey).once('value').then(function(snap){
+      const v=snap.val(); if(v) allHist[sKey]=v;
+    }).catch(function(){}));
+  });
+  Promise.all(promises).then(function(){ callback(allDone,allHist); })
+    .catch(function(){ callback(allDone,allHist); });
+}
+
 /* 모든 학생 오늘 완료 기록 로드 (관리자용) */
 function _fbLoadAllToday(callback){
   if(!_fbReady){ callback({},{}); return; }
   const key = _fbDateKey();
   try{
-    Promise.all([_fbDb.ref('hwDone').once('value'),_fbDb.ref('hwHistory').once('value')]).then(function(snaps){
-      const allDone=snaps[0].val()||{},allHist=snaps[1].val()||{};
+    _fbLoadAllStudentsRoot(function(allDone,allHist){
       const today={},todayHist={};
       Object.keys(allDone).forEach(function(sName){today[sName]=allDone[sName][key]||[];});
       Object.keys(allHist).forEach(function(sName){todayHist[sName]=allHist[sName][key]||null;});
       callback(today,todayHist);
-    }).catch(function(){ callback({},{}); });
+    });
   }catch(e){ callback({},{}); }
 }
 
