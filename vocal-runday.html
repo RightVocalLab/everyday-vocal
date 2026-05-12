@@ -1830,6 +1830,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        7,
+        {
+          "hold": 2
+        },
         5,
         4,
         2,
@@ -1854,6 +1858,10 @@ const INIT_DB={
         7,
         {
           "hold": 6
+        },
+        7,
+        {
+          "hold": 2
         },
         5,
         4,
@@ -1880,6 +1888,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        7,
+        {
+          "hold": 2
+        },
         5,
         4,
         2,
@@ -1904,6 +1916,10 @@ const INIT_DB={
         7,
         {
           "hold": 6
+        },
+        7,
+        {
+          "hold": 2
         },
         5,
         4,
@@ -1978,7 +1994,7 @@ const INIT_DB={
       "id": "9D-C",
       "name": "9도 스케일",
       "range": "흉성~휘슬",
-      "startNote": 55,
+      "startNote": 57,
       "endNote": 77,
       "bpm": 180,
       "pattern": [
@@ -2024,6 +2040,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        14,
+        {
+          "hold": 2
+        },
         12,
         11,
         9,
@@ -2057,6 +2077,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        14,
+        {
+          "hold": 2
+        },
         12,
         11,
         9,
@@ -2074,7 +2098,7 @@ const INIT_DB={
       "id": "9H-C",
       "name": "9도 쉬고 내려오기",
       "range": "흉성~휘슬",
-      "startNote": 55,
+      "startNote": 57,
       "endNote": 77,
       "bpm": 180,
       "pattern": [
@@ -2089,6 +2113,10 @@ const INIT_DB={
         14,
         {
           "hold": 6
+        },
+        14,
+        {
+          "hold": 2
         },
         12,
         11,
@@ -2142,7 +2170,7 @@ const INIT_DB={
     {
       "id": "5DN-C",
       "name": "5도 하향 스케일",
-      "range": "고급",
+      "range": "중성~휘슬",
       "startNote": 62,
       "endNote": 84,
       "bpm": 125,
@@ -2204,7 +2232,7 @@ const INIT_DB={
     {
       "id": "5DNH-C",
       "name": "5도 홀드 하향 스케일",
-      "range": "고급",
+      "range": "중성~휘슬",
       "startNote": 62,
       "endNote": 84,
       "bpm": 125,
@@ -4778,7 +4806,7 @@ if(isTransition && prevRootMidi!=null){
 }
 } else {
 /* 하행스케일 단음 예비음 — 서스테인 + 건반 표시 */
-const isDown = curMod && (curMod.id||'').indexOf('DN') !== -1;
+const isDown = curMod && (curMod.scaleId||curMod.id||'').indexOf('DN') !== -1;
 if(isDown){
   playPianoSustain(rootMidi, spb*2.5, 0.38);
   _scheduledNotes.push({sT:t, m:rootMidi, si:0, dir:'down', sIdx:-3, total:1, isPreview:true});
@@ -4876,7 +4904,12 @@ function _displayLoop(){
     if(activeMidi!==note.m||_lastDisplayedSIdx!==note.sIdx){
       litKey(note.m);
       if(note.isPreview){
-        /* 예비음: 빛만 켜고 진행 정보/스케일 라벨은 갱신 안 함 */
+        /* 예비음: 빛 + 음정 텍스트(이동 시각화). 진행 정보/스케일 라벨은 갱신 안 함 */
+        const n=m2n(note.m);
+        const _cn=document.getElementById('cur-n');
+        const _co=document.getElementById('cur-o');
+        if(_cn)_cn.textContent=n.name;
+        if(_co)_co.textContent=n.oct;
         _lastDisplayedSIdx=note.sIdx;
       } else {
         const n=m2n(note.m);
@@ -4946,10 +4979,10 @@ else s.push({type:'note',semi:typeof p==='number'?p:0});
 return s;
 };
 const ps=ep(mod.pattern);
-const isDN=(mod.id||'').indexOf('DN')!==-1;
+const isDN=((mod.scaleId||mod.id||'').indexOf('DN')!==-1);
 const patNotes=mod.pattern.filter(p=>typeof p==='number');
 const patMax=patNotes.length?Math.max(...patNotes):0;
-const offset=isDN?-patMax:0;
+const offset=0; /* FIX: DN scales now use root as startNote, pattern adds offsets (솔파미레도 from highest) */
 const a=[],r=mod.endNote-mod.startNote;
 if(isDN){
   /* DN 스케일: 각 키에서 하행 패턴 재생 */
@@ -5056,14 +5089,19 @@ function prepTrain(mod){
 stopEngine();curMod=mod;
 /* 설명 자동재생 토글 버튼 라벨 동기화 (훈련 화면 진입 시마다) */
 if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
-/* 스킵 버튼 제어 */
+/* 스킵 버튼 제어 — 자유훈련/숙제 모드 기준
+   - 자유훈련: 항상 모든 스킵/다음 버튼 표시
+   - 김동현 숙제: 트레이너 권한이므로 표시
+   - 다른 학생 숙제: 모두 숨김 */
+const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+const _isFreeMode=!_isHwMode;
+const _isTrainer=(curStudent&&curStudent.name==='김동현');
 const _skipBtn=document.getElementById('skip-step-btn');
-if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
+if(_skipBtn)_skipBtn.style.display=(_isHwMode&&_isTrainer)?'':'none';
 const _freeSkipBtn=document.getElementById('free-skip-step-btn');
 const _freeNextBtn=document.getElementById('free-skip-train-btn');
-const _isFree=!curStudent&&isSeq;
-if(_freeSkipBtn)_freeSkipBtn.style.display=_isFree?'':'none';
-if(_freeNextBtn)_freeNextBtn.style.display=(_isFree&&seqIdx<seqList.length-1)?'':'none';
+if(_freeSkipBtn)_freeSkipBtn.style.display=_isFreeMode?'':'none'; /* 한 개만 있어도 반음 스킵은 가능 */
+if(_freeNextBtn)_freeNextBtn.style.display=(_isFreeMode&&isSeq&&seqIdx<seqList.length-1)?'':'none';
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
@@ -5192,10 +5230,9 @@ if(_metroTimer){ clearInterval(_metroTimer); _metroTimer=null; }
 /* 스케일 실제 첫 음 반환 — 하행 스케일은 pattern[0]만큼 위 음 */
 function _getFirstNote(mod){
 if(!mod)return 0;
-/* DN 스케일: 첫음 = startNote (레8/솔) */
-if((mod.id||'').indexOf('DN')!==-1) return mod.startNote;
 const pat=mod.pattern||[];
 const firstSemi=pat.length>0&&typeof pat[0]==='number'?pat[0]:0;
+/* DN 스케일: 첫음 = startNote + 패턴첫음 (가장 높은 음, 예: 솔) */
 return mod.startNote+firstSemi;
 }
 
@@ -5252,7 +5289,7 @@ const ctx=gCtx(),spb=60/curBpm;
 if(sch.nx===0)sch.nx=ctx.currentTime+0.12;
 while(sch.nx<ctx.currentTime+0.38){
 if(sch.s>=allSteps.length){
-const _downDelay=(curMod&&(curMod.id||'').indexOf('DN')!==-1)?1200:700;
+const _downDelay=(curMod&&(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1)?1200:700;
 setTimeout(onDone,_downDelay);return;
 }
 const step=allSteps[sch.s],root=curMod.startNote+step.semi;
@@ -5274,7 +5311,7 @@ sch.p=0;sch.s++;
 
 if(sch.s<allSteps.length){
 const hasPreview=curMod.previewType&&curMod.previewType!=='없음';
-const isDownScale=(curMod&&(curMod.id||'').indexOf('DN')!==-1);
+const isDownScale=(curMod&&(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1);
 if(hasPreview){
 const tspb_wait=60/100; /* BPM 100 고정 */
 /* 마지막음 후 텀:
@@ -5286,7 +5323,7 @@ sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
 /* DN 스케일 예비음: root(도)가 아닌 startNote(레8/솔) 음 사용 */
-const _isDNmod=(curMod.id||'').indexOf('DN')!==-1;
+const _isDNmod=(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1;
 const _dnPatMax=_isDNmod?(function(){const pn=curMod.pattern.filter(p=>typeof p==='number');return pn.length?Math.max(...pn):0;})():0;
 const previewNr=_isDNmod?nr+_dnPatMax:nr;
 const previewPrevR=_isDNmod?prevRoot+_dnPatMax:prevRoot;
@@ -5385,10 +5422,19 @@ document.getElementById('done-modal').classList.add('open');
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
 function doRestart(){
   window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod);startEngine();}}
-function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
-function freeSkipStep(){if(curStudent)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
+function skipStep(){
+  if(!playing)return;
+  /* 자유훈련: 누구나 OK. 숙제: 김동현만 OK */
+  const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+  if(_isHwMode&&curStudent.name!=='김동현')return;
+  sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);
+}
+function freeSkipStep(){
+  const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+  if(_isHwMode)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function freeSkipTrain(){
-  if(curStudent||!isSeq||seqIdx>=seqList.length-1)return;
+  const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+  if(_isHwMode||!isSeq||seqIdx>=seqList.length-1)return;
   stopEngine();closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
@@ -5404,24 +5450,30 @@ function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=
 function updSeqBar(){
 const bar=document.getElementById('seq-bar');
 const ntr=document.getElementById('next-train-row');
+/* 자유훈련 vs 숙제 판별: seqList의 현재 항목에 hwIdx 있으면 숙제, 없으면 자유훈련 */
+const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+const _isFreeMode=!_isHwMode;
 if(isSeq&&seqList.length>1){
 bar.style.display='';
 bar.textContent=`${seqIdx+1}/${seqList.length} — ${seqList[seqIdx].label||''}`;
 
 if(ntr){
-  if(curStudent){ntr.style.display='none';}
+  if(_isHwMode){ntr.style.display='none';}
   else{ntr.style.display=(seqIdx<seqList.length-1)?'':'none';const btn=ntr.querySelector('button');if(btn&&seqIdx<seqList.length-1)btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;}
 }
 const _freeNB=document.getElementById('free-skip-train-btn');
-if(_freeNB&&!curStudent)_freeNB.style.display=(isSeq&&seqIdx<seqList.length-1)?'':'none';
+if(_freeNB)_freeNB.style.display=(_isFreeMode&&isSeq&&seqIdx<seqList.length-1)?'':'none';
 } else {
 bar.style.display='none';
 if(ntr)ntr.style.display='none';
+const _freeNB=document.getElementById('free-skip-train-btn');
+if(_freeNB)_freeNB.style.display='none';
 }
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
-if(curStudent)return;
+const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+if(_isHwMode)return;
 stopEngine();
 seqIdx++;
 updSeqBar();
