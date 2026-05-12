@@ -12198,6 +12198,27 @@ function _autoStartIntro(){
    일반 자동로그인: Firebase Auth가 자동 처리 (Phase 2에서 구현) */
 function _checkAutoLogin(){
   try {
+    /* === 개발자(동현) 자동 진입 우선 체크 === */
+    const _DEV_EMAIL = 'gunfree2@naver.com';
+    if(typeof firebase !== 'undefined' && firebase.auth){
+      const cu = firebase.auth().currentUser;
+      if(cu && !cu.isAnonymous && cu.email && cu.email.toLowerCase() === _DEV_EMAIL){
+        _setAdminLogin(true);
+        window._generalUser = {
+          uid: cu.uid,
+          email: cu.email,
+          nickname: cu.displayName || cu.email,
+        };
+        const _kdh = (typeof STUDENTS_DB !== 'undefined') ? (STUDENTS_DB || []).find(s => s.name === '김동현') : null;
+        if(_kdh){
+          curStudent = _kdh;
+          window._userType = 'student';
+          console.log('✅ 개발자 자동 로그인: 김동현 + 관리자');
+          return true;
+        }
+      }
+    }
+    
     /* 학생 자동로그인 체크 (우선순위 높음) */
     const autoStudent = localStorage.getItem('auto_student_name');
     if(autoStudent && typeof STUDENTS_DB !== 'undefined'){
@@ -13112,6 +13133,45 @@ function _firebaseAuthErrorMessage(err){
 
 /* 이메일 인증 성공 후 처리 (회원가입/로그인 공통) */
 function _onEmailAuthSuccess(user){
+  /* === 개발자(동현) 특수 처리: gunfree2@naver.com → 김동현 학생 + 관리자 동시 진입 === */
+  const _DEV_EMAIL = 'gunfree2@naver.com';
+  const _isDev = user && user.email && user.email.toLowerCase() === _DEV_EMAIL;
+  if(_isDev){
+    /* 1. 관리자 모드 활성화 */
+    _setAdminLogin(true);
+    /* 2. 일반 사용자 세션도 저장 (게시판 등을 위해) */
+    try {
+      localStorage.setItem('general_user_uid', user.uid);
+      if(user.displayName){
+        localStorage.setItem('general_user_name', user.displayName);
+      }
+    } catch(e){}
+    window._generalUser = {
+      uid: user.uid,
+      email: user.email,
+      nickname: user.displayName || user.email,
+    };
+    /* 3. 김동현 학생 모드 진입 */
+    const _kdh = (typeof STUDENTS_DB !== 'undefined') ? (STUDENTS_DB || []).find(s => s.name === '김동현') : null;
+    if(_kdh){
+      try { localStorage.setItem('auto_student_name', '김동현'); } catch(e){}
+      curStudent = _kdh;
+      window._userType = 'student';
+      if(typeof closeStudentLogin === 'function') closeStudentLogin();
+      if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
+      if(typeof buildHome === 'function') buildHome();
+      if(typeof _updateUserBtn === 'function') _updateUserBtn();
+      if(typeof openHomework === 'function') openHomework();
+      setTimeout(function(){
+        if(typeof _showWelcomeToast === 'function') _showWelcomeToast('👑 관리자(김동현)');
+      }, 300);
+      console.log('✅ 개발자 자동 진입: 김동현 학생 + 관리자 모드');
+      return;
+    } else {
+      console.warn('⚠️ STUDENTS_DB에서 김동현을 찾을 수 없습니다. 일반 로그인으로 진행.');
+    }
+  }
+  
   /* 다른 모드(학생) 로그인 상태였다면 정리 - 권한 분리 원칙 */
   if(typeof curStudent !== 'undefined' && curStudent){
     curStudent = null;
