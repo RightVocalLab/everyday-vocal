@@ -4476,6 +4476,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        7,
+        {
+          "hold": 2
+        },
         5,
         4,
         2,
@@ -4500,6 +4504,10 @@ const INIT_DB={
         7,
         {
           "hold": 6
+        },
+        7,
+        {
+          "hold": 2
         },
         5,
         4,
@@ -4526,6 +4534,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        7,
+        {
+          "hold": 2
+        },
         5,
         4,
         2,
@@ -4550,6 +4562,10 @@ const INIT_DB={
         7,
         {
           "hold": 6
+        },
+        7,
+        {
+          "hold": 2
         },
         5,
         4,
@@ -4624,7 +4640,7 @@ const INIT_DB={
       "id": "9D-C",
       "name": "9도 스케일",
       "range": "흉성~휘슬",
-      "startNote": 55,
+      "startNote": 57,
       "endNote": 77,
       "bpm": 180,
       "pattern": [
@@ -4670,6 +4686,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        14,
+        {
+          "hold": 2
+        },
         12,
         11,
         9,
@@ -4703,6 +4723,10 @@ const INIT_DB={
         {
           "hold": 6
         },
+        14,
+        {
+          "hold": 2
+        },
         12,
         11,
         9,
@@ -4720,7 +4744,7 @@ const INIT_DB={
       "id": "9H-C",
       "name": "9도 쉬고 내려오기",
       "range": "흉성~휘슬",
-      "startNote": 55,
+      "startNote": 57,
       "endNote": 77,
       "bpm": 180,
       "pattern": [
@@ -4735,6 +4759,10 @@ const INIT_DB={
         14,
         {
           "hold": 6
+        },
+        14,
+        {
+          "hold": 2
         },
         12,
         11,
@@ -4788,7 +4816,7 @@ const INIT_DB={
     {
       "id": "5DN-C",
       "name": "5도 하향 스케일",
-      "range": "고급",
+      "range": "중성~휘슬",
       "startNote": 62,
       "endNote": 84,
       "bpm": 125,
@@ -4850,7 +4878,7 @@ const INIT_DB={
     {
       "id": "5DNH-C",
       "name": "5도 홀드 하향 스케일",
-      "range": "고급",
+      "range": "중성~휘슬",
       "startNote": 62,
       "endNote": 84,
       "bpm": 125,
@@ -7657,7 +7685,7 @@ const ps=ep(mod.pattern);
 const isDN=(mod.id||'').indexOf('DN')!==-1;
 const patNotes=mod.pattern.filter(p=>typeof p==='number');
 const patMax=patNotes.length?Math.max(...patNotes):0;
-const offset=isDN?-patMax:0;
+const offset=0; /* FIX: DN scales now use root as startNote, pattern adds offsets (솔파미레도 from highest) */
 const a=[],r=mod.endNote-mod.startNote;
 if(isDN){
   /* DN 스케일: 각 키에서 하행 패턴 재생 */
@@ -7922,10 +7950,9 @@ if(_metroTimer){ clearInterval(_metroTimer); _metroTimer=null; }
 /* 스케일 실제 첫 음 반환 — 하행 스케일은 pattern[0]만큼 위 음 */
 function _getFirstNote(mod){
 if(!mod)return 0;
-/* DN 스케일: 첫음 = startNote (레8/솔) */
-if((mod.id||'').indexOf('DN')!==-1) return mod.startNote;
 const pat=mod.pattern||[];
 const firstSemi=pat.length>0&&typeof pat[0]==='number'?pat[0]:0;
+/* DN 스케일: 첫음 = startNote + 패턴첫음 (가장 높은 음, 예: 솔) */
 return mod.startNote+firstSemi;
 }
 
