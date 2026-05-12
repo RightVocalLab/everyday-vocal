@@ -7514,7 +7514,7 @@ if(isTransition && prevRootMidi!=null){
 }
 } else {
 /* 하행스케일 단음 예비음 — 서스테인 + 건반 표시 */
-const isDown = curMod && (curMod.id||'').indexOf('DN') !== -1;
+const isDown = curMod && (curMod.scaleId||curMod.id||'').indexOf('DN') !== -1;
 if(isDown){
   playPianoSustain(rootMidi, spb*2.5, 0.38);
   _scheduledNotes.push({sT:t, m:rootMidi, si:0, dir:'down', sIdx:-3, total:1, isPreview:true});
@@ -7612,7 +7612,12 @@ function _displayLoop(){
     if(activeMidi!==note.m||_lastDisplayedSIdx!==note.sIdx){
       litKey(note.m);
       if(note.isPreview){
-        /* 예비음: 빛만 켜고 진행 정보/스케일 라벨은 갱신 안 함 */
+        /* 예비음: 빛 + 음정 텍스트(이동 시각화). 진행 정보/스케일 라벨은 갱신 안 함 */
+        const n=m2n(note.m);
+        const _cn=document.getElementById('cur-n');
+        const _co=document.getElementById('cur-o');
+        if(_cn)_cn.textContent=n.name;
+        if(_co)_co.textContent=n.oct;
         _lastDisplayedSIdx=note.sIdx;
       } else {
         const n=m2n(note.m);
@@ -7682,14 +7687,14 @@ else s.push({type:'note',semi:typeof p==='number'?p:0});
 return s;
 };
 const ps=ep(mod.pattern);
-const isDN=(mod.id||'').indexOf('DN')!==-1;
+const isDN=((mod.scaleId||mod.id||'').indexOf('DN')!==-1);
 const patNotes=mod.pattern.filter(p=>typeof p==='number');
 const patMax=patNotes.length?Math.max(...patNotes):0;
 const offset=0; /* FIX: DN scales now use root as startNote, pattern adds offsets (솔파미레도 from highest) */
 const a=[],r=mod.endNote-mod.startNote;
 if(isDN){
   /* DN 스케일: 각 키에서 하행 패턴 재생 */
-  const id = mod.id || '';
+  const id = mod.scaleId || mod.id || '';
   const is5DN = id.indexOf('5DN') === 0;
   /* 양방향 진행 스케일: 5DN, 5DNH, 9DN, 9DNH (단, "하향만"은 제외 - ID 끝에 'O' 붙음)
      "하향만" = 9DN-C, 9DNH-C (기존), 또는 9DNHO-* (신규) → 한 방향만 진행 */
@@ -7804,7 +7809,7 @@ const _skipBtn=document.getElementById('skip-step-btn');
 if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
 const _freeSkipBtn=document.getElementById('free-skip-step-btn');
 const _freeNextBtn=document.getElementById('free-skip-train-btn');
-const _isFree=!curStudent&&isSeq;
+const _isFree=(!curStudent||curStudent.name==='김동현')&&isSeq;
 if(_freeSkipBtn)_freeSkipBtn.style.display=_isFree?'':'none';
 if(_freeNextBtn)_freeNextBtn.style.display=(_isFree&&seqIdx<seqList.length-1)?'':'none';
 
@@ -8009,7 +8014,7 @@ const ctx=gCtx(),spb=60/curBpm;
 if(sch.nx===0)sch.nx=ctx.currentTime+0.12;
 while(sch.nx<ctx.currentTime+0.38){
 if(sch.s>=allSteps.length){
-const _downDelay=(curMod&&(curMod.id||'').indexOf('DN')!==-1)?1200:700;
+const _downDelay=(curMod&&(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1)?1200:700;
 setTimeout(onDone,_downDelay);return;
 }
 const step=allSteps[sch.s],root=curMod.startNote+step.semi;
@@ -8031,7 +8036,7 @@ sch.p=0;sch.s++;
 
 if(sch.s<allSteps.length){
 const hasPreview=curMod.previewType&&curMod.previewType!=='없음';
-const isDownScale=(curMod&&(curMod.id||'').indexOf('DN')!==-1);
+const isDownScale=(curMod&&(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1);
 if(hasPreview){
 const tspb_wait=60/100; /* BPM 100 고정 */
 /* 마지막음 후 텀:
@@ -8043,7 +8048,7 @@ sch.nx += preGap;
 const prevRoot=curMod.startNote+(allSteps[sch.s-1]?allSteps[sch.s-1].semi:0);
 const nr=curMod.startNote+allSteps[sch.s].semi;
 /* DN 스케일 예비음: root(도)가 아닌 startNote(레8/솔) 음 사용 */
-const _isDNmod=(curMod.id||'').indexOf('DN')!==-1;
+const _isDNmod=(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1;
 const _dnPatMax=_isDNmod?(function(){const pn=curMod.pattern.filter(p=>typeof p==='number');return pn.length?Math.max(...pn):0;})():0;
 const previewNr=_isDNmod?nr+_dnPatMax:nr;
 const previewPrevR=_isDNmod?prevRoot+_dnPatMax:prevRoot;
@@ -8143,9 +8148,9 @@ function closeDone(){document.getElementById('done-modal').classList.remove('ope
 function doRestart(){
   window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod);startEngine();}}
 function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
-function freeSkipStep(){if(curStudent)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
+function freeSkipStep(){if(curStudent&&curStudent.name!=='김동현')return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function freeSkipTrain(){
-  if(curStudent||!isSeq||seqIdx>=seqList.length-1)return;
+  if((curStudent&&curStudent.name!=='김동현')||!isSeq||seqIdx>=seqList.length-1)return;
   stopEngine();closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
@@ -8170,7 +8175,7 @@ if(ntr){
   else{ntr.style.display=(seqIdx<seqList.length-1)?'':'none';const btn=ntr.querySelector('button');if(btn&&seqIdx<seqList.length-1)btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;}
 }
 const _freeNB=document.getElementById('free-skip-train-btn');
-if(_freeNB&&!curStudent)_freeNB.style.display=(isSeq&&seqIdx<seqList.length-1)?'':'none';
+if(_freeNB&&(!curStudent||curStudent.name==='김동현'))_freeNB.style.display=(isSeq&&seqIdx<seqList.length-1)?'':'none';
 } else {
 bar.style.display='none';
 if(ntr)ntr.style.display='none';
@@ -8178,7 +8183,7 @@ if(ntr)ntr.style.display='none';
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
-if(curStudent)return;
+if(curStudent&&curStudent.name!=='김동현')return;
 stopEngine();
 seqIdx++;
 updSeqBar();
@@ -13178,7 +13183,7 @@ function _onEmailAuthSuccess(user){
       email: user.email,
       nickname: user.displayName || user.email,
     };
-    /* 3. 김동현 학생 모드 진입 */
+    /* 3. 김동현 학생 모드 진입 (홈 화면으로 - 숙제 화면 X) */
     const _kdh = (typeof STUDENTS_DB !== 'undefined') ? (STUDENTS_DB || []).find(s => s.name === '김동현') : null;
     if(_kdh){
       try { localStorage.setItem('auto_student_name', '김동현'); } catch(e){}
@@ -13188,11 +13193,13 @@ function _onEmailAuthSuccess(user){
       if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
       if(typeof buildHome === 'function') buildHome();
       if(typeof _updateUserBtn === 'function') _updateUserBtn();
-      if(typeof openHomework === 'function') openHomework();
+      /* 숙제 화면이 아닌 홈 화면으로 진입 */
+      document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+      if(typeof goHome === 'function') goHome();
       setTimeout(function(){
         if(typeof _showWelcomeToast === 'function') _showWelcomeToast('👑 관리자(김동현)');
       }, 300);
-      console.log('✅ 개발자 자동 진입: 김동현 학생 + 관리자 모드');
+      console.log('✅ 개발자 자동 진입: 김동현 학생 + 관리자 모드 (홈 화면)');
       return;
     } else {
       console.warn('⚠️ STUDENTS_DB에서 김동현을 찾을 수 없습니다. 일반 로그인으로 진행.');
