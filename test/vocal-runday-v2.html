@@ -7804,14 +7804,20 @@ function prepTrain(mod){
 stopEngine();curMod=mod;
 /* 설명 자동재생 토글 버튼 라벨 동기화 (훈련 화면 진입 시마다) */
 if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
-/* 스킵 버튼 제어 */
+/* 스킵 버튼 제어 — 자유훈련/숙제 모드 기준
+   - 자유훈련: 항상 모든 스킵/다음 버튼 표시
+   - 김동현 숙제: 트레이너 권한이므로 표시
+   - 다른 학생 숙제: 모두 숨김 */
+const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+const _isFreeMode=!_isHwMode;
+const _isTrainer=(curStudent&&curStudent.name==='김동현');
+const _showSkip=_isFreeMode||_isTrainer;
 const _skipBtn=document.getElementById('skip-step-btn');
-if(_skipBtn)_skipBtn.style.display=(curStudent&&curStudent.name==='김동현')?'':'none';
+if(_skipBtn)_skipBtn.style.display=(_isHwMode&&_isTrainer)?'':'none';
 const _freeSkipBtn=document.getElementById('free-skip-step-btn');
 const _freeNextBtn=document.getElementById('free-skip-train-btn');
-const _isFree=(!curStudent||curStudent.name==='김동현')&&isSeq;
-if(_freeSkipBtn)_freeSkipBtn.style.display=_isFree?'':'none';
-if(_freeNextBtn)_freeNextBtn.style.display=(_isFree&&seqIdx<seqList.length-1)?'':'none';
+if(_freeSkipBtn)_freeSkipBtn.style.display=_isFreeMode?'':'none'; /* 한 개만 있어도 반음 스킵은 가능 */
+if(_freeNextBtn)_freeNextBtn.style.display=(_isFreeMode&&isSeq&&seqIdx<seqList.length-1)?'':'none';
 
 /* 스케일 없는 항목 — 설명 화면만 표시 */
 if(mod.noScale){
@@ -8147,10 +8153,21 @@ document.getElementById('done-modal').classList.add('open');
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
 function doRestart(){
   window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod);startEngine();}}
-function skipStep(){if(!playing)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
-function freeSkipStep(){if(curStudent&&curStudent.name!=='김동현')return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
+function skipStep(){
+  if(!playing)return;
+  /* 자유훈련: 누구나 OK. 숙제: 김동현만 OK */
+  const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+  if(_isHwMode&&curStudent.name!=='김동현')return;
+  sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);
+}
+function freeSkipStep(){
+  /* 자유훈련에서만 동작 (숙제 시퀀스에서는 차단) */
+  const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+  if(_isHwMode)return;sch.p=0;sch.s=Math.min(sch.s+1,allSteps.length-1);}
 function freeSkipTrain(){
-  if((curStudent&&curStudent.name!=='김동현')||!isSeq||seqIdx>=seqList.length-1)return;
+  /* 자유훈련에서만 동작 (숙제 시퀀스에서는 차단) */
+  const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+  if(_isHwMode||!isSeq||seqIdx>=seqList.length-1)return;
   stopEngine();closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
@@ -8166,24 +8183,33 @@ function updDots(all=false){const ds=document.querySelectorAll('#dots .sd'),tot=
 function updSeqBar(){
 const bar=document.getElementById('seq-bar');
 const ntr=document.getElementById('next-train-row');
+/* 자유훈련 vs 숙제 판별: seqList의 현재 항목에 hwIdx 있으면 숙제, 없으면 자유훈련 */
+const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+const _isFreeMode=!_isHwMode;
 if(isSeq&&seqList.length>1){
 bar.style.display='';
 bar.textContent=`${seqIdx+1}/${seqList.length} — ${seqList[seqIdx].label||''}`;
 
 if(ntr){
-  if(curStudent){ntr.style.display='none';}
+  /* "다음 훈련으로" 큰 버튼: 자유훈련에서만 표시 (숙제 시퀀스에서는 숨김) */
+  if(_isHwMode){ntr.style.display='none';}
   else{ntr.style.display=(seqIdx<seqList.length-1)?'':'none';const btn=ntr.querySelector('button');if(btn&&seqIdx<seqList.length-1)btn.innerHTML=`다음 훈련으로 (${seqIdx+2}/${seqList.length}) ›`;}
 }
 const _freeNB=document.getElementById('free-skip-train-btn');
-if(_freeNB&&(!curStudent||curStudent.name==='김동현'))_freeNB.style.display=(isSeq&&seqIdx<seqList.length-1)?'':'none';
+if(_freeNB)_freeNB.style.display=(_isFreeMode&&isSeq&&seqIdx<seqList.length-1)?'':'none';
 } else {
 bar.style.display='none';
 if(ntr)ntr.style.display='none';
+/* 시퀀스 아닐 때(자유훈련 단일 항목 등)에도 free 버튼은 숨김 처리 */
+const _freeNB=document.getElementById('free-skip-train-btn');
+if(_freeNB)_freeNB.style.display='none';
 }
 }
 function goNextTrain(){
 if(!isSeq||seqIdx>=seqList.length-1)return;
-if(curStudent&&curStudent.name!=='김동현')return;
+/* 자유훈련에서만 동작 (숙제 시퀀스에서는 차단) */
+const _isHwMode=(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined);
+if(_isHwMode)return;
 stopEngine();
 seqIdx++;
 updSeqBar();
