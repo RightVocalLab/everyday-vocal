@@ -14985,16 +14985,15 @@ function _drawPianoKeyboard(W, graphH, totalH, midiMin, midiMax, pianoH, labelH)
 let _ptCurrentTone = null;  /* {midi, dB합계, 카운트, 시작시각, 마지막시각} */
 const PT_MIDI_TOLERANCE = 0.6;  /* 같은 음정으로 간주 (반음 이내) */
 const PT_GAP_MS = 200;          /* 발성 끊김 판정 (마지막 입력 후 200ms 무입력 → 끊김) */
-const PT_MIN_DURATION_MS = 300; /* 0.3초 미만은 잡음/부정확한 측정으로 무시
-                                   (이전 0.5초 → 0.3초로 단축. 빠른 스케일 측정 대응)
+const PT_MIN_DURATION_MS = 200; /* 0.2초 미만은 잡음/부정확한 측정으로 무시 (2026-05-12: 0.3→0.2초)
                                    파열음(ㅂ,ㄷ,ㄱ): 5~30ms, 치찰음(ㅅ,ㅈ): 50~200ms 차단
-                                   200bpm 이상 빠른 발성도 검출 가능 */
-const PT_MIN_FRAME_COUNT = 6;   /* 최소 프레임 수 (잡음 추가 차단)
-                                   60fps 기준 6프레임 = 약 100ms, 30fps 기준 약 200ms
-                                   짧은 시간 안에 6번 측정 안 되면 잡음 가능성 ↑ */
+                                   더 빠른 스케일 (240bpm 이상) 대응 */
+const PT_MIN_FRAME_COUNT = 5;   /* 최소 프레임 수 (잡음 추가 차단) (2026-05-12: 6→5)
+                                   60fps 기준 5프레임 = 약 83ms, 30fps 기준 약 167ms
+                                   200ms 임계 안에서 충분히 검출되어야 함 */
 const PT_MIN_AVG_DB = 50;       /* 평균 dB이 50 미만이면 잡음 (이미 적용 중) */
-const PT_MAX_DB_VARIANCE = 25;  /* dB 표준편차가 25 이상이면 잡음/불안정 (NEW)
-                                   안정된 발성은 dB이 비교적 일정함 */
+const PT_MAX_DB_VARIANCE = 20;  /* dB 표준편차가 20 이상이면 잡음/불안정 (2026-05-12: 25→20)
+                                   시간 임계가 짧아진 만큼 안정성 검증 강화 */
 
 function _ptAddPoint(midi, dB, register){
   const now = Date.now();
