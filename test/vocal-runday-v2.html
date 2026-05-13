@@ -683,12 +683,7 @@ input,select,button,textarea{font-family:inherit;}
           <circle cx="12" cy="7" r="4"/>
         </svg>
       </button>
-      <button class="ico" id="topbar-user-btn" onclick="_handleUserBtn()" title="내 계정" style="display:none">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="8" r="4" stroke="#c2410c" stroke-width="2" fill="none"/>
-          <path d="M4 21 C4 16, 7 13, 12 13 C17 13, 20 16, 20 21" stroke="#c2410c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        </svg>
-      </button>
+
       <button class="ico" onclick="openSettings()" title="설정">🔊</button>
       <button class="ico" onclick="openAdminPW()">⚙</button>
     </div>
@@ -13800,31 +13795,8 @@ function _handleUserBtn(){
 /* 토픽바 사용자 버튼 표시/숨김 + 아이콘 색 갱신 
    사용자 타입이 바뀔 때마다 호출 (로그인/로그아웃 시점) */
 function _updateUserBtn(){
-  const btn = document.getElementById('topbar-user-btn');
-  if(!btn) return;
-  const type = _getUserType();
-  
-  if(type === 'student'){
-    btn.style.display = '';
-    btn.title = (typeof curStudent !== 'undefined' && curStudent && curStudent.name) ? curStudent.name + '님 (학생)' : '학생';
-    /* 학생 = 주황 색조 */
-    const svg = btn.querySelector('svg');
-    if(svg){
-      svg.querySelectorAll('circle, path').forEach(el => el.setAttribute('stroke', '#c2410c'));
-    }
-  } else if(type === 'general'){
-    btn.style.display = '';
-    const nick = (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname : '회원';
-    btn.title = nick + '님 (일반)';
-    /* 일반 = 세이지/틸 그린 (로그인 카드와 동일 톤) */
-    const svg = btn.querySelector('svg');
-    if(svg){
-      svg.querySelectorAll('circle, path').forEach(el => el.setAttribute('stroke', '#0d9488'));
-    }
-  } else {
-    /* 비로그인 - 버튼 숨김 (또는 표시 옵션) */
-    btn.style.display = 'none';
-  }
+  /* topbar-user-btn 제거됨 → home-user-btn으로 통일 */
+  if(typeof _updateHomeUserBtn === 'function') _updateHomeUserBtn();
 }
 
 /* ===== 약관·방침 모달 시스템 =====
