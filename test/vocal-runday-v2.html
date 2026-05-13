@@ -1601,6 +1601,12 @@ input,select,button,textarea{font-family:inherit;}
     <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:12px;padding:14px;margin-bottom:14px">
       <div style="font-size:13px;font-weight:800;color:#1d4ed8;margin-bottom:6px">보컬 진단실이란?</div>
       <div style="font-size:11.5px;color:#1e40af;line-height:1.7">음성을 녹음하거나 파일을 업로드하면<br>트레이너가 직접 텍스트 피드백을 드립니다.<br><span style="color:#3b82f6;font-weight:700">최대 5분 / 5MB &middot; 음성 파일만 가능</span></div>
+      <!-- 보관 기간 안내 -->
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.6);border-radius:8px;border-left:3px solid #93c5fd;font-size:11px;color:#1e40af;line-height:1.6">
+        <span style="font-weight:800">&#x1F4C5; 음성 파일 보관 기간: 업로드 후 30일</span><br>
+        서버 용량 관리를 위해 업로드된 음성 파일은 <strong>30일 후 자동 삭제</strong>됩니다.<br>
+        피드백은 삭제 후에도 텍스트로 확인하실 수 있어요.
+      </div>
     </div>
     <div style="display:flex;margin-bottom:14px;border:1.5px solid #bfdbfe;border-radius:10px;overflow:hidden;background:#eff6ff">
       <button id="vclinic-tab-all" onclick="_vclinicSwitchTab('all')" style="flex:1;padding:10px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff">전체 글</button>
@@ -1621,7 +1627,10 @@ input,select,button,textarea{font-family:inherit;}
   <div class="v2-pt-modal-card" style="max-width:420px;max-height:95vh;overflow-y:auto">
     <button class="v2-ios-modal-close" onclick="_closeVclinicWrite()" aria-label="닫기">&#x2715;</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">음성 올리기</div>
-    <div style="text-align:center;font-size:11px;color:#64748b;margin-bottom:16px">최대 5분 &middot; 5MB &middot; 음성 파일만</div>
+    <div style="text-align:center;font-size:11px;color:#64748b;margin-bottom:8px">최대 5분 &middot; 5MB &middot; 음성 파일만</div>
+    <div style="text-align:center;font-size:10.5px;color:#3b82f6;background:#eff6ff;border-radius:8px;padding:6px 10px;margin-bottom:14px">
+      &#x1F4C5; 음성 파일은 업로드 후 <strong>30일간 보관</strong> 후 자동 삭제됩니다
+    </div>
     <div id="vclinic-private-row" style="display:none;margin-bottom:14px;padding:10px 14px;background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div><div style="font-size:12px;font-weight:800;color:#7c3aed">트레이너 비공개 설정</div><div style="font-size:10.5px;color:#a78bfa;margin-top:2px">비공개 시 트레이너만 내용을 볼 수 있어요</div></div>
@@ -12250,10 +12259,19 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
                 /* 인트로/로그인 선택 화면이 보이는 상태면 홈으로 자동 이동 */
                 const introVis = !document.getElementById('scr-intro')?.classList.contains('hidden');
                 const loginSelVis = !document.getElementById('scr-login-select')?.classList.contains('hidden');
-                if(loginSelVis && !introVis){
-                  /* 사용자가 명시적으로 로그인 후라면 홈으로 이미 이동되었을 것
-                     이 코드는 새로고침 직후 자동 복원 시나리오를 위함 */
-                  if(typeof goHome === 'function') goHome();
+                if(loginSelVis || introVis){
+                  /* 새로고침 직후 자동 복원: 인트로 or 로그인 선택 화면에서 바로 홈으로 */
+                  if(typeof goHome === 'function'){
+                    /* 인트로 화면이면 부드럽게 숨기고 이동 */
+                    const introEl = document.getElementById('scr-intro');
+                    if(introEl && introVis){
+                      introEl.style.transition = 'opacity .3s';
+                      introEl.style.opacity = '0';
+                      setTimeout(function(){ goHome(); introEl.style.opacity=''; introEl.style.transition=''; }, 300);
+                    } else {
+                      goHome();
+                    }
+                  }
                 }
               }
             }
@@ -12430,7 +12448,11 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 
 /* v2: 인트로 자동 시작 (splash 제거됨) */
+let _autoStartIntroCalled = false;
 function _autoStartIntro(){
+  /* 중복 호출 방어 */
+  if(_autoStartIntroCalled) return;
+  _autoStartIntroCalled = true;
   const intro = document.getElementById('scr-intro');
   if(!intro) return;
   /* 현재 인트로가 화면에 보이는 상태 */
