@@ -19448,7 +19448,8 @@ function _renderVclinicPosts(){
     const hasFb=p.feedbackCount&&p.feedbackCount>0;
     const sC=hasFb?'#16a34a':'#854d0e', sBg=hasFb?'#dcfce7':'#fef9c3', sBd=hasFb?'#86efac':'#fde047', sTxt=hasFb?'답변 완료':'답변 대기';
     const privB=p.isPrivate?'<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px">비공개</span>':'';
-    return '<div onclick="_openVclinicView(''+p._id+'')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='#e5e7eb'">'
+    const pid = p._id;
+    return '<div onclick="_openVclinicView(\''+pid+'\')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">'
       +'<div style="font-size:13.5px;font-weight:800;color:#1e3a8a;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+privB+_escapeHtml(p.title||'')+'</div>'
       +'<span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;background:'+sBg+';color:'+sC+';border:1px solid '+sBd+'">'+sTxt+'</span>'
@@ -19750,7 +19751,7 @@ async function _loadVclinicComments(postId){
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
         +'<span style="font-size:11px;font-weight:700;color:#374151">'+_escapeHtml(cm.nickname||'익명')+'</span>'
         +'<div style="display:flex;align-items:center;gap:6px"><span style="font-size:10.5px;color:var(--mu)">'+dt+'</span>'
-        +(canDel?'<button onclick="_deleteVclinicComment(''+postId+'',''+cm._id+'')" style="font-size:10px;color:#dc2626;background:none;border:none;cursor:pointer;padding:0">삭제</button>':'')
+        +(canDel?'<button onclick="_deleteVclinicComment(\''+postId+'\',\''+cm._id+'\')" style="font-size:10px;color:#dc2626;background:none;border:none;cursor:pointer;padding:0">삭제</button>':'')
         +'</div></div><div style="font-size:12px;color:#374151;line-height:1.5">'+_escapeHtml(cm.text||'')+'</div></div>';
     }).join('');
   } catch(e){}
