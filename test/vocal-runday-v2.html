@@ -1608,8 +1608,8 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:11.5px;color:#1e40af;line-height:1.7">음성을 녹음하거나 파일을 업로드하면<br>트레이너가 직접 텍스트 피드백을 드립니다.<br><span style="color:#3b82f6;font-weight:700">최대 5분 / 5MB &middot; 음성 파일만 가능</span></div>
       <!-- 보관 기간 안내 -->
       <div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.6);border-radius:8px;border-left:3px solid #93c5fd;font-size:11px;color:#1e40af;line-height:1.6">
-        <span style="font-weight:800">&#x1F4C5; 음성 파일 보관 기간: 업로드 후 90일 (3개월)</span><br>
-        서버 용량 관리를 위해 업로드된 음성 파일은 <strong>90일(3개월) 후 자동 삭제</strong>됩니다.<br>
+        <span style="font-weight:800">&#x1F4C5; 음성 파일 보관 기간: 업로드 후 30일</span><br>
+        서버 용량 관리를 위해 업로드된 음성 파일은 <strong>30일 후 자동 삭제</strong>됩니다.<br>
         피드백은 삭제 후에도 텍스트로 확인하실 수 있어요.
       </div>
     </div>
@@ -1621,7 +1621,7 @@ input,select,button,textarea{font-family:inherit;}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
       <span>음성 올리기</span>
     </button>
-    <div id="vclinic-limit-notice" style="display:none;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#854d0e;line-height:1.5">현재 답변 대기 중인 글이 있습니다.<br><span style="font-weight:700">답변을 받은 후에 새 글을 올릴 수 있어요.</span></div>
+    <div id="vclinic-limit-notice" style="display:none;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#854d0e;line-height:1.5">답변 대기 중인 글이 3개입니다.<br><span style="font-weight:700">답변을 받은 후에 새 글을 올릴 수 있어요.</span></div>
     <div id="vclinic-posts" style="display:flex;flex-direction:column;gap:10px"><div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">불러오는 중...</div></div>
     <button id="vclinic-more-btn" onclick="_loadMoreVclinicPosts()" style="display:none;width:100%;margin-top:12px;background:#fff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">더 보기</button>
   </div></div>
@@ -1634,7 +1634,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">음성 올리기</div>
     <div style="text-align:center;font-size:11px;color:#64748b;margin-bottom:8px">최대 5분 &middot; 5MB &middot; 음성 파일만</div>
     <div style="text-align:center;font-size:10.5px;color:#3b82f6;background:#eff6ff;border-radius:8px;padding:6px 10px;margin-bottom:14px">
-      &#x1F4C5; 음성 파일은 업로드 후 <strong>90일(3개월)간 보관</strong> 후 자동 삭제됩니다
+      &#x1F4C5; 음성 파일은 업로드 후 <strong>30일간 보관</strong> 후 자동 삭제됩니다
     </div>
     <div id="vclinic-private-row" style="display:none;margin-bottom:14px;padding:10px 14px;background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1679,7 +1679,7 @@ input,select,button,textarea{font-family:inherit;}
           </button>
         </div>
         <div id="vclinic-rec-preview" style="display:none;margin-top:12px">
-          <audio id="vclinic-preview-audio" controls style="width:100%;display:block;min-height:40px"></audio>
+          <audio id="vclinic-preview-audio" controls style="width:100%;display:block"></audio>
           <div style="font-size:11px;color:#64748b;margin-top:6px">녹음을 다시 하려면 녹음 버튼을 누르세요</div>
         </div>
       </div>
@@ -1711,7 +1711,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 보컬 진단실 상세 모달 -->
 <div class="v2-pt-modal-bg" id="vclinic-view-modal" onclick="if(event.target===this)_closeVclinicView()">
-  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <button class="v2-ios-modal-close" onclick="_closeVclinicView()" aria-label="닫기">&#x2715;</button>
     <div id="vclinic-view-header" style="margin-bottom:14px">
       <div id="vclinic-view-private-badge" style="display:none;margin-bottom:6px"><span style="background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:6px;padding:3px 8px;font-size:10.5px;font-weight:800;color:#7c3aed">&#x1F512; 트레이너 비공개</span></div>
@@ -1726,7 +1726,7 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">업로드된 음성</div>
-      <audio id="vclinic-view-audio" controls style="width:100%;display:block;min-height:40px"></audio>
+      <audio id="vclinic-view-audio" controls style="width:100%;display:block"></audio>
     </div>
     <div id="vclinic-view-memo" style="display:none;background:#f9fafb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#475569;line-height:1.65;white-space:pre-wrap"></div>
     <div style="margin-bottom:14px">
@@ -1849,7 +1849,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 게시글 상세 보기 모달 -->
 <div class="v2-pt-modal-bg" id="community-view-modal" onclick="if(event.target===this)_closeCommunityView()">
-  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <button class="v2-ios-modal-close" onclick="_closeCommunityView()" aria-label="닫기">✕</button>
     
     <!-- 게시글 헤더 -->
@@ -2083,7 +2083,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 측정 결과 비교 모달 (그래프 겹침) -->
 <div class="v2-pt-modal-bg" id="pt-compare-modal" onclick="if(event.target===this)_closePtCompare()">
-  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <button class="v2-ios-modal-close" onclick="_closePtCompare()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">📈 측정 결과 비교</div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:12px" id="pt-compare-info">—</div>
@@ -18751,11 +18751,9 @@ async function _openCommunityView(postId){
   /* 본인 글이면 삭제 버튼 표시 */
   const deleteBtn = document.getElementById('comm-delete-btn');
   if(deleteBtn){
-    if(_fbAuthUid && post.authorUid === _fbAuthUid){
-      deleteBtn.style.display = 'inline-flex';
-    } else {
-      deleteBtn.style.display = 'none';
-    }
+    const _isAdmin = (curStudent && curStudent.name === '김동현');
+    const _isOwner = (_fbAuthUid && post.authorUid === _fbAuthUid);
+    deleteBtn.style.display = (_isOwner || _isAdmin) ? 'inline-flex' : 'none';
   }
   
   /* 모달 표시 + 그래프 그리기 */
@@ -19235,7 +19233,8 @@ async function _loadComments(postId){
     listEl.innerHTML = comments.map(c => {
       const d = new Date(c.timestamp);
       const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      const isMine = _fbAuthUid && c.authorUid === _fbAuthUid;
+      const _commIsAdmin = (curStudent && curStudent.name === '김동현');
+    const isMine = (_fbAuthUid && c.authorUid === _fbAuthUid) || _commIsAdmin;
       const delLink = isMine ? ` · <a onclick="_deleteComment('${c._id}')" style="color:#dc2626;cursor:pointer">삭제</a>` : '';
       return `
         <div style="background:#f9fafb;border-radius:8px;padding:8px 11px">
@@ -19353,7 +19352,9 @@ async function _reportCommunity(){
 /* === 본인 게시글 삭제 === */
 async function _deleteCommunityPost(){
   if(!_currentViewingPost) return;
-  if(_currentViewingPost.authorUid !== _fbAuthUid){
+  const _isAdmin = (curStudent && curStudent.name === '김동현');
+  const _isOwner = (_currentViewingPost.authorUid === _fbAuthUid);
+  if(!_isOwner && !_isAdmin){
     alert('본인 게시글만 삭제할 수 있습니다.');
     return;
   }
@@ -19413,7 +19414,7 @@ async function _vclinicCheckLimitNotice(){
   if(!notice||!_fbAuthUid||!_fbDb) return;
   try {
     const snap=await _fbDb.ref('vocalClinic/userActiveCount/'+_fbAuthUid).once('value');
-    const hasActive=(snap.val()||0)>0;
+    const hasActive=(snap.val()||0)>=3; /* 최대 3개 */
     notice.style.display=hasActive?'block':'none';
     if(writeBtn){writeBtn.disabled=hasActive; writeBtn.style.opacity=hasActive?'0.5':'1';}
   } catch(e){}
@@ -19591,8 +19592,8 @@ async function _vclinicToggleRec(){
     clearInterval(_vclinicRecInterval); _vclinicRecInterval=null;
     _vclinicIsPaused=true; _vclinicIsRecording=false;
     if(statusEl) statusEl.textContent='일시정지 ('+_vclinicFmtTime(_vclinicRecSeconds)+')';
-    /* 일시정지 중: 재생 아이콘(재개 버튼) */
-    if(recBtn){recBtn.style.background='#16a34a'; recBtn.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>';}
+    /* 일시정지 중: 빨간 원(녹음 재개 아이콘) - 재생 버튼으로 오해 방지 */
+    if(recBtn){recBtn.style.background='#dc2626'; recBtn.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>';}
 
   } else if(_vclinicIsPaused){
     /* 재개 */
