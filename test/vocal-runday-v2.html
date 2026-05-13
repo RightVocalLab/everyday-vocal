@@ -1797,11 +1797,11 @@ input,select,button,textarea{font-family:inherit;}
     <button class="v2-ios-modal-close" onclick="_closeCommunityWrite()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#7c2d92;margin-bottom:14px">✍️ 발전 자랑 글쓰기</div>
     
-    <!-- 닉네임 -->
-    <div style="margin-bottom:12px">
-      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">닉네임 <span style="color:#dc2626">*</span></label>
-      <input id="comm-nickname" type="text" placeholder="공개될 닉네임" maxlength="15"
-        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:13px;box-sizing:border-box">
+    <!-- 작성자 (로그인 이름 자동) -->
+    <div style="margin-bottom:12px;background:#f5f3ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span style="font-size:12px;font-weight:700;color:#7c3aed">작성자:</span>
+      <span id="comm-author-display" style="font-size:13px;font-weight:800;color:#5b21b6"></span>
     </div>
     
     <!-- Before 선택 -->
@@ -1888,8 +1888,8 @@ input,select,button,textarea{font-family:inherit;}
       <div id="comm-cmt-list" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
       
       <!-- 댓글 작성 -->
-      <div style="display:flex;gap:6px">
-        <input id="comm-cmt-nickname" type="text" placeholder="닉네임" maxlength="15" style="width:80px;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
+      <div id="comm-cmt-login-notice" style="display:none;font-size:11.5px;color:#64748b;padding:8px;background:#f9fafb;border-radius:8px;text-align:center">로그인 후 댓글을 달 수 있어요</div>
+      <div id="comm-cmt-form" style="display:flex;gap:6px">
         <input id="comm-cmt-input" type="text" placeholder="댓글 입력..." maxlength="100" style="flex:1;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
         <button onclick="_submitComment()" style="background:#a855f7;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:11.5px;font-weight:700;cursor:pointer">등록</button>
       </div>
@@ -18509,7 +18509,20 @@ function _escapeHtml(str){
 function _openCommunityWrite(){
   const modal = document.getElementById('community-write-modal');
   if(!modal) return;
-  
+
+  /* 로그인 체크 - 미로그인 차단 */
+  const loginName = curStudent ? curStudent.name
+                  : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
+                  : null;
+  if(!loginName){
+    alert('로그인 후 게시글을 작성할 수 있어요.');
+    return;
+  }
+
+  /* 작성자 이름 표시 */
+  const authorDisplay = document.getElementById('comm-author-display');
+  if(authorDisplay) authorDisplay.textContent = loginName;
+
   /* localStorage 측정 이력 + Firebase 학생 이력 모두 */
   const allList = _loadAllLocalPtHistory();
   
@@ -18517,11 +18530,6 @@ function _openCommunityWrite(){
     alert('비포&애프터를 게시하려면 최소 2개의 측정 이력이 필요합니다.\n\n측정을 더 진행해주세요!');
     return;
   }
-  
-  /* 닉네임 자동 채우기 (마지막 사용 닉네임) */
-  const lastNick = localStorage.getItem('comm_nickname') || localStorage.getItem('pt_last_name') || '';
-  const nickInput = document.getElementById('comm-nickname');
-  if(nickInput) nickInput.value = lastNick;
   
   /* before/after 카드 버튼 채우기 (선택하면 즉시 적용 효과) */
   const beforeList = document.getElementById('comm-before-list');
@@ -18618,13 +18626,15 @@ async function _submitCommunityPost(){
   const errEl = document.getElementById('comm-write-err');
   const setErr = (msg) => { if(errEl) errEl.textContent = msg; };
   
-  const nickname = document.getElementById('comm-nickname').value.trim();
+  /* 로그인 이름 자동 사용 */
+  const nickname = curStudent ? curStudent.name
+                 : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
+                 : null;
+  if(!nickname){ setErr('⚠️ 로그인 후 게시글을 작성할 수 있어요.'); return; }
   const beforeIdx = document.getElementById('comm-before-idx').value;
   const afterIdx = document.getElementById('comm-after-idx').value;
   const title = document.getElementById('comm-title').value.trim();
   const content = document.getElementById('comm-content').value.trim();
-  
-  if(!nickname){ setErr('⚠️ 닉네임을 입력해주세요.'); return; }
   if(!beforeIdx || !afterIdx){ setErr('⚠️ Before와 After 측정 이력을 선택해주세요.'); return; }
   if(beforeIdx === afterIdx){ setErr('⚠️ Before와 After는 서로 다른 측정이어야 합니다.'); return; }
   if(!title){ setErr('⚠️ 제목을 입력해주세요.'); return; }
@@ -18758,6 +18768,13 @@ async function _openCommunityView(postId){
   
   /* 댓글 로드 */
   _loadComments(postId);
+
+  /* 댓글 폼: 로그인 여부에 따라 표시 */
+  const _isLoggedIn = !!(curStudent || window._generalUser);
+  const _cmtForm = document.getElementById('comm-cmt-form');
+  const _cmtNotice = document.getElementById('comm-cmt-login-notice');
+  if(_cmtForm) _cmtForm.style.display = _isLoggedIn ? 'flex' : 'none';
+  if(_cmtNotice) _cmtNotice.style.display = _isLoggedIn ? 'none' : 'block';
 }
 
 /* ========================================================
@@ -19243,10 +19260,12 @@ async function _submitComment(){
     return;
   }
   
-  const nickname = document.getElementById('comm-cmt-nickname').value.trim();
+  /* 로그인 이름 자동 사용 */
+  const nickname = curStudent ? curStudent.name
+                 : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
+                 : null;
+  if(!nickname){ alert('로그인 후 댓글을 달 수 있어요.'); return; }
   const text = document.getElementById('comm-cmt-input').value.trim();
-  
-  if(!nickname){ alert('닉네임을 입력해주세요.'); return; }
   if(!text){ alert('댓글 내용을 입력해주세요.'); return; }
   
   const postId = _currentViewingPost._id;
@@ -19258,8 +19277,6 @@ async function _submitComment(){
   };
   
   try {
-    /* 닉네임 저장 */
-    try { localStorage.setItem('comm_nickname', nickname); } catch(e){}
     
     const ref = firebase.database().ref(`community/comments/${postId}`).push();
     await ref.set(comment);
@@ -19807,7 +19824,7 @@ async function _deleteVclinicPost(){
   const postId=_vclinicCurrentPost._id;
   const authorUid=_vclinicCurrentPost.authorUid;
 
-  /* Storage 파일 삭제 (실패해도 DB 삭제는 계속 진행) */
+  /* Storage 파일 삭제 (실패해도 무시) */
   if(_vclinicCurrentPost.storagePath){
     try{
       const cu=firebase.auth().currentUser;
@@ -19818,10 +19835,17 @@ async function _deleteVclinicPost(){
     }catch(e){ console.warn('Storage 삭제 실패(무시):', e.message); }
   }
 
-  /* DB 삭제 - 각 경로 개별 처리 (일부 실패해도 나머지 진행) */
-  let dbErr = null;
-  try { await _fbDb.ref('vocalClinic/posts/'+postId).remove(); } catch(e){ dbErr=e; }
-  try { await _fbDb.ref('vocalClinic/postsByUser/'+authorUid+'/'+postId).remove(); } catch(e){}
+  /* posts 메인 데이터 삭제 (핵심) */
+  try {
+    await _fbDb.ref('vocalClinic/posts/'+postId).remove();
+  } catch(e){
+    console.error('posts 삭제 실패:', e);
+    alert('삭제 실패: ' + e.message);
+    return;
+  }
+
+  /* 나머지 경로 삭제 (실패해도 무시 - 권한 없어도 메인은 지워짐) */
+  try { await _fbDb.ref('vocalClinic/postsByUser/'+authorUid+'/'+postId).remove(); } catch(e){ console.warn('postsByUser 삭제 실패(무시)'); }
   try { await _fbDb.ref('vocalClinic/feedback/'+postId).remove(); } catch(e){}
   try { await _fbDb.ref('vocalClinic/comments/'+postId).remove(); } catch(e){}
   try {
@@ -19830,10 +19854,6 @@ async function _deleteVclinicPost(){
     }
   } catch(e){}
 
-  if(dbErr){
-    alert('삭제 실패: 권한이 없습니다.\n\n※ 관리자 권한 오류 시 Firebase DB 규칙 업데이트가 필요합니다.');
-    return;
-  }
   showToast('글이 삭제되었습니다.');
   _closeVclinicView();
   _loadVclinicPosts(true);
