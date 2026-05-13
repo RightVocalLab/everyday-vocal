@@ -13244,7 +13244,7 @@ function _onEmailAuthSuccess(user){
       document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
       if(typeof goHome === 'function') goHome();
       setTimeout(function(){
-        if(typeof _showWelcomeToast === 'function') _showWelcomeToast('👑 관리자(김동현)');
+        if(typeof _showWelcomeToast === 'function') _showWelcomeToast('관리자(김동현)');
       }, 300);
       console.log('✅ 개발자 자동 진입: 김동현 학생 + 관리자 모드 (홈 화면)');
       return;
@@ -16703,7 +16703,7 @@ function _escapeHtml(s){
     .replace(/'/g, '&#039;');
 }
 
-/* 통합 로그아웃 처리 */
+/* 통합 로그아웃 처리 - 학생/일반/관리자 모두 안전하게 정리 */
 function _handleLogout(){
   const info = _getUserInfo();
   if(!info){
@@ -16719,18 +16719,18 @@ function _handleLogout(){
   
   if(!confirm(confirmMsg)) return;
   
-  /* 학생/일반 모두 정리 */
-  if(info.type === 'student'){
-    /* 학생 로그아웃 (기존 logoutStudent와 같은 동작이나 화면 이동만 다름) */
+  /* === 학생 세션 정리 (curStudent가 있으면 무조건) === */
+  if(typeof curStudent !== 'undefined' && curStudent){
     if(typeof _saveHwList === 'function') _saveHwList();
-    if(typeof curStudent !== 'undefined') curStudent = null;
+    curStudent = null;
     if(typeof hwList !== 'undefined') hwList = [];
-    window._userType = null;
     try { localStorage.removeItem('auto_student_name'); } catch(e){}
     if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
-    console.log('✅ 학생 로그아웃 완료');
-  } else {
-    /* 일반 사용자 로그아웃 */
+    console.log('✅ 학생 세션 정리');
+  }
+  
+  /* === 일반 사용자 세션 정리 (window._generalUser가 있으면 무조건) === */
+  if(typeof window._generalUser !== 'undefined' && window._generalUser){
     if(typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser && !firebase.auth().currentUser.isAnonymous){
       firebase.auth().signOut().then(function(){
         firebase.auth().signInAnonymously().catch(function(e){
@@ -16739,15 +16739,17 @@ function _handleLogout(){
       }).catch(function(e){ console.warn('일반사용자 로그아웃 실패:', e); });
     }
     window._generalUser = null;
-    window._userType = null;
     try {
       localStorage.removeItem('general_user_uid');
       localStorage.removeItem('general_user_name');
     } catch(e){}
-    console.log('✅ 일반 사용자 로그아웃 완료');
+    console.log('✅ 일반 사용자 세션 정리');
   }
   
-  /* 관리자 모드도 해제 (개발자 자동 로그인 케이스) */
+  /* 모든 사용자 타입 초기화 */
+  window._userType = null;
+  
+  /* 관리자 모드도 해제 (개발자 자동 로그인 케이스 - 동현 이메일 로그인 시) */
   if(typeof _setAdminLogin === 'function'){
     try { _setAdminLogin(false); } catch(e){}
   }
@@ -17002,27 +17004,39 @@ function _ptHandleRecommendationClick(item){
         openCourse(item.id);
       }
     } else if(item.type === 'free' && Array.isArray(item.scaleIds)){
-      /* 자유연습으로 이동 - 추천 스케일을 자유연습 리스트에 추가 */
+      /* 자유연습 추가: 실제 freeList 구조 사용 (전역 freeList + _saveFreeList) */
       try {
-        const list = JSON.parse(localStorage.getItem('freeList_v2') || '[]');
-        item.scaleIds.forEach(sid => {
-          const sc = (DB.scales||[]).find(s => s.id === sid);
-          if(sc){
-            const exists = list.some(x => x.scaleId === sid && !x.exId);
-            if(!exists){
-              list.push({
-                exId: '',
-                scaleId: sid,
-                repeat: 1,
-                comment: '',
-                addedFromRecommendation: true,
-              });
-            }
-          }
-        });
-        localStorage.setItem('freeList_v2', JSON.stringify(list));
+        if(typeof freeList === 'undefined' || !Array.isArray(freeList)){
+          /* 안전장치: freeList 정의 안 됨 → 자유연습으로만 이동 */
+          console.warn('freeList 미정의 - 화면만 이동');
+        } else {
+          const exId = '추천 자유연습';
+          item.scaleIds.forEach(sid => {
+            const sc = (DB.scales||[]).find(s => s.id === sid);
+            if(!sc) return;
+            /* 중복 방지: 같은 scaleId + exId 조합이 이미 있으면 skip */
+            const exists = freeList.some(x => x.scaleId === sid && x.exId === exId);
+            if(exists) return;
+            freeList.push({
+              id: `rec_${sid}_${Date.now()}`,
+              exId: exId,
+              scaleId: sid,
+              label: `${exId} — ${sc.name} (${sc.range})`,
+              rangeLabel: sc.range,
+              desc: '',
+              scaleNote: sc.note || '',
+              startNote: sc.startNote,
+              endNote: sc.endNote,
+              pattern: sc.pattern,
+              bpm: sc.bpm || 60,
+              previewType: sc.previewType || '없음',
+              videoId: '',
+            });
+          });
+          if(typeof _saveFreeList === 'function') _saveFreeList();
+        }
       } catch(e){
-        console.warn('자유연습 리스트 저장 실패:', e);
+        console.warn('자유연습 리스트 추가 실패:', e);
       }
       
       /* 자유연습 화면으로 이동 */
@@ -17030,7 +17044,10 @@ function _ptHandleRecommendationClick(item){
       const freeScr = document.getElementById('scr-free');
       if(freeScr){
         freeScr.classList.remove('hidden');
+        if(typeof scrStack !== 'undefined') scrStack = ['scr-free'];
         if(typeof rndrFree === 'function') rndrFree();
+      } else if(typeof goHome === 'function'){
+        goHome();
       }
     }
   }, 200);
