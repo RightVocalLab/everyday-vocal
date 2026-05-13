@@ -136,7 +136,7 @@ input,select,button,textarea{font-family:inherit;}
   align-items:center;justify-content:center;padding:14px;}
 .modal-bg.open{display:flex;}
 .modal-box{background:#fff;border:2px solid var(--or);border-radius:18px;padding:22px;
-  width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(249,115,22,.14);}
+  width:100%;max-width:460px;margin-top:10px;margin-bottom:20px;box-shadow:0 20px 60px rgba(249,115,22,.14);}
 
 #scr-splash{background:linear-gradient(155deg,#fff7f0 0%,#fff 65%);justify-content:center;align-items:center;text-align:center;}
 .div{height:1px;background:var(--line);margin:12px 0;}
@@ -1629,7 +1629,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 보컬 진단실 글쓰기 모달 -->
 <div class="v2-pt-modal-bg" id="vclinic-write-modal" onclick="if(event.target===this)_closeVclinicWrite()">
-  <div class="v2-pt-modal-card" style="max-width:420px;max-height:95vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:420px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closeVclinicWrite()" aria-label="닫기">&#x2715;</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">음성 올리기</div>
     <div style="text-align:center;font-size:11px;color:#64748b;margin-bottom:8px">최대 5분 &middot; 5MB &middot; 음성 파일만</div>
@@ -1711,7 +1711,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 보컬 진단실 상세 모달 -->
 <div class="v2-pt-modal-bg" id="vclinic-view-modal" onclick="if(event.target===this)_closeVclinicView()">
-  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div class="v2-pt-modal-card" style="max-width:440px;margin-top:10px;margin-bottom:20px;-webkit-overflow-scrolling:touch">
     <button class="v2-ios-modal-close" onclick="_closeVclinicView()" aria-label="닫기">&#x2715;</button>
     <div id="vclinic-view-header" style="margin-bottom:14px">
       <div id="vclinic-view-private-badge" style="display:none;margin-bottom:6px"><span style="background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:6px;padding:3px 8px;font-size:10.5px;font-weight:800;color:#7c3aed">&#x1F512; 트레이너 비공개</span></div>
@@ -1793,7 +1793,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 게시글 작성 모달 -->
 <div class="v2-pt-modal-bg" id="community-write-modal" onclick="if(event.target===this)_closeCommunityWrite()">
-  <div class="v2-pt-modal-card" style="max-width:420px;max-height:95vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:420px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closeCommunityWrite()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#7c2d92;margin-bottom:14px">✍️ 발전 자랑 글쓰기</div>
     
@@ -1849,7 +1849,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 게시글 상세 보기 모달 -->
 <div class="v2-pt-modal-bg" id="community-view-modal" onclick="if(event.target===this)_closeCommunityView()">
-  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div class="v2-pt-modal-card" style="max-width:440px;margin-top:10px;margin-bottom:20px;-webkit-overflow-scrolling:touch">
     <button class="v2-ios-modal-close" onclick="_closeCommunityView()" aria-label="닫기">✕</button>
     
     <!-- 게시글 헤더 -->
@@ -1950,7 +1950,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 음역대 측정 결과 모달 -->
 <div class="v2-pt-modal-bg" id="pt-result-modal" onclick="if(event.target===this)_closePtResult()">
-  <div class="v2-pt-modal-card" style="max-width:380px;max-height:90vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:380px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closePtResult()" aria-label="닫기">✕</button>
     
     <div style="text-align:center;font-size:18px;font-weight:900;color:#1d4ed8;margin-bottom:6px">🎤 음역대 측정 결과</div>
@@ -2053,7 +2053,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 측정 이력 모달 (학생 숙제 화면에서 사용) -->
 <div class="v2-pt-modal-bg" id="pt-history-modal" onclick="if(event.target===this)_closePtHistory()">
-  <div class="v2-pt-modal-card" style="max-width:400px;max-height:90vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:400px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closePtHistory()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:14px">📊 음역대 측정 이력</div>
     <div id="pt-history-list">
@@ -2067,7 +2067,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 관리자용: 학생별 측정 이력 모달 (체크박스 + 비교) -->
 <div class="v2-pt-modal-bg" id="admin-pt-history-modal" onclick="if(event.target===this)_closeAdminPtHistory()">
-  <div class="v2-pt-modal-card" style="max-width:420px;max-height:90vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:420px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closeAdminPtHistory()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px" id="admin-pt-title">📊 학생 음역대 이력</div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:12px">최대 3개까지 선택해서 비교할 수 있습니다</div>
@@ -2083,7 +2083,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 측정 결과 비교 모달 (그래프 겹침) -->
 <div class="v2-pt-modal-bg" id="pt-compare-modal" onclick="if(event.target===this)_closePtCompare()">
-  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div class="v2-pt-modal-card" style="max-width:440px;margin-top:10px;margin-bottom:20px;-webkit-overflow-scrolling:touch">
     <button class="v2-ios-modal-close" onclick="_closePtCompare()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">📈 측정 결과 비교</div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:12px" id="pt-compare-info">—</div>
@@ -2109,7 +2109,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 로컬 이력: 이름 그룹 모달 (이 기기에 저장된 사용자 목록) -->
 <div class="v2-pt-modal-bg" id="local-pt-group-modal" onclick="if(event.target===this)_closeLocalPtGroup()">
-  <div class="v2-pt-modal-card" style="max-width:400px;max-height:90vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:400px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closeLocalPtGroup()" aria-label="닫기">✕</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:6px">📊 측정 이력 (이 기기)</div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-bottom:14px">이름을 누르면 해당 사용자의 측정 이력을 볼 수 있습니다</div>
@@ -2124,7 +2124,7 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- 로컬 이력: 특정 사용자 이력 모달 (체크박스 + 비교) -->
 <div class="v2-pt-modal-bg" id="local-pt-user-modal" onclick="if(event.target===this)_closeLocalPtUser()">
-  <div class="v2-pt-modal-card" style="max-width:420px;max-height:90vh;overflow-y:auto">
+  <div class="v2-pt-modal-card" style="max-width:420px;margin-top:10px;margin-bottom:20px">
     <button class="v2-ios-modal-close" onclick="_closeLocalPtUser()" aria-label="닫기">✕</button>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <button onclick="_backToLocalPtGroup()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer">‹ 뒤로</button>
@@ -2305,7 +2305,7 @@ input,select,button,textarea{font-family:inherit;}
   align-items:center;justify-content:center;padding:14px;}
 .modal-bg.open{display:flex;}
 .modal-box{background:#fff;border:2px solid var(--or);border-radius:18px;padding:22px;
-  width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(249,115,22,.14);}
+  width:100%;max-width:460px;margin-top:10px;margin-bottom:20px;box-shadow:0 20px 60px rgba(249,115,22,.14);}
 
 #scr-splash{background:linear-gradient(155deg,#fff7f0 0%,#fff 65%);justify-content:center;align-items:center;text-align:center;}
 .div{height:1px;background:var(--line);margin:12px 0;}
@@ -3748,10 +3748,12 @@ input,select,button,textarea{font-family:inherit;}
   inset:0;
   background:rgba(0,0,0,0.55);
   z-index:10001;
-  align-items:center;
+  align-items:flex-start;
   justify-content:center;
   padding:20px;
   box-sizing:border-box;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 .v2-pt-modal-bg.active{display:flex;}
 
@@ -3825,6 +3827,23 @@ input,select,button,textarea{font-family:inherit;}
 }
 
 </style>
+<!-- 닉네임 설정 모달 (일반/소셜/이메일 로그인 후 최초 1회) -->
+<div class="modal-bg" id="nickname-modal" style="z-index:10010">
+  <div class="modal-box" style="max-width:360px;text-align:center">
+    <div style="font-size:32px;margin-bottom:8px">👤</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:4px;color:#1e3a8a">닉네임 설정</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:14px;line-height:1.6">
+      게시판에서 표시될 <strong>닉네임</strong>을 정해주세요.<br>
+      <span style="color:#dc2626;font-weight:700">⚠️ 한 번 설정하면 수정할 수 없어요</span>
+    </div>
+    <input id="nickname-input" type="text" placeholder="닉네임 (2~15자)" maxlength="15"
+      style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 14px;font-size:14px;text-align:center;margin-bottom:8px"
+      oninput="document.getElementById('nickname-err').textContent='';">
+    <div id="nickname-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
+    <button onclick="_submitNickname()" style="width:100%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:20px;padding:12px;font-size:13px;font-weight:800;cursor:pointer">닉네임 설정</button>
+  </div>
+</div>
+
 <!-- 학생 로그인 모달 -->
 <div class="modal-bg" id="student-login-modal">
   <div class="modal-box" style="max-width:340px;text-align:center">
@@ -12274,9 +12293,12 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
                 };
                 window._userType = 'general';
                 /* onAuthStateChanged는 체크박스를 볼 수 없음
-                   저장 여부는 로그인 성공 시(_onEmailAuthSuccess)에서 이미 처리됨
-                   여기선 localStorage에 저장된 값이 있으면 자동로그인으로 간주 */
+                   저장 여부는 로그인 성공 시(_onEmailAuthSuccess)에서 이미 처리됨 */
                 if(typeof _updateUserBtn === 'function') _updateUserBtn();
+                /* 닉네임 체크: 미설정이면 모달 표시 (학생 로그인 제외) */
+                if(!curStudent){
+                  setTimeout(function(){ if(typeof _ensureNickname==='function') _ensureNickname(); }, 500);
+                }
                 /* 인트로/로그인 선택 화면이 보이는 상태면 홈으로 자동 이동 */
                 const introVis = !document.getElementById('scr-intro')?.classList.contains('hidden');
                 const loginSelVis = !document.getElementById('scr-login-select')?.classList.contains('hidden');
@@ -13572,6 +13594,87 @@ function _onEmailAuthSuccess(user){
    3초 후 자동으로 사라짐 */
 
 /* 이메일 로그인 - 비밀번호 표시/숨기기 */
+
+/* ═══════════════════════════════════════════════════════════
+   닉네임 시스템 (실명 노출 방지)
+   - 일반/소셜/이메일 로그인 후 최초 1회 강제 설정
+   - users/{uid}/nickname 저장 (수정 불가)
+   - users/{uid}/realName, email 같이 저장 → 관리자만 매칭 확인 가능
+   - 학생 로그인은 제외 (curStudent.name 사용)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 사용자 닉네임 조회/캐시. 없으면 모달 표시 */
+async function _ensureNickname(){
+  /* 학생 로그인은 닉네임 불필요 */
+  if(curStudent && !window._generalUser) return;
+  if(!window._generalUser || !_fbDb) return;
+  const uid = window._generalUser.uid;
+  if(!uid) return;
+  try {
+    const snap = await _fbDb.ref('users/'+uid+'/nickname').once('value');
+    const nick = snap.val();
+    if(nick && typeof nick==='string' && nick.length>=1){
+      /* 이미 닉네임 있음 → 캐시 갱신 */
+      window._generalUser.nickname = nick;
+      try { localStorage.setItem('general_user_name', nick); } catch(e){}
+      if(typeof _updateUserBtn==='function') _updateUserBtn();
+    } else {
+      /* 닉네임 미설정 → 모달 표시 */
+      _openNicknameModal();
+    }
+  } catch(e){ console.warn('닉네임 조회 실패:', e); }
+}
+
+/* 닉네임 설정 모달 열기 */
+function _openNicknameModal(){
+  const modal = document.getElementById('nickname-modal');
+  const input = document.getElementById('nickname-input');
+  const err = document.getElementById('nickname-err');
+  if(!modal) return;
+  if(input) input.value='';
+  if(err) err.textContent='';
+  modal.classList.add('open');
+  setTimeout(()=>{ if(input) input.focus(); }, 100);
+}
+
+/* 닉네임 등록 (수정 불가, 1회만) */
+async function _submitNickname(){
+  const input = document.getElementById('nickname-input');
+  const err = document.getElementById('nickname-err');
+  const nick = (input?.value||'').trim();
+  if(nick.length < 2){ if(err) err.textContent='닉네임은 2자 이상이어야 해요.'; return; }
+  if(nick.length > 15){ if(err) err.textContent='닉네임은 15자 이하여야 해요.'; return; }
+  if(!window._generalUser || !_fbDb){ if(err) err.textContent='로그인 정보가 없어요.'; return; }
+  const uid = window._generalUser.uid;
+  try {
+    /* 이미 설정되어 있는지 한 번 더 확인 (수정 불가) */
+    const exist = await _fbDb.ref('users/'+uid+'/nickname').once('value');
+    if(exist.val()){
+      if(err) err.textContent='이미 닉네임이 설정되어 있어요.';
+      window._generalUser.nickname = exist.val();
+      document.getElementById('nickname-modal')?.classList.remove('open');
+      return;
+    }
+    /* 저장: nickname + 실명/이메일 매핑 (관리자만 조회 가능) */
+    const cu = firebase.auth().currentUser;
+    const userData = {
+      nickname: nick,
+      email: cu?.email || window._generalUser.email || '',
+      realName: cu?.displayName || '',
+      provider: (cu?.providerData?.[0]?.providerId) || 'unknown',
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    await _fbDb.ref('users/'+uid).update(userData);
+    window._generalUser.nickname = nick;
+    try { localStorage.setItem('general_user_name', nick); } catch(e){}
+    if(typeof _updateUserBtn==='function') _updateUserBtn();
+    document.getElementById('nickname-modal')?.classList.remove('open');
+    showToast('닉네임이 설정되었어요: '+nick);
+  } catch(e){
+    if(err) err.textContent='닉네임 설정 실패: '+e.message;
+  }
+}
+
 function _toggleLoginPw(){
   const input = document.getElementById('login-pw-input');
   const eye   = document.getElementById('login-pw-eye');
@@ -19260,10 +19363,18 @@ async function _submitComment(){
   }
   
   /* 로그인 이름 자동 사용 */
-  const nickname = curStudent ? curStudent.name
+  let nickname = curStudent ? curStudent.name
                  : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
                  : null;
-  if(!nickname){ alert('로그인 후 댓글을 달 수 있어요.'); return; }
+  if(!nickname){
+    /* 닉네임 미설정 시 모달 표시 */
+    if(window._generalUser && typeof _ensureNickname==='function'){
+      alert('먼저 닉네임을 설정해주세요.');
+      _ensureNickname();
+      return;
+    }
+    alert('로그인 후 댓글을 달 수 있어요.'); return;
+  }
   const text = document.getElementById('comm-cmt-input').value.trim();
   if(!text){ alert('댓글 내용을 입력해주세요.'); return; }
   
@@ -19309,6 +19420,7 @@ async function _deleteComment(commentId){
   if(!confirm('댓글을 삭제하시겠습니까?')) return;
   
   const postId = _currentViewingPost._id;
+  console.log('댓글 삭제 시도:', postId, commentId, 'auth uid:', firebase.auth().currentUser?.uid);
   try {
     await firebase.database().ref(`community/comments/${postId}/${commentId}`).set(null);
     /* 카운트 감소 */
@@ -19472,7 +19584,7 @@ function _renderVclinicPosts(){
   if(!container) return;
   if(!_vclinicPosts.length){container.innerHTML='<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">글이 없어요</div>'; return;}
   container.innerHTML=_vclinicPosts.map(p=>{
-    const dt=p.createdAt?new Date(p.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}):'';
+    const dt=p.createdAt?new Date(p.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     const hasFb=p.feedbackCount&&p.feedbackCount>0;
     const sC=hasFb?'#16a34a':'#854d0e', sBg=hasFb?'#dcfce7':'#fef9c3', sBd=hasFb?'#86efac':'#fde047', sTxt=hasFb?'답변 완료':'답변 대기';
     const privB=p.isPrivate?'<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px">비공개</span>':'';
@@ -19505,8 +19617,8 @@ function _openVclinicWrite(){
   /* 비공개 토글 초기화 */
   const tog=document.getElementById('vclinic-private-toggle'); if(tog) tog.checked=false;
   _updatePrivateToggle();
-  const isAdmin=(curStudent&&curStudent.name==='김동현');
-  const privRow=document.getElementById('vclinic-private-row'); if(privRow) privRow.style.display=isAdmin?'block':'none';
+  /* 비공개 토글 모든 사용자 표시 (이전: 관리자만) */
+  const privRow=document.getElementById('vclinic-private-row'); if(privRow) privRow.style.display='block';
   _vclinicSetMode('rec');
   const modal=document.getElementById('vclinic-write-modal');
   if(modal){modal.style.display='flex'; document.body.style.overflow='hidden';}
@@ -19564,7 +19676,18 @@ async function _vclinicToggleRec(){
         stream.getTracks().forEach(t=>t.stop());
         _vclinicAudioBlob=new Blob(_vclinicRecChunks,{type:'audio/webm'});
         const url=URL.createObjectURL(_vclinicAudioBlob);
-        const audio=document.getElementById('vclinic-preview-audio'); if(audio) audio.src=url;
+        const audio=document.getElementById('vclinic-preview-audio');
+        if(audio){
+          audio.src=url;
+          /* webm duration Infinity 버그 해결 */
+          audio.addEventListener('loadedmetadata', function _fix(){
+            if(audio.duration === Infinity || isNaN(audio.duration)){
+              audio.currentTime = 1e101;
+              audio.ontimeupdate = function(){ audio.ontimeupdate=null; audio.currentTime=0; };
+            }
+            audio.removeEventListener('loadedmetadata', _fix);
+          });
+        }
         const prevEl2=document.getElementById('vclinic-rec-preview'); if(prevEl2) prevEl2.style.display='block';
         if(statusEl) statusEl.textContent='녹음 완료 ('+_vclinicFmtTime(_vclinicRecSeconds)+')';
         if(recBtn){recBtn.style.background='#dc2626'; recBtn.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>';}
@@ -19694,12 +19817,24 @@ async function _openVclinicView(postId){
   const f=(id)=>document.getElementById(id);
   if(f('vclinic-view-title')) f('vclinic-view-title').textContent=post.title||'';
   if(f('vclinic-view-author')) f('vclinic-view-author').textContent=post.nickname||'익명';
-  if(f('vclinic-view-time')) f('vclinic-view-time').textContent=post.createdAt?new Date(post.createdAt).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}):'';
+  if(f('vclinic-view-time')) f('vclinic-view-time').textContent=post.createdAt?new Date(post.createdAt).toLocaleString('ko-KR',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
   if(f('vclinic-view-private-badge')) f('vclinic-view-private-badge').style.display=post.isPrivate?'block':'none';
   const hasFb=post.feedbackCount&&post.feedbackCount>0;
   const ss=f('vclinic-status-span');
   if(ss){ss.textContent=hasFb?'답변 완료':'답변 대기중'; ss.style.background=hasFb?'#dcfce7':'#fef9c3'; ss.style.color=hasFb?'#16a34a':'#854d0e'; ss.style.borderColor=hasFb?'#86efac':'#fde047';}
-  const audio=f('vclinic-view-audio'); if(audio){audio.src=post.audioUrl||''; audio.load();}
+  const audio=f('vclinic-view-audio');
+  if(audio){
+    audio.src=post.audioUrl||'';
+    audio.load();
+    /* webm duration Infinity 버그 해결 - 업로드된 음성도 동일 */
+    audio.addEventListener('loadedmetadata', function _fix2(){
+      if(audio.duration === Infinity || isNaN(audio.duration)){
+        audio.currentTime = 1e101;
+        audio.ontimeupdate = function(){ audio.ontimeupdate=null; audio.currentTime=0; };
+      }
+      audio.removeEventListener('loadedmetadata', _fix2);
+    });
+  }
   const memoEl=f('vclinic-view-memo');
   if(memoEl){if(post.memo){memoEl.textContent=post.memo; memoEl.style.display='block';}else{memoEl.style.display='none';}}
   if(f('vclinic-delete-btn')) f('vclinic-delete-btn').style.display=(isOwner||isAdmin)?'inline-block':'none';
@@ -19733,7 +19868,7 @@ async function _loadVclinicFeedback(postId){
     if(!data){list.innerHTML='<div style="font-size:12px;color:var(--mu);padding:8px">아직 피드백이 없어요</div>'; return;}
     const items=Object.entries(data).map(([k,v])=>({_id:k,...v})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     list.innerHTML=items.map(fb=>{
-      const dt=fb.createdAt?new Date(fb.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}):'';
+      const dt=fb.createdAt?new Date(fb.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
       return '<div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:11px 13px"><div style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:5px">트레이너 &middot; '+dt+'</div><div style="font-size:12.5px;color:#1e3a8a;line-height:1.65;white-space:pre-wrap">'+_escapeHtml(fb.text||'')+'</div></div>';
     }).join('');
   } catch(e){list.innerHTML='<div style="font-size:12px;color:#dc2626;padding:8px">불러오기 실패</div>';}
@@ -19747,14 +19882,27 @@ async function _submitVclinicFeedback(){
   const text=(input?.value||'').trim(); if(!text){alert('피드백 내용을 입력해주세요.'); return;}
   const postId=_vclinicCurrentPost._id;
   const authorUid=_vclinicCurrentPost.authorUid;
+  /* 현재 Firebase auth 상태 확인 */
+  const cu = firebase.auth().currentUser;
+  console.log('피드백 등록 - auth:', cu?.email, 'uid:', cu?.uid?.substring(0,8));
   try {
-    await _fbDb.ref('vocalClinic/feedback/'+postId).push({text,createdAt:firebase.database.ServerValue.TIMESTAMP,trainerUid:_fbAuthUid});
-    await _fbDb.ref('vocalClinic/posts/'+postId).update({feedbackCount:firebase.database.ServerValue.increment(1),status:'answered'});
+    /* 1. feedback 푸시 */
+    await _fbDb.ref('vocalClinic/feedback/'+postId).push({
+      text,
+      createdAt:firebase.database.ServerValue.TIMESTAMP,
+      trainerUid: cu?.uid || _fbAuthUid || ''
+    });
+    /* 2. posts 업데이트 (권한 실패 가능 - try로 분리) */
+    try {
+      await _fbDb.ref('vocalClinic/posts/'+postId).update({
+        feedbackCount:firebase.database.ServerValue.increment(1),
+        status:'answered'
+      });
+    } catch(e){ console.warn('posts 카운트 업데이트 실패(무시):', e.message); }
+    /* 3. userActiveCount/userUnread (실패해도 무시) */
     if(authorUid){
-      await Promise.all([
-        _fbDb.ref('vocalClinic/userActiveCount/'+authorUid).transaction(v=>Math.max(0,(v||0)-1)),
-        _fbDb.ref('vocalClinic/userUnread/'+authorUid).transaction(v=>(v||0)+1)
-      ]);
+      try { await _fbDb.ref('vocalClinic/userActiveCount/'+authorUid).transaction(v=>Math.max(0,(v||0)-1)); } catch(e){}
+      try { await _fbDb.ref('vocalClinic/userUnread/'+authorUid).transaction(v=>(v||0)+1); } catch(e){}
     }
     if(input) input.value='';
     _vclinicCurrentPost.feedbackCount=(_vclinicCurrentPost.feedbackCount||0)+1;
@@ -19764,7 +19912,10 @@ async function _submitVclinicFeedback(){
     showToast('피드백이 등록되었습니다!');
     _loadVclinicFeedback(postId);
     _renderVclinicPosts();
-  } catch(e){alert('등록 실패: '+e.message);}
+  } catch(e){
+    console.error('피드백 등록 실패:', e);
+    alert('피드백 등록 실패: '+e.message+'\n\nauth: '+(cu?.email||cu?.uid?.substring(0,8)||'없음'));
+  }
 }
 
 async function _loadVclinicComments(postId){
@@ -19779,7 +19930,7 @@ async function _loadVclinicComments(postId){
     if(cntEl) cntEl.textContent=items.length;
     const isAdmin=(curStudent&&curStudent.name==='김동현');
     list.innerHTML=items.map(cm=>{
-      const dt=cm.createdAt?new Date(cm.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}):'';
+      const dt=cm.createdAt?new Date(cm.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
       const canDel=(cm.authorUid===_fbAuthUid||isAdmin);
       return '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:9px 11px">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
@@ -19794,10 +19945,17 @@ async function _loadVclinicComments(postId){
 async function _submitVclinicComment(){
   if(!_vclinicCurrentPost||!_fbDb) return;
   /* 로그인 이름 자동 사용 (익명 불가) */
-  const nick = curStudent ? curStudent.name
+  let nick = curStudent ? curStudent.name
              : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
              : null;
-  if(!nick){ alert('로그인 후 댓글을 달 수 있어요.'); return; }
+  if(!nick){
+    if(window._generalUser && typeof _ensureNickname==='function'){
+      alert('먼저 닉네임을 설정해주세요.');
+      _ensureNickname();
+      return;
+    }
+    alert('로그인 후 댓글을 달 수 있어요.'); return;
+  }
   const inputEl=document.getElementById('vclinic-cmt-input');
   const text=(inputEl?.value||'').trim(); if(!text){alert('댓글 내용을 입력해주세요.'); return;}
   /* Firebase 현재 auth uid 사용 (캐시된 _fbAuthUid 대신 live값) */
