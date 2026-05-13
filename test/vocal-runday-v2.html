@@ -808,6 +808,29 @@ input,select,button,textarea{font-family:inherit;}
       <div class="v2-card-arrow" style="position:static;color:#a855f7">›</div>
     </div>
 
+    <!-- 보컬 진단실 카드 -->
+    <div class="v2-card" id="menu-vclinic" onclick="openVocalClinic()" style="margin-top:10px;flex-direction:row;align-items:center;min-height:auto;padding:14px 18px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;position:relative">
+      <div class="v2-card-illust" style="width:48px;height:48px;margin-bottom:0;margin-right:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:12px">
+        <svg viewBox="0 0 64 64" fill="none" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="14" width="44" height="36" rx="8" stroke="#2563eb" stroke-width="2.5" fill="#eff6ff"/>
+          <circle cx="28" cy="28" r="6" stroke="#2563eb" stroke-width="2.2" fill="none"/>
+          <path d="M22 40 Q28 34 34 40" stroke="#2563eb" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <path d="M38 24 L50 24" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/>
+          <path d="M38 30 L50 30" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/>
+          <path d="M38 36 L46 36" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="50" cy="14" r="7" fill="#dc2626"/>
+          <text x="47" y="18" font-size="9" font-weight="900" fill="#fff">!</text>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="v2-card-title" style="margin-bottom:2px;color:#1d4ed8">보컬 진단실</div>
+        <div class="v2-card-desc" style="font-size:11px;color:#3b82f6">음성을 올리면 트레이너가 피드백해 드려요</div>
+      </div>
+      <!-- 새 알림 빨간 점 -->
+      <span id="vclinic-home-badge" style="display:none;position:absolute;top:10px;right:38px;width:8px;height:8px;background:#dc2626;border-radius:50%;border:1.5px solid #fff"></span>
+      <div class="v2-card-arrow" style="position:static;color:#2563eb">›</div>
+    </div>
+
     <!-- ═══════════════════════════════════════ -->
     <!-- 섹션 3: 발성 이론 (누구나 - 가로 스크롤) -->
     <!-- ═══════════════════════════════════════ -->
@@ -1414,6 +1437,13 @@ input,select,button,textarea{font-family:inherit;}
         <span>🌟</span>
         <span>발전 자랑 게시판 가기</span>
       </button>
+
+      <!-- 보컬 진단실 진입 버튼 -->
+      <button onclick="openVocalClinic()" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#1d4ed8;border:1.5px solid #93c5fd;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;position:relative">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span>내 진단 이력 / 보컬 진단실</span>
+        <span id="vclinic-student-badge" style="display:none;width:8px;height:8px;background:#dc2626;border-radius:50%;border:1.5px solid #fff;position:absolute;top:8px;right:12px"></span>
+      </button>
       
       <!-- 측정 거리 안내 (가장 중요) -->
       <div style="margin-top:14px;padding:12px 14px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;font-size:12px;line-height:1.6;color:#1e3a8a">
@@ -1545,6 +1575,243 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
   </div></div>
+</div>
+
+<!-- ============ 보컬 진단실 화면 ============ -->
+<div id="scr-vclinic" class="scr hidden">
+  <div class="topbar">
+    <button class="ico" onclick="pop()">←</button>
+    <div class="tb">보컬 진단실</div>
+    <button class="ico" onclick="goHome()" title="홈">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+  </div>
+  <div class="body"><div class="inner" style="padding-bottom:80px">
+
+    <!-- 안내 카드 -->
+    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:#1d4ed8;margin-bottom:6px">보컬 진단실이란?</div>
+      <div style="font-size:11.5px;color:#1e40af;line-height:1.7">
+        음성을 녹음하거나 파일을 업로드하면<br>
+        트레이너가 직접 텍스트 피드백을 드립니다.<br>
+        <span style="color:#3b82f6;font-weight:700">최대 5분 / 5MB · 음성 파일만 가능</span>
+      </div>
+    </div>
+
+    <!-- 탭 (전체 / 내 글) -->
+    <div style="display:flex;gap:0;margin-bottom:14px;border:1.5px solid #bfdbfe;border-radius:10px;overflow:hidden;background:#eff6ff">
+      <button id="vclinic-tab-all" onclick="_vclinicSwitchTab('all')"
+        style="flex:1;padding:10px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;transition:all 0.15s">
+        전체 글
+      </button>
+      <button id="vclinic-tab-mine" onclick="_vclinicSwitchTab('mine')"
+        style="flex:1;padding:10px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:transparent;color:#2563eb;transition:all 0.15s">
+        내 글
+      </button>
+    </div>
+
+    <!-- 새 글 작성 버튼 -->
+    <button id="vclinic-write-btn" onclick="_openVclinicWrite()"
+      style="width:100%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;box-shadow:0 2px 10px rgba(37,99,235,0.3)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span>음성 올리기</span>
+    </button>
+
+    <!-- 1개 제한 안내 (활성 글 있을 때) -->
+    <div id="vclinic-limit-notice" style="display:none;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#854d0e;line-height:1.5">
+      현재 답변 대기 중인 글이 있습니다.<br>
+      <span style="font-weight:700">답변을 받은 후에 새 글을 올릴 수 있어요.</span>
+    </div>
+
+    <!-- 게시글 리스트 -->
+    <div id="vclinic-posts" style="display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">불러오는 중...</div>
+    </div>
+    <button id="vclinic-more-btn" onclick="_loadMoreVclinicPosts()" style="display:none;width:100%;margin-top:12px;background:#fff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">
+      더 보기
+    </button>
+
+  </div></div>
+</div>
+
+<!-- 보컬 진단실 글쓰기 모달 -->
+<div class="v2-pt-modal-bg" id="vclinic-write-modal" onclick="if(event.target===this)_closeVclinicWrite()">
+  <div class="v2-pt-modal-card" style="max-width:420px;max-height:95vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeVclinicWrite()" aria-label="닫기">&#x2715;</button>
+    <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">음성 올리기</div>
+    <div style="text-align:center;font-size:11px;color:#64748b;margin-bottom:16px">최대 5분 · 5MB · 음성 파일만</div>
+
+    <!-- 비공개 토글 (트레이너 전용) -->
+    <div id="vclinic-private-row" style="display:none;margin-bottom:14px;padding:10px 14px;background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#7c3aed">트레이너 비공개 설정</div>
+          <div style="font-size:10.5px;color:#a78bfa;margin-top:2px">비공개 시 트레이너만 내용을 볼 수 있어요</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer">
+          <input type="checkbox" id="vclinic-private-toggle" style="opacity:0;width:0;height:0" onchange="_updatePrivateToggle()">
+          <span id="vclinic-toggle-bg" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#d1d5db;border-radius:24px;transition:0.2s"></span>
+          <span id="vclinic-toggle-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 제목 -->
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">제목 <span style="color:#dc2626">*</span></label>
+      <input id="vclinic-title" type="text" placeholder="예: 고음 올릴 때 목이 조여요" maxlength="50"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:13px;box-sizing:border-box">
+    </div>
+
+    <!-- 메모 -->
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px">메모 (선택)</label>
+      <textarea id="vclinic-memo" placeholder="어떤 부분이 고민인지 적어주세요" maxlength="200" rows="3"
+        style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
+    </div>
+
+    <!-- 음성 입력 방식 선택 -->
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">음성 입력 방식 <span style="color:#dc2626">*</span></label>
+      <div style="display:flex;gap:8px">
+        <button id="vclinic-mode-rec" onclick="_vclinicSetMode('rec')"
+          style="flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800;cursor:pointer">
+          직접 녹음
+        </button>
+        <button id="vclinic-mode-file" onclick="_vclinicSetMode('file')"
+          style="flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:800;cursor:pointer">
+          파일 업로드
+        </button>
+      </div>
+    </div>
+
+    <!-- 직접 녹음 영역 -->
+    <div id="vclinic-rec-area" style="margin-bottom:14px">
+      <div style="background:#f1f5f9;border-radius:12px;padding:16px;text-align:center">
+        <div id="vclinic-rec-status" style="font-size:12px;color:#64748b;margin-bottom:10px">녹음 준비</div>
+        <div id="vclinic-rec-timer" style="font-size:24px;font-weight:900;color:#1d4ed8;margin-bottom:12px;font-variant-numeric:tabular-nums">00:00</div>
+        <div style="display:flex;gap:10px;justify-content:center;align-items:center">
+          <button id="vclinic-rec-btn" onclick="_vclinicToggleRec()"
+            style="width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#dc2626;box-shadow:0 2px 8px rgba(220,38,38,0.4)">
+            <svg id="vclinic-rec-icon" width="22" height="22" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
+          </button>
+          <button id="vclinic-rec-stop-btn" onclick="_vclinicStopRec()"
+            style="display:none;width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;align-items:center;justify-content:center;background:#374151;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          </button>
+        </div>
+        <div id="vclinic-rec-preview" style="display:none;margin-top:12px">
+          <audio id="vclinic-preview-audio" controls style="width:100%;border-radius:8px;height:36px"></audio>
+          <div style="font-size:11px;color:#64748b;margin-top:6px">녹음을 다시 하려면 위 버튼을 누르세요</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 파일 업로드 영역 -->
+    <div id="vclinic-file-area" style="display:none;margin-bottom:14px">
+      <label for="vclinic-file-input" style="display:block;background:#f1f5f9;border:2px dashed #93c5fd;border-radius:12px;padding:20px;text-align:center;cursor:pointer">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="font-size:13px;font-weight:700;color:#1d4ed8;margin-bottom:4px">파일 선택</div>
+        <div style="font-size:11px;color:#64748b">mp3, m4a, wav, ogg, webm · 최대 5MB / 5분</div>
+      </label>
+      <input id="vclinic-file-input" type="file" accept="audio/*" style="display:none" onchange="_vclinicFileSelected(event)">
+      <div id="vclinic-file-selected" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 12px">
+        <div style="font-size:12px;font-weight:700;color:#1d4ed8" id="vclinic-file-name">파일명</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px" id="vclinic-file-size">크기</div>
+      </div>
+    </div>
+
+    <!-- 에러 + 진행 -->
+    <div id="vclinic-write-err" style="font-size:11px;color:#dc2626;margin-bottom:8px;min-height:14px"></div>
+    <div id="vclinic-upload-progress" style="display:none;margin-bottom:10px">
+      <div style="font-size:11px;color:#2563eb;font-weight:700;margin-bottom:6px" id="vclinic-progress-txt">업로드 중...</div>
+      <div style="background:#e5e7eb;border-radius:99px;height:6px;overflow:hidden">
+        <div id="vclinic-progress-bar" style="height:100%;background:linear-gradient(90deg,#2563eb,#1d4ed8);border-radius:99px;width:0%;transition:width 0.3s"></div>
+      </div>
+    </div>
+
+    <!-- 제출 버튼 -->
+    <div style="display:flex;gap:8px">
+      <button onclick="_closeVclinicWrite()" style="flex:1;background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="_submitVclinicPost()" id="vclinic-submit-btn" style="flex:1.5;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer">올리기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 보컬 진단실 상세 모달 -->
+<div class="v2-pt-modal-bg" id="vclinic-view-modal" onclick="if(event.target===this)_closeVclinicView()">
+  <div class="v2-pt-modal-card" style="max-width:440px;max-height:95vh;overflow-y:auto">
+    <button class="v2-ios-modal-close" onclick="_closeVclinicView()" aria-label="닫기">&#x2715;</button>
+
+    <!-- 헤더 -->
+    <div id="vclinic-view-header" style="margin-bottom:14px">
+      <div id="vclinic-view-private-badge" style="display:none;margin-bottom:6px">
+        <span style="background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:6px;padding:3px 8px;font-size:10.5px;font-weight:800;color:#7c3aed">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;margin-right:3px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          트레이너 비공개
+        </span>
+      </div>
+      <div style="font-size:17px;font-weight:900;color:#1e3a8a;margin-bottom:6px" id="vclinic-view-title">&#x2014;</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--mu)">
+        <span id="vclinic-view-author">&#x2014;</span>
+        <span id="vclinic-view-time">&#x2014;</span>
+      </div>
+    </div>
+
+    <!-- 답변 상태 뱃지 -->
+    <div style="margin-bottom:12px">
+      <span id="vclinic-status-span" style="font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:99px;background:#fef9c3;color:#854d0e;border:1.5px solid #fde047">
+        답변 대기중
+      </span>
+    </div>
+
+    <!-- 음성 플레이어 -->
+    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">업로드된 음성</div>
+      <audio id="vclinic-view-audio" controls style="width:100%;border-radius:8px;height:36px"></audio>
+    </div>
+
+    <!-- 메모 -->
+    <div id="vclinic-view-memo" style="display:none;background:#f9fafb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#475569;line-height:1.65;white-space:pre-wrap"></div>
+
+    <!-- 트레이너 피드백 -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        트레이너 피드백
+      </div>
+      <div id="vclinic-feedback-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <!-- 관리자 답변 입력 -->
+      <div id="vclinic-trainer-input" style="display:none">
+        <textarea id="vclinic-feedback-input" placeholder="피드백을 입력하세요..." maxlength="500" rows="3"
+          style="width:100%;border:1.5px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:inherit;background:#eff6ff"></textarea>
+        <button onclick="_submitVclinicFeedback()"
+          style="width:100%;margin-top:6px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:800;cursor:pointer">
+          피드백 등록
+        </button>
+      </div>
+    </div>
+
+    <!-- 댓글 -->
+    <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px">댓글 <span id="vclinic-cmt-count">0</span></div>
+      <div id="vclinic-cmt-list" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <input id="vclinic-cmt-nick" type="text" placeholder="닉네임" maxlength="15"
+          style="width:80px;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
+        <input id="vclinic-cmt-input" type="text" placeholder="댓글 입력..." maxlength="100"
+          style="flex:1;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
+        <button onclick="_submitVclinicComment()"
+          style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:11.5px;font-weight:700;cursor:pointer">등록</button>
+      </div>
+    </div>
+
+    <!-- 삭제 + 닫기 -->
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button id="vclinic-delete-btn" onclick="_deleteVclinicPost()" style="display:none;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+      <button onclick="_closeVclinicView()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:9px 28px;font-size:12.5px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============ 발전 자랑 게시판 화면 ============ -->
@@ -11635,6 +11902,8 @@ function _completeStudentLogin(student){
   _updateHwMenuSub();
   buildHome(); /* v2: 메인 화면에 훈련 설명 섹션 표시 */
   if(typeof _updateUserBtn === 'function') _updateUserBtn();
+  /* 보컬 진단실 뱃지 업데이트 */
+  if(typeof _vclinicCheckBadge === 'function') _vclinicCheckBadge();
   openHomework();
 }
 function logoutStudent(){
@@ -19061,6 +19330,641 @@ async function _deleteCommunityPost(){
     alert('삭제 실패: ' + e.message);
   }
 }
+
+/* ========== 보컬 진단실 (Vocal Clinic) ========== */
+
+let _vclinicPosts = [];
+let _vclinicLastKey = null;
+let _vclinicPostsPerPage = 20;
+let _vclinicCurrentTab = 'all';
+let _vclinicCurrentPost = null;
+let _vclinicMediaRecorder = null;
+let _vclinicRecChunks = [];
+let _vclinicRecInterval = null;
+let _vclinicRecSeconds = 0;
+let _vclinicIsRecording = false;
+let _vclinicAudioBlob = null;
+let _vclinicInputMode = 'rec';
+let _vclinicFileBlob = null;
+const VC_MAX_BYTES = 5 * 1024 * 1024;
+const VC_MAX_SEC   = 5 * 60;
+
+function openVocalClinic(){
+  push('scr-vclinic');
+  _vclinicCurrentTab = 'all';
+  _vclinicSwitchTab('all');
+  _vclinicCheckLimitNotice();
+  _vclinicCheckBadge();
+}
+
+function _vclinicSwitchTab(tab){
+  _vclinicCurrentTab = tab;
+  const btnAll  = document.getElementById('vclinic-tab-all');
+  const btnMine = document.getElementById('vclinic-tab-mine');
+  if(!btnAll) return;
+  if(tab === 'all'){
+    btnAll.style.background  = 'linear-gradient(135deg,#2563eb,#1d4ed8)';
+    btnAll.style.color       = '#fff';
+    btnMine.style.background = 'transparent';
+    btnMine.style.color      = '#2563eb';
+  } else {
+    btnMine.style.background = 'linear-gradient(135deg,#2563eb,#1d4ed8)';
+    btnMine.style.color      = '#fff';
+    btnAll.style.background  = 'transparent';
+    btnAll.style.color       = '#2563eb';
+  }
+  _vclinicPosts = [];
+  _vclinicLastKey = null;
+  _loadVclinicPosts(true);
+}
+
+async function _vclinicCheckLimitNotice(){
+  const notice   = document.getElementById('vclinic-limit-notice');
+  const writeBtn = document.getElementById('vclinic-write-btn');
+  if(!notice || !_fbAuthUid || !_fbDb) return;
+  try {
+    const snap = await _fbDb.ref('vocalClinic/userActiveCount/' + _fbAuthUid).once('value');
+    const cnt = snap.val() || 0;
+    const hasActive = cnt > 0;
+    notice.style.display = hasActive ? 'block' : 'none';
+    if(writeBtn){ writeBtn.disabled = hasActive; writeBtn.style.opacity = hasActive ? '0.5' : '1'; }
+  } catch(e){}
+}
+
+async function _vclinicCheckBadge(){
+  const badge = document.getElementById('vclinic-home-badge');
+  if(!badge || !_fbAuthUid || !_fbDb) return;
+  try {
+    const snap = await _fbDb.ref('vocalClinic/userUnread/' + _fbAuthUid).once('value');
+    badge.style.display = (snap.val() && snap.val() > 0) ? 'block' : 'none';
+  } catch(e){ badge.style.display = 'none'; }
+}
+
+async function _loadVclinicPosts(reset){
+  if(!_fbDb) return;
+  const container = document.getElementById('vclinic-posts');
+  const moreBtn   = document.getElementById('vclinic-more-btn');
+  if(reset){
+    _vclinicPosts = []; _vclinicLastKey = null;
+    if(container) container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">불러오는 중...</div>';
+  }
+  const isAdmin = (curStudent && curStudent.name === '김동현');
+  try {
+    if(_vclinicCurrentTab === 'mine' && _fbAuthUid){
+      const byUserRef = _fbDb.ref('vocalClinic/postsByUser/' + _fbAuthUid);
+      let q = byUserRef.orderByKey().limitToLast(_vclinicPostsPerPage);
+      if(_vclinicLastKey) q = q.endAt(_vclinicLastKey);
+      const snap = await q.once('value');
+      const data = snap.val();
+      if(!data){
+        if(reset && container) container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">등록한 글이 없어요</div>';
+        if(moreBtn) moreBtn.style.display = 'none';
+        return;
+      }
+      const ids = Object.values(data).reverse();
+      const posts = [];
+      for(const pid of ids){
+        const ps = await _fbDb.ref('vocalClinic/posts/' + pid).once('value');
+        if(ps.val()) posts.push({_id: pid, ...ps.val()});
+      }
+      _vclinicPosts = _vclinicPosts.concat(posts);
+      if(moreBtn) moreBtn.style.display = ids.length >= _vclinicPostsPerPage ? 'block' : 'none';
+    } else {
+      let q = _fbDb.ref('vocalClinic/posts').orderByChild('createdAt').limitToLast(_vclinicPostsPerPage);
+      if(_vclinicLastKey) q = q.endAt(_vclinicLastKey);
+      const snap = await q.once('value');
+      const data = snap.val();
+      if(!data){
+        if(reset && container) container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">등록된 글이 없어요</div>';
+        if(moreBtn) moreBtn.style.display = 'none';
+        return;
+      }
+      let newPosts = Object.entries(data).map(([k,v]) => ({_id:k,...v}));
+      newPosts = newPosts.filter(p => !p.isPrivate || p.authorUid === _fbAuthUid || isAdmin);
+      newPosts.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      const keys = Object.keys(data);
+      _vclinicLastKey = keys[0];
+      _vclinicPosts = _vclinicPosts.concat(newPosts);
+      if(moreBtn) moreBtn.style.display = newPosts.length >= _vclinicPostsPerPage ? 'block' : 'none';
+    }
+    _renderVclinicPosts();
+  } catch(e){
+    if(container) container.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:12px;padding:20px">불러오기 실패: ' + e.message + '</div>';
+  }
+}
+
+function _loadMoreVclinicPosts(){ _loadVclinicPosts(false); }
+
+function _renderVclinicPosts(){
+  const container = document.getElementById('vclinic-posts');
+  if(!container) return;
+  if(_vclinicPosts.length === 0){
+    container.innerHTML = '<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">글이 없어요</div>';
+    return;
+  }
+  container.innerHTML = _vclinicPosts.map(p => {
+    const dt = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}) : '';
+    const hasFeedback = p.feedbackCount && p.feedbackCount > 0;
+    const sColor = hasFeedback ? '#16a34a' : '#854d0e';
+    const sBg    = hasFeedback ? '#dcfce7' : '#fef9c3';
+    const sBd    = hasFeedback ? '#86efac' : '#fde047';
+    const sTxt   = hasFeedback ? '답변 완료' : '답변 대기';
+    const privBadge = p.isPrivate
+      ? '<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px">비공개</span>'
+      : '';
+    return '<div onclick="_openVclinicView(\'' + p._id + '\')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">'
+      + '<div style="font-size:13.5px;font-weight:800;color:#1e3a8a;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + privBadge + _escapeHtml(p.title||'') + '</div>'
+      + '<span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;background:' + sBg + ';color:' + sColor + ';border:1px solid ' + sBd + '">' + sTxt + '</span>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu)">'
+      + '<span>' + _escapeHtml(p.nickname||'익명') + '</span>'
+      + '<span>' + dt + '</span>'
+      + '</div></div>';
+  }).join('');
+}
+
+/* ---- 글쓰기 모달 ---- */
+
+function _openVclinicWrite(){
+  const writeBtn = document.getElementById('vclinic-write-btn');
+  if(writeBtn && writeBtn.disabled) return;
+  _vclinicAudioBlob = null;
+  _vclinicFileBlob  = null;
+  _vclinicRecSeconds = 0;
+  _vclinicIsRecording = false;
+  const f = (id) => document.getElementById(id);
+  if(f('vclinic-title')) f('vclinic-title').value = '';
+  if(f('vclinic-memo'))  f('vclinic-memo').value  = '';
+  if(f('vclinic-write-err')) f('vclinic-write-err').textContent = '';
+  if(f('vclinic-upload-progress')) f('vclinic-upload-progress').style.display = 'none';
+  if(f('vclinic-rec-preview')) f('vclinic-rec-preview').style.display = 'none';
+  if(f('vclinic-rec-timer')) f('vclinic-rec-timer').textContent = '00:00';
+  if(f('vclinic-rec-status')) f('vclinic-rec-status').textContent = '녹음 준비';
+  if(f('vclinic-file-selected')) f('vclinic-file-selected').style.display = 'none';
+  if(f('vclinic-private-toggle')) f('vclinic-private-toggle').checked = false;
+  _updatePrivateToggle();
+  /* 관리자(트레이너)만 비공개 토글 표시 */
+  const isAdmin = (curStudent && curStudent.name === '김동현');
+  const privRow = f('vclinic-private-row');
+  if(privRow) privRow.style.display = isAdmin ? 'block' : 'none';
+  /* 기본 모드: 직접 녹음 */
+  _vclinicSetMode('rec');
+  /* 닉네임 자동입력 */
+  /* 모달 표시 */
+  const modal = f('vclinic-write-modal');
+  if(modal){ modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+
+function _closeVclinicWrite(){
+  /* 녹음 중이면 정지 */
+  if(_vclinicIsRecording) _vclinicStopRec();
+  const modal = document.getElementById('vclinic-write-modal');
+  if(modal){ modal.style.display = 'none'; document.body.style.overflow = ''; }
+}
+
+function _vclinicSetMode(mode){
+  _vclinicInputMode = mode;
+  const recBtn  = document.getElementById('vclinic-mode-rec');
+  const fileBtn = document.getElementById('vclinic-mode-file');
+  const recArea  = document.getElementById('vclinic-rec-area');
+  const fileArea = document.getElementById('vclinic-file-area');
+  if(!recBtn) return;
+  if(mode === 'rec'){
+    recBtn.style.border   = '1.5px solid #2563eb';
+    recBtn.style.background = '#eff6ff';
+    recBtn.style.color    = '#1d4ed8';
+    fileBtn.style.border  = '1.5px solid #d1d5db';
+    fileBtn.style.background = '#fff';
+    fileBtn.style.color   = '#374151';
+    if(recArea)  recArea.style.display  = 'block';
+    if(fileArea) fileArea.style.display = 'none';
+  } else {
+    fileBtn.style.border  = '1.5px solid #2563eb';
+    fileBtn.style.background = '#eff6ff';
+    fileBtn.style.color   = '#1d4ed8';
+    recBtn.style.border   = '1.5px solid #d1d5db';
+    recBtn.style.background = '#fff';
+    recBtn.style.color    = '#374151';
+    if(recArea)  recArea.style.display  = 'none';
+    if(fileArea) fileArea.style.display = 'block';
+  }
+}
+
+function _updatePrivateToggle(){
+  const toggle = document.getElementById('vclinic-private-toggle');
+  const bg     = document.getElementById('vclinic-toggle-bg');
+  const knob   = document.getElementById('vclinic-toggle-knob');
+  if(!toggle) return;
+  const on = toggle.checked;
+  if(bg)   bg.style.background = on ? '#7c3aed' : '#d1d5db';
+  if(knob) knob.style.left     = on ? '20px'    : '2px';
+}
+
+/* 녹음 토글 (시작/일시정지 → 여기선 시작만 처리) */
+async function _vclinicToggleRec(){
+  if(_vclinicIsRecording){
+    _vclinicStopRec();
+    return;
+  }
+  /* 이전 녹음 초기화 */
+  _vclinicAudioBlob = null;
+  _vclinicRecChunks = [];
+  _vclinicRecSeconds = 0;
+  const timer    = document.getElementById('vclinic-rec-timer');
+  const statusEl = document.getElementById('vclinic-rec-status');
+  const prevEl   = document.getElementById('vclinic-rec-preview');
+  const recBtn   = document.getElementById('vclinic-rec-btn');
+  const stopBtn  = document.getElementById('vclinic-rec-stop-btn');
+  if(prevEl) prevEl.style.display = 'none';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    _vclinicMediaRecorder = new MediaRecorder(stream);
+    _vclinicMediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) _vclinicRecChunks.push(e.data); };
+    _vclinicMediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      _vclinicAudioBlob = new Blob(_vclinicRecChunks, {type:'audio/webm'});
+      const url = URL.createObjectURL(_vclinicAudioBlob);
+      const audio = document.getElementById('vclinic-preview-audio');
+      if(audio){ audio.src = url; }
+      if(prevEl) prevEl.style.display = 'block';
+      if(statusEl) statusEl.textContent = '녹음 완료 (' + _vclinicFmtTime(_vclinicRecSeconds) + ')';
+      if(recBtn) { recBtn.style.background = '#dc2626'; recBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>'; }
+      if(stopBtn) stopBtn.style.display = 'none';
+    };
+    _vclinicMediaRecorder.start(200);
+    _vclinicIsRecording = true;
+    if(statusEl) statusEl.textContent = '녹음 중...';
+    if(recBtn){
+      recBtn.style.background = '#991b1b';
+      recBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>';
+    }
+    if(stopBtn) stopBtn.style.display = 'flex';
+    /* 타이머 */
+    _vclinicRecInterval = setInterval(() => {
+      _vclinicRecSeconds++;
+      if(timer) timer.textContent = _vclinicFmtTime(_vclinicRecSeconds);
+      /* 5분 초과 시 자동 정지 */
+      if(_vclinicRecSeconds >= VC_MAX_SEC) _vclinicStopRec();
+    }, 1000);
+  } catch(e){
+    alert('마이크 접근 오류: ' + e.message);
+  }
+}
+
+function _vclinicStopRec(){
+  if(_vclinicRecInterval){ clearInterval(_vclinicRecInterval); _vclinicRecInterval = null; }
+  _vclinicIsRecording = false;
+  if(_vclinicMediaRecorder && _vclinicMediaRecorder.state !== 'inactive'){
+    _vclinicMediaRecorder.stop();
+  }
+}
+
+function _vclinicFmtTime(sec){
+  const m = String(Math.floor(sec/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return m + ':' + s;
+}
+
+function _vclinicFileSelected(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const errEl = document.getElementById('vclinic-write-err');
+  /* 크기 체크 */
+  if(file.size > VC_MAX_BYTES){
+    if(errEl) errEl.textContent = '5MB 이하의 파일만 업로드 가능합니다.';
+    event.target.value = '';
+    return;
+  }
+  /* 타입 체크 */
+  if(!file.type.startsWith('audio/')){
+    if(errEl) errEl.textContent = '음성 파일만 업로드 가능합니다 (mp3, m4a, wav 등).';
+    event.target.value = '';
+    return;
+  }
+  if(errEl) errEl.textContent = '';
+  _vclinicFileBlob = file;
+  const nameEl = document.getElementById('vclinic-file-name');
+  const sizeEl = document.getElementById('vclinic-file-size');
+  const selEl  = document.getElementById('vclinic-file-selected');
+  if(nameEl) nameEl.textContent = file.name;
+  if(sizeEl) sizeEl.textContent = (file.size/1024).toFixed(1) + ' KB';
+  if(selEl)  selEl.style.display = 'block';
+}
+
+async function _submitVclinicPost(){
+  const errEl    = document.getElementById('vclinic-write-err');
+  const progEl   = document.getElementById('vclinic-upload-progress');
+  const progBar  = document.getElementById('vclinic-progress-bar');
+  const progTxt  = document.getElementById('vclinic-progress-txt');
+  const submitBtn = document.getElementById('vclinic-submit-btn');
+  if(errEl) errEl.textContent = '';
+
+  /* 입력값 검증 */
+  const title = (document.getElementById('vclinic-title')?.value || '').trim();
+  if(!title){ if(errEl) errEl.textContent = '제목을 입력해주세요.'; return; }
+
+  /* 음성 Blob 결정 */
+  const blob = _vclinicInputMode === 'rec' ? _vclinicAudioBlob : _vclinicFileBlob;
+  if(!blob){ if(errEl) errEl.textContent = '음성을 녹음하거나 파일을 선택해주세요.'; return; }
+  if(blob.size > VC_MAX_BYTES){ if(errEl) errEl.textContent = '파일이 5MB를 초과합니다.'; return; }
+
+  /* Firebase 인증 확인 */
+  if(!_fbAuthUid){ if(errEl) errEl.textContent = '로그인이 필요합니다.'; return; }
+
+  /* UI 잠금 */
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '업로드 중...'; }
+  if(progEl) progEl.style.display = 'block';
+  if(progBar) progBar.style.width = '10%';
+  if(progTxt) progTxt.textContent = 'Firebase에 업로드 중...';
+
+  try {
+    /* Auth 토큰 */
+    const idToken = await firebase.auth().currentUser.getIdToken();
+    /* 고유 postId */
+    const postId = _fbDb.ref('vocalClinic/posts').push().key;
+    /* 파일 확장자 */
+    const ext = _vclinicInputMode === 'rec' ? 'webm' : (_vclinicFileBlob.name.split('.').pop() || 'audio');
+    const storagePath = 'vocal-clinic/' + _fbAuthUid + '/' + postId + '.' + ext;
+    const uploadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name=' + encodeURIComponent(storagePath);
+
+    if(progBar) progBar.style.width = '30%';
+
+    const resp = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': blob.type || 'audio/webm', 'Authorization': 'Bearer ' + idToken },
+      body: blob
+    });
+    if(!resp.ok) throw new Error('Storage 업로드 실패: ' + resp.status);
+
+    const downloadUrl = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/' + encodeURIComponent(storagePath) + '?alt=media';
+
+    if(progBar) progBar.style.width = '70%';
+    if(progTxt) progTxt.textContent = 'DB에 저장 중...';
+
+    /* 닉네임 결정 */
+    const nickname = curStudent ? curStudent.name : ('사용자' + (_fbAuthUid||'').substring(0,4));
+    const isPrivate = document.getElementById('vclinic-private-toggle')?.checked || false;
+    const memo = (document.getElementById('vclinic-memo')?.value || '').trim();
+
+    const postData = {
+      title, nickname, memo, isPrivate,
+      audioUrl: downloadUrl,
+      storagePath,
+      authorUid: _fbAuthUid,
+      feedbackCount: 0,
+      commentCount: 0,
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      status: 'pending'
+    };
+
+    const updates = {};
+    updates['vocalClinic/posts/' + postId] = postData;
+    updates['vocalClinic/postsByUser/' + _fbAuthUid + '/' + postId] = postId;
+    updates['vocalClinic/userActiveCount/' + _fbAuthUid] = firebase.database.ServerValue.increment(1);
+    await _fbDb.ref().update(updates);
+
+    if(progBar) progBar.style.width = '100%';
+
+    showToast('음성이 등록되었습니다!');
+    _closeVclinicWrite();
+    _vclinicCheckLimitNotice();
+    _loadVclinicPosts(true);
+  } catch(e){
+    if(errEl) errEl.textContent = '업로드 실패: ' + e.message;
+    if(progEl) progEl.style.display = 'none';
+  } finally {
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '올리기'; }
+  }
+}
+
+/* ---- 상세 보기 모달 ---- */
+
+async function _openVclinicView(postId){
+  if(!_fbDb) return;
+  const post = _vclinicPosts.find(p => p._id === postId);
+  if(!post) return;
+  _vclinicCurrentPost = post;
+  const isAdmin = (curStudent && curStudent.name === '김동현');
+  const isOwner = (post.authorUid === _fbAuthUid);
+
+  const f = (id) => document.getElementById(id);
+  if(f('vclinic-view-title'))  f('vclinic-view-title').textContent  = post.title || '';
+  if(f('vclinic-view-author')) f('vclinic-view-author').textContent = post.nickname || '익명';
+  if(f('vclinic-view-time'))   f('vclinic-view-time').textContent   = post.createdAt ? new Date(post.createdAt).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}) : '';
+
+  /* 비공개 뱃지 */
+  if(f('vclinic-view-private-badge')) f('vclinic-view-private-badge').style.display = post.isPrivate ? 'block' : 'none';
+
+  /* 답변 상태 */
+  const hasFeedback = post.feedbackCount && post.feedbackCount > 0;
+  const statusSpan = f('vclinic-status-span');
+  if(statusSpan){
+    statusSpan.textContent  = hasFeedback ? '답변 완료' : '답변 대기중';
+    statusSpan.style.background = hasFeedback ? '#dcfce7' : '#fef9c3';
+    statusSpan.style.color      = hasFeedback ? '#16a34a' : '#854d0e';
+    statusSpan.style.borderColor = hasFeedback ? '#86efac' : '#fde047';
+  }
+
+  /* 음성 플레이어 */
+  const audio = f('vclinic-view-audio');
+  if(audio){ audio.src = post.audioUrl || ''; audio.load(); }
+
+  /* 메모 */
+  const memoEl = f('vclinic-view-memo');
+  if(memoEl){
+    if(post.memo){ memoEl.textContent = post.memo; memoEl.style.display = 'block'; }
+    else          { memoEl.style.display = 'none'; }
+  }
+
+  /* 삭제 버튼 (본인 or 관리자) */
+  const delBtn = f('vclinic-delete-btn');
+  if(delBtn) delBtn.style.display = (isOwner || isAdmin) ? 'inline-block' : 'none';
+
+  /* 트레이너 입력창 (관리자만) */
+  const trainerInput = f('vclinic-trainer-input');
+  if(trainerInput) trainerInput.style.display = isAdmin ? 'block' : 'none';
+  if(f('vclinic-feedback-input')) f('vclinic-feedback-input').value = '';
+
+  /* 피드백 로드 */
+  _loadVclinicFeedback(postId);
+  /* 댓글 로드 */
+  _loadVclinicComments(postId);
+
+  /* 읽음 처리 (내 글에 새 피드백 있으면 unread 초기화) */
+  if(isOwner && hasFeedback && _fbAuthUid){
+    _fbDb.ref('vocalClinic/userUnread/' + _fbAuthUid).set(0).catch(()=>{});
+    _vclinicCheckBadge();
+  }
+
+  /* 모달 표시 */
+  const modal = f('vclinic-view-modal');
+  if(modal){ modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+
+function _closeVclinicView(){
+  const modal = document.getElementById('vclinic-view-modal');
+  if(modal){ modal.style.display = 'none'; document.body.style.overflow = ''; }
+  _vclinicCurrentPost = null;
+}
+
+async function _loadVclinicFeedback(postId){
+  const list = document.getElementById('vclinic-feedback-list');
+  if(!list || !_fbDb) return;
+  list.innerHTML = '<div style="font-size:12px;color:var(--mu);padding:8px">불러오는 중...</div>';
+  try {
+    const snap = await _fbDb.ref('vocalClinic/feedback/' + postId).orderByChild('createdAt').once('value');
+    const data = snap.val();
+    if(!data){ list.innerHTML = '<div style="font-size:12px;color:var(--mu);padding:8px">아직 피드백이 없어요</div>'; return; }
+    const items = Object.entries(data).map(([k,v]) => ({_id:k,...v}));
+    items.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+    list.innerHTML = items.map(fb => {
+      const dt = fb.createdAt ? new Date(fb.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}) : '';
+      return '<div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:11px 13px">'
+        + '<div style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:5px">트레이너 · ' + dt + '</div>'
+        + '<div style="font-size:12.5px;color:#1e3a8a;line-height:1.65;white-space:pre-wrap">' + _escapeHtml(fb.text||'') + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(e){
+    list.innerHTML = '<div style="font-size:12px;color:#dc2626;padding:8px">불러오기 실패</div>';
+  }
+}
+
+async function _submitVclinicFeedback(){
+  if(!_vclinicCurrentPost || !_fbDb) return;
+  const isAdmin = (curStudent && curStudent.name === '김동현');
+  if(!isAdmin){ alert('트레이너 전용 기능입니다.'); return; }
+  const input = document.getElementById('vclinic-feedback-input');
+  const text  = (input?.value || '').trim();
+  if(!text){ alert('피드백 내용을 입력해주세요.'); return; }
+  const postId = _vclinicCurrentPost._id;
+  const authorUid = _vclinicCurrentPost.authorUid;
+  try {
+    const fbRef = _fbDb.ref('vocalClinic/feedback/' + postId).push();
+    await fbRef.set({ text, createdAt: firebase.database.ServerValue.TIMESTAMP, trainerUid: _fbAuthUid });
+    /* feedbackCount + status 갱신 */
+    await _fbDb.ref('vocalClinic/posts/' + postId).update({
+      feedbackCount: firebase.database.ServerValue.increment(1),
+      status: 'answered'
+    });
+    /* 글쓴이 activeCount 감소 + unread 증가 */
+    if(authorUid){
+      await Promise.all([
+        _fbDb.ref('vocalClinic/userActiveCount/' + authorUid).transaction(v => Math.max(0, (v||0) - 1)),
+        _fbDb.ref('vocalClinic/userUnread/' + authorUid).transaction(v => (v||0) + 1)
+      ]);
+    }
+    if(input) input.value = '';
+    showToast('피드백이 등록되었습니다!');
+    /* 로컬 포스트 캐시 갱신 */
+    _vclinicCurrentPost.feedbackCount = (_vclinicCurrentPost.feedbackCount||0) + 1;
+    _vclinicCurrentPost.status = 'answered';
+    /* 상태 뱃지 갱신 */
+    const statusSpan = document.getElementById('vclinic-status-span');
+    if(statusSpan){
+      statusSpan.textContent = '답변 완료';
+      statusSpan.style.background = '#dcfce7';
+      statusSpan.style.color = '#16a34a';
+      statusSpan.style.borderColor = '#86efac';
+    }
+    _loadVclinicFeedback(postId);
+    _renderVclinicPosts();
+  } catch(e){ alert('등록 실패: ' + e.message); }
+}
+
+async function _loadVclinicComments(postId){
+  const list = document.getElementById('vclinic-cmt-list');
+  const cntEl = document.getElementById('vclinic-cmt-count');
+  if(!list || !_fbDb) return;
+  try {
+    const snap = await _fbDb.ref('vocalClinic/comments/' + postId).orderByChild('createdAt').once('value');
+    const data = snap.val();
+    if(!data){ list.innerHTML = ''; if(cntEl) cntEl.textContent = '0'; return; }
+    const items = Object.entries(data).map(([k,v]) => ({_id:k,...v}));
+    items.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+    if(cntEl) cntEl.textContent = items.length;
+    const isAdmin = (curStudent && curStudent.name === '김동현');
+    list.innerHTML = items.map(c => {
+      const dt = c.createdAt ? new Date(c.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}) : '';
+      const canDel = (c.authorUid === _fbAuthUid || isAdmin);
+      return '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:9px 11px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+        + '<span style="font-size:11px;font-weight:700;color:#374151">' + _escapeHtml(c.nickname||'익명') + '</span>'
+        + '<div style="display:flex;align-items:center;gap:6px">'
+        + '<span style="font-size:10.5px;color:var(--mu)">' + dt + '</span>'
+        + (canDel ? '<button onclick="_deleteVclinicComment(\'' + postId + '\',\'' + c._id + '\')" style="font-size:10px;color:#dc2626;background:none;border:none;cursor:pointer;padding:0">삭제</button>' : '')
+        + '</div></div>'
+        + '<div style="font-size:12px;color:#374151;line-height:1.5">' + _escapeHtml(c.text||'') + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(e){ /* 무시 */ }
+}
+
+async function _submitVclinicComment(){
+  if(!_vclinicCurrentPost || !_fbDb) return;
+  const nickEl = document.getElementById('vclinic-cmt-nick');
+  const inputEl = document.getElementById('vclinic-cmt-input');
+  const nick = (nickEl?.value || '').trim() || '익명';
+  const text = (inputEl?.value || '').trim();
+  if(!text){ alert('댓글 내용을 입력해주세요.'); return; }
+  const postId = _vclinicCurrentPost._id;
+  try {
+    await _fbDb.ref('vocalClinic/comments/' + postId).push({
+      nickname: nick, text,
+      authorUid: _fbAuthUid || '',
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    });
+    await _fbDb.ref('vocalClinic/posts/' + postId + '/commentCount').transaction(v => (v||0) + 1);
+    if(inputEl) inputEl.value = '';
+    _loadVclinicComments(postId);
+  } catch(e){ alert('댓글 등록 실패: ' + e.message); }
+}
+
+async function _deleteVclinicComment(postId, commentId){
+  if(!confirm('댓글을 삭제하시겠습니까?')) return;
+  try {
+    await _fbDb.ref('vocalClinic/comments/' + postId + '/' + commentId).remove();
+    await _fbDb.ref('vocalClinic/posts/' + postId + '/commentCount').transaction(v => Math.max(0,(v||0)-1));
+    _loadVclinicComments(postId);
+  } catch(e){ alert('삭제 실패: ' + e.message); }
+}
+
+async function _deleteVclinicPost(){
+  if(!_vclinicCurrentPost || !_fbDb) return;
+  const isAdmin = (curStudent && curStudent.name === '김동현');
+  const isOwner = (_vclinicCurrentPost.authorUid === _fbAuthUid);
+  if(!isOwner && !isAdmin){ alert('본인 게시글만 삭제할 수 있습니다.'); return; }
+  if(!confirm('이 글을 삭제하시겠습니까?\n댓글, 피드백도 함께 삭제됩니다.')) return;
+  const postId = _vclinicCurrentPost._id;
+  const authorUid = _vclinicCurrentPost.authorUid;
+  try {
+    /* Storage 파일 삭제 시도 (권한 없으면 무시) */
+    if(_vclinicCurrentPost.storagePath){
+      try {
+        const idToken = await firebase.auth().currentUser.getIdToken();
+        await fetch('https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/' + encodeURIComponent(_vclinicCurrentPost.storagePath), {
+          method: 'DELETE', headers: { 'Authorization': 'Bearer ' + idToken }
+        });
+      } catch(e){}
+    }
+    /* DB 삭제 */
+    const updates = {};
+    updates['vocalClinic/posts/' + postId] = null;
+    updates['vocalClinic/postsByUser/' + authorUid + '/' + postId] = null;
+    updates['vocalClinic/feedback/' + postId] = null;
+    updates['vocalClinic/comments/' + postId] = null;
+    /* activeCount 복원 (pending 상태였으면) */
+    if(_vclinicCurrentPost.status === 'pending' && authorUid){
+      updates['vocalClinic/userActiveCount/' + authorUid] = firebase.database.ServerValue.increment(-1);
+    }
+    await _fbDb.ref().update(updates);
+    showToast('글이 삭제되었습니다.');
+    _closeVclinicView();
+    _loadVclinicPosts(true);
+    _vclinicCheckLimitNotice();
+  } catch(e){ alert('삭제 실패: ' + e.message); }
+}
+
 
 </script>
 
