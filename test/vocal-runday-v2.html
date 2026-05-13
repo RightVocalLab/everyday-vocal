@@ -1819,6 +1819,15 @@ input,select,button,textarea{font-family:inherit;}
       —
     </div>
     
+    <!-- Phase3: 맞춤 추천 섹션 -->
+    <div id="pt-result-recommendation" style="display:none;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #fbbf24;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:16px">🎯</span><span>당신을 위한 맞춤 추천</span>
+      </div>
+      <div id="pt-rec-analysis" style="font-size:11px;color:#78350f;line-height:1.55;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.6);border-radius:8px"></div>
+      <div id="pt-rec-cards" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    
     <!-- 닫기 버튼 -->
     <div style="display:flex;justify-content:center">
       <button onclick="_closePtResult()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:11px 32px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
@@ -15799,6 +15808,16 @@ function _showPtResult(){
   if(typeof _ptInitEditModeUI === 'function'){
     _ptInitEditModeUI(r);
   }
+  
+  /* Phase3: 맞춤 추천 생성 + 렌더링 */
+  try {
+    const rec = _ptGenerateRecommendation(r);
+    _ptRenderRecommendation(rec);
+  } catch(e){
+    console.warn('추천 생성 실패:', e);
+    const wrap = document.getElementById('pt-result-recommendation');
+    if(wrap) wrap.style.display = 'none';
+  }
 }
 
 /* 단일 측정 결과를 PVR 그래프로 그리기 (등고선 1개 + 피아노 건반) */
@@ -16489,6 +16508,260 @@ function _closePtResult(){
    - 학생 로그인 시: curStudent.name 우선
    - 비로그인 시: 사용자가 입력한 userName으로 저장 (PC↔모바일 동기화 가능)
 */
+
+
+/* ========================================================
+   PVR Phase 3: 음역 분석 → 맞춤 코스/스케일 추천
+   ======================================================== */
+
+/* 추천 생성 함수: 측정 결과 분석 → 추천 객체 반환
+   입력: result (PVR 측정 결과)
+   출력: { analysis: "...", recommendations: [...] }
+   각 추천은 { type:'course'|'free', id, name, reason, badge } 형식 */
+function _ptGenerateRecommendation(r){
+  if(!r) return null;
+  const isFemale = (r.gender === 'female');
+  const chest = r.chestRatio || 0;
+  const mix = r.mixRatio || 0;
+  const fal = r.falsettoRatio || 0;
+  const realLow = r.realLow || r.lowMidi || 0;
+  const realHigh = r.realHigh || r.highMidi || 0;
+  const rangeSemi = realHigh - realLow;  /* 진성 음역 폭 (반음 단위) */
+  const primary = r.primary || (r.allMatches && r.allMatches[0]);
+  
+  /* === 약점 점수 계산 === */
+  /* 각 영역별 0~100 점수: 높을수록 약함 (=훈련 필요) */
+  const weakness = {
+    chest: 0,    /* 흉성구 약함 */
+    mix: 0,      /* 믹스/중성 약함 */
+    high: 0,     /* 고음 약함 */
+    range: 0,    /* 음역 좁음 */
+    breath: 0,   /* 호흡/안정성 부족 (데이터 적음/신뢰도 낮음) */
+  };
+  
+  /* (1) register 비율 분석 (각 영역의 데이터 비율이 낮을수록 약함) */
+  /* 이상적: 흉성 30%, 믹스 40%, 가성 30% 정도 균형 */
+  if(chest < 0.20) weakness.chest = (0.30 - chest) * 200;  /* 20% 미만이면 약함 */
+  if(mix < 0.25) weakness.mix = (0.35 - mix) * 200;
+  if(fal < 0.10) weakness.high = Math.max(weakness.high, (0.20 - fal) * 150);
+  
+  /* (2) 음역 폭 분석 */
+  if(rangeSemi < 12) weakness.range = (12 - rangeSemi) * 8;  /* 1옥타브 미만 */
+  
+  /* (3) 성종 매칭 갭 분석 */
+  if(primary){
+    /* gapHigh > 0 → 고음 부족 (양수면 표준이 더 높음) */
+    if(primary.gapHigh > 2) weakness.high = Math.max(weakness.high, primary.gapHigh * 8);
+    /* gapLow > 0 → 저음 부족 */
+    if(primary.gapLow > 2) weakness.chest = Math.max(weakness.chest, primary.gapLow * 6);
+  }
+  
+  /* (4) 호흡/데이터 안정성 */
+  const conf = r.confidence || 100;
+  if(conf < 50) weakness.breath = (60 - conf) * 1.5;
+  
+  /* 약점을 점수 내림차순 정렬 */
+  const sorted = Object.entries(weakness)
+    .map(([k,v]) => ({key:k, score:Math.min(100, Math.max(0, Math.round(v)))}))
+    .filter(w => w.score >= 15)  /* 의미 있는 약점만 (점수 15 이상) */
+    .sort((a,b) => b.score - a.score);
+  
+  /* === 분석 요약 텍스트 === */
+  let analysisText = '';
+  if(sorted.length === 0){
+    analysisText = '음역대가 균형 있게 발달되어 있어요. 현재 수준을 유지하며 다양한 훈련을 시도해보세요.';
+  } else {
+    const labels = {
+      chest: '흉성구(저음)',
+      mix: '믹스/중성구',
+      high: '고음/두성구',
+      range: '음역 폭',
+      breath: '호흡 안정성',
+    };
+    const weakLabels = sorted.slice(0, 2).map(w => labels[w.key]).join(', ');
+    analysisText = `약점 영역: ${weakLabels}. 아래 추천 훈련으로 균형을 잡아보세요.`;
+  }
+  
+  /* === 추천 생성 === */
+  const recs = [];
+  
+  /* 메인 추천: 가장 큰 약점에 맞는 코스 1개 */
+  if(sorted.length > 0){
+    const top = sorted[0];
+    if(top.key === 'breath'){
+      recs.push({
+        type:'course', id:'c_1', name:'복흉식 호흡 만들기',
+        reason:'호흡 안정성을 키우는 10일 코스로 모든 발성의 기초를 다질 수 있어요.',
+        badge:'기초',
+      });
+    } else if(top.key === 'chest' || top.key === 'range'){
+      recs.push({
+        type:'course', id:'c_2', name:'흉성구 확립하기',
+        reason:'안정적인 흉성을 만들어 음역 확장의 기반을 다지는 28일 코스입니다.',
+        badge:'추천',
+      });
+    } else if(top.key === 'high' || top.key === 'mix'){
+      recs.push({
+        type:'course', id:'c_3', name:'고음만들기 프로젝트',
+        reason:'중성에서 고음으로 부드럽게 연결되는 발성을 만드는 코스입니다.',
+        badge:'추천',
+      });
+    }
+  } else {
+    /* 약점 없음 → 음역 유지/확장 코스 */
+    recs.push({
+      type:'course', id:'c_3', name:'고음만들기 프로젝트',
+      reason:'현재 균형 잡힌 음역을 한 단계 더 확장해보세요.',
+      badge:'심화',
+    });
+  }
+  
+  /* 보조 추천: 자유연습 스케일 (약점 영역에 맞는 스케일 ID 3개) */
+  const scaleRecs = [];
+  const hasScale = id => (DB.scales||[]).some(s => s.id === id);
+  
+  /* 측정한 사용자 음역에 가까운 스케일 선택 */
+  if(sorted.find(w => w.key === 'chest' || w.key === 'range')){
+    /* 흉성/저음 강화: 3D, 5D 흉성 계열 */
+    if(hasScale('3D-C')) scaleRecs.push('3D-C'); /* 흉성~낮은중성 */
+    if(hasScale('5D-A')) scaleRecs.push('5D-A'); /* 흉성 */
+    if(hasScale('5D-B')) scaleRecs.push('5D-B');
+  }
+  if(sorted.find(w => w.key === 'mix')){
+    /* 중성/믹스: 5D 중성, 9D 중성~두성 */
+    if(hasScale('5D-D')) scaleRecs.push('5D-D'); /* 중성~낮은두성 */
+    if(hasScale('5D-E')) scaleRecs.push('5D-E'); /* 중성~높은두성 */
+    if(hasScale('9D-B')) scaleRecs.push('9D-B');
+  }
+  if(sorted.find(w => w.key === 'high')){
+    /* 고음/두성: 5D 두성, 9D 두성~휘슬, DN 시리즈 */
+    if(hasScale('5D-H')) scaleRecs.push('5D-H'); /* 높은두성 */
+    if(hasScale('5DNH-B')) scaleRecs.push('5DNH-B');
+    if(hasScale('9DNH-B')) scaleRecs.push('9DNH-B');
+  }
+  
+  /* 약점 없거나 위에서 못 잡았으면 기본 균형 스케일 */
+  if(scaleRecs.length === 0){
+    if(hasScale('5D-A')) scaleRecs.push('5D-A');
+    if(hasScale('5D-D')) scaleRecs.push('5D-D');
+    if(hasScale('9D-B')) scaleRecs.push('9D-B');
+  }
+  
+  /* 중복 제거 + 최대 3개로 제한 */
+  const uniqScales = [...new Set(scaleRecs)].slice(0, 3);
+  if(uniqScales.length > 0){
+    const scaleNames = uniqScales.map(sid => {
+      const s = (DB.scales||[]).find(x => x.id === sid);
+      return s ? `${s.name} (${s.range})` : sid;
+    }).join(', ');
+    recs.push({
+      type:'free', scaleIds:uniqScales, name:'추천 자유 연습',
+      reason:`바로 연습할 스케일 ${uniqScales.length}개: ${scaleNames}`,
+      badge:'바로 시작',
+    });
+  }
+  
+  return {
+    analysis: analysisText,
+    recommendations: recs,
+    weaknessScores: sorted,
+  };
+}
+
+/* 추천 UI 렌더링 함수 */
+function _ptRenderRecommendation(rec){
+  const wrap = document.getElementById('pt-result-recommendation');
+  const analysisEl = document.getElementById('pt-rec-analysis');
+  const cardsEl = document.getElementById('pt-rec-cards');
+  if(!wrap || !analysisEl || !cardsEl) return;
+  
+  if(!rec || !rec.recommendations || rec.recommendations.length === 0){
+    wrap.style.display = 'none';
+    return;
+  }
+  
+  analysisEl.textContent = rec.analysis || '';
+  cardsEl.innerHTML = '';
+  
+  rec.recommendations.forEach(item => {
+    const card = document.createElement('button');
+    card.style.cssText = 'width:100%;background:#fff;border:1px solid #fbbf24;border-radius:10px;padding:11px 12px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform 0.1s,box-shadow 0.1s';
+    card.onmouseover = function(){this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';this.style.transform='translateY(-1px)';};
+    card.onmouseout = function(){this.style.boxShadow='';this.style.transform='';};
+    
+    const icon = item.type === 'course' ? '📚' : '🎵';
+    card.innerHTML = `
+      <div style="font-size:24px;flex-shrink:0">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span style="font-size:12.5px;font-weight:700;color:#1f2937">${item.name}</span>
+          <span style="font-size:9px;background:#fbbf24;color:#78350f;padding:1px 6px;border-radius:6px;font-weight:600">${item.badge||''}</span>
+        </div>
+        <div style="font-size:10.5px;color:#4b5563;line-height:1.45">${item.reason||''}</div>
+      </div>
+      <div style="font-size:18px;color:#9ca3af;flex-shrink:0">›</div>
+    `;
+    
+    card.onclick = function(){
+      _ptHandleRecommendationClick(item);
+    };
+    
+    cardsEl.appendChild(card);
+  });
+  
+  wrap.style.display = 'block';
+}
+
+/* 추천 클릭 핸들러 */
+function _ptHandleRecommendationClick(item){
+  if(!item) return;
+  
+  /* 결과 모달 닫기 */
+  if(typeof _closePtResult === 'function'){
+    _closePtResult();
+  }
+  
+  setTimeout(function(){
+    if(item.type === 'course' && item.id){
+      /* 코스로 이동 */
+      if(typeof openCourse === 'function'){
+        openCourse(item.id);
+      }
+    } else if(item.type === 'free' && Array.isArray(item.scaleIds)){
+      /* 자유연습으로 이동 - 추천 스케일을 자유연습 리스트에 추가 */
+      try {
+        const list = JSON.parse(localStorage.getItem('freeList_v2') || '[]');
+        item.scaleIds.forEach(sid => {
+          const sc = (DB.scales||[]).find(s => s.id === sid);
+          if(sc){
+            const exists = list.some(x => x.scaleId === sid && !x.exId);
+            if(!exists){
+              list.push({
+                exId: '',
+                scaleId: sid,
+                repeat: 1,
+                comment: '',
+                addedFromRecommendation: true,
+              });
+            }
+          }
+        });
+        localStorage.setItem('freeList_v2', JSON.stringify(list));
+      } catch(e){
+        console.warn('자유연습 리스트 저장 실패:', e);
+      }
+      
+      /* 자유연습 화면으로 이동 */
+      document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
+      const freeScr = document.getElementById('scr-free');
+      if(freeScr){
+        freeScr.classList.remove('hidden');
+        if(typeof rndrFree === 'function') rndrFree();
+      }
+    }
+  }, 200);
+}
+
 function _ptSaveResult(result){
   if(!result) return;
   
