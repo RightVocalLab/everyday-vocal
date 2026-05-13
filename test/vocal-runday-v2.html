@@ -19269,11 +19269,13 @@ async function _submitComment(){
   if(!text){ alert('댓글 내용을 입력해주세요.'); return; }
   
   const postId = _currentViewingPost._id;
+  /* Firebase 현재 auth uid 사용 (캐시된 _fbAuthUid 대신 live값) */
+  const _liveUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || _fbAuthUid || '';
   const comment = {
     timestamp: Date.now(),
     nickname: nickname.substring(0, 15),
     text: text.substring(0, 100),
-    authorUid: _fbAuthUid
+    authorUid: _liveUid
   };
   
   try {
@@ -19797,9 +19799,11 @@ async function _submitVclinicComment(){
   if(!nick){ alert('로그인 후 댓글을 달 수 있어요.'); return; }
   const inputEl=document.getElementById('vclinic-cmt-input');
   const text=(inputEl?.value||'').trim(); if(!text){alert('댓글 내용을 입력해주세요.'); return;}
+  /* Firebase 현재 auth uid 사용 (캐시된 _fbAuthUid 대신 live값) */
+  const liveUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || _fbAuthUid || '';
   const postId=_vclinicCurrentPost._id;
   try {
-    await _fbDb.ref('vocalClinic/comments/'+postId).push({nickname:nick,text,authorUid:_fbAuthUid||'',createdAt:firebase.database.ServerValue.TIMESTAMP});
+    await _fbDb.ref('vocalClinic/comments/'+postId).push({nickname:nick,text,authorUid:liveUid,createdAt:firebase.database.ServerValue.TIMESTAMP});
     await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>(v||0)+1);
     if(inputEl) inputEl.value='';
     _loadVclinicComments(postId);
@@ -19836,11 +19840,14 @@ async function _deleteVclinicPost(){
   }
 
   /* posts 메인 데이터 삭제 (핵심) */
+  /* 삭제 전 현재 Firebase auth 상태 확인 */
+  const _delUser = firebase.auth().currentUser;
+  console.log('삭제 시도 - auth uid:', _delUser?.uid, 'email:', _delUser?.email, 'anon:', _delUser?.isAnonymous);
   try {
     await _fbDb.ref('vocalClinic/posts/'+postId).remove();
   } catch(e){
     console.error('posts 삭제 실패:', e);
-    alert('삭제 실패: ' + e.message);
+    alert('삭제 실패: ' + e.message + '\n\nauth: ' + (_delUser?.email || _delUser?.uid?.substring(0,8) || '없음'));
     return;
   }
 
