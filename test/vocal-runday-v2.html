@@ -1679,7 +1679,7 @@ input,select,button,textarea{font-family:inherit;}
           </button>
         </div>
         <div id="vclinic-rec-preview" style="display:none;margin-top:12px">
-          <audio id="vclinic-preview-audio" controls style="width:100%;border-radius:8px;height:36px"></audio>
+          <audio id="vclinic-preview-audio" controls style="width:100%;display:block;min-height:40px"></audio>
           <div style="font-size:11px;color:#64748b;margin-top:6px">녹음을 다시 하려면 녹음 버튼을 누르세요</div>
         </div>
       </div>
@@ -1726,7 +1726,7 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">업로드된 음성</div>
-      <audio id="vclinic-view-audio" controls style="width:100%;border-radius:8px;height:36px"></audio>
+      <audio id="vclinic-view-audio" controls style="width:100%;display:block;min-height:40px"></audio>
     </div>
     <div id="vclinic-view-memo" style="display:none;background:#f9fafb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#475569;line-height:1.65;white-space:pre-wrap"></div>
     <div style="margin-bottom:14px">
@@ -1740,8 +1740,8 @@ input,select,button,textarea{font-family:inherit;}
     <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-bottom:12px">
       <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px">댓글 <span id="vclinic-cmt-count">0</span></div>
       <div id="vclinic-cmt-list" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
-      <div style="display:flex;gap:6px">
-        <input id="vclinic-cmt-nick" type="text" placeholder="닉네임" maxlength="15" style="width:80px;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
+      <div id="vclinic-cmt-login-notice" style="display:none;font-size:11.5px;color:#64748b;padding:8px;background:#f9fafb;border-radius:8px;text-align:center">로그인 후 댓글을 달 수 있어요</div>
+      <div id="vclinic-cmt-form" style="display:flex;gap:6px">
         <input id="vclinic-cmt-input" type="text" placeholder="댓글 입력..." maxlength="100" style="flex:1;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:11.5px;box-sizing:border-box">
         <button onclick="_submitVclinicComment()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:11.5px;font-weight:700;cursor:pointer">등록</button>
       </div>
@@ -19688,6 +19688,12 @@ async function _openVclinicView(postId){
   _loadVclinicFeedback(postId);
   _loadVclinicComments(postId);
   if(isOwner&&hasFb&&_fbAuthUid){_fbDb.ref('vocalClinic/userUnread/'+_fbAuthUid).set(0).catch(()=>{}); _vclinicCheckBadge();}
+  /* 댓글 폼: 로그인 여부에 따라 표시 */
+  const isLoggedIn = !!(curStudent || window._generalUser);
+  const cmtForm = f('vclinic-cmt-form');
+  const cmtNotice = f('vclinic-cmt-login-notice');
+  if(cmtForm) cmtForm.style.display = isLoggedIn ? 'flex' : 'none';
+  if(cmtNotice) cmtNotice.style.display = isLoggedIn ? 'none' : 'block';
   const modal=f('vclinic-view-modal');
   if(modal){modal.style.display='flex'; document.body.style.overflow='hidden';}
 }
@@ -19767,9 +19773,12 @@ async function _loadVclinicComments(postId){
 
 async function _submitVclinicComment(){
   if(!_vclinicCurrentPost||!_fbDb) return;
-  const nickEl=document.getElementById('vclinic-cmt-nick');
+  /* 로그인 이름 자동 사용 (익명 불가) */
+  const nick = curStudent ? curStudent.name
+             : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
+             : null;
+  if(!nick){ alert('로그인 후 댓글을 달 수 있어요.'); return; }
   const inputEl=document.getElementById('vclinic-cmt-input');
-  const nick=(nickEl?.value||'').trim()||'익명';
   const text=(inputEl?.value||'').trim(); if(!text){alert('댓글 내용을 입력해주세요.'); return;}
   const postId=_vclinicCurrentPost._id;
   try {
@@ -19797,22 +19806,38 @@ async function _deleteVclinicPost(){
   if(!confirm('이 글을 삭제하시겠습니까?')) return;
   const postId=_vclinicCurrentPost._id;
   const authorUid=_vclinicCurrentPost.authorUid;
+
+  /* Storage 파일 삭제 (실패해도 DB 삭제는 계속 진행) */
+  if(_vclinicCurrentPost.storagePath){
+    try{
+      const cu=firebase.auth().currentUser;
+      if(cu){
+        const idToken=await cu.getIdToken();
+        await fetch('https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(_vclinicCurrentPost.storagePath),{method:'DELETE',headers:{'Authorization':'Bearer '+idToken}});
+      }
+    }catch(e){ console.warn('Storage 삭제 실패(무시):', e.message); }
+  }
+
+  /* DB 삭제 - 각 경로 개별 처리 (일부 실패해도 나머지 진행) */
+  let dbErr = null;
+  try { await _fbDb.ref('vocalClinic/posts/'+postId).remove(); } catch(e){ dbErr=e; }
+  try { await _fbDb.ref('vocalClinic/postsByUser/'+authorUid+'/'+postId).remove(); } catch(e){}
+  try { await _fbDb.ref('vocalClinic/feedback/'+postId).remove(); } catch(e){}
+  try { await _fbDb.ref('vocalClinic/comments/'+postId).remove(); } catch(e){}
   try {
-    if(_vclinicCurrentPost.storagePath){
-      try{const idToken=await firebase.auth().currentUser.getIdToken(); await fetch('https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(_vclinicCurrentPost.storagePath),{method:'DELETE',headers:{'Authorization':'Bearer '+idToken}});}catch(e){}
+    if(_vclinicCurrentPost.status==='pending'&&authorUid){
+      await _fbDb.ref('vocalClinic/userActiveCount/'+authorUid).transaction(v=>Math.max(0,(v||0)-1));
     }
-    const updates={};
-    updates['vocalClinic/posts/'+postId]=null;
-    updates['vocalClinic/postsByUser/'+authorUid+'/'+postId]=null;
-    updates['vocalClinic/feedback/'+postId]=null;
-    updates['vocalClinic/comments/'+postId]=null;
-    if(_vclinicCurrentPost.status==='pending'&&authorUid) updates['vocalClinic/userActiveCount/'+authorUid]=firebase.database.ServerValue.increment(-1);
-    await _fbDb.ref().update(updates);
-    showToast('글이 삭제되었습니다.');
-    _closeVclinicView();
-    _loadVclinicPosts(true);
-    _vclinicCheckLimitNotice();
-  } catch(e){alert('삭제 실패: '+e.message);}
+  } catch(e){}
+
+  if(dbErr){
+    alert('삭제 실패: 권한이 없습니다.\n\n※ 관리자 권한 오류 시 Firebase DB 규칙 업데이트가 필요합니다.');
+    return;
+  }
+  showToast('글이 삭제되었습니다.');
+  _closeVclinicView();
+  _loadVclinicPosts(true);
+  _vclinicCheckLimitNotice();
 }
 
 
