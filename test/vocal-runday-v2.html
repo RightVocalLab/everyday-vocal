@@ -4632,6 +4632,7 @@ const INIT_DB={
       "startNote": 57,
       "endNote": 61,
       "bpm": 110,
+      "studentOnly": "김동현",
       "pattern": [
         0,
         2,
@@ -10389,11 +10390,12 @@ return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
 function bldFreePick(){
 const pick=document.getElementById('free-pick');
 pick.innerHTML='';
-/* studentOnly 필드 체크: 해당 학생일 때만 노출, 다른 학생/일반/비로그인은 숨김 */
+/* studentOnly 필드 체크: 해당 학생 + 관리자만 노출 */
 const _curStuName = (typeof curStudent !== 'undefined' && curStudent) ? (curStudent.name || curStudent) : null;
+const _isAdmin = (typeof _isAppAdmin === 'function') ? _isAppAdmin() : false;
 const scales = (DB.scales||[]).filter(s => {
   if(s.active === false) return false;
-  if(s.studentOnly && s.studentOnly !== _curStuName) return false;
+  if(s.studentOnly && !_isAdmin && s.studentOnly !== _curStuName) return false;
   return true;
 });
 if(!scales.length){
@@ -20178,16 +20180,20 @@ async function _vclinicTogglePvrPicker(){
     /* 최근 10개만 노출 */
     const items = hist.slice(0, 10);
     list.innerHTML = items.map((r, idx)=>{
-      const d = new Date(r.timestamp);
-      const tStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const d = r.timestamp ? new Date(r.timestamp) : null;
+      const tStr = d ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '날짜 없음';
       const vt = (r.primary && r.primary.name) || '—';
-      const mp = (r.primary && typeof r.primary.match==='number') ? r.primary.match : 0;
+      const mp = (r.primary && typeof r.primary.match==='number') ? r.primary.match : null;
       const lo = r.realLowNote || r.lowNote || '';
       const hi = r.realHighNote || r.highNote || '';
       const rng = lo && hi ? (lo + ' ~ ' + hi) : '';
+      /* 옛날 데이터 감지: primary 없거나 dataPoints 비어있음 */
+      const _isOld = !r.primary || !Array.isArray(r.dataPoints) || r.dataPoints.length === 0;
+      const oldBadge = _isOld ? '<span style="font-size:9px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:3px;padding:0 4px;margin-left:4px">간략정보</span>' : '';
+      const matchTxt = (mp !== null) ? '매칭 '+mp+'%' : '음역 정보만';
       return '<div onclick="_vclinicPickPvr('+idx+')" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;margin-bottom:5px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\';this.style.background=\'#eff6ff\'" onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span style="font-size:12px;font-weight:800;color:#1e3a8a">'+_escapeHtml(vt)+'</span><span style="font-size:10px;color:#94a3b8">'+tStr+'</span></div>'
-        +'<div style="font-size:10.5px;color:#64748b">매칭 '+mp+'%'+(rng?' &middot; '+rng:'')+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span style="font-size:12px;font-weight:800;color:#1e3a8a">'+_escapeHtml(vt)+oldBadge+'</span><span style="font-size:10px;color:#94a3b8">'+tStr+'</span></div>'
+        +'<div style="font-size:10.5px;color:#64748b">'+matchTxt+(rng?' &middot; '+rng:'')+'</div>'
         +'</div>';
     }).join('');
   } catch(e){
@@ -20197,23 +20203,38 @@ async function _vclinicTogglePvrPicker(){
 
 /* 이력 항목 선택 */
 function _vclinicPickPvr(idx){
-  if(!_vclinicPvrHistoryCache || !_vclinicPvrHistoryCache[idx]) return;
+  if(!_vclinicPvrHistoryCache || !_vclinicPvrHistoryCache[idx]){
+    alert('선택한 결과를 불러올 수 없어요. 다시 시도해 주세요.');
+    return;
+  }
   const r = _vclinicPvrHistoryCache[idx];
-  /* 첨부용 스냅샷 (필수 필드만) */
+  /* 옛날 데이터 호환성: 필수 필드 누락 확인 */
+  const missingFields = [];
+  if(!r.timestamp) missingFields.push('측정 날짜');
+  if(typeof r.lowMidi !== 'number' && typeof r.highMidi !== 'number') missingFields.push('음역 정보');
+  if(missingFields.length > 0){
+    alert('이 측정 결과는 정보가 부족해서 첨부할 수 없어요.\n부족한 항목: ' + missingFields.join(', ') + '\n\n다시 측정해 주세요.');
+    return;
+  }
+  /* 호환성: 옛날 데이터에는 dataPoints/primary/confidence 등이 없을 수 있음 */
+  const _safeDP = Array.isArray(r.dataPoints) ? r.dataPoints : [];
+  const _isLegacy = (!r.primary || !_safeDP.length);
+  /* 첨부용 스냅샷 - 옛날 데이터는 가능한 만큼 채움 */
   _vclinicPvrSnapshot = {
     timestamp: r.timestamp,
-    gender: r.gender,
+    gender: r.gender || 'female',
     lowMidi: r.lowMidi, highMidi: r.highMidi,
     realLow: r.realLow, realHigh: r.realHigh,
     lowNote: r.lowNote, highNote: r.highNote,
     realLowNote: r.realLowNote, realHighNote: r.realHighNote,
-    chestRatio: r.chestRatio, mixRatio: r.mixRatio, falsettoRatio: r.falsettoRatio,
-    primary: r.primary,
+    chestRatio: r.chestRatio || 0, mixRatio: r.mixRatio || 0, falsettoRatio: r.falsettoRatio || 0,
+    primary: r.primary || null,
     confidence: r.confidence,
     comment: r.comment,
-    dataPoints: r.dataPoints || [],
+    dataPoints: _safeDP,
     rangeOctaves: r.rangeOctaves,
-    measureCenterWeighted: r.measureCenterWeighted
+    measureCenterWeighted: r.measureCenterWeighted,
+    _legacy: _isLegacy  /* 옛날 데이터 플래그 */
   };
   /* 이력 목록 접기, 미리보기 표시 */
   const wrap=document.getElementById('vclinic-pvr-list-wrap');
@@ -20229,17 +20250,20 @@ function _vclinicRenderPvrSelected(){
   if(!wrap) return;
   if(!_vclinicPvrSnapshot){wrap.style.display='none'; wrap.innerHTML=''; return;}
   const r = _vclinicPvrSnapshot;
-  const d = new Date(r.timestamp);
-  const tStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  const vt = (r.primary && r.primary.name) || '—';
-  const mp = (r.primary && typeof r.primary.match==='number') ? r.primary.match : 0;
+  const d = r.timestamp ? new Date(r.timestamp) : null;
+  const tStr = d ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '날짜 없음';
+  const vt = (r.primary && r.primary.name) || (r._legacy ? '간략정보' : '—');
+  const mp = (r.primary && typeof r.primary.match==='number') ? r.primary.match : null;
   const lo = r.realLowNote || r.lowNote || '';
   const hi = r.realHighNote || r.highNote || '';
   const rng = lo && hi ? (lo + ' ~ ' + hi) : '';
+  const matchTxt = (mp !== null) ? ' &middot; 매칭 '+mp+'%' : '';
+  const legacyNote = r._legacy ? '<div style="font-size:9.5px;color:#94a3b8;margin-top:2px">⚠ 옛 측정 데이터 - 음역 정보만 첨부됩니다</div>' : '';
   wrap.innerHTML = '<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:9px 11px;position:relative">'
     +'<button type="button" onclick="_vclinicRemovePvr()" style="position:absolute;top:6px;right:6px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;cursor:pointer">제거</button>'
-    +'<div style="font-size:12px;font-weight:800;color:#1e3a8a;margin-bottom:2px">'+_escapeHtml(vt)+' &middot; 매칭 '+mp+'%</div>'
+    +'<div style="font-size:12px;font-weight:800;color:#1e3a8a;margin-bottom:2px">'+_escapeHtml(vt)+matchTxt+'</div>'
     +'<div style="font-size:10.5px;color:#475569">'+(rng?rng+' &middot; ':'')+tStr+'</div>'
+    +legacyNote
     +'</div>';
   wrap.style.display='block';
 }
@@ -20358,16 +20382,88 @@ function _vclinicStopRec(){
 
 function _vclinicFmtTime(sec){return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
 
+/* 에러 표시 헬퍼 - display:none 상태도 강제로 보이게 */
+function _vclinicShowErr(msg){
+  const errEl=document.getElementById('vclinic-write-err');
+  if(!errEl) return;
+  errEl.textContent = msg || '';
+  errEl.style.display = msg ? 'block' : 'none';
+  if(msg){
+    /* 모달 안에서 에러가 보이도록 스크롤 */
+    try { errEl.scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){}
+  }
+}
+
 function _vclinicFileSelected(event){
   const file=event.target.files[0]; if(!file) return;
-  const errEl=document.getElementById('vclinic-write-err');
-  if(file.size>VC_MAX_BYTES){if(errEl) errEl.textContent='5MB 이하의 파일만 업로드 가능합니다.'; event.target.value=''; return;}
-  if(!file.type.startsWith('audio/')){if(errEl) errEl.textContent='음성 파일만 업로드 가능합니다.'; event.target.value=''; return;}
-  if(errEl) errEl.textContent='';
-  _vclinicFileBlob=file;
-  const nameEl=document.getElementById('vclinic-file-name'); if(nameEl) nameEl.textContent=file.name;
-  const sizeEl=document.getElementById('vclinic-file-size'); if(sizeEl) sizeEl.textContent=(file.size/1024).toFixed(1)+' KB';
-  const selEl=document.getElementById('vclinic-file-selected'); if(selEl) selEl.style.display='block';
+  /* 1) 파일 형식 검증 */
+  if(!file.type.startsWith('audio/')){
+    _vclinicShowErr('🎵 음성 파일만 업로드 가능해요. (mp3, m4a, wav 등)');
+    event.target.value='';
+    return;
+  }
+  /* 2) 파일 크기 검증 (5MB) */
+  if(file.size > VC_MAX_BYTES){
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    _vclinicShowErr('📦 파일 크기가 너무 커요. (현재: '+sizeMB+'MB / 최대: 5MB)\n파일을 압축하거나 짧게 잘라서 다시 시도해주세요.');
+    event.target.value='';
+    return;
+  }
+  /* 3) 재생 시간 검증 (5분 = 300초) - 비동기로 메타데이터 읽기 */
+  const tempUrl = URL.createObjectURL(file);
+  const tempAudio = new Audio();
+  tempAudio.preload = 'metadata';
+  let _settled = false;
+  const _onMeta = ()=>{
+    if(_settled) return; _settled=true;
+    const dur = tempAudio.duration;
+    URL.revokeObjectURL(tempUrl);
+    if(isFinite(dur) && dur > 300){
+      const minutes = Math.floor(dur/60), seconds = Math.floor(dur%60);
+      _vclinicShowErr('⏱ 음성이 너무 길어요. (현재: '+minutes+'분 '+seconds+'초 / 최대: 5분)\n5분 이하로 잘라서 다시 시도해주세요.');
+      event.target.value='';
+      _vclinicFileBlob=null;
+      return;
+    }
+    /* 검증 통과 → 파일 정보 표시 */
+    _vclinicShowErr('');
+    _vclinicFileBlob=file;
+    const nameEl=document.getElementById('vclinic-file-name'); if(nameEl) nameEl.textContent=file.name;
+    const sizeEl=document.getElementById('vclinic-file-size');
+    if(sizeEl){
+      const sizeKB = file.size/1024;
+      const sizeTxt = sizeKB > 1024 ? (sizeKB/1024).toFixed(1)+' MB' : sizeKB.toFixed(1)+' KB';
+      const durTxt = isFinite(dur) ? ' &middot; '+Math.floor(dur/60)+':'+String(Math.floor(dur%60)).padStart(2,'0') : '';
+      sizeEl.innerHTML = sizeTxt + durTxt;
+    }
+    const selEl=document.getElementById('vclinic-file-selected'); if(selEl) selEl.style.display='block';
+  };
+  const _onErr = ()=>{
+    if(_settled) return; _settled=true;
+    URL.revokeObjectURL(tempUrl);
+    _vclinicShowErr('🎵 이 파일은 재생할 수 없는 형식이에요. 다른 음성 파일로 시도해주세요.');
+    event.target.value='';
+    _vclinicFileBlob=null;
+  };
+  tempAudio.addEventListener('loadedmetadata', _onMeta);
+  tempAudio.addEventListener('error', _onErr);
+  /* 안전장치: 5초 안에 메타데이터 못 읽으면 통과 (재생 시간 검증 생략) */
+  setTimeout(()=>{
+    if(_settled) return;
+    _settled=true;
+    URL.revokeObjectURL(tempUrl);
+    /* 길이를 못 읽었어도 크기는 통과했으니 일단 업로드 허용 */
+    _vclinicShowErr('');
+    _vclinicFileBlob=file;
+    const nameEl=document.getElementById('vclinic-file-name'); if(nameEl) nameEl.textContent=file.name;
+    const sizeEl=document.getElementById('vclinic-file-size');
+    if(sizeEl){
+      const sizeKB = file.size/1024;
+      sizeEl.textContent = sizeKB > 1024 ? (sizeKB/1024).toFixed(1)+' MB' : sizeKB.toFixed(1)+' KB';
+    }
+    const selEl=document.getElementById('vclinic-file-selected'); if(selEl) selEl.style.display='block';
+  }, 5000);
+  tempAudio.src = tempUrl;
 }
 
 async function _submitVclinicPost(){
@@ -20377,12 +20473,13 @@ async function _submitVclinicPost(){
   const progTxt=document.getElementById('vclinic-progress-txt');
   const submitBtn=document.getElementById('vclinic-submit-btn');
   if(errEl) errEl.textContent='';
+  _vclinicShowErr('');
   const title=(document.getElementById('vclinic-title')?.value||'').trim();
-  if(!title){if(errEl) errEl.textContent='제목을 입력해주세요.'; return;}
+  if(!title){_vclinicShowErr('제목을 입력해주세요.'); return;}
   const blob=_vclinicInputMode==='rec'?_vclinicAudioBlob:_vclinicFileBlob;
-  if(!blob){if(errEl) errEl.textContent='음성을 녹음하거나 파일을 선택해주세요.'; return;}
-  if(blob.size>VC_MAX_BYTES){if(errEl) errEl.textContent='파일이 5MB를 초과합니다.'; return;}
-  if(!_fbAuthUid){if(errEl) errEl.textContent='로그인이 필요합니다.'; return;}
+  if(!blob){_vclinicShowErr('음성을 녹음하거나 파일을 선택해주세요.'); return;}
+  if(blob.size>VC_MAX_BYTES){_vclinicShowErr('📦 파일이 5MB를 초과합니다.'); return;}
+  if(!_fbAuthUid){_vclinicShowErr('로그인이 필요합니다.'); return;}
   if(submitBtn){submitBtn.disabled=true; submitBtn.textContent='업로드 중...';}
   if(progEl) progEl.style.display='block';
   if(progBar) progBar.style.width='10%';
@@ -20520,17 +20617,27 @@ function _closeVclinicView(){
 function _vclinicRenderViewPvr(snap){
   const wrap = document.getElementById('vclinic-view-pvr');
   if(!wrap) return;
-  if(!snap || !snap.primary){wrap.style.display='none'; return;}
+  /* 스냅샷 자체가 없으면 숨김 */
+  if(!snap){wrap.style.display='none'; return;}
+  /* 필수 정보 부족하면 숨김 (lowMidi/highMidi 둘 다 없음 = 첨부 의미 없음) */
+  if(typeof snap.lowMidi !== 'number' && typeof snap.highMidi !== 'number' && !snap.lowNote && !snap.highNote){
+    wrap.style.display='none';
+    return;
+  }
+  const hasPrimary = !!(snap.primary && snap.primary.name);
+  const hasDataPoints = Array.isArray(snap.dataPoints) && snap.dataPoints.length > 0;
   /* 정보 채우기 */
   const dateEl = document.getElementById('vclinic-view-pvr-date');
   if(dateEl && snap.timestamp){
     const d = new Date(snap.timestamp);
     dateEl.textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 측정`;
+  } else if(dateEl){
+    dateEl.textContent = '날짜 정보 없음';
   }
   const voiceEl = document.getElementById('vclinic-view-pvr-voice');
-  if(voiceEl) voiceEl.textContent = snap.primary.name || '—';
+  if(voiceEl) voiceEl.textContent = hasPrimary ? snap.primary.name : '간략 정보';
   const matchEl = document.getElementById('vclinic-view-pvr-match');
-  if(matchEl) matchEl.textContent = (snap.primary.match || 0) + '%';
+  if(matchEl) matchEl.textContent = hasPrimary ? ((snap.primary.match || 0) + '%') : '—';
   /* 음역 정보 */
   const rangeEl = document.getElementById('vclinic-view-pvr-range');
   if(rangeEl){
@@ -20540,9 +20647,14 @@ function _vclinicRenderViewPvr(snap){
     const chest = Math.round((snap.chestRatio||0)*100);
     const mix = Math.round((snap.mixRatio||0)*100);
     const fals = Math.round((snap.falsettoRatio||0)*100);
-    rangeEl.innerHTML = '<div><b style="color:#1e3a8a">전체 음역</b> &nbsp; '+lo+' ~ '+hi+' &nbsp;(<span style="color:#3b82f6">'+oct+' 옥타브</span>)</div>'
-      +'<div><b style="color:#1e3a8a">실용 음역(진성)</b> &nbsp; '+rlo+' ~ '+rhi+'</div>'
-      +'<div style="margin-top:3px"><b style="color:#1e3a8a">발성 분포</b> &nbsp; 흉성 '+chest+'% &middot; 믹스 '+mix+'% &middot; 가성 '+fals+'%</div>';
+    let html = '<div><b style="color:#1e3a8a">전체 음역</b> &nbsp; '+lo+' ~ '+hi;
+    if(oct !== '—') html += ' &nbsp;(<span style="color:#3b82f6">'+oct+' 옥타브</span>)';
+    html += '</div><div><b style="color:#1e3a8a">실용 음역(진성)</b> &nbsp; '+rlo+' ~ '+rhi+'</div>';
+    /* 발성 분포는 데이터 있을 때만 표시 */
+    if(hasDataPoints && (chest > 0 || mix > 0 || fals > 0)){
+      html += '<div style="margin-top:3px"><b style="color:#1e3a8a">발성 분포</b> &nbsp; 흉성 '+chest+'% &middot; 믹스 '+mix+'% &middot; 가성 '+fals+'%</div>';
+    }
+    rangeEl.innerHTML = html;
   }
   /* 코멘트 */
   const commentEl = document.getElementById('vclinic-view-pvr-comment');
@@ -20554,17 +20666,20 @@ function _vclinicRenderViewPvr(snap){
       commentEl.style.display='none';
     }
   }
-  /* 그래프 (캔버스에 데이터포인트 있으면 그리기) */
+  /* 그래프: 데이터포인트 있을 때만 표시, 없으면 캔버스 숨김 */
   wrap.style.display='block';
   const canvas = document.getElementById('vclinic-view-pvr-canvas');
-  if(canvas && snap.dataPoints && snap.dataPoints.length>0 && typeof _drawSinglePtToCanvas==='function'){
-    /* _drawSinglePtToCanvas는 result.dataPoints만 사용해서 그래프를 그림 (gender 기준 축)
-       시각화 호환을 위해 result 객체 형태로 전달 */
-    /* 모달이 막 표시된 직후에는 캔버스 width가 0일 수 있으므로 다음 프레임에 그리기 */
-    requestAnimationFrame(()=>{
-      try { _drawSinglePtToCanvas('vclinic-view-pvr-canvas', snap); }
-      catch(e){ console.warn('PVR 그래프 렌더 실패:', e); }
-    });
+  if(canvas){
+    if(hasDataPoints && typeof _drawSinglePtToCanvas==='function'){
+      canvas.style.display='block';
+      requestAnimationFrame(()=>{
+        try { _drawSinglePtToCanvas('vclinic-view-pvr-canvas', snap); }
+        catch(e){ console.warn('PVR 그래프 렌더 실패:', e); }
+      });
+    } else {
+      /* 옛날 데이터: 캔버스 숨기고 안내 표시 */
+      canvas.style.display='none';
+    }
   }
 }
 
