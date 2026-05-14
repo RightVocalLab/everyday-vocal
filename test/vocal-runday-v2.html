@@ -19520,10 +19520,12 @@ async function _submitComment(){
     const ref = firebase.database().ref(`community/comments/${postId}`).push();
     await ref.set(comment);
     
-    /* 게시글 댓글 카운트 갱신 */
-    await firebase.database().ref(`community/posts/${postId}/commentCount`).transaction(cur => {
-      return (cur || 0) + 1;
-    });
+    /* 게시글 댓글 카운트 갱신 (권한 실패해도 무시 - 본인 글 아닐 때 익명 학생은 카운트 권한 없음) */
+    try {
+      await firebase.database().ref(`community/posts/${postId}/commentCount`).transaction(cur => {
+        return (cur || 0) + 1;
+      });
+    } catch(ce){ console.warn('commentCount transaction 실패(무시):', ce.message); }
     
     /* 입력칸 비우기 */
     document.getElementById('comm-cmt-input').value = '';
@@ -19551,10 +19553,12 @@ async function _deleteComment(commentId){
   console.log('댓글 삭제 시도:', postId, commentId, 'auth uid:', _liveUid, 'admin:', _isAppAdmin());
   try {
     await firebase.database().ref(`community/comments/${postId}/${commentId}`).set(null);
-    /* 카운트 감소 */
-    await firebase.database().ref(`community/posts/${postId}/commentCount`).transaction(cur => {
-      return Math.max(0, (cur || 0) - 1);
-    });
+    /* 카운트 감소 (실패해도 무시) */
+    try {
+      await firebase.database().ref(`community/posts/${postId}/commentCount`).transaction(cur => {
+        return Math.max(0, (cur || 0) - 1);
+      });
+    } catch(ce){ console.warn('commentCount transaction 실패(무시):', ce.message); }
     _loadComments(postId);
     /* 리스트 갱신 */
     const listPost = _communityPosts.find(p => p._id === postId);
@@ -20117,7 +20121,10 @@ async function _submitVclinicComment(){
   const postId=_vclinicCurrentPost._id;
   try {
     await _fbDb.ref('vocalClinic/comments/'+postId).push({nickname:nick,text,authorUid:liveUid,createdAt:firebase.database.ServerValue.TIMESTAMP});
-    await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>(v||0)+1);
+    /* 카운트 transaction 실패해도 무시 */
+    try {
+      await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>(v||0)+1);
+    } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
     if(inputEl) inputEl.value='';
     _loadVclinicComments(postId);
   } catch(e){alert('댓글 등록 실패: '+e.message);}
@@ -20127,7 +20134,10 @@ async function _deleteVclinicComment(postId,commentId){
   if(!confirm('댓글을 삭제하시겠습니까?')) return;
   try {
     await _fbDb.ref('vocalClinic/comments/'+postId+'/'+commentId).remove();
-    await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>Math.max(0,(v||0)-1));
+    /* 카운트 transaction 실패해도 무시 */
+    try {
+      await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>Math.max(0,(v||0)-1));
+    } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
     _loadVclinicComments(postId);
   } catch(e){alert('삭제 실패: '+e.message);}
 }
