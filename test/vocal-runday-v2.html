@@ -9283,17 +9283,28 @@ async function _customAudioInit(audioId, btnId, timeId, progId, src, fallbackDur
   let finalSrc = src;
   if(src && src.startsWith('http')){
     try {
-      const resp = await fetch(src);
+      /* Firebase Auth ID 토큰을 헤더에 추가 (Storage 규칙 인증 통과) */
+      let headers = {};
+      try {
+        const cu = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+        if(cu){
+          const idToken = await cu.getIdToken();
+          headers['Authorization'] = 'Bearer ' + idToken;
+        }
+      } catch(authErr){ console.warn('토큰 가져오기 실패:', authErr); }
+      
+      const resp = await fetch(src, { headers: headers });
       if(resp.ok){
         const origBlob = await resp.blob();
         /* Content-Type 강제 설정해서 Blob 재생성 */
         const fixedBlob = new Blob([origBlob], { type: 'audio/webm' });
         finalSrc = URL.createObjectURL(fixedBlob);
-        /* 이전 ObjectURL 정리 */
         if(audio.dataset.objectUrl){
           try { URL.revokeObjectURL(audio.dataset.objectUrl); } catch(e){}
         }
         audio.dataset.objectUrl = finalSrc;
+      } else {
+        console.warn('fetch 실패:', resp.status, resp.statusText);
       }
     } catch(e){
       console.warn('Blob 우회 실패, 원본 URL 사용:', e);
