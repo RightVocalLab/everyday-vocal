@@ -1679,7 +1679,16 @@ input,select,button,textarea{font-family:inherit;}
           </button>
         </div>
         <div id="vclinic-rec-preview" style="display:none;margin-top:12px">
-          <audio id="vclinic-preview-audio" controls preload="metadata" style="width:100%;display:block;min-height:54px"></audio>
+          <audio id="vclinic-preview-audio" preload="metadata" style="display:none"></audio>
+          <div id="vclinic-preview-player" style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px">
+            <button id="vclinic-preview-play" onclick="_customAudioToggle('vclinic-preview-audio','vclinic-preview-play','vclinic-preview-time','vclinic-preview-progress')" style="background:#2563eb;color:#fff;border:none;border-radius:50%;width:32px;height:32px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>
+            </button>
+            <span id="vclinic-preview-time" style="font-size:11px;color:#475569;font-weight:600;min-width:70px;text-align:center">0:00 / 0:00</span>
+            <div id="vclinic-preview-progress-bar" onclick="_customAudioSeek(event,'vclinic-preview-audio','vclinic-preview-progress-bar','vclinic-preview-progress')" style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;cursor:pointer;position:relative">
+              <div id="vclinic-preview-progress" style="height:100%;background:#2563eb;border-radius:3px;width:0%;pointer-events:none"></div>
+            </div>
+          </div>
           <div style="font-size:11px;color:#64748b;margin-top:6px">녹음을 다시 하려면 녹음 버튼을 누르세요</div>
         </div>
       </div>
@@ -1724,9 +1733,18 @@ input,select,button,textarea{font-family:inherit;}
     <div style="margin-bottom:12px">
       <span id="vclinic-status-span" style="font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:99px;background:#fef9c3;color:#854d0e;border:1.5px solid #fde047">답변 대기중</span>
     </div>
-    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 8px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px;padding:0 4px">업로드된 음성</div>
-      <audio id="vclinic-view-audio" controls preload="metadata" style="width:100%;display:block;min-height:54px"></audio>
+    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">업로드된 음성</div>
+      <audio id="vclinic-view-audio" preload="metadata" style="display:none"></audio>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="vclinic-audio-view-play" onclick="_customAudioToggle('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress')" style="background:#1d4ed8;color:#fff;border:none;border-radius:50%;width:34px;height:34px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>
+        </button>
+        <span id="vclinic-audio-view-time" style="font-size:11px;color:#1e3a8a;font-weight:700;min-width:70px;text-align:center">0:00 / 0:00</span>
+        <div id="vclinic-audio-view-progress-bar" onclick="_customAudioSeek(event,'vclinic-view-audio','vclinic-audio-view-progress-bar','vclinic-audio-view-progress')" style="flex:1;height:6px;background:#bfdbfe;border-radius:3px;cursor:pointer;position:relative">
+          <div id="vclinic-audio-view-progress" style="height:100%;background:#1d4ed8;border-radius:3px;width:0%;pointer-events:none"></div>
+        </div>
+      </div>
     </div>
     <div id="vclinic-view-memo" style="display:none;background:#f9fafb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#475569;line-height:1.65;white-space:pre-wrap"></div>
     <div style="margin-bottom:14px">
@@ -9122,6 +9140,135 @@ function _fixAudioDuration(audio, src){
   audio.addEventListener('loadedmetadata', tryFix, { once: true });
   audio.addEventListener('durationchange', tryFix);
   audio.load();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   커스텀 audio player (모바일/PC 환경 일관성 보장)
+   - native audio controls의 한 줄 정렬/duration 문제 회피
+   - audio.duration 못 잡으면 audio.dataset.fallbackDuration 사용
+   ═══════════════════════════════════════════════════════════ */
+function _customAudioFmt(s){
+  if(!isFinite(s) || isNaN(s)) return '0:00';
+  s = Math.floor(s);
+  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+}
+
+function _customAudioGetDuration(audio){
+  const d = audio.duration;
+  if(isFinite(d) && !isNaN(d) && d > 0) return d;
+  const fb = parseFloat(audio.dataset.fallbackDuration || '0');
+  return isFinite(fb) && fb > 0 ? fb : 0;
+}
+
+function _customAudioToggle(audioId, btnId, timeId, progId){
+  const audio = document.getElementById(audioId);
+  const btn = document.getElementById(btnId);
+  if(!audio) return;
+  if(audio.paused){
+    document.querySelectorAll('audio').forEach(function(a){
+      if(a !== audio && !a.paused){ a.pause(); }
+    });
+    audio.play().then(function(){
+      _customAudioUpdateBtn(btn, true);
+      _customAudioStartUpdate(audio, timeId, progId);
+    }).catch(function(e){ console.warn('audio play 실패:', e); });
+  } else {
+    audio.pause();
+    _customAudioUpdateBtn(btn, false);
+  }
+}
+
+function _customAudioUpdateBtn(btn, playing){
+  if(!btn) return;
+  btn.innerHTML = playing
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>';
+}
+
+function _customAudioStartUpdate(audio, timeId, progId){
+  const timeEl = document.getElementById(timeId);
+  const progEl = document.getElementById(progId);
+  function update(){
+    if(!audio || audio.paused) return;
+    const dur = _customAudioGetDuration(audio);
+    const cur = audio.currentTime;
+    if(timeEl) timeEl.textContent = _customAudioFmt(cur) + ' / ' + _customAudioFmt(dur);
+    if(progEl && dur > 0) progEl.style.width = Math.min(100, (cur/dur)*100) + '%';
+    if(!audio.paused) requestAnimationFrame(update);
+  }
+  update();
+}
+
+function _customAudioSeek(event, audioId, barId, progId){
+  const audio = document.getElementById(audioId);
+  const bar = document.getElementById(barId);
+  if(!audio || !bar) return;
+  const dur = _customAudioGetDuration(audio);
+  if(dur <= 0) return;
+  const rect = bar.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  try {
+    audio.currentTime = ratio * dur;
+    const progEl = document.getElementById(progId);
+    if(progEl) progEl.style.width = (ratio*100) + '%';
+  } catch(e){ console.warn('seek 실패:', e); }
+}
+
+function _customAudioInit(audioId, btnId, timeId, progId, src, fallbackDuration){
+  const audio = document.getElementById(audioId);
+  if(!audio) return;
+  audio.onloadedmetadata = null;
+  audio.ondurationchange = null;
+  audio.ontimeupdate = null;
+  audio.onended = null;
+  audio.onpause = null;
+  audio.onplay = null;
+  if(fallbackDuration && fallbackDuration > 0){
+    audio.dataset.fallbackDuration = String(fallbackDuration);
+  } else {
+    delete audio.dataset.fallbackDuration;
+  }
+  const timeEl = document.getElementById(timeId);
+  const progEl = document.getElementById(progId);
+  const btn = document.getElementById(btnId);
+  if(timeEl) timeEl.textContent = '0:00 / ' + _customAudioFmt(fallbackDuration || 0);
+  if(progEl) progEl.style.width = '0%';
+  _customAudioUpdateBtn(btn, false);
+  audio.addEventListener('loadedmetadata', function(){
+    if(timeEl) timeEl.textContent = '0:00 / ' + _customAudioFmt(_customAudioGetDuration(audio));
+  });
+  audio.addEventListener('durationchange', function(){
+    const cur = audio.currentTime || 0;
+    if(timeEl) timeEl.textContent = _customAudioFmt(cur) + ' / ' + _customAudioFmt(_customAudioGetDuration(audio));
+  });
+  audio.addEventListener('ended', function(){
+    _customAudioUpdateBtn(btn, false);
+    audio.currentTime = 0;
+    if(progEl) progEl.style.width = '0%';
+    if(timeEl) timeEl.textContent = '0:00 / ' + _customAudioFmt(_customAudioGetDuration(audio));
+  });
+  audio.addEventListener('pause', function(){
+    _customAudioUpdateBtn(btn, false);
+  });
+  audio.preload = 'metadata';
+  audio.src = src;
+  audio.load();
+  /* webm Infinity 버그 처리 */
+  audio.addEventListener('loadedmetadata', function _fix(){
+    if(audio.duration === Infinity || isNaN(audio.duration)){
+      try {
+        audio.currentTime = 1e101;
+        audio.addEventListener('timeupdate', function _once(){
+          audio.removeEventListener('timeupdate', _once);
+          if(isFinite(audio.duration)){
+            audio.currentTime = 0;
+            if(timeEl) timeEl.textContent = '0:00 / ' + _customAudioFmt(audio.duration);
+          }
+        }, { once: true });
+      } catch(e){}
+    }
+    audio.removeEventListener('loadedmetadata', _fix);
+  }, { once: true });
 }
 
 /* 관리자 로그아웃 */
@@ -19808,8 +19955,8 @@ async function _vclinicToggleRec(){
         stream.getTracks().forEach(t=>t.stop());
         _vclinicAudioBlob=new Blob(_vclinicRecChunks,{type:'audio/webm'});
         const url=URL.createObjectURL(_vclinicAudioBlob);
-        const audio=document.getElementById('vclinic-preview-audio');
-        if(audio){ _fixAudioDuration(audio, url); }
+        /* 커스텀 audio player 초기화 (녹음 길이를 fallback duration으로 전달) */
+        _customAudioInit('vclinic-preview-audio','vclinic-preview-play','vclinic-preview-time','vclinic-preview-progress', url, _vclinicRecSeconds);
         const prevEl2=document.getElementById('vclinic-rec-preview'); if(prevEl2) prevEl2.style.display='block';
         if(statusEl) statusEl.textContent='녹음 완료 ('+_vclinicFmtTime(_vclinicRecSeconds)+')';
         if(recBtn){recBtn.style.background='#dc2626'; recBtn.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>';}
@@ -19922,7 +20069,9 @@ async function _submitVclinicPost(){
     }
     const isPrivate=document.getElementById('vclinic-private-toggle')?.checked||false;
     const memo=(document.getElementById('vclinic-memo')?.value||'').trim();
-    const postData={title,nickname,memo,isPrivate,audioUrl:downloadUrl,storagePath,authorUid:_fbAuthUid,feedbackCount:0,commentCount:0,createdAt:firebase.database.ServerValue.TIMESTAMP,status:'pending'};
+    /* 녹음일 때만 duration 저장 (파일 업로드는 미지원) */
+    const _recDuration = (_vclinicInputMode==='rec' && _vclinicRecSeconds > 0) ? _vclinicRecSeconds : 0;
+    const postData={title,nickname,memo,isPrivate,audioUrl:downloadUrl,storagePath,authorUid:_fbAuthUid,feedbackCount:0,commentCount:0,duration:_recDuration,createdAt:firebase.database.ServerValue.TIMESTAMP,status:'pending'};
     const updates={};
     updates['vocalClinic/posts/'+postId]=postData;
     updates['vocalClinic/postsByUser/'+_fbAuthUid+'/'+postId]=postId;
@@ -19957,8 +20106,10 @@ async function _openVclinicView(postId){
   const hasFb=post.feedbackCount&&post.feedbackCount>0;
   const ss=f('vclinic-status-span');
   if(ss){ss.textContent=hasFb?'답변 완료':'답변 대기중'; ss.style.background=hasFb?'#dcfce7':'#fef9c3'; ss.style.color=hasFb?'#16a34a':'#854d0e'; ss.style.borderColor=hasFb?'#86efac':'#fde047';}
-  const audio=f('vclinic-view-audio');
-  if(audio){ _fixAudioDuration(audio, post.audioUrl||''); }
+  /* 커스텀 audio player 초기화 (저장된 duration이 있으면 fallback으로 사용) */
+  if(post.audioUrl){
+    _customAudioInit('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress', post.audioUrl, post.duration || 0);
+  }
   const memoEl=f('vclinic-view-memo');
   if(memoEl){if(post.memo){memoEl.textContent=post.memo; memoEl.style.display='block';}else{memoEl.style.display='none';}}
   if(f('vclinic-delete-btn')) f('vclinic-delete-btn').style.display=(isOwner||isAdmin)?'inline-block':'none';
