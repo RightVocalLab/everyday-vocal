@@ -1679,7 +1679,7 @@ input,select,button,textarea{font-family:inherit;}
           </button>
         </div>
         <div id="vclinic-rec-preview" style="display:none;margin-top:12px">
-          <audio id="vclinic-preview-audio" preload="metadata" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></audio>
+          <div style="height:0;overflow:hidden;position:absolute"><audio id="vclinic-preview-audio" controls preload="metadata"></audio></div>
           <div id="vclinic-preview-player" style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px">
             <button id="vclinic-preview-play" onclick="_customAudioToggle('vclinic-preview-audio','vclinic-preview-play','vclinic-preview-time','vclinic-preview-progress')" style="background:#2563eb;color:#fff;border:none;border-radius:50%;width:32px;height:32px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>
@@ -1735,7 +1735,7 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">업로드된 음성</div>
-      <audio id="vclinic-view-audio" preload="metadata" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></audio>
+      <div style="height:0;overflow:hidden;position:absolute"><audio id="vclinic-view-audio" controls preload="metadata"></audio></div>
       <div style="display:flex;align-items:center;gap:8px">
         <button id="vclinic-audio-view-play" onclick="_customAudioToggle('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress')" style="background:#1d4ed8;color:#fff;border:none;border-radius:50%;width:34px;height:34px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6,4 20,12 6,20"/></svg>
@@ -9177,14 +9177,23 @@ function _customAudioToggle(audioId, btnId, timeId, progId){
       _customAudioUpdateBtn(btn, true);
       _customAudioStartUpdate(audio, timeId, progId);
     }).catch(function(e){
-      console.warn('audio play 실패:', e, 'src:', audio.src);
+      console.warn('audio play 실패:', e.name, e.message);
+      console.warn('  src:', audio.src);
+      console.warn('  readyState:', audio.readyState, '(0=빈,1=메타,2=현재,3=미래,4=완전)');
+      console.warn('  networkState:', audio.networkState, '(0=빈,1=대기,2=로딩,3=src없음)');
+      if(audio.error){
+        console.warn('  audio.error:', audio.error.code, audio.error.message);
+      }
       /* 재시도: load() 후 다시 play */
       audio.load();
       setTimeout(function(){
         audio.play().then(function(){
           _customAudioUpdateBtn(btn, true);
           _customAudioStartUpdate(audio, timeId, progId);
-        }).catch(function(e2){ console.warn('재시도도 실패:', e2); });
+        }).catch(function(e2){
+          console.warn('재시도도 실패:', e2.name, e2.message);
+          if(audio.error) console.warn('  최종 audio.error:', audio.error.code);
+        });
       }, 300);
     });
   } else {
