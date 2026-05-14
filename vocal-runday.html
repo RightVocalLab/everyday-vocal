@@ -1623,6 +1623,7 @@ const INIT_DB={
       "startNote": 57,
       "endNote": 61,
       "bpm": 110,
+      "studentOnly": "김동현",
       "pattern": [
         0,
         2,
@@ -6747,9 +6748,10 @@ hdr.innerHTML=`
 const body=document.createElement('div');
 body.style.cssText=`display:${isOpen?'flex':'none'};flex-direction:column;gap:0;border-top:1px solid var(--line)`;
 
-/* studentOnly 필드 체크: 해당 학생일 때만 노출 */
+/* studentOnly 필드 체크: 해당 학생 + 관리자만 노출 */
 const _curStuName = (typeof curStudent !== 'undefined' && curStudent) ? (curStudent.name || curStudent) : null;
-const _vScales = (DB.scales||[]).filter(sc => !sc.studentOnly || sc.studentOnly === _curStuName);
+const _isAdmin = (typeof _isAppAdmin === 'function') ? _isAppAdmin() : false;
+const _vScales = (DB.scales||[]).filter(sc => !sc.studentOnly || _isAdmin || sc.studentOnly === _curStuName);
 _vScales.forEach((sc,si)=>{
 const row=document.createElement('div');
 row.style.cssText='display:flex;align-items:center;gap:8px;padding:9px 13px 9px 16px;'+(si<_vScales.length-1?'border-bottom:1px solid var(--line)':'');
