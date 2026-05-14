@@ -1706,6 +1706,24 @@ input,select,button,textarea{font-family:inherit;}
         <div style="font-size:11px;color:#64748b;margin-top:2px" id="vclinic-file-size">크기</div>
       </div>
     </div>
+    <!-- 음역대 분석 결과 첨부 (선택) -->
+    <div id="vclinic-pvr-section" style="margin-bottom:14px;background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:10px;padding:11px 13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+          <span style="font-size:12px;font-weight:800;color:#475569">음역대 분석 결과 (선택)</span>
+        </div>
+        <button id="vclinic-pvr-toggle-btn" type="button" onclick="_vclinicTogglePvrPicker()" style="background:#fff;border:1.5px solid #cbd5e1;color:#475569;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">결과 첨부</button>
+      </div>
+      <!-- 선택된 결과 미리보기 -->
+      <div id="vclinic-pvr-selected" style="display:none;margin-top:10px"></div>
+      <!-- 측정 이력 목록 (펼침) -->
+      <div id="vclinic-pvr-list-wrap" style="display:none;margin-top:10px">
+        <div style="font-size:10.5px;color:#64748b;margin-bottom:6px">내 측정 이력에서 선택하세요</div>
+        <div id="vclinic-pvr-list" style="max-height:180px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px"></div>
+      </div>
+    </div>
+
     <div id="vclinic-write-err" style="font-size:11px;color:#dc2626;margin-bottom:8px;min-height:14px"></div>
     <div id="vclinic-upload-progress" style="display:none;margin-bottom:10px">
       <div style="font-size:11px;color:#2563eb;font-weight:700;margin-bottom:6px" id="vclinic-progress-txt">업로드 중...</div>
@@ -1734,7 +1752,10 @@ input,select,button,textarea{font-family:inherit;}
       <span id="vclinic-status-span" style="font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:99px;background:#fef9c3;color:#854d0e;border:1.5px solid #fde047">답변 대기중</span>
     </div>
     <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">업로드된 음성</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#1d4ed8">업로드된 음성</div>
+        <span id="vclinic-view-source" style="display:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px"></span>
+      </div>
       <div style="height:0;overflow:hidden;position:absolute"><audio id="vclinic-view-audio" controls preload="metadata"></audio></div>
       <div style="display:flex;align-items:center;gap:8px">
         <button id="vclinic-audio-view-play" onclick="_customAudioToggle('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress')" style="background:#1d4ed8;color:#fff;border:none;border-radius:50%;width:34px;height:34px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
@@ -1747,6 +1768,30 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
     <div id="vclinic-view-memo" style="display:none;background:#f9fafb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#475569;line-height:1.65;white-space:pre-wrap"></div>
+
+    <!-- 첨부된 음역대 분석 결과 -->
+    <div id="vclinic-view-pvr" style="display:none;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+          <span style="font-size:12.5px;font-weight:800;color:#1d4ed8">음역대 분석 결과</span>
+        </div>
+        <span id="vclinic-view-pvr-date" style="font-size:10px;color:#3b82f6;font-weight:600">—</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,0.8);border-radius:6px;padding:7px 9px">
+          <div style="font-size:9.5px;color:#64748b;font-weight:700;margin-bottom:2px">예상 성종</div>
+          <div id="vclinic-view-pvr-voice" style="font-size:13px;font-weight:800;color:#1e3a8a">—</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.8);border-radius:6px;padding:7px 9px">
+          <div style="font-size:9.5px;color:#64748b;font-weight:700;margin-bottom:2px">매칭도</div>
+          <div id="vclinic-view-pvr-match" style="font-size:13px;font-weight:800;color:#1e3a8a">—%</div>
+        </div>
+      </div>
+      <div id="vclinic-view-pvr-range" style="font-size:11px;color:#475569;line-height:1.6;margin-bottom:10px;background:rgba(255,255,255,0.6);border-radius:6px;padding:7px 9px"></div>
+      <canvas id="vclinic-view-pvr-canvas" width="600" height="760" style="width:100%;height:auto;display:block;border-radius:8px;background:#fff"></canvas>
+      <div id="vclinic-view-pvr-comment" style="display:none;font-size:11px;color:#1e3a8a;margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.75);border-radius:6px;line-height:1.6;border-left:3px solid #3b82f6;white-space:pre-wrap"></div>
+    </div>
     <div style="margin-bottom:14px">
       <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">트레이너 피드백</div>
       <div id="vclinic-feedback-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
@@ -19839,6 +19884,9 @@ let _vclinicCurrentTab='all', _vclinicCurrentPost=null;
 let _vclinicMediaRecorder=null, _vclinicRecChunks=[], _vclinicRecInterval=null;
 let _vclinicRecSeconds=0, _vclinicIsRecording=false, _vclinicIsPaused=false;
 let _vclinicAudioBlob=null, _vclinicInputMode='rec', _vclinicFileBlob=null;
+/* 음역대 분석 결과 첨부 상태 */
+let _vclinicPvrSnapshot=null;       /* 선택된 PVR 결과 (글쓰기 중) */
+let _vclinicPvrHistoryCache=null;   /* PVR 이력 캐시 */
 const VC_MAX_BYTES=5*1024*1024, VC_MAX_SEC=5*60;
 
 function openVocalClinic(){
@@ -19933,12 +19981,23 @@ function _renderVclinicPosts(){
     const hasFb=p.feedbackCount&&p.feedbackCount>0;
     const sC=hasFb?'#16a34a':'#854d0e', sBg=hasFb?'#dcfce7':'#fef9c3', sBd=hasFb?'#86efac':'#fde047', sTxt=hasFb?'답변 완료':'답변 대기';
     const privB=p.isPrivate?'<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px">비공개</span>':'';
+    /* 출처 뱃지: 녹음 (빨강) / 파일 (회색) */
+    let srcB = '';
+    if(p.sourceType === 'rec'){
+      srcB = '<span title="직접 녹음" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="#dc2626" stroke-width="2" fill="none" stroke-linecap="round"/></svg>녹음</span>';
+    } else if(p.sourceType === 'file'){
+      srcB = '<span title="파일 업로드" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#475569;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>파일</span>';
+    }
+    /* PVR 첨부 뱃지 */
+    const pvrB = p.pvrSnapshot ? '<span title="음역대 분석 결과 포함" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>분석</span>' : '';
     const pid = p._id;
     return '<div onclick="_openVclinicView(\''+pid+'\')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">'
       +'<div style="font-size:13.5px;font-weight:800;color:#1e3a8a;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+privB+_escapeHtml(p.title||'')+'</div>'
       +'<span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;background:'+sBg+';color:'+sC+';border:1px solid '+sBd+'">'+sTxt+'</span>'
-      +'</div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu)">'
+      +'</div>'
+      +(srcB||pvrB?'<div style="margin-bottom:6px;line-height:1.4">'+srcB+pvrB+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu)">'
       +'<span>'+_escapeHtml(p.nickname||'익명')+'</span><span>'+dt+'</span></div></div>';
   }).join('');
 }
@@ -19950,10 +20009,13 @@ function _openVclinicWrite(){
   /* 상태 초기화 */
   _vclinicAudioBlob=null; _vclinicFileBlob=null;
   _vclinicRecSeconds=0; _vclinicIsRecording=false; _vclinicIsPaused=false;
+  _vclinicPvrSnapshot=null;
   ['vclinic-title','vclinic-memo'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
-  ['vclinic-write-err','vclinic-upload-progress','vclinic-rec-preview','vclinic-file-selected'].forEach(id=>{
+  ['vclinic-write-err','vclinic-upload-progress','vclinic-rec-preview','vclinic-file-selected','vclinic-pvr-selected','vclinic-pvr-list-wrap'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.style.display='none';
   });
+  const pvrToggleBtn=document.getElementById('vclinic-pvr-toggle-btn');
+  if(pvrToggleBtn){pvrToggleBtn.textContent='결과 첨부'; pvrToggleBtn.style.background='#fff'; pvrToggleBtn.style.color='#475569'; pvrToggleBtn.style.borderColor='#cbd5e1';}
   const timer=document.getElementById('vclinic-rec-timer'); if(timer) timer.textContent='00:00';
   const status=document.getElementById('vclinic-rec-status'); if(status) status.textContent='녹음 준비';
   const stopBtn=document.getElementById('vclinic-rec-stop-btn'); if(stopBtn) stopBtn.style.display='none';
@@ -19971,8 +20033,111 @@ function _openVclinicWrite(){
 
 function _closeVclinicWrite(){
   if(_vclinicIsRecording) _vclinicStopRec();
+  _vclinicPvrSnapshot=null;  /* 닫을 때 첨부 결과 정리 */
   const modal=document.getElementById('vclinic-write-modal');
   if(modal){modal.style.display='none'; document.body.style.overflow='';}
+}
+
+/* ---- PVR 분석 결과 첨부 (글쓰기 모달) ---- */
+/* 결과 첨부 버튼 클릭 → 이력 펼침/접기 */
+async function _vclinicTogglePvrPicker(){
+  const wrap=document.getElementById('vclinic-pvr-list-wrap');
+  const list=document.getElementById('vclinic-pvr-list');
+  const btn=document.getElementById('vclinic-pvr-toggle-btn');
+  if(!wrap||!list) return;
+  if(wrap.style.display==='block'){
+    /* 접기 */
+    wrap.style.display='none';
+    if(btn){btn.textContent='결과 첨부'; btn.style.background='#fff'; btn.style.color='#475569'; btn.style.borderColor='#cbd5e1';}
+    return;
+  }
+  /* 펼치기 */
+  wrap.style.display='block';
+  if(btn){btn.textContent='닫기'; btn.style.background='#2563eb'; btn.style.color='#fff'; btn.style.borderColor='#2563eb';}
+  list.innerHTML='<div style="text-align:center;color:#94a3b8;font-size:11px;padding:14px">불러오는 중...</div>';
+  try {
+    const hist = (typeof _ptLoadHistory==='function') ? await _ptLoadHistory() : [];
+    _vclinicPvrHistoryCache = hist;
+    if(!hist || hist.length===0){
+      list.innerHTML='<div style="text-align:center;color:#94a3b8;font-size:11px;padding:14px">측정 이력이 없어요.<br><span style="font-size:10px">먼저 음역대 테스트를 진행해주세요.</span></div>';
+      return;
+    }
+    /* 최근 10개만 노출 */
+    const items = hist.slice(0, 10);
+    list.innerHTML = items.map((r, idx)=>{
+      const d = new Date(r.timestamp);
+      const tStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const vt = (r.primary && r.primary.name) || '—';
+      const mp = (r.primary && typeof r.primary.match==='number') ? r.primary.match : 0;
+      const lo = r.realLowNote || r.lowNote || '';
+      const hi = r.realHighNote || r.highNote || '';
+      const rng = lo && hi ? (lo + ' ~ ' + hi) : '';
+      return '<div onclick="_vclinicPickPvr('+idx+')" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;margin-bottom:5px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\';this.style.background=\'#eff6ff\'" onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span style="font-size:12px;font-weight:800;color:#1e3a8a">'+_escapeHtml(vt)+'</span><span style="font-size:10px;color:#94a3b8">'+tStr+'</span></div>'
+        +'<div style="font-size:10.5px;color:#64748b">매칭 '+mp+'%'+(rng?' &middot; '+rng:'')+'</div>'
+        +'</div>';
+    }).join('');
+  } catch(e){
+    list.innerHTML='<div style="text-align:center;color:#dc2626;font-size:11px;padding:14px">이력 불러오기 실패</div>';
+  }
+}
+
+/* 이력 항목 선택 */
+function _vclinicPickPvr(idx){
+  if(!_vclinicPvrHistoryCache || !_vclinicPvrHistoryCache[idx]) return;
+  const r = _vclinicPvrHistoryCache[idx];
+  /* 첨부용 스냅샷 (필수 필드만) */
+  _vclinicPvrSnapshot = {
+    timestamp: r.timestamp,
+    gender: r.gender,
+    lowMidi: r.lowMidi, highMidi: r.highMidi,
+    realLow: r.realLow, realHigh: r.realHigh,
+    lowNote: r.lowNote, highNote: r.highNote,
+    realLowNote: r.realLowNote, realHighNote: r.realHighNote,
+    chestRatio: r.chestRatio, mixRatio: r.mixRatio, falsettoRatio: r.falsettoRatio,
+    primary: r.primary,
+    confidence: r.confidence,
+    comment: r.comment,
+    dataPoints: r.dataPoints || [],
+    rangeOctaves: r.rangeOctaves,
+    measureCenterWeighted: r.measureCenterWeighted
+  };
+  /* 이력 목록 접기, 미리보기 표시 */
+  const wrap=document.getElementById('vclinic-pvr-list-wrap');
+  if(wrap) wrap.style.display='none';
+  const btn=document.getElementById('vclinic-pvr-toggle-btn');
+  if(btn){btn.textContent='변경'; btn.style.background='#fff'; btn.style.color='#475569'; btn.style.borderColor='#cbd5e1';}
+  _vclinicRenderPvrSelected();
+}
+
+/* 선택된 결과 미리보기 렌더 */
+function _vclinicRenderPvrSelected(){
+  const wrap=document.getElementById('vclinic-pvr-selected');
+  if(!wrap) return;
+  if(!_vclinicPvrSnapshot){wrap.style.display='none'; wrap.innerHTML=''; return;}
+  const r = _vclinicPvrSnapshot;
+  const d = new Date(r.timestamp);
+  const tStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const vt = (r.primary && r.primary.name) || '—';
+  const mp = (r.primary && typeof r.primary.match==='number') ? r.primary.match : 0;
+  const lo = r.realLowNote || r.lowNote || '';
+  const hi = r.realHighNote || r.highNote || '';
+  const rng = lo && hi ? (lo + ' ~ ' + hi) : '';
+  wrap.innerHTML = '<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:9px 11px;position:relative">'
+    +'<button type="button" onclick="_vclinicRemovePvr()" style="position:absolute;top:6px;right:6px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;cursor:pointer">제거</button>'
+    +'<div style="font-size:12px;font-weight:800;color:#1e3a8a;margin-bottom:2px">'+_escapeHtml(vt)+' &middot; 매칭 '+mp+'%</div>'
+    +'<div style="font-size:10.5px;color:#475569">'+(rng?rng+' &middot; ':'')+tStr+'</div>'
+    +'</div>';
+  wrap.style.display='block';
+}
+
+/* 선택 제거 */
+function _vclinicRemovePvr(){
+  _vclinicPvrSnapshot = null;
+  const wrap=document.getElementById('vclinic-pvr-selected');
+  if(wrap){wrap.style.display='none'; wrap.innerHTML='';}
+  const btn=document.getElementById('vclinic-pvr-toggle-btn');
+  if(btn){btn.textContent='결과 첨부'; btn.style.background='#fff'; btn.style.color='#475569'; btn.style.borderColor='#cbd5e1';}
 }
 
 function _vclinicSetMode(mode){
@@ -20140,7 +20305,13 @@ async function _submitVclinicPost(){
     const memo=(document.getElementById('vclinic-memo')?.value||'').trim();
     /* 녹음일 때만 duration 저장 (파일 업로드는 미지원) */
     const _recDuration = (_vclinicInputMode==='rec' && _vclinicRecSeconds > 0) ? _vclinicRecSeconds : 0;
-    const postData={title,nickname,memo,isPrivate,audioUrl:downloadUrl,storagePath,authorUid:_fbAuthUid,feedbackCount:0,commentCount:0,duration:_recDuration,createdAt:firebase.database.ServerValue.TIMESTAMP,status:'pending'};
+    /* 출처 타입: 'rec' = 직접 녹음, 'file' = 파일 업로드 */
+    const _sourceType = _vclinicInputMode === 'rec' ? 'rec' : 'file';
+    const postData={title,nickname,memo,isPrivate,audioUrl:downloadUrl,storagePath,authorUid:_fbAuthUid,feedbackCount:0,commentCount:0,duration:_recDuration,sourceType:_sourceType,createdAt:firebase.database.ServerValue.TIMESTAMP,status:'pending'};
+    /* PVR 분석 결과 첨부 (선택) */
+    if(_vclinicPvrSnapshot){
+      postData.pvrSnapshot = _vclinicPvrSnapshot;
+    }
     const updates={};
     updates['vocalClinic/posts/'+postId]=postData;
     updates['vocalClinic/postsByUser/'+_fbAuthUid+'/'+postId]=postId;
@@ -20189,6 +20360,23 @@ async function _openVclinicView(postId){
     }
     _customAudioInit('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress', finalAudioUrl, post.duration || 0);
   }
+  /* 출처 뱃지: 녹음/파일 */
+  const srcEl = f('vclinic-view-source');
+  if(srcEl){
+    if(post.sourceType === 'rec'){
+      srcEl.style.display='inline-flex';
+      srcEl.style.background='#fef2f2'; srcEl.style.color='#dc2626'; srcEl.style.border='1px solid #fca5a5';
+      srcEl.style.alignItems='center'; srcEl.style.gap='4px';
+      srcEl.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="#dc2626" stroke-width="2" fill="none" stroke-linecap="round"/></svg>직접 녹음';
+    } else if(post.sourceType === 'file'){
+      srcEl.style.display='inline-flex';
+      srcEl.style.background='#f1f5f9'; srcEl.style.color='#475569'; srcEl.style.border='1px solid #cbd5e1';
+      srcEl.style.alignItems='center'; srcEl.style.gap='4px';
+      srcEl.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>파일 업로드';
+    } else {
+      srcEl.style.display='none';
+    }
+  }
   const memoEl=f('vclinic-view-memo');
   if(memoEl){if(post.memo){memoEl.textContent=post.memo; memoEl.style.display='block';}else{memoEl.style.display='none';}}
   if(f('vclinic-delete-btn')) f('vclinic-delete-btn').style.display=(isOwner||isAdmin)?'inline-block':'none';
@@ -20205,12 +20393,66 @@ async function _openVclinicView(postId){
   if(cmtNotice) cmtNotice.style.display = isLoggedIn ? 'none' : 'block';
   const modal=f('vclinic-view-modal');
   if(modal){modal.style.display='flex'; document.body.style.overflow='hidden';}
+  /* 모달 표시 이후 PVR 렌더 (캔버스 width=0 방지) */
+  _vclinicRenderViewPvr(post.pvrSnapshot);
 }
 
 function _closeVclinicView(){
   const modal=document.getElementById('vclinic-view-modal');
   if(modal){modal.style.display='none'; document.body.style.overflow='';}
   _vclinicCurrentPost=null;
+}
+
+/* 첨부된 음역대 분석 결과를 상세 모달에 렌더 */
+function _vclinicRenderViewPvr(snap){
+  const wrap = document.getElementById('vclinic-view-pvr');
+  if(!wrap) return;
+  if(!snap || !snap.primary){wrap.style.display='none'; return;}
+  /* 정보 채우기 */
+  const dateEl = document.getElementById('vclinic-view-pvr-date');
+  if(dateEl && snap.timestamp){
+    const d = new Date(snap.timestamp);
+    dateEl.textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 측정`;
+  }
+  const voiceEl = document.getElementById('vclinic-view-pvr-voice');
+  if(voiceEl) voiceEl.textContent = snap.primary.name || '—';
+  const matchEl = document.getElementById('vclinic-view-pvr-match');
+  if(matchEl) matchEl.textContent = (snap.primary.match || 0) + '%';
+  /* 음역 정보 */
+  const rangeEl = document.getElementById('vclinic-view-pvr-range');
+  if(rangeEl){
+    const lo = snap.lowNote || '—', hi = snap.highNote || '—';
+    const rlo = snap.realLowNote || lo, rhi = snap.realHighNote || hi;
+    const oct = (typeof snap.rangeOctaves==='number') ? snap.rangeOctaves.toFixed(2) : '—';
+    const chest = Math.round((snap.chestRatio||0)*100);
+    const mix = Math.round((snap.mixRatio||0)*100);
+    const fals = Math.round((snap.falsettoRatio||0)*100);
+    rangeEl.innerHTML = '<div><b style="color:#1e3a8a">전체 음역</b> &nbsp; '+lo+' ~ '+hi+' &nbsp;(<span style="color:#3b82f6">'+oct+' 옥타브</span>)</div>'
+      +'<div><b style="color:#1e3a8a">실용 음역(진성)</b> &nbsp; '+rlo+' ~ '+rhi+'</div>'
+      +'<div style="margin-top:3px"><b style="color:#1e3a8a">발성 분포</b> &nbsp; 흉성 '+chest+'% &middot; 믹스 '+mix+'% &middot; 가성 '+fals+'%</div>';
+  }
+  /* 코멘트 */
+  const commentEl = document.getElementById('vclinic-view-pvr-comment');
+  if(commentEl){
+    if(snap.comment){
+      commentEl.textContent = snap.comment;
+      commentEl.style.display='block';
+    } else {
+      commentEl.style.display='none';
+    }
+  }
+  /* 그래프 (캔버스에 데이터포인트 있으면 그리기) */
+  wrap.style.display='block';
+  const canvas = document.getElementById('vclinic-view-pvr-canvas');
+  if(canvas && snap.dataPoints && snap.dataPoints.length>0 && typeof _drawSinglePtToCanvas==='function'){
+    /* _drawSinglePtToCanvas는 result.dataPoints만 사용해서 그래프를 그림 (gender 기준 축)
+       시각화 호환을 위해 result 객체 형태로 전달 */
+    /* 모달이 막 표시된 직후에는 캔버스 width가 0일 수 있으므로 다음 프레임에 그리기 */
+    requestAnimationFrame(()=>{
+      try { _drawSinglePtToCanvas('vclinic-view-pvr-canvas', snap); }
+      catch(e){ console.warn('PVR 그래프 렌더 실패:', e); }
+    });
+  }
 }
 
 async function _loadVclinicFeedback(postId){
