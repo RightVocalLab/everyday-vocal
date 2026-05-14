@@ -4631,7 +4631,7 @@ const INIT_DB={
       "range": "흉성(여)",
       "startNote": 57,
       "endNote": 61,
-      "bpm": 190,
+      "bpm": 110,
       "pattern": [
         0,
         2,
@@ -5527,10 +5527,11 @@ const INIT_DB={
     {
       "id": "PRH-A",
       "name": "Press 후우 스케일",
-      "range": "흉성~낮은두성",
-      "startNote": 57,
-      "endNote": 72,
+      "range": "중성~낮은중성",
+      "startNote": 62,
+      "endNote": 67,
       "bpm": 130,
+      "studentOnly": "김동현",
       "pattern": [
         0,
         {
@@ -5559,7 +5560,7 @@ const INIT_DB={
       ],
       "previewType": "5도화음",
       "previewBeats": 4,
-      "note": "Press 후우(후우빡!) 발성 - 도레미파솔 각 5박 홀드 후 하행"
+      "note": "Press 후우(후우빡!) 발성 - 도레미파솔 각 6박 홀드 후 하행 (김동현 테스트 전용)"
     }
   ],
   "courses": [
@@ -10388,7 +10389,13 @@ return (DB.exercises||[]).filter(ex=>ex.hasScale===true&&ex.active!==false);
 function bldFreePick(){
 const pick=document.getElementById('free-pick');
 pick.innerHTML='';
-const scales = (DB.scales||[]).filter(s => s.active !== false);
+/* studentOnly 필드 체크: 해당 학생일 때만 노출, 다른 학생/일반/비로그인은 숨김 */
+const _curStuName = (typeof curStudent !== 'undefined' && curStudent) ? (curStudent.name || curStudent) : null;
+const scales = (DB.scales||[]).filter(s => {
+  if(s.active === false) return false;
+  if(s.studentOnly && s.studentOnly !== _curStuName) return false;
+  return true;
+});
 if(!scales.length){
   pick.innerHTML='<div class="empty" style="padding:24px;text-align:center;color:var(--mu)">스케일이 없습니다</div>';
   return;
@@ -10406,6 +10413,7 @@ const groups = [
   {label:'9도 하향', prefix:'9DN', icon:_freeScaleIcon('9DN')},
   {label:'9도 홀드 하향', prefix:'9DNH', icon:_freeScaleIcon('9DN')},
   {label:'9도 홀드 하향 (하향만)', prefix:'9DNHO', icon:_freeScaleIcon('9DN')},
+  {label:'Press 후우', prefix:'PRH', icon:_freeScaleIcon('5D')},
 ];
 
 /* 그룹별 카드 생성 */
