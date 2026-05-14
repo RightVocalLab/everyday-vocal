@@ -1655,7 +1655,7 @@ input,select,button,textarea{font-family:inherit;}
       <textarea id="vclinic-memo" placeholder="어떤 부분이 고민인지 적어주세요" maxlength="200" rows="3" style="width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 11px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
     </div>
     <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">음성 입력 방식 <span style="color:#dc2626">*</span></label>
+      <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">음성 입력 방식 <span style="color:#94a3b8;font-weight:500">(선택 — PVR 결과만 올릴 수도 있어요)</span></label>
       <div style="display:flex;gap:8px">
         <button id="vclinic-mode-rec" onclick="_vclinicSetMode('rec')" style="flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800;cursor:pointer">직접 녹음</button>
         <button id="vclinic-mode-file" onclick="_vclinicSetMode('file')" style="flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:800;cursor:pointer">파일 업로드</button>
@@ -1751,7 +1751,7 @@ input,select,button,textarea{font-family:inherit;}
     <div style="margin-bottom:12px">
       <span id="vclinic-status-span" style="font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:99px;background:#fef9c3;color:#854d0e;border:1.5px solid #fde047">답변 대기중</span>
     </div>
-    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px">
+    <div id="vclinic-view-audio-card" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:11px;font-weight:700;color:#1d4ed8">업로드된 음성</div>
         <span id="vclinic-view-source" style="display:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px"></span>
@@ -20100,12 +20100,14 @@ function _renderVclinicPosts(){
     const hasFb=p.feedbackCount&&p.feedbackCount>0;
     const sC=hasFb?'#16a34a':'#854d0e', sBg=hasFb?'#dcfce7':'#fef9c3', sBd=hasFb?'#86efac':'#fde047', sTxt=hasFb?'답변 완료':'답변 대기';
     const privB=p.isPrivate?'<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px">비공개</span>':'';
-    /* 출처 뱃지: 녹음 (빨강) / 파일 (회색) */
+    /* 출처 뱃지: 녹음 (빨강) / 파일 (회색) / PVR (파랑) */
     let srcB = '';
     if(p.sourceType === 'rec'){
       srcB = '<span title="직접 녹음" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="#dc2626" stroke-width="2" fill="none" stroke-linecap="round"/></svg>녹음</span>';
     } else if(p.sourceType === 'file'){
       srcB = '<span title="파일 업로드" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#475569;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>파일</span>';
+    } else if(p.sourceType === 'pvr'){
+      srcB = '<span title="음역대 분석만" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>음역대만</span>';
     }
     /* PVR 첨부 뱃지 */
     const pvrB = p.pvrSnapshot ? '<span title="음역대 분석 결과 포함" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>분석</span>' : '';
@@ -20205,6 +20207,30 @@ async function _vclinicTogglePvrPicker(){
   }
 }
 
+/* Firebase는 undefined를 거부하므로 모든 undefined를 제거하는 헬퍼 */
+function _vclinicCleanForFirebase(obj){
+  if(obj === null || obj === undefined) return null;
+  if(typeof obj !== 'object') return obj;
+  if(Array.isArray(obj)){
+    return obj.map(_vclinicCleanForFirebase).filter(v => v !== undefined && v !== null);
+  }
+  const cleaned = {};
+  Object.keys(obj).forEach(k => {
+    const v = obj[k];
+    if(v === undefined) return;  /* undefined 필드는 완전 제거 */
+    if(v === null) return;  /* null도 제거 (저장 공간 절약) */
+    if(typeof v === 'object'){
+      const sub = _vclinicCleanForFirebase(v);
+      if(sub !== null && sub !== undefined && (Array.isArray(sub) ? sub.length > 0 : Object.keys(sub).length > 0)){
+        cleaned[k] = sub;
+      }
+    } else {
+      cleaned[k] = v;
+    }
+  });
+  return cleaned;
+}
+
 /* 이력 항목 선택 */
 function _vclinicPickPvr(idx){
   if(!_vclinicPvrHistoryCache || !_vclinicPvrHistoryCache[idx]){
@@ -20212,19 +20238,17 @@ function _vclinicPickPvr(idx){
     return;
   }
   const r = _vclinicPvrHistoryCache[idx];
-  /* 옛날 데이터 호환성: 필수 필드 누락 확인 */
-  const missingFields = [];
-  if(!r.timestamp) missingFields.push('측정 날짜');
-  if(typeof r.lowMidi !== 'number' && typeof r.highMidi !== 'number') missingFields.push('음역 정보');
-  if(missingFields.length > 0){
-    alert('이 측정 결과는 정보가 부족해서 첨부할 수 없어요.\n부족한 항목: ' + missingFields.join(', ') + '\n\n다시 측정해 주세요.');
+  /* 최소 정보 검증 - 음역 정보만 있어도 첨부 가능 */
+  const hasAnyRange = (typeof r.lowMidi === 'number') || (typeof r.highMidi === 'number') || r.lowNote || r.highNote;
+  if(!r.timestamp && !hasAnyRange){
+    alert('이 측정 결과는 정보가 너무 부족해서 첨부할 수 없어요.\n다시 측정해 주세요.');
     return;
   }
   /* 호환성: 옛날 데이터에는 dataPoints/primary/confidence 등이 없을 수 있음 */
   const _safeDP = Array.isArray(r.dataPoints) ? r.dataPoints : [];
   const _isLegacy = (!r.primary || !_safeDP.length);
-  /* 첨부용 스냅샷 - 옛날 데이터는 가능한 만큼 채움 */
-  _vclinicPvrSnapshot = {
+  /* 첨부용 스냅샷 - undefined를 절대 넣지 않음 (Firebase 호환) */
+  const rawSnapshot = {
     timestamp: r.timestamp,
     gender: r.gender || 'female',
     lowMidi: r.lowMidi, highMidi: r.highMidi,
@@ -20232,7 +20256,7 @@ function _vclinicPickPvr(idx){
     lowNote: r.lowNote, highNote: r.highNote,
     realLowNote: r.realLowNote, realHighNote: r.realHighNote,
     chestRatio: r.chestRatio || 0, mixRatio: r.mixRatio || 0, falsettoRatio: r.falsettoRatio || 0,
-    primary: r.primary || null,
+    primary: r.primary,
     confidence: r.confidence,
     comment: r.comment,
     dataPoints: _safeDP,
@@ -20240,6 +20264,8 @@ function _vclinicPickPvr(idx){
     measureCenterWeighted: r.measureCenterWeighted,
     _legacy: _isLegacy  /* 옛날 데이터 플래그 */
   };
+  /* undefined 필드 제거 → Firebase 거부 방지 */
+  _vclinicPvrSnapshot = _vclinicCleanForFirebase(rawSnapshot);
   /* 이력 목록 접기, 미리보기 표시 */
   const wrap=document.getElementById('vclinic-pvr-list-wrap');
   if(wrap) wrap.style.display='none';
@@ -20481,8 +20507,12 @@ async function _submitVclinicPost(){
   const title=(document.getElementById('vclinic-title')?.value||'').trim();
   if(!title){_vclinicShowErr('제목을 입력해주세요.'); return;}
   const blob=_vclinicInputMode==='rec'?_vclinicAudioBlob:_vclinicFileBlob;
-  if(!blob){_vclinicShowErr('음성을 녹음하거나 파일을 선택해주세요.'); return;}
-  if(blob.size>VC_MAX_BYTES){_vclinicShowErr('📦 파일이 5MB를 초과합니다.'); return;}
+  /* 음성 또는 PVR 둘 중 하나는 있어야 함 */
+  if(!blob && !_vclinicPvrSnapshot){
+    _vclinicShowErr('🎵 음성을 녹음/업로드하거나 📊 음역대 분석 결과를 첨부해주세요.\n(둘 중 하나는 필수예요)');
+    return;
+  }
+  if(blob && blob.size>VC_MAX_BYTES){_vclinicShowErr('📦 파일이 5MB를 초과합니다.'); return;}
   if(!_fbAuthUid){_vclinicShowErr('로그인이 필요합니다.'); return;}
   /* 강화된 버튼 피드백 */
   if(submitBtn){
@@ -20494,44 +20524,54 @@ async function _submitVclinicPost(){
   if(progEl){progEl.style.display='block';}
   if(progBar) progBar.style.width='5%';
   if(progTxt) progTxt.textContent='준비 중...';
+  /* PVR만 등록하는 경우 (음성 없음) - Storage 업로드 스킵 */
+  const _isPvrOnly = !blob && !!_vclinicPvrSnapshot;
   try {
-    if(progTxt) progTxt.textContent='🔐 인증 확인 중...';
-    const idToken=await firebase.auth().currentUser.getIdToken();
-    if(progBar) progBar.style.width='12%';
+    let downloadUrl = '';
+    let storagePath = '';
     const postId=_fbDb.ref('vocalClinic/posts').push().key;
-    const ext=_vclinicInputMode==='rec'?'webm':(_vclinicFileBlob.name.split('.').pop()||'audio');
-    const storagePath='vocal-clinic/'+_fbAuthUid+'/'+postId+'.'+ext;
-    const uploadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name='+encodeURIComponent(storagePath);
-    if(progTxt) progTxt.textContent='📤 음성 업로드 중...';
-    if(progBar) progBar.style.width='15%';
-    /* XMLHttpRequest로 실제 업로드 진행률 표시 (15% ~ 75%) */
-    const uploadResultText = await new Promise((resolve, reject)=>{
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', uploadUrl);
-      xhr.setRequestHeader('Content-Type', blob.type||'audio/webm');
-      xhr.setRequestHeader('Authorization', 'Bearer '+idToken);
-      xhr.upload.onprogress = (ev)=>{
-        if(ev.lengthComputable){
-          const pct = (ev.loaded / ev.total) * 60;  // 15~75% 범위
-          if(progBar) progBar.style.width = (15 + pct) + '%';
-          if(progTxt) progTxt.textContent = '📤 업로드 중... ' + Math.round((ev.loaded/ev.total)*100) + '%';
-        }
-      };
-      xhr.onload = ()=>{
-        if(xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
-        else reject(new Error('Storage 업로드 실패: '+xhr.status));
-      };
-      xhr.onerror = ()=>reject(new Error('네트워크 오류: 업로드 중 연결이 끊겼어요.'));
-      xhr.ontimeout = ()=>reject(new Error('업로드 시간 초과. 다시 시도해주세요.'));
-      xhr.timeout = 120000;  // 2분
-      xhr.send(blob);
-    });
-    const uploadResult = JSON.parse(uploadResultText);
-    const downloadToken = uploadResult.downloadTokens || '';
-    const downloadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(storagePath)+'?alt=media'+(downloadToken?'&token='+downloadToken:'');
+    if(!_isPvrOnly){
+      /* === 음성이 있는 경우: Storage 업로드 === */
+      if(progTxt) progTxt.textContent='🔐 인증 확인 중...';
+      const idToken=await firebase.auth().currentUser.getIdToken();
+      if(progBar) progBar.style.width='12%';
+      const ext=_vclinicInputMode==='rec'?'webm':(_vclinicFileBlob.name.split('.').pop()||'audio');
+      storagePath='vocal-clinic/'+_fbAuthUid+'/'+postId+'.'+ext;
+      const uploadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name='+encodeURIComponent(storagePath);
+      if(progTxt) progTxt.textContent='📤 음성 업로드 중...';
+      if(progBar) progBar.style.width='15%';
+      const uploadResultText = await new Promise((resolve, reject)=>{
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', uploadUrl);
+        xhr.setRequestHeader('Content-Type', blob.type||'audio/webm');
+        xhr.setRequestHeader('Authorization', 'Bearer '+idToken);
+        xhr.upload.onprogress = (ev)=>{
+          if(ev.lengthComputable){
+            const pct = (ev.loaded / ev.total) * 60;
+            if(progBar) progBar.style.width = (15 + pct) + '%';
+            if(progTxt) progTxt.textContent = '📤 업로드 중... ' + Math.round((ev.loaded/ev.total)*100) + '%';
+          }
+        };
+        xhr.onload = ()=>{
+          if(xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
+          else reject(new Error('Storage 업로드 실패: '+xhr.status));
+        };
+        xhr.onerror = ()=>reject(new Error('네트워크 오류: 업로드 중 연결이 끊겼어요.'));
+        xhr.ontimeout = ()=>reject(new Error('업로드 시간 초과. 다시 시도해주세요.'));
+        xhr.timeout = 120000;
+        xhr.send(blob);
+      });
+      const uploadResult = JSON.parse(uploadResultText);
+      const downloadToken = uploadResult.downloadTokens || '';
+      downloadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(storagePath)+'?alt=media'+(downloadToken?'&token='+downloadToken:'');
+    } else {
+      /* === PVR만 등록 === */
+      if(progBar) progBar.style.width='50%';
+      if(progTxt) progTxt.textContent='📊 분석 결과 저장 중...';
+    }
     if(progBar) progBar.style.width='80%';
     if(progTxt) progTxt.textContent='💾 게시글 저장 중...';
-    /* 닉네임: 학생=이름, 일반사용자=설정한 닉네임, 미설정시 모달 표시 */
+    /* 닉네임 */
     let nickname = curStudent ? curStudent.name
                  : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
                  : null;
@@ -20546,14 +20586,23 @@ async function _submitVclinicPost(){
     }
     const isPrivate=document.getElementById('vclinic-private-toggle')?.checked||false;
     const memo=(document.getElementById('vclinic-memo')?.value||'').trim();
-    /* 녹음일 때만 duration 저장 (파일 업로드는 미지원) */
-    const _recDuration = (_vclinicInputMode==='rec' && _vclinicRecSeconds > 0) ? _vclinicRecSeconds : 0;
-    /* 출처 타입: 'rec' = 직접 녹음, 'file' = 파일 업로드 */
-    const _sourceType = _vclinicInputMode === 'rec' ? 'rec' : 'file';
-    const postData={title,nickname,memo,isPrivate,audioUrl:downloadUrl,storagePath,authorUid:_fbAuthUid,feedbackCount:0,commentCount:0,duration:_recDuration,sourceType:_sourceType,createdAt:firebase.database.ServerValue.TIMESTAMP,status:'pending'};
-    /* PVR 분석 결과 첨부 (선택) */
+    const _recDuration = (!_isPvrOnly && _vclinicInputMode==='rec' && _vclinicRecSeconds > 0) ? _vclinicRecSeconds : 0;
+    /* 출처 타입: 'rec' = 직접 녹음, 'file' = 파일 업로드, 'pvr' = PVR만 */
+    const _sourceType = _isPvrOnly ? 'pvr' : (_vclinicInputMode === 'rec' ? 'rec' : 'file');
+    const postData={
+      title, nickname, memo, isPrivate,
+      audioUrl: downloadUrl,  /* 빈 문자열일 수 있음 */
+      storagePath: storagePath,
+      authorUid: _fbAuthUid,
+      feedbackCount: 0, commentCount: 0,
+      duration: _recDuration,
+      sourceType: _sourceType,
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      status: 'pending'
+    };
+    /* PVR 분석 결과 첨부 (선택) - undefined 제거하여 Firebase 호환 */
     if(_vclinicPvrSnapshot){
-      postData.pvrSnapshot = _vclinicPvrSnapshot;
+      postData.pvrSnapshot = _vclinicPvrSnapshot;  /* 이미 _vclinicCleanForFirebase 처리됨 */
     }
     const updates={};
     updates['vocalClinic/posts/'+postId]=postData;
@@ -20562,7 +20611,7 @@ async function _submitVclinicPost(){
     await _fbDb.ref().update(updates);
     if(progBar) progBar.style.width='100%';
     if(progTxt) progTxt.textContent='✅ 완료!';
-    showToast('음성이 등록되었습니다!');
+    showToast(_isPvrOnly ? '음역대 분석 결과가 등록되었습니다!' : '음성이 등록되었습니다!');
     _closeVclinicWrite();
     _vclinicCheckLimitNotice();
     _loadVclinicPosts(true);
@@ -20596,7 +20645,10 @@ async function _openVclinicView(postId){
   const ss=f('vclinic-status-span');
   if(ss){ss.textContent=hasFb?'답변 완료':'답변 대기중'; ss.style.background=hasFb?'#dcfce7':'#fef9c3'; ss.style.color=hasFb?'#16a34a':'#854d0e'; ss.style.borderColor=hasFb?'#86efac':'#fde047';}
   /* 커스텀 audio player 초기화 (저장된 duration이 있으면 fallback으로 사용) */
+  /* 음성 카드 표시/숨김 */
+  const audioCard = f('vclinic-view-audio-card');
   if(post.audioUrl){
+    if(audioCard) audioCard.style.display='block';
     let finalAudioUrl = post.audioUrl;
     /* 토큰 없는 기존 URL이면 Firebase SDK로 다운로드 URL 새로 받기 */
     if(post.storagePath && !post.audioUrl.includes('token=')){
@@ -20608,8 +20660,11 @@ async function _openVclinicView(postId){
       } catch(e){ console.warn('Storage URL 재생성 실패:', e); }
     }
     _customAudioInit('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress', finalAudioUrl, post.duration || 0);
+  } else {
+    /* PVR만 등록된 글: 음성 카드 숨김 */
+    if(audioCard) audioCard.style.display='none';
   }
-  /* 출처 뱃지: 녹음/파일 */
+  /* 출처 뱃지: 녹음/파일/PVR */
   const srcEl = f('vclinic-view-source');
   if(srcEl){
     if(post.sourceType === 'rec'){
