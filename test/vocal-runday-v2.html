@@ -9238,7 +9238,7 @@ function _customAudioSeek(event, audioId, barId, progId){
   } catch(e){ console.warn('seek 실패:', e); }
 }
 
-function _customAudioInit(audioId, btnId, timeId, progId, src, fallbackDuration){
+async function _customAudioInit(audioId, btnId, timeId, progId, src, fallbackDuration){
   const audio = document.getElementById(audioId);
   if(!audio) return;
   audio.onloadedmetadata = null;
@@ -9275,7 +9275,32 @@ function _customAudioInit(audioId, btnId, timeId, progId, src, fallbackDuration)
     _customAudioUpdateBtn(btn, false);
   });
   audio.preload = 'metadata';
-  audio.src = src;
+  
+  /* ════════════════════════════════════════════════════════════
+     Blob URL 우회 처리: Firebase Storage의 Content-Type이 잘못
+     설정된 기존 글도 재생 가능하도록 fetch → Blob → ObjectURL
+     ════════════════════════════════════════════════════════════ */
+  let finalSrc = src;
+  if(src && src.startsWith('http')){
+    try {
+      const resp = await fetch(src);
+      if(resp.ok){
+        const origBlob = await resp.blob();
+        /* Content-Type 강제 설정해서 Blob 재생성 */
+        const fixedBlob = new Blob([origBlob], { type: 'audio/webm' });
+        finalSrc = URL.createObjectURL(fixedBlob);
+        /* 이전 ObjectURL 정리 */
+        if(audio.dataset.objectUrl){
+          try { URL.revokeObjectURL(audio.dataset.objectUrl); } catch(e){}
+        }
+        audio.dataset.objectUrl = finalSrc;
+      }
+    } catch(e){
+      console.warn('Blob 우회 실패, 원본 URL 사용:', e);
+    }
+  }
+  
+  audio.src = finalSrc;
   audio.load();
   /* webm Infinity 버그 처리 */
   audio.addEventListener('loadedmetadata', function _fix(){
