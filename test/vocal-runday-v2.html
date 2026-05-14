@@ -12559,6 +12559,10 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
       const scriptAuth = document.createElement('script');
       scriptAuth.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
       scriptAuth.onload = function(){
+        /* Storage SDK 추가 로드 (음성 파일 다운로드 URL 재생성용) */
+        const scriptStorage = document.createElement('script');
+        scriptStorage.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js';
+        scriptStorage.onload = function(){
         try{
           if(!firebase.apps.length){
             _fbApp = firebase.initializeApp(_FB_CONFIG);
@@ -12630,6 +12634,8 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
             }
           });
         }catch(e){ console.warn('Firebase 초기화 실패:', e); }
+        };
+        document.head.appendChild(scriptStorage);
       };
       document.head.appendChild(scriptAuth);
     };
@@ -20111,7 +20117,10 @@ async function _submitVclinicPost(){
     if(progBar) progBar.style.width='30%';
     const resp=await fetch(uploadUrl,{method:'POST',headers:{'Content-Type':blob.type||'audio/webm','Authorization':'Bearer '+idToken},body:blob});
     if(!resp.ok) throw new Error('Storage 업로드 실패: '+resp.status);
-    const downloadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(storagePath)+'?alt=media';
+    /* 업로드 응답에서 downloadTokens 추출 → URL에 추가해야 인증 없이 접근 가능 */
+    const uploadResult = await resp.json();
+    const downloadToken = uploadResult.downloadTokens || '';
+    const downloadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(storagePath)+'?alt=media'+(downloadToken?'&token='+downloadToken:'');
     if(progBar) progBar.style.width='70%';
     if(progTxt) progTxt.textContent='DB에 저장 중...';
     /* 닉네임: 학생=이름, 일반사용자=설정한 닉네임, 미설정시 모달 표시 */
@@ -20168,7 +20177,17 @@ async function _openVclinicView(postId){
   if(ss){ss.textContent=hasFb?'답변 완료':'답변 대기중'; ss.style.background=hasFb?'#dcfce7':'#fef9c3'; ss.style.color=hasFb?'#16a34a':'#854d0e'; ss.style.borderColor=hasFb?'#86efac':'#fde047';}
   /* 커스텀 audio player 초기화 (저장된 duration이 있으면 fallback으로 사용) */
   if(post.audioUrl){
-    _customAudioInit('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress', post.audioUrl, post.duration || 0);
+    let finalAudioUrl = post.audioUrl;
+    /* 토큰 없는 기존 URL이면 Firebase SDK로 다운로드 URL 새로 받기 */
+    if(post.storagePath && !post.audioUrl.includes('token=')){
+      try {
+        if(typeof firebase !== 'undefined' && firebase.storage){
+          const newUrl = await firebase.storage().ref(post.storagePath).getDownloadURL();
+          if(newUrl) finalAudioUrl = newUrl;
+        }
+      } catch(e){ console.warn('Storage URL 재생성 실패:', e); }
+    }
+    _customAudioInit('vclinic-view-audio','vclinic-audio-view-play','vclinic-audio-view-time','vclinic-audio-view-progress', finalAudioUrl, post.duration || 0);
   }
   const memoEl=f('vclinic-view-memo');
   if(memoEl){if(post.memo){memoEl.textContent=post.memo; memoEl.style.display='block';}else{memoEl.style.display='none';}}
