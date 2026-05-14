@@ -1633,8 +1633,8 @@ input,select,button,textarea{font-family:inherit;}
     <button class="v2-ios-modal-close" onclick="_closeVclinicWrite()" aria-label="닫기">&#x2715;</button>
     <div style="text-align:center;font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:4px">음성 올리기</div>
     <div style="text-align:center;font-size:11px;color:#64748b;margin-bottom:8px">최대 5분 &middot; 5MB &middot; 음성 파일만</div>
-    <div style="text-align:center;font-size:10.5px;color:#3b82f6;background:#eff6ff;border-radius:8px;padding:6px 10px;margin-bottom:14px">
-      &#x1F4C5; 음성 파일은 업로드 후 <strong>30일간 보관</strong> 후 자동 삭제됩니다
+    <div style="text-align:center;font-size:10.5px;color:#3b82f6;background:#eff6ff;border-radius:8px;padding:6px 10px;margin-bottom:14px;line-height:1.5">
+      &#x1F4C5; 기본 <strong>30일 보관</strong> &middot; ❤️10+ <strong>3개월</strong> &middot; ❤️100+ <strong>영구 보관</strong>
     </div>
     <div id="vclinic-private-row" style="display:none;margin-bottom:14px;padding:10px 14px;background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1748,8 +1748,15 @@ input,select,button,textarea{font-family:inherit;}
         <span id="vclinic-view-time">&#x2014;</span>
       </div>
     </div>
-    <div style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
       <span id="vclinic-status-span" style="font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:99px;background:#fef9c3;color:#854d0e;border:1.5px solid #fde047">답변 대기중</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="vclinic-view-expiry" style="display:none;font-size:10px;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:5px;padding:3px 7px;font-weight:700"></span>
+        <button id="vclinic-like-btn" onclick="_toggleVclinicLike()" style="background:#fff;border:1.5px solid #fca5a5;border-radius:99px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#dc2626">
+          <span id="vclinic-like-icon">🤍</span>
+          <span id="vclinic-like-count">0</span>
+        </button>
+      </div>
     </div>
     <div id="vclinic-view-audio-card" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -1809,7 +1816,8 @@ input,select,button,textarea{font-family:inherit;}
         <button onclick="_submitVclinicComment()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:11.5px;font-weight:700;cursor:pointer">등록</button>
       </div>
     </div>
-    <div style="display:flex;gap:8px;justify-content:center">
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button id="vclinic-report-btn" onclick="_reportVclinicPost()" style="background:#fff;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;padding:8px 14px;font-size:11.5px;cursor:pointer">🚨 신고</button>
       <button id="vclinic-delete-btn" onclick="_deleteVclinicPost()" style="display:none;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
       <button onclick="_closeVclinicView()" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:10px;padding:9px 28px;font-size:12.5px;font-weight:700;cursor:pointer">닫기</button>
     </div>
@@ -1940,7 +1948,7 @@ input,select,button,textarea{font-family:inherit;}
         <span id="comm-like-count">0</span>
       </button>
       <div style="display:flex;gap:6px">
-        <button onclick="_reportCommunity()" style="background:#fff;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer">🚨 신고</button>
+        <button id="comm-report-btn" onclick="_reportCommunity()" style="background:#fff;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer">🚨 신고</button>
         <button id="comm-delete-btn" onclick="_deleteCommunityPost()" style="display:none;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer;font-weight:700">🗑 삭제</button>
       </div>
     </div>
@@ -3894,6 +3902,36 @@ input,select,button,textarea{font-family:inherit;}
 }
 
 </style>
+<!-- 닉네임 선택 다이얼로그 (글쓰기 첫 시도 시 1회) -->
+<div class="modal-bg" id="nickname-choice-modal" style="z-index:10020">
+  <div class="modal-box" style="max-width:380px;text-align:center">
+    <div style="font-size:36px;margin-bottom:10px">👤</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:8px;color:#1e3a8a">닉네임으로 변경할까요?</div>
+    <div style="font-size:12.5px;color:var(--mu);margin-bottom:14px;line-height:1.7">
+      현재 글은 <strong id="nick-choice-real-name" style="color:#1e3a8a">—</strong> 로 게시돼요.<br>
+      닉네임으로 바꾸시겠어요?
+    </div>
+    <div style="background:#fef3c7;border:1px solid #fde047;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:#854d0e;line-height:1.5">
+      ⚠️ 닉네임은 <strong>딱 한 번만</strong> 설정/변경할 수 있어요.<br>
+      실명 사용 후 나중에 닉네임으로 바꾸는 것도 1회 가능합니다.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="_nicknameChoiceResult('keep')"
+        style="flex:1;background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:20px;padding:11px;font-size:13px;font-weight:700;cursor:pointer">
+        실명 사용
+      </button>
+      <button onclick="_nicknameChoiceResult('change')"
+        style="flex:1.3;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:20px;padding:11px;font-size:13px;font-weight:800;cursor:pointer">
+        닉네임으로 변경
+      </button>
+    </div>
+    <button onclick="_nicknameChoiceResult('cancel')"
+      style="margin-top:8px;background:transparent;color:#94a3b8;border:none;font-size:11px;cursor:pointer;text-decoration:underline">
+      나중에 결정
+    </button>
+  </div>
+</div>
+
 <!-- 닉네임 설정 모달 (일반/소셜/이메일 로그인 후 최초 1회) -->
 <div class="modal-bg" id="nickname-modal" style="z-index:10010">
   <div class="modal-box" style="max-width:360px;text-align:center">
@@ -3907,7 +3945,16 @@ input,select,button,textarea{font-family:inherit;}
       style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 14px;font-size:14px;text-align:center;margin-bottom:8px"
       oninput="document.getElementById('nickname-err').textContent='';">
     <div id="nickname-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
-    <button onclick="_submitNickname()" style="width:100%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:20px;padding:12px;font-size:13px;font-weight:800;cursor:pointer">닉네임 설정</button>
+    <div style="display:flex;gap:8px">
+      <button onclick="_closeNicknameModal()" id="nickname-cancel-btn"
+        style="flex:1;background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:20px;padding:11px;font-size:13px;font-weight:700;cursor:pointer">
+        취소
+      </button>
+      <button onclick="_submitNickname()"
+        style="flex:1.5;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:20px;padding:11px;font-size:13px;font-weight:800;cursor:pointer">
+        닉네임 설정
+      </button>
+    </div>
   </div>
 </div>
 
@@ -14082,17 +14129,22 @@ async function _loadNicknameQuiet(){
   const uid = window._generalUser.uid;
   if(!uid) return;
   try {
-    const snap = await _fbDb.ref('users/'+uid+'/nickname').once('value');
-    const nick = snap.val();
-    if(nick && typeof nick==='string' && nick.length>=1){
-      window._generalUser.nickname = nick;
-      try { localStorage.setItem('general_user_name', nick); } catch(e){}
-      if(typeof _updateUserBtn==='function') _updateUserBtn();
+    const snap = await _fbDb.ref('users/'+uid).once('value');
+    const data = snap.val() || {};
+    /* 닉네임이 있으면 캐시 */
+    if(data.nickname && typeof data.nickname==='string' && data.nickname.length>=1){
+      window._generalUser.nickname = data.nickname;
+      try { localStorage.setItem('general_user_name', data.nickname); } catch(e){}
     }
+    /* 선택 상태 캐시 */
+    window._generalUser.nicknameChoiceMade = !!data.nicknameChoiceMade;
+    window._generalUser.nicknameChanged = !!data.nicknameChanged;
+    window._generalUser.realName = data.realName || window._generalUser.realName || '';
+    if(typeof _updateUserBtn==='function') _updateUserBtn();
   } catch(e){ console.warn('닉네임 조회 실패:', e); }
 }
 
-/* 사용자 닉네임 조회/캐시. 없으면 모달 표시 */
+/* 사용자 닉네임 조회/캐시. 직접 호출 시(사용자 메뉴에서) 모달 표시 */
 async function _ensureNickname(){
   /* 학생 로그인은 닉네임 불필요 */
   if(curStudent && !window._generalUser) return;
@@ -14100,18 +14152,99 @@ async function _ensureNickname(){
   const uid = window._generalUser.uid;
   if(!uid) return;
   try {
-    const snap = await _fbDb.ref('users/'+uid+'/nickname').once('value');
-    const nick = snap.val();
-    if(nick && typeof nick==='string' && nick.length>=1){
-      /* 이미 닉네임 있음 → 캐시 갱신 */
-      window._generalUser.nickname = nick;
-      try { localStorage.setItem('general_user_name', nick); } catch(e){}
-      if(typeof _updateUserBtn==='function') _updateUserBtn();
-    } else {
-      /* 닉네임 미설정 → 모달 표시 */
-      _openNicknameModal();
+    const snap = await _fbDb.ref('users/'+uid).once('value');
+    const data = snap.val() || {};
+    if(data.nicknameChanged){
+      /* 이미 닉네임으로 변경 완료 - 더 이상 변경 불가 */
+      alert('이미 닉네임을 설정하셨어요.\n닉네임 변경은 한 번만 가능해요.');
+      return;
     }
+    /* 캐시 갱신 */
+    window._generalUser.nicknameChoiceMade = !!data.nicknameChoiceMade;
+    window._generalUser.nicknameChanged = !!data.nicknameChanged;
+    window._generalUser.realName = data.realName || window._generalUser.realName || '';
+    /* 닉네임 입력 모달 표시 */
+    _openNicknameModal();
   } catch(e){ console.warn('닉네임 조회 실패:', e); }
+}
+
+/* ───────────── 닉네임 선택 다이얼로그 (글쓰기 진입 시 1회) ───────────── */
+let _nicknameChoiceResolver = null;
+
+/**
+ * 글쓰기 진입 시 호출 - 닉네임 선택 다이얼로그 표시(1회만)
+ * @returns {Promise<boolean>} 진행 가능 여부 (true=계속, false=취소)
+ */
+async function _promptNicknameChoice(){
+  /* 학생 로그인이면 통과 (실명 사용) */
+  if(curStudent && !window._generalUser) return true;
+  if(!window._generalUser || !_fbDb) return true;
+  const uid = window._generalUser.uid;
+  if(!uid) return true;
+  try {
+    /* 한 번이라도 선택했으면 통과 */
+    const choiceSnap = await _fbDb.ref('users/'+uid+'/nicknameChoiceMade').once('value');
+    if(choiceSnap.val() === true){
+      window._generalUser.nicknameChoiceMade = true;
+      return true;
+    }
+  } catch(e){ return true; }  /* 에러 시 통과 (UX 우선) */
+  /* 첫 글쓰기 - 모달 표시 */
+  const realName = window._generalUser.realName ||
+                   firebase.auth().currentUser?.displayName ||
+                   (window._generalUser.email ? window._generalUser.email.split('@')[0] : null) ||
+                   '사용자';
+  return new Promise(resolve => {
+    _nicknameChoiceResolver = resolve;
+    const modal = document.getElementById('nickname-choice-modal');
+    if(!modal){ resolve(true); _nicknameChoiceResolver=null; return; }
+    const nameEl = document.getElementById('nick-choice-real-name');
+    if(nameEl) nameEl.textContent = realName;
+    modal.classList.add('open');
+  });
+}
+
+/* 선택 다이얼로그 결과 처리 */
+async function _nicknameChoiceResult(action){
+  const modal = document.getElementById('nickname-choice-modal');
+  if(modal) modal.classList.remove('open');
+  if(action === 'change'){
+    /* 닉네임 입력 모달로 전환 - 입력 완료 시 _submitNickname이 _nicknameChoiceResolver(true) 호출 */
+    _openNicknameModal();
+  } else if(action === 'keep'){
+    /* 실명 사용: choiceMade=true, changed=false 저장 */
+    await _saveNicknameChoice(false, null);
+    showToast('실명으로 게시돼요. 나중에 ⚙️에서 닉네임으로 변경 가능해요.');
+    if(_nicknameChoiceResolver){ _nicknameChoiceResolver(true); _nicknameChoiceResolver=null; }
+  } else {
+    /* 취소 또는 나중에 - choiceMade 저장 안 함, 다음 글쓰기에서 다시 묻음 */
+    if(_nicknameChoiceResolver){ _nicknameChoiceResolver(false); _nicknameChoiceResolver=null; }
+  }
+}
+
+/* 선택 상태만 저장 (닉네임 없이 실명 사용 시) */
+async function _saveNicknameChoice(changed, nickname){
+  if(!window._generalUser || !_fbDb) return;
+  const uid = window._generalUser.uid;
+  try {
+    const updates = {
+      nicknameChoiceMade: true,
+      nicknameChanged: !!changed
+    };
+    if(nickname) updates.nickname = nickname;
+    /* 실명/이메일 보존 (관리자만 조회) */
+    const cu = firebase.auth().currentUser;
+    if(cu){
+      updates.email = cu.email || window._generalUser.email || '';
+      updates.realName = cu.displayName || window._generalUser.realName || '';
+      updates.provider = (cu.providerData && cu.providerData[0] && cu.providerData[0].providerId) || 'unknown';
+    }
+    await _fbDb.ref('users/'+uid).update(updates);
+    /* 캐시 갱신 */
+    window._generalUser.nicknameChoiceMade = true;
+    window._generalUser.nicknameChanged = !!changed;
+    if(nickname) window._generalUser.nickname = nickname;
+  } catch(e){ console.warn('닉네임 선택 저장 실패:', e); }
 }
 
 /* 닉네임 설정 모달 열기 */
@@ -14126,7 +14259,15 @@ function _openNicknameModal(){
   setTimeout(()=>{ if(input) input.focus(); }, 100);
 }
 
-/* 닉네임 등록 (수정 불가, 1회만) */
+/* 닉네임 설정 모달 닫기 (취소 버튼) */
+function _closeNicknameModal(){
+  const modal = document.getElementById('nickname-modal');
+  if(modal) modal.classList.remove('open');
+  /* 글쓰기 진입 흐름에서 호출된 경우: 취소로 처리 */
+  if(_nicknameChoiceResolver){ _nicknameChoiceResolver(false); _nicknameChoiceResolver=null; }
+}
+
+/* 닉네임 등록 (1회만) */
 async function _submitNickname(){
   const input = document.getElementById('nickname-input');
   const err = document.getElementById('nickname-err');
@@ -14136,29 +14277,23 @@ async function _submitNickname(){
   if(!window._generalUser || !_fbDb){ if(err) err.textContent='로그인 정보가 없어요.'; return; }
   const uid = window._generalUser.uid;
   try {
-    /* 이미 설정되어 있는지 한 번 더 확인 (수정 불가) */
-    const exist = await _fbDb.ref('users/'+uid+'/nickname').once('value');
-    if(exist.val()){
+    /* 이미 변경했는지 한 번 더 확인 (1회만) */
+    const exist = await _fbDb.ref('users/'+uid).once('value');
+    const existData = exist.val() || {};
+    if(existData.nicknameChanged){
       if(err) err.textContent='이미 닉네임이 설정되어 있어요.';
-      window._generalUser.nickname = exist.val();
+      window._generalUser.nickname = existData.nickname;
       document.getElementById('nickname-modal')?.classList.remove('open');
       return;
     }
-    /* 저장: nickname + 실명/이메일 매핑 (관리자만 조회 가능) */
-    const cu = firebase.auth().currentUser;
-    const userData = {
-      nickname: nick,
-      email: cu?.email || window._generalUser.email || '',
-      realName: cu?.displayName || '',
-      provider: (cu?.providerData?.[0]?.providerId) || 'unknown',
-      createdAt: firebase.database.ServerValue.TIMESTAMP
-    };
-    await _fbDb.ref('users/'+uid).update(userData);
-    window._generalUser.nickname = nick;
+    /* 저장 - nicknameChoiceMade=true + nicknameChanged=true */
+    await _saveNicknameChoice(true, nick);
     try { localStorage.setItem('general_user_name', nick); } catch(e){}
     if(typeof _updateUserBtn==='function') _updateUserBtn();
     document.getElementById('nickname-modal')?.classList.remove('open');
     showToast('닉네임이 설정되었어요: '+nick);
+    /* 글쓰기 진입 흐름에서 왔으면 진행 허용 */
+    if(_nicknameChoiceResolver){ _nicknameChoiceResolver(true); _nicknameChoiceResolver=null; }
   } catch(e){
     if(err) err.textContent='닉네임 설정 실패: '+e.message;
   }
@@ -19046,8 +19181,10 @@ function _loadMoreCommunityPosts(){
 function _renderCommunityPosts(){
   const container = document.getElementById('community-posts');
   if(!container) return;
+  /* 만료된 게시글 필터링 (좋아요 10+ → 90일, 100+ → 영구) */
+  const visible = _communityPosts.filter(p => !_vclinicIsExpired({ createdAt: p.timestamp, likeCount: p.likes || 0 }));
   
-  const html = _communityPosts.map(p => {
+  const html = visible.map(p => {
     const d = new Date(p.timestamp);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     const before = p.before || {};
@@ -19067,11 +19204,14 @@ function _renderCommunityPosts(){
     
     const likes = p.likes || 0;
     const comments = p.commentCount || 0;
+    /* 보관 정책 뱃지 */
+    const ret = _vclinicComputeRetention({ likeCount: likes });
+    const retB = ret.label ? '<span title="좋아요로 보관 연장됨" style="font-size:9.5px;font-weight:800;color:'+ret.color+';background:#fff;border:1px solid '+ret.color+';border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle">'+ret.label+'</span>' : '';
     
     return `
       <div onclick="_openCommunityView('${p._id}')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='#d8b4fe'" onmouseout="this.style.borderColor='#e5e7eb'">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-          <div style="font-weight:800;font-size:14px;color:#1e3a8a;flex:1;line-height:1.3">${_escapeHtml(p.title || '제목 없음')}</div>
+          <div style="font-weight:800;font-size:14px;color:#1e3a8a;flex:1;line-height:1.3">${_escapeHtml(p.title || '제목 없음')}${retB}</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--mu);margin-bottom:10px">
           <span>👤 ${_escapeHtml(p.nickname || '익명')}</span>
@@ -19111,14 +19251,23 @@ function _escapeHtml(str){
 }
 
 /* === 글 작성 모달 === */
-function _openCommunityWrite(){
+async function _openCommunityWrite(){
   const modal = document.getElementById('community-write-modal');
   if(!modal) return;
 
-  /* 로그인 체크 - 미로그인 차단 */
+  /* 닉네임 선택 다이얼로그 (일반 사용자 첫 글쓰기 시 1회) */
+  if(typeof _promptNicknameChoice === 'function'){
+    const ok = await _promptNicknameChoice();
+    if(!ok) return;  /* 사용자가 취소함 */
+  }
+
+  /* 로그인 체크 - 학생이면 이름, 일반사용자면 닉네임 우선, 없으면 실명 */
+  const realName = (window._generalUser && (window._generalUser.realName ||
+                   (firebase.auth().currentUser && firebase.auth().currentUser.displayName) ||
+                   (window._generalUser.email && window._generalUser.email.split('@')[0]))) || null;
   const loginName = curStudent ? curStudent.name
                   : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-                  : null;
+                  : realName;
   if(!loginName){
     alert('로그인 후 게시글을 작성할 수 있어요.');
     return;
@@ -19360,6 +19509,12 @@ async function _openCommunityView(postId){
     const _isAdmin = _isAppAdmin();
     const _isOwner = (_fbAuthUid && post.authorUid === _fbAuthUid);
     deleteBtn.style.display = (_isOwner || _isAdmin) ? 'inline-flex' : 'none';
+  }
+  /* 본인 글은 신고 못함 + 로그인 안 했으면 숨김 */
+  const reportBtn = document.getElementById('comm-report-btn');
+  if(reportBtn){
+    const _isOwner2 = (_fbAuthUid && post.authorUid === _fbAuthUid);
+    reportBtn.style.display = (_isOwner2 || !_fbAuthUid) ? 'none' : 'inline-flex';
   }
   
   /* 모달 표시 + 그래프 그리기 */
@@ -19781,7 +19936,9 @@ async function _refreshLikeStatus(postId){
 }
 
 async function _toggleCommunityLike(){
-  if(!_currentViewingPost || !_fbReady || !_fbAuthUid) return;
+  if(!_currentViewingPost){ console.warn('좋아요: 게시글 없음'); return; }
+  if(!_fbReady){ alert('Firebase 준비 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+  if(!_fbAuthUid){ alert('로그인 후 좋아요를 누를 수 있어요.'); return; }
   
   const postId = _currentViewingPost._id;
   try {
@@ -19795,12 +19952,14 @@ async function _toggleCommunityLike(){
       await ref.set(true);
     }
     
-    /* 게시글 좋아요 카운트 업데이트 (transaction) */
-    await firebase.database().ref(`community/posts/${postId}/likes`).transaction(cur => {
-      return Math.max(0, (cur || 0) + (currentlyLiked ? -1 : 1));
-    });
+    /* 게시글 좋아요 카운트 트랜잭션 (다른 사람 글이면 권한 거부 - 무시) */
+    try {
+      await firebase.database().ref(`community/posts/${postId}/likes`).transaction(cur => {
+        return Math.max(0, (cur || 0) + (currentlyLiked ? -1 : 1));
+      });
+    } catch(te){ /* 권한 없음 - UI는 likes에서 다시 계산 */ }
     
-    _refreshLikeStatus(postId);
+    await _refreshLikeStatus(postId);
     /* 리스트도 갱신 */
     const listPost = _communityPosts.find(p => p._id === postId);
     if(listPost){
@@ -19808,7 +19967,8 @@ async function _toggleCommunityLike(){
       _renderCommunityPosts();
     }
   } catch(e){
-    console.warn('좋아요 토글 실패:', e);
+    console.error('좋아요 토글 실패:', e);
+    alert('좋아요 처리 중 오류: ' + (e.message || '알 수 없는 오류'));
   }
 }
 
@@ -19841,12 +20001,16 @@ async function _loadComments(postId){
       const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
       const _commIsAdmin = _isAppAdmin();
     const isMine = (_fbAuthUid && c.authorUid === _fbAuthUid) || _commIsAdmin;
+      const isOwnComment = (_fbAuthUid && c.authorUid === _fbAuthUid);
       const delLink = isMine ? ` · <a onclick="_deleteComment('${c._id}')" style="color:#dc2626;cursor:pointer">삭제</a>` : '';
+      const postIdForReport = _currentViewingPost ? _currentViewingPost._id : '';
+      const _cmText = (c.text||'').replace(/'/g,"\\'");
+      const reportLink = (_fbAuthUid && !isOwnComment) ? ` · <a onclick="_reportCommunityComment('${c._id}','${postIdForReport}','${_cmText.substring(0,80)}')" style="color:#6b7280;cursor:pointer" title="신고">🚨</a>` : '';
       return `
         <div style="background:#f9fafb;border-radius:8px;padding:8px 11px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
             <span style="font-size:11px;font-weight:700;color:#1e3a8a">👤 ${_escapeHtml(c.nickname || '익명')}</span>
-            <span style="font-size:9.5px;color:var(--mu)">${timeStr}${delLink}</span>
+            <span style="font-size:9.5px;color:var(--mu)">${timeStr}${delLink}${reportLink}</span>
           </div>
           <div style="font-size:11.5px;color:#475569;line-height:1.5">${_escapeHtml(c.text || '')}</div>
         </div>
@@ -19951,20 +20115,32 @@ async function _deleteComment(commentId){
 /* === 게시글 신고 === */
 async function _reportCommunity(){
   if(!_currentViewingPost) return;
+  if(!_fbAuthUid){ alert('로그인 후 신고할 수 있어요.'); return; }
+  /* 본인 글은 신고 못 함 */
+  if(_currentViewingPost.authorUid === _fbAuthUid){
+    alert('본인 게시글은 신고할 수 없어요.');
+    return;
+  }
   const reason = prompt('신고 사유를 입력해주세요:\n(욕설, 스팸, 부적절한 콘텐츠 등)');
   if(!reason || !reason.trim()) return;
   
-  if(!_fbReady || !_fbAuthUid){ alert('Firebase 연결을 확인해주세요.'); return; }
+  if(!_fbReady){ alert('Firebase 연결을 확인해주세요.'); return; }
   
   try {
     const postId = _currentViewingPost._id;
-    const ref = firebase.database().ref(`community/reports/${postId}`).push();
+    const ref = firebase.database().ref('community/reports/posts/'+postId).push();
     await ref.set({
-      timestamp: Date.now(),
+      type: 'post',
+      targetId: postId,
+      postTitle: (_currentViewingPost.title||'').substring(0, 50),
+      authorUid: _currentViewingPost.authorUid || '',
+      authorNickname: _currentViewingPost.nickname || '',
       reporterUid: _fbAuthUid,
-      reason: reason.trim().substring(0, 200)
+      reason: reason.trim().substring(0, 200),
+      timestamp: Date.now(),
+      handled: false
     });
-    alert('✅ 신고가 접수되었습니다. 관리자가 검토 후 조치합니다.');
+    alert('✅ 신고가 접수되었어요.\n관리자가 검토 후 조치할게요.');
   } catch(e){
     alert('신고 접수 실패: ' + e.message);
   }
@@ -20094,13 +20270,15 @@ function _loadMoreVclinicPosts(){_loadVclinicPosts(false);}
 function _renderVclinicPosts(){
   const container=document.getElementById('vclinic-posts');
   if(!container) return;
-  if(!_vclinicPosts.length){container.innerHTML='<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">글이 없어요</div>'; return;}
-  container.innerHTML=_vclinicPosts.map(p=>{
+  /* 만료된 게시글 필터링 (영구 보관/3개월/30일 정책 기준) */
+  const visible = _vclinicPosts.filter(p => !_vclinicIsExpired(p));
+  if(!visible.length){container.innerHTML='<div style="text-align:center;color:var(--mu);font-size:12px;padding:30px">글이 없어요</div>'; return;}
+  container.innerHTML=visible.map(p=>{
     const dt=p.createdAt?new Date(p.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     const hasFb=p.feedbackCount&&p.feedbackCount>0;
     const sC=hasFb?'#16a34a':'#854d0e', sBg=hasFb?'#dcfce7':'#fef9c3', sBd=hasFb?'#86efac':'#fde047', sTxt=hasFb?'답변 완료':'답변 대기';
     const privB=p.isPrivate?'<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#faf5ff;border:1px solid #d8b4fe;border-radius:4px;padding:1px 5px;margin-right:4px">비공개</span>':'';
-    /* 출처 뱃지: 녹음 (빨강) / 파일 (회색) / PVR (파랑) */
+    /* 출처 뱃지: 녹음 (빨강) / 파일 (회색) / PVR (보라) */
     let srcB = '';
     if(p.sourceType === 'rec'){
       srcB = '<span title="직접 녹음" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="#dc2626" stroke-width="2" fill="none" stroke-linecap="round"/></svg>녹음</span>';
@@ -20111,22 +20289,35 @@ function _renderVclinicPosts(){
     }
     /* PVR 첨부 뱃지 */
     const pvrB = p.pvrSnapshot ? '<span title="음역대 분석 결과 포함" style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #93c5fd;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>분석</span>' : '';
+    /* 보관 정책 뱃지 (10+ / 100+) */
+    const ret = _vclinicComputeRetention(p);
+    const retB = ret.label ? '<span title="좋아요로 보관 연장됨" style="font-size:9.5px;font-weight:800;color:'+ret.color+';background:#fff;border:1px solid '+ret.color+';border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:middle">'+ret.label+'</span>' : '';
+    /* 좋아요 카운트 */
+    const likeCount = (typeof p.likeCount === 'number' && p.likeCount > 0) ? p.likeCount : 0;
+    const likeB = '<span style="font-size:11px;color:#dc2626;font-weight:700;display:inline-flex;align-items:center;gap:3px">❤️ '+likeCount+'</span>';
     const pid = p._id;
     return '<div onclick="_openVclinicView(\''+pid+'\')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">'
       +'<div style="font-size:13.5px;font-weight:800;color:#1e3a8a;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+privB+_escapeHtml(p.title||'')+'</div>'
       +'<span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;background:'+sBg+';color:'+sC+';border:1px solid '+sBd+'">'+sTxt+'</span>'
       +'</div>'
-      +(srcB||pvrB?'<div style="margin-bottom:6px;line-height:1.4">'+srcB+pvrB+'</div>':'')
-      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu)">'
-      +'<span>'+_escapeHtml(p.nickname||'익명')+'</span><span>'+dt+'</span></div></div>';
+      +(srcB||pvrB||retB?'<div style="margin-bottom:6px;line-height:1.4">'+srcB+pvrB+retB+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--mu)">'
+      +'<span>'+_escapeHtml(p.nickname||'익명')+' &middot; '+dt+'</span>'
+      +likeB
+      +'</div></div>';
   }).join('');
 }
 
 /* ---- 글쓰기 모달 ---- */
-function _openVclinicWrite(){
+async function _openVclinicWrite(){
   const writeBtn=document.getElementById('vclinic-write-btn');
   if(writeBtn&&writeBtn.disabled) return;
+  /* 닉네임 선택 다이얼로그 (일반 사용자 첫 글쓰기 시 1회) */
+  if(typeof _promptNicknameChoice === 'function'){
+    const ok = await _promptNicknameChoice();
+    if(!ok) return;  /* 사용자가 취소함 */
+  }
   /* 상태 초기화 */
   _vclinicAudioBlob=null; _vclinicFileBlob=null;
   _vclinicRecSeconds=0; _vclinicIsRecording=false; _vclinicIsPaused=false;
@@ -20571,15 +20762,15 @@ async function _submitVclinicPost(){
     }
     if(progBar) progBar.style.width='80%';
     if(progTxt) progTxt.textContent='💾 게시글 저장 중...';
-    /* 닉네임 */
+    /* 닉네임: 학생=이름, 일반사용자=닉네임>실명, 없으면 모달 */
+    const _realName = (window._generalUser && (window._generalUser.realName ||
+                     (firebase.auth().currentUser && firebase.auth().currentUser.displayName) ||
+                     (window._generalUser.email && window._generalUser.email.split('@')[0]))) || null;
     let nickname = curStudent ? curStudent.name
                  : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-                 : null;
+                 : _realName;
     if(!nickname){
-      if(typeof _ensureNickname==='function'){
-        alert('먼저 닉네임을 설정해주세요.');
-        _ensureNickname();
-      }
+      _vclinicShowErr('이름 정보를 확인할 수 없어요.');
       if(submitBtn){submitBtn.disabled=false; submitBtn.style.opacity=''; submitBtn.style.cursor=''; submitBtn.innerHTML='올리기';}
       if(progEl) progEl.style.display='none';
       return;
@@ -20684,6 +20875,8 @@ async function _openVclinicView(postId){
   const memoEl=f('vclinic-view-memo');
   if(memoEl){if(post.memo){memoEl.textContent=post.memo; memoEl.style.display='block';}else{memoEl.style.display='none';}}
   if(f('vclinic-delete-btn')) f('vclinic-delete-btn').style.display=(isOwner||isAdmin)?'inline-block':'none';
+  /* 본인 글은 신고 못함 + 로그인 안 했으면 숨김 */
+  if(f('vclinic-report-btn')) f('vclinic-report-btn').style.display=(isOwner||!_fbAuthUid)?'none':'inline-block';
   if(f('vclinic-trainer-input')) f('vclinic-trainer-input').style.display=isAdmin?'block':'none';
   if(f('vclinic-feedback-input')) f('vclinic-feedback-input').value='';
   _loadVclinicFeedback(postId);
@@ -20699,6 +20892,8 @@ async function _openVclinicView(postId){
   if(modal){modal.style.display='flex'; document.body.style.overflow='hidden';}
   /* 모달 표시 이후 PVR 렌더 (캔버스 width=0 방지) */
   _vclinicRenderViewPvr(post.pvrSnapshot);
+  /* 좋아요 상태 + 보관 기간 표시 */
+  _refreshVclinicLikeStatus(postId);
 }
 
 function _closeVclinicView(){
@@ -20790,10 +20985,13 @@ async function _loadVclinicFeedback(postId){
       const dt=fb.createdAt?new Date(fb.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
       const editedBadge = fb.editedAt ? ' <span style="font-size:9.5px;color:#94a3b8">(수정됨)</span>' : '';
       const editBtn = _isAdminNow ? '<button onclick="_editVclinicFeedback(\''+postId+'\',\''+fb._id+'\')" style="font-size:10.5px;color:#1d4ed8;background:none;border:none;cursor:pointer;padding:0;margin-left:8px;text-decoration:underline">수정</button>' : '';
+      /* 신고 버튼: 본인 작성자 아닌 로그인 사용자만 (관리자는 자기 피드백 신고 안 함) */
+      const _fbText = (fb.text||'').replace(/'/g,"\\'");
+      const reportBtn = (_fbAuthUid && !_isAdminNow) ? '<button onclick="_reportVclinicFeedback(\''+fb._id+'\',\''+postId+'\',\''+_fbText.substring(0,80)+'\')" style="font-size:10.5px;color:#6b7280;background:none;border:none;cursor:pointer;padding:0;margin-left:8px;text-decoration:underline" title="신고">🚨</button>' : '';
       return '<div id="fb-item-'+fb._id+'" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:11px 13px">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
         +'<span style="font-size:11px;font-weight:800;color:#1d4ed8">트레이너 &middot; '+dt+editedBadge+'</span>'
-        +editBtn
+        +'<span>'+editBtn+reportBtn+'</span>'
         +'</div>'
         +'<div id="fb-text-'+fb._id+'" style="font-size:12.5px;color:#1e3a8a;line-height:1.65;white-space:pre-wrap">'+_escapeHtml(fb.text||'')+'</div>'
         +'</div>';
@@ -20884,11 +21082,15 @@ async function _loadVclinicComments(postId){
     list.innerHTML=items.map(cm=>{
       const dt=cm.createdAt?new Date(cm.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
       const canDel=(cm.authorUid===_fbAuthUid||isAdmin);
+      const isOwnComment=(cm.authorUid===_fbAuthUid);
+      const _cmText = (cm.text||'').replace(/'/g,"\\'");
+      const reportBtn = (_fbAuthUid && !isOwnComment) ? '<button onclick="_reportVclinicComment(\''+cm._id+'\',\''+postId+'\',\''+_cmText.substring(0,80)+'\')" style="font-size:10px;color:#6b7280;background:none;border:none;cursor:pointer;padding:0" title="신고">🚨</button>' : '';
       return '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:9px 11px">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
         +'<span style="font-size:11px;font-weight:700;color:#374151">'+_escapeHtml(cm.nickname||'익명')+'</span>'
         +'<div style="display:flex;align-items:center;gap:6px"><span style="font-size:10.5px;color:var(--mu)">'+dt+'</span>'
         +(canDel?'<button onclick="_deleteVclinicComment(\''+postId+'\',\''+cm._id+'\')" style="font-size:10px;color:#dc2626;background:none;border:none;cursor:pointer;padding:0">삭제</button>':'')
+        +reportBtn
         +'</div></div><div style="font-size:12px;color:#374151;line-height:1.5">'+_escapeHtml(cm.text||'')+'</div></div>';
     }).join('');
   } catch(e){}
@@ -20934,6 +21136,201 @@ async function _deleteVclinicComment(postId,commentId){
     } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
     _loadVclinicComments(postId);
   } catch(e){alert('삭제 실패: '+e.message);}
+}
+
+/* ============== 좋아요 + 보관 정책 ============== */
+/* 보관 정책: 기본 30일 / 좋아요 10+ → 90일 / 좋아요 100+ → 영구 */
+function _vclinicComputeRetention(post){
+  const likes = (post && typeof post.likeCount === 'number') ? post.likeCount : 0;
+  if(likes >= 100) return { days: null, label: '🏆 영구 보관', color: '#dc2626', perm: true };
+  if(likes >= 10)  return { days: 90, label: '⭐ 3개월 보관', color: '#7c3aed', perm: false };
+  return { days: 30, label: null, color: null, perm: false };
+}
+
+/* 게시글이 만료되었는지 (만료된 글은 표시 안 함) */
+function _vclinicIsExpired(post){
+  if(!post || !post.createdAt) return false;
+  const ret = _vclinicComputeRetention(post);
+  if(ret.perm) return false;
+  const ageMs = Date.now() - post.createdAt;
+  const ageDays = ageMs / (1000*60*60*24);
+  return ageDays > ret.days;
+}
+
+/* 보관 만료 안내 텍스트 (상세 모달용) */
+function _vclinicRetentionText(post){
+  const ret = _vclinicComputeRetention(post);
+  if(ret.perm) return '🏆 영구 보관 (좋아요 100+)';
+  if(!post || !post.createdAt) return '';
+  const ageMs = Date.now() - post.createdAt;
+  const ageDays = ageMs / (1000*60*60*24);
+  const remaining = Math.max(0, Math.ceil(ret.days - ageDays));
+  const labelPrefix = ret.days === 90 ? '⭐ ' : '';
+  return labelPrefix + remaining + '일 후 자동 삭제';
+}
+
+/* 좋아요 상태 갱신 (상세 모달 표시 시) */
+async function _refreshVclinicLikeStatus(postId){
+  if(!_fbDb || !_fbAuthUid) return;
+  const likeIcon = document.getElementById('vclinic-like-icon');
+  const likeCount = document.getElementById('vclinic-like-count');
+  try {
+    /* 본인 좋아요 여부 */
+    const userLikeSnap = await _fbDb.ref('vocalClinic/likes/'+postId+'/'+_fbAuthUid).once('value');
+    const liked = userLikeSnap.val() === true;
+    /* 총 좋아요 개수 */
+    const allLikesSnap = await _fbDb.ref('vocalClinic/likes/'+postId).once('value');
+    const allLikes = allLikesSnap.val() || {};
+    const count = Object.values(allLikes).filter(v => v === true).length;
+    if(likeIcon) likeIcon.textContent = liked ? '❤️' : '🤍';
+    if(likeCount) likeCount.textContent = count;
+    /* 현재 글 데이터에도 반영 (다음 렌더링용) */
+    if(_vclinicCurrentPost && _vclinicCurrentPost._id === postId){
+      _vclinicCurrentPost.likeCount = count;
+    }
+    /* 보관 기간 표시 */
+    const expiryEl = document.getElementById('vclinic-view-expiry');
+    if(expiryEl && _vclinicCurrentPost){
+      const txt = _vclinicRetentionText(_vclinicCurrentPost);
+      if(txt){ expiryEl.textContent = txt; expiryEl.style.display='inline-block'; }
+      else { expiryEl.style.display='none'; }
+    }
+  } catch(e){ console.warn('좋아요 상태 로드 실패:', e); }
+}
+
+/* 좋아요 토글 (보컬 진단실) */
+async function _toggleVclinicLike(){
+  if(!_vclinicCurrentPost || !_fbDb || !_fbAuthUid){
+    alert('로그인 후 좋아요를 누를 수 있어요.');
+    return;
+  }
+  const postId = _vclinicCurrentPost._id;
+  try {
+    const ref = _fbDb.ref('vocalClinic/likes/'+postId+'/'+_fbAuthUid);
+    const snap = await ref.once('value');
+    const currentlyLiked = snap.val() === true;
+    if(currentlyLiked){
+      await ref.set(null);
+    } else {
+      await ref.set(true);
+    }
+    /* 게시글의 likeCount 트랜잭션으로 동기화 */
+    try {
+      await _fbDb.ref('vocalClinic/posts/'+postId+'/likeCount').transaction(cur => {
+        return Math.max(0, (cur || 0) + (currentlyLiked ? -1 : 1));
+      });
+    } catch(te){ /* 권한 없을 수도 - 무시. count는 likes에서 다시 계산됨 */ }
+    /* UI 갱신 */
+    await _refreshVclinicLikeStatus(postId);
+    /* 목록에도 반영 */
+    const listPost = _vclinicPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.likeCount = Math.max(0, (listPost.likeCount || 0) + (currentlyLiked ? -1 : 1));
+      _renderVclinicPosts();
+    }
+  } catch(e){ console.warn('좋아요 토글 실패:', e); }
+}
+
+/* ============== 신고 기능 (보컬 진단실) ============== */
+
+/* 게시글 신고 */
+async function _reportVclinicPost(){
+  if(!_vclinicCurrentPost){ return; }
+  if(!_fbDb || !_fbAuthUid){ alert('로그인 후 신고할 수 있어요.'); return; }
+  /* 본인 글은 신고 못 함 */
+  if(_vclinicCurrentPost.authorUid === _fbAuthUid){
+    alert('본인 게시글은 신고할 수 없어요.');
+    return;
+  }
+  const reason = prompt('신고 사유를 입력해주세요:\n(욕설, 스팸, 부적절한 콘텐츠 등)');
+  if(!reason || !reason.trim()) return;
+  try {
+    const postId = _vclinicCurrentPost._id;
+    const ref = _fbDb.ref('vocalClinic/reports/posts/'+postId).push();
+    await ref.set({
+      type: 'post',
+      targetId: postId,
+      postTitle: (_vclinicCurrentPost.title||'').substring(0, 50),
+      authorUid: _vclinicCurrentPost.authorUid || '',
+      authorNickname: _vclinicCurrentPost.nickname || '',
+      reporterUid: _fbAuthUid,
+      reason: reason.trim().substring(0, 200),
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      handled: false
+    });
+    alert('✅ 신고가 접수되었어요.\n관리자가 검토 후 조치할게요.');
+  } catch(e){
+    alert('신고 접수 실패: ' + e.message);
+  }
+}
+
+/* 피드백 신고 (트레이너 답변) */
+async function _reportVclinicFeedback(feedbackId, postId, feedbackText){
+  if(!_fbDb || !_fbAuthUid){ alert('로그인 후 신고할 수 있어요.'); return; }
+  const reason = prompt('이 피드백을 신고하는 사유를 입력해주세요:');
+  if(!reason || !reason.trim()) return;
+  try {
+    const ref = _fbDb.ref('vocalClinic/reports/feedback/'+feedbackId).push();
+    await ref.set({
+      type: 'feedback',
+      targetId: feedbackId,
+      postId: postId,
+      feedbackPreview: (feedbackText||'').substring(0, 80),
+      reporterUid: _fbAuthUid,
+      reason: reason.trim().substring(0, 200),
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      handled: false
+    });
+    alert('✅ 피드백 신고가 접수되었어요.');
+  } catch(e){
+    alert('신고 접수 실패: ' + e.message);
+  }
+}
+
+/* 댓글 신고 (보컬 진단실) */
+async function _reportVclinicComment(commentId, postId, commentText){
+  if(!_fbDb || !_fbAuthUid){ alert('로그인 후 신고할 수 있어요.'); return; }
+  const reason = prompt('이 댓글을 신고하는 사유를 입력해주세요:');
+  if(!reason || !reason.trim()) return;
+  try {
+    const ref = _fbDb.ref('vocalClinic/reports/comments/'+commentId).push();
+    await ref.set({
+      type: 'comment',
+      targetId: commentId,
+      postId: postId,
+      commentPreview: (commentText||'').substring(0, 80),
+      reporterUid: _fbAuthUid,
+      reason: reason.trim().substring(0, 200),
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      handled: false
+    });
+    alert('✅ 댓글 신고가 접수되었어요.');
+  } catch(e){
+    alert('신고 접수 실패: ' + e.message);
+  }
+}
+
+/* 발전 자랑 댓글 신고 */
+async function _reportCommunityComment(commentId, postId, commentText){
+  if(!_fbAuthUid || !_fbReady){ alert('로그인 후 신고할 수 있어요.'); return; }
+  const reason = prompt('이 댓글을 신고하는 사유를 입력해주세요:');
+  if(!reason || !reason.trim()) return;
+  try {
+    const ref = firebase.database().ref('community/reports/comments/'+commentId).push();
+    await ref.set({
+      type: 'comment',
+      targetId: commentId,
+      postId: postId,
+      commentPreview: (commentText||'').substring(0, 80),
+      reporterUid: _fbAuthUid,
+      reason: reason.trim().substring(0, 200),
+      timestamp: Date.now(),
+      handled: false
+    });
+    alert('✅ 댓글 신고가 접수되었어요.');
+  } catch(e){
+    alert('신고 접수 실패: ' + e.message);
+  }
 }
 
 async function _deleteVclinicPost(){
