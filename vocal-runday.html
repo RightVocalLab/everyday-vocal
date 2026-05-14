@@ -1622,7 +1622,7 @@ const INIT_DB={
       "range": "흉성(여)",
       "startNote": 57,
       "endNote": 61,
-      "bpm": 190,
+      "bpm": 110,
       "pattern": [
         0,
         2,
@@ -2518,10 +2518,11 @@ const INIT_DB={
     {
       "id": "PRH-A",
       "name": "Press 후우 스케일",
-      "range": "흉성~낮은두성",
-      "startNote": 57,
-      "endNote": 72,
+      "range": "중성~낮은중성",
+      "startNote": 62,
+      "endNote": 67,
       "bpm": 130,
+      "studentOnly": "김동현",
       "pattern": [
         0,
         {
@@ -2550,7 +2551,7 @@ const INIT_DB={
       ],
       "previewType": "5도화음",
       "previewBeats": 4,
-      "note": "Press 후우(후우빡!) 발성 - 도레미파솔 각 5박 홀드 후 하행"
+      "note": "Press 후우(후우빡!) 발성 - 도레미파솔 각 6박 홀드 후 하행 (김동현 테스트 전용)"
     }
   ],
   "courses": [
@@ -6746,9 +6747,12 @@ hdr.innerHTML=`
 const body=document.createElement('div');
 body.style.cssText=`display:${isOpen?'flex':'none'};flex-direction:column;gap:0;border-top:1px solid var(--line)`;
 
-(DB.scales||[]).forEach((sc,si)=>{
+/* studentOnly 필드 체크: 해당 학생일 때만 노출 */
+const _curStuName = (typeof curStudent !== 'undefined' && curStudent) ? (curStudent.name || curStudent) : null;
+const _vScales = (DB.scales||[]).filter(sc => !sc.studentOnly || sc.studentOnly === _curStuName);
+_vScales.forEach((sc,si)=>{
 const row=document.createElement('div');
-row.style.cssText='display:flex;align-items:center;gap:8px;padding:9px 13px 9px 16px;'+(si<(DB.scales||[]).length-1?'border-bottom:1px solid var(--line)':'');
+row.style.cssText='display:flex;align-items:center;gap:8px;padding:9px 13px 9px 16px;'+(si<_vScales.length-1?'border-bottom:1px solid var(--line)':'');
 row.innerHTML=`
 <div style="flex:1;min-width:0">
 <div style="font-size:12px;font-weight:700;color:var(--tx)">${sc.name} <span style="font-size:10px;font-weight:400;color:var(--mu)">${sc.range}</span></div>
