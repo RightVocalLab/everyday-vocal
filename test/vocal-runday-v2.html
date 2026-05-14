@@ -9083,6 +9083,7 @@ function _setAdminLogin(yes){
     if(yes) sessionStorage.setItem('ev_admin_logged', '1');
     else sessionStorage.removeItem('ev_admin_logged');
   }catch(e){}
+}
 
 
 /* 통합 관리자 판단 헬퍼 - 김동현(학생) OR 관리자 모드(설정톱니바퀴) */
@@ -9121,10 +9122,6 @@ function _fixAudioDuration(audio, src){
   audio.addEventListener('loadedmetadata', tryFix, { once: true });
   audio.addEventListener('durationchange', tryFix);
   audio.load();
-}
-
-
-
 }
 
 /* 관리자 로그아웃 */
