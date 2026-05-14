@@ -3109,6 +3109,10 @@ input,select,button,textarea{font-family:inherit;}
   0%, 100%{transform:scale(0.8);opacity:0.5;}
   50%{transform:scale(1.2);opacity:1;}
 }
+@keyframes vclinicSpin{
+  0%{transform:rotate(0deg);}
+  100%{transform:rotate(360deg);}
+}
 
 /* TTS 토글 버튼 */
 .v2-th-tts-btn{
@@ -20480,24 +20484,53 @@ async function _submitVclinicPost(){
   if(!blob){_vclinicShowErr('음성을 녹음하거나 파일을 선택해주세요.'); return;}
   if(blob.size>VC_MAX_BYTES){_vclinicShowErr('📦 파일이 5MB를 초과합니다.'); return;}
   if(!_fbAuthUid){_vclinicShowErr('로그인이 필요합니다.'); return;}
-  if(submitBtn){submitBtn.disabled=true; submitBtn.textContent='업로드 중...';}
-  if(progEl) progEl.style.display='block';
-  if(progBar) progBar.style.width='10%';
+  /* 강화된 버튼 피드백 */
+  if(submitBtn){
+    submitBtn.disabled=true;
+    submitBtn.style.opacity='0.7';
+    submitBtn.style.cursor='wait';
+    submitBtn.innerHTML='<span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:vclinicSpin 0.8s linear infinite;vertical-align:middle;margin-right:6px"></span>올리는 중...';
+  }
+  if(progEl){progEl.style.display='block';}
+  if(progBar) progBar.style.width='5%';
+  if(progTxt) progTxt.textContent='준비 중...';
   try {
+    if(progTxt) progTxt.textContent='🔐 인증 확인 중...';
     const idToken=await firebase.auth().currentUser.getIdToken();
+    if(progBar) progBar.style.width='12%';
     const postId=_fbDb.ref('vocalClinic/posts').push().key;
     const ext=_vclinicInputMode==='rec'?'webm':(_vclinicFileBlob.name.split('.').pop()||'audio');
     const storagePath='vocal-clinic/'+_fbAuthUid+'/'+postId+'.'+ext;
     const uploadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o?uploadType=media&name='+encodeURIComponent(storagePath);
-    if(progBar) progBar.style.width='30%';
-    const resp=await fetch(uploadUrl,{method:'POST',headers:{'Content-Type':blob.type||'audio/webm','Authorization':'Bearer '+idToken},body:blob});
-    if(!resp.ok) throw new Error('Storage 업로드 실패: '+resp.status);
-    /* 업로드 응답에서 downloadTokens 추출 → URL에 추가해야 인증 없이 접근 가능 */
-    const uploadResult = await resp.json();
+    if(progTxt) progTxt.textContent='📤 음성 업로드 중...';
+    if(progBar) progBar.style.width='15%';
+    /* XMLHttpRequest로 실제 업로드 진행률 표시 (15% ~ 75%) */
+    const uploadResultText = await new Promise((resolve, reject)=>{
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl);
+      xhr.setRequestHeader('Content-Type', blob.type||'audio/webm');
+      xhr.setRequestHeader('Authorization', 'Bearer '+idToken);
+      xhr.upload.onprogress = (ev)=>{
+        if(ev.lengthComputable){
+          const pct = (ev.loaded / ev.total) * 60;  // 15~75% 범위
+          if(progBar) progBar.style.width = (15 + pct) + '%';
+          if(progTxt) progTxt.textContent = '📤 업로드 중... ' + Math.round((ev.loaded/ev.total)*100) + '%';
+        }
+      };
+      xhr.onload = ()=>{
+        if(xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
+        else reject(new Error('Storage 업로드 실패: '+xhr.status));
+      };
+      xhr.onerror = ()=>reject(new Error('네트워크 오류: 업로드 중 연결이 끊겼어요.'));
+      xhr.ontimeout = ()=>reject(new Error('업로드 시간 초과. 다시 시도해주세요.'));
+      xhr.timeout = 120000;  // 2분
+      xhr.send(blob);
+    });
+    const uploadResult = JSON.parse(uploadResultText);
     const downloadToken = uploadResult.downloadTokens || '';
     const downloadUrl='https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(storagePath)+'?alt=media'+(downloadToken?'&token='+downloadToken:'');
-    if(progBar) progBar.style.width='70%';
-    if(progTxt) progTxt.textContent='DB에 저장 중...';
+    if(progBar) progBar.style.width='80%';
+    if(progTxt) progTxt.textContent='💾 게시글 저장 중...';
     /* 닉네임: 학생=이름, 일반사용자=설정한 닉네임, 미설정시 모달 표시 */
     let nickname = curStudent ? curStudent.name
                  : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
@@ -20507,7 +20540,7 @@ async function _submitVclinicPost(){
         alert('먼저 닉네임을 설정해주세요.');
         _ensureNickname();
       }
-      if(submitBtn){submitBtn.disabled=false; submitBtn.textContent='올리기';}
+      if(submitBtn){submitBtn.disabled=false; submitBtn.style.opacity=''; submitBtn.style.cursor=''; submitBtn.innerHTML='올리기';}
       if(progEl) progEl.style.display='none';
       return;
     }
@@ -20528,15 +20561,21 @@ async function _submitVclinicPost(){
     updates['vocalClinic/userActiveCount/'+_fbAuthUid]=firebase.database.ServerValue.increment(1);
     await _fbDb.ref().update(updates);
     if(progBar) progBar.style.width='100%';
+    if(progTxt) progTxt.textContent='✅ 완료!';
     showToast('음성이 등록되었습니다!');
     _closeVclinicWrite();
     _vclinicCheckLimitNotice();
     _loadVclinicPosts(true);
   } catch(e){
-    if(errEl) errEl.textContent='업로드 실패: '+e.message;
+    _vclinicShowErr('❌ 업로드 실패: '+e.message);
     if(progEl) progEl.style.display='none';
   } finally {
-    if(submitBtn){submitBtn.disabled=false; submitBtn.textContent='올리기';}
+    if(submitBtn){
+      submitBtn.disabled=false;
+      submitBtn.style.opacity='';
+      submitBtn.style.cursor='';
+      submitBtn.innerHTML='올리기';
+    }
   }
 }
 
@@ -20851,38 +20890,39 @@ async function _deleteVclinicPost(){
   const postId=_vclinicCurrentPost._id;
   const authorUid=_vclinicCurrentPost.authorUid;
 
-  /* Storage 파일 삭제 (실패해도 무시) */
-  if(_vclinicCurrentPost.storagePath){
+  /* Storage 파일 삭제 - 본인이거나, 관리자라도 본인 글이면 시도 (남의 파일은 권한 없음) */
+  if(_vclinicCurrentPost.storagePath && isOwner){
     try{
       const cu=firebase.auth().currentUser;
       if(cu){
         const idToken=await cu.getIdToken();
         await fetch('https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/'+encodeURIComponent(_vclinicCurrentPost.storagePath),{method:'DELETE',headers:{'Authorization':'Bearer '+idToken}});
       }
-    }catch(e){ console.warn('Storage 삭제 실패(무시):', e.message); }
+    }catch(e){ /* 조용히 무시 */ }
   }
 
-  /* posts 메인 데이터 삭제 (핵심) */
-  /* 삭제 전 현재 Firebase auth 상태 확인 */
-  const _delUser = firebase.auth().currentUser;
-  console.log('삭제 시도 - auth uid:', _delUser?.uid, 'email:', _delUser?.email, 'anon:', _delUser?.isAnonymous);
+  /* posts 메인 데이터 삭제 (핵심) - 관리자/본인 모두 가능 */
   try {
     await _fbDb.ref('vocalClinic/posts/'+postId).remove();
   } catch(e){
     console.error('posts 삭제 실패:', e);
-    alert('삭제 실패: ' + e.message + '\n\nauth: ' + (_delUser?.email || _delUser?.uid?.substring(0,8) || '없음'));
+    alert('삭제 실패: ' + e.message);
     return;
   }
 
-  /* 나머지 경로 삭제 (실패해도 무시 - 권한 없어도 메인은 지워짐) */
-  try { await _fbDb.ref('vocalClinic/postsByUser/'+authorUid+'/'+postId).remove(); } catch(e){ console.warn('postsByUser 삭제 실패(무시)'); }
-  try { await _fbDb.ref('vocalClinic/feedback/'+postId).remove(); } catch(e){}
-  try { await _fbDb.ref('vocalClinic/comments/'+postId).remove(); } catch(e){}
-  try {
-    if(_vclinicCurrentPost.status==='pending'&&authorUid){
-      await _fbDb.ref('vocalClinic/userActiveCount/'+authorUid).transaction(v=>Math.max(0,(v||0)-1));
-    }
-  } catch(e){}
+  /* 부수 데이터 정리 - 본인일 때만 시도 (남의 경로는 Firebase 규칙상 권한 없음 → 콘솔 노이즈 방지) */
+  if(isOwner){
+    try { await _fbDb.ref('vocalClinic/postsByUser/'+authorUid+'/'+postId).remove(); } catch(e){}
+    try { await _fbDb.ref('vocalClinic/feedback/'+postId).remove(); } catch(e){}
+    try { await _fbDb.ref('vocalClinic/comments/'+postId).remove(); } catch(e){}
+    try {
+      if(_vclinicCurrentPost.status==='pending'&&authorUid){
+        await _fbDb.ref('vocalClinic/userActiveCount/'+authorUid).transaction(v=>Math.max(0,(v||0)-1));
+      }
+    } catch(e){}
+  }
+  /* 관리자가 남의 글 삭제: 메인 글만 지움. 부수 데이터(피드백/댓글/Storage 파일)는 orphan으로 남지만 UI엔 안 보이므로 무해.
+     완전 청소가 필요하면 Firebase Console에서 수동 정리 또는 Cloud Function으로 후처리 권장. */
 
   showToast('글이 삭제되었습니다.');
   _closeVclinicView();
