@@ -9687,21 +9687,102 @@ function _renderAdminReports(){
     const handledBadge = r.handled
       ? '<span style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">처리됨</span>'
       : '<span style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">미처리</span>';
-    const preview = r.postTitle || r.feedbackPreview || r.commentPreview || '';
-    return '<div style="background:'+(r.handled?'#f9fafb':'#fff7ed')+';border:1px solid '+(r.handled?'#e5e7eb':'#fed7aa')+';border-radius:8px;padding:10px 12px;margin-bottom:8px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+    /* 타입 한국어 라벨 */
+    const typeLabel = r.type === 'post' ? '게시글' : (r.type === 'comment' ? '댓글' : (r.type === 'feedback' ? '피드백' : ''));
+    /* === 신고 대상 작성자 정보 (악성 사용자) === */
+    const targetAuthorName = r.authorNickname || '(이름 없음)';
+    const targetAuthorUid = r.authorUid || '(UID 없음)';
+    const targetAuthorBlock =
+      '<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:7px 9px;margin-bottom:6px">'
+      +'<div style="font-size:10.5px;font-weight:800;color:#991b1b;margin-bottom:3px">⚠️ 신고 대상 '+typeLabel+' 작성자</div>'
+      +'<div style="font-size:11.5px;color:#7f1d1d;font-weight:700">'+_escapeHtml(targetAuthorName)+'</div>'
+      +'<div style="font-family:monospace;font-size:9.5px;color:#991b1b;margin-top:2px">UID: '+_escapeHtml(targetAuthorUid)+'</div>'
+      +'</div>';
+    /* === 댓글/피드백 신고면 원글 정보 추가 === */
+    let originalPostBlock = '';
+    if((r.type === 'comment' || r.type === 'feedback') && r.postTitle){
+      originalPostBlock =
+        '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:6px 9px;margin-bottom:6px">'
+        +'<div style="font-size:10px;color:#9a3412;margin-bottom:2px">📄 원글 정보</div>'
+        +'<div style="font-size:11px;color:#7c2d12;font-weight:700">'+_escapeHtml(r.postTitle)+'</div>'
+        +(r.postAuthorName ? '<div style="font-size:10px;color:#9a3412;margin-top:1px">작성자: '+_escapeHtml(r.postAuthorName)+(r.postAuthorUid?' (UID: '+_escapeHtml(r.postAuthorUid.substring(0,16))+'...)':'')+'</div>' : '')
+        +'</div>';
+    }
+    /* === 신고된 내용 미리보기 === */
+    const previewText = r.postPreview || r.commentPreview || r.feedbackPreview || '';
+    const previewLabel = r.type === 'post' ? '게시글 내용' : (r.type === 'comment' ? '댓글 내용' : (r.type === 'feedback' ? '피드백 내용' : '내용'));
+    const titleForPost = (r.type === 'post' && r.postTitle) ? r.postTitle : '';
+    const contentBlock = (previewText || titleForPost)
+      ? '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:6px 9px;margin-bottom:6px">'
+        +'<div style="font-size:10px;color:#6b7280;margin-bottom:2px">📝 '+previewLabel+'</div>'
+        +(titleForPost ? '<div style="font-size:11.5px;font-weight:700;color:#1f2937">'+_escapeHtml(titleForPost)+'</div>' : '')
+        +(previewText ? '<div style="font-size:11px;color:#475569;line-height:1.4;margin-top:'+(titleForPost?'3':'0')+'px;white-space:pre-wrap">'+_escapeHtml(previewText)+'</div>' : '')
+        +'</div>'
+      : '';
+    /* === 원글 이동 버튼 === */
+    const linkPostId = r.postId || r.targetId;
+    const boardName = r._path && r._path.startsWith('vocalClinic') ? '보컬 진단실' : '발전 자랑';
+    const gotoBtn = linkPostId && !r.handled
+      ? '<button onclick="_adminGotoOriginalPost(\''+r._path+'\',\''+linkPostId+'\')" style="flex:1;background:#3b82f6;color:#fff;border:none;border-radius:4px;padding:5px;font-size:10.5px;font-weight:700;cursor:pointer">🔗 원글 보기 ('+boardName+')</button>'
+      : '';
+    /* === 신고자 정보 === */
+    const ri = r.reporterInfo || {};
+    let reporterDetails = '';
+    if(ri.name || ri.realName || ri.email){
+      const parts = [];
+      if(ri.type) parts.push(_escapeHtml(ri.type));
+      if(ri.name) parts.push('닉네임: ' + _escapeHtml(ri.name));
+      if(ri.realName && ri.realName !== ri.name) parts.push('실명: ' + _escapeHtml(ri.realName));
+      if(ri.email) parts.push('이메일: ' + _escapeHtml(ri.email));
+      if(ri.provider) parts.push('제공자: ' + _escapeHtml(ri.provider));
+      reporterDetails = parts.join(' / ');
+    } else {
+      reporterDetails = ri.type ? _escapeHtml(ri.type) : '비로그인';
+    }
+    const reporterUidFull = r.reporterUid || (ri.uid) || '없음';
+    return '<div style="background:'+(r.handled?'#f9fafb':'#fff7ed')+';border:1.5px solid '+(r.handled?'#e5e7eb':'#fed7aa')+';border-radius:8px;padding:10px 12px;margin-bottom:10px;word-break:break-all">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       +'<span style="font-size:11px;font-weight:800;color:#7c2d12">'+r._icon+' '+r._source+'</span>'
       +handledBadge
       +'</div>'
-      +(preview ? '<div style="font-size:11px;color:#475569;background:#fff;border-radius:4px;padding:4px 7px;margin-bottom:4px;max-height:2.6em;overflow:hidden">대상: '+_escapeHtml(preview)+'</div>' : '')
-      +'<div style="font-size:12px;color:#1f2937;line-height:1.5;margin-bottom:4px;white-space:pre-wrap">'+_escapeHtml(r.reason || '')+'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8">'
-      +'<span>신고자: '+(r.reporterUid ? r.reporterUid.substring(0,8)+'...' : '익명')+'</span>'
-      +'<span>'+dStr+'</span>'
+      +targetAuthorBlock
+      +originalPostBlock
+      +contentBlock
+      +'<div style="background:#fee2e2;border-radius:4px;padding:6px 8px;margin-bottom:6px">'
+      +'<div style="font-size:10px;color:#991b1b;margin-bottom:2px">📌 신고 사유</div>'
+      +'<div style="font-size:11.5px;color:#7f1d1d;line-height:1.5;white-space:pre-wrap">'+_escapeHtml(r.reason || '')+'</div>'
       +'</div>'
-      +(r.handled ? '' : '<button onclick="_markReportHandled(\''+r._path+'\',\''+r._targetId+'\',\''+r._reportId+'\')" style="margin-top:6px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:4px;padding:5px;font-size:10.5px;font-weight:700;cursor:pointer">✓ 처리 완료</button>')
+      +'<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:10.5px;color:#6b7280;padding:3px">👤 신고자 정보 (펼치기)</summary>'
+      +'<div style="font-size:10.5px;color:#475569;background:#fff;border-radius:4px;padding:4px 7px;margin-top:3px;line-height:1.5">'
+      +'<div>'+reporterDetails+'</div>'
+      +'<div style="margin-top:2px;font-family:monospace;font-size:9.5px;color:#94a3b8">UID: '+_escapeHtml(reporterUidFull)+'</div>'
+      +'</div></details>'
+      +'<div style="text-align:right;font-size:10px;color:#94a3b8;margin-bottom:5px">'+dStr+'</div>'
+      +(r.handled ? '' : '<div style="display:flex;gap:5px">'+gotoBtn+'<button onclick="_markReportHandled(\''+r._path+'\',\''+r._targetId+'\',\''+r._reportId+'\')" style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:4px;padding:5px;font-size:10.5px;font-weight:700;cursor:pointer">✓ 처리 완료</button></div>')
       +'</div>';
   }).join('');
+}
+
+/* 건의자 정보를 풀로 렌더링 (reporterInfo 또는 userInfo 사용) */
+function _renderSuggestionUserInfo(s){
+  const ri = s.reporterInfo || null;
+  let details = '';
+  if(ri && (ri.name || ri.realName || ri.email)){
+    const parts = [];
+    if(ri.type) parts.push(_escapeHtml(ri.type));
+    if(ri.name) parts.push('닉네임: ' + _escapeHtml(ri.name));
+    if(ri.realName && ri.realName !== ri.name) parts.push('실명: ' + _escapeHtml(ri.realName));
+    if(ri.email) parts.push('이메일: ' + _escapeHtml(ri.email));
+    if(ri.provider) parts.push('제공자: ' + _escapeHtml(ri.provider));
+    details = parts.join(' / ');
+  } else {
+    details = _escapeHtml(s.userInfo || '알수없음');
+  }
+  const uidFull = s.reporterUid || (ri && ri.uid) || '없음';
+  return '<div style="font-size:10.5px;color:#475569;background:#fff;border-radius:4px;padding:4px 7px;margin-bottom:4px;line-height:1.5">'
+    +'<div><b>건의자:</b> '+details+'</div>'
+    +'<div style="margin-top:2px;font-family:monospace;font-size:9.5px;color:#94a3b8">UID: '+_escapeHtml(uidFull)+'</div>'
+    +'</div>';
 }
 
 function _renderAdminSuggestions(){
@@ -9724,20 +9805,45 @@ function _renderAdminSuggestions(){
       : '<span style="background:#fef3c7;color:#854d0e;border:1px solid #fde047;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">미처리</span>';
     const tp = typeMap[s.type] || typeMap.other;
     const typeBadge = '<span style="background:'+tp.bg+';color:'+tp.color+';border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">'+tp.label+'</span>';
-    return '<div style="background:'+(s.handled?'#f9fafb':'#fff')+';border:1px solid '+(s.handled?'#e5e7eb':'#d1d5db')+';border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+    return '<div style="background:'+(s.handled?'#f9fafb':'#fff')+';border:1px solid '+(s.handled?'#e5e7eb':'#d1d5db')+';border-radius:8px;padding:10px 12px;margin-bottom:8px;word-break:break-all">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
       +typeBadge
       +handledBadge
       +'</div>'
       +'<div style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:3px">'+_escapeHtml(s.title || '')+'</div>'
-      +'<div style="font-size:12px;color:#475569;line-height:1.5;margin-bottom:5px;white-space:pre-wrap">'+_escapeHtml(s.content || '')+'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8">'
-      +'<span>'+_escapeHtml(s.userInfo || '알수없음')+'</span>'
-      +'<span>'+dStr+'</span>'
-      +'</div>'
+      +'<div style="font-size:12px;color:#475569;line-height:1.5;margin-bottom:6px;white-space:pre-wrap;background:#fafafa;border-radius:4px;padding:6px 8px">'+_escapeHtml(s.content || '')+'</div>'
+      +_renderSuggestionUserInfo(s)
+      +'<div style="text-align:right;font-size:10px;color:#94a3b8;margin-bottom:4px">'+dStr+'</div>'
       +(s.handled ? '' : '<button onclick="_markSuggestionHandled(\''+s._id+'\')" style="margin-top:6px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:4px;padding:5px;font-size:10.5px;font-weight:700;cursor:pointer">✓ 처리 완료</button>')
       +'</div>';
   }).join('');
+}
+
+/* 관리자가 신고된 원글로 이동 */
+async function _adminGotoOriginalPost(path, postId){
+  if(!postId){ alert('원글 ID가 없어요.'); return; }
+  try {
+    if(path && path.startsWith('vocalClinic')){
+      /* 보컬 진단실로 이동 */
+      if(typeof push === 'function') push('scr-vclinic');
+      /* 게시글 로드 후 상세 열기 */
+      if(typeof _loadVclinicPosts === 'function') await _loadVclinicPosts(true);
+      setTimeout(()=>{
+        if(typeof _openVclinicView === 'function') _openVclinicView(postId);
+        else alert('원글을 열 수 없어요. (postId: '+postId+')');
+      }, 500);
+    } else {
+      /* 발전 자랑으로 이동 */
+      if(typeof push === 'function') push('scr-community');
+      if(typeof _loadCommunityPosts === 'function') await _loadCommunityPosts(true);
+      setTimeout(()=>{
+        if(typeof _openCommunityView === 'function') _openCommunityView(postId);
+        else alert('원글을 열 수 없어요. (postId: '+postId+')');
+      }, 500);
+    }
+  } catch(e){
+    alert('원글 이동 실패: ' + e.message);
+  }
 }
 
 async function _markReportHandled(path, targetId, reportId){
@@ -11049,7 +11155,7 @@ let STUDENTS_DB = [
         "exId": "하아빡",
         "exName": "하아빡",
         "displayLabel": "하아빡",
-        "scaleId": "5D-E",
+        "scaleId": "PRH-A",
         "repeat": 1,
         "comment": "벽에 붙어서 수업시간에 했던 대로! 성문간격 생각하면서 첫시작에서 H어택 으로!",
         "active": true,
@@ -20195,6 +20301,10 @@ async function _refreshLikeStatus(postId){
     
     if(likeIcon) likeIcon.textContent = liked ? '❤️' : '🤍';
     if(likeCount) likeCount.textContent = count;
+    /* 현재 글 데이터에도 정확한 카운트 반영 (목록 동기화용) */
+    if(_currentViewingPost && _currentViewingPost._id === postId){
+      _currentViewingPost.likes = count;
+    }
   } catch(e){
     console.warn('좋아요 상태 로드 실패:', e);
   }
@@ -20225,10 +20335,10 @@ async function _toggleCommunityLike(){
     } catch(te){ /* 권한 없음 - UI는 likes에서 다시 계산 */ }
     
     await _refreshLikeStatus(postId);
-    /* 리스트도 갱신 */
+    /* 리스트도 정확한 값으로 동기화 (덧셈 X, 직접 대입) */
     const listPost = _communityPosts.find(p => p._id === postId);
     if(listPost){
-      listPost.likes = Math.max(0, (listPost.likes || 0) + (currentlyLiked ? -1 : 1));
+      listPost.likes = _currentViewingPost.likes || 0;
       _renderCommunityPosts();
     }
   } catch(e){
@@ -20255,6 +20365,14 @@ async function _loadComments(postId){
     comments.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
     
     if(countEl) countEl.textContent = comments.length;
+    /* 정확한 댓글 수를 데이터에 반영 (목록 동기화용) */
+    if(_currentViewingPost && _currentViewingPost._id === postId){
+      _currentViewingPost.commentCount = comments.length;
+    }
+    const listPost = _communityPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.commentCount = comments.length;
+    }
     
     if(comments.length === 0){
       listEl.innerHTML = '<div style="font-size:11px;color:var(--mu);text-align:center;padding:10px">첫 댓글을 남겨보세요!</div>';
@@ -20394,17 +20512,22 @@ async function _reportCommunity(){
   try {
     const postId = _currentViewingPost._id;
     const ref = firebase.database().ref('community/reports/posts/'+postId).push();
-    await ref.set({
+    const reporterInfo = (typeof _buildReporterInfo === 'function') ? _buildReporterInfo() : null;
+    const payload = {
       type: 'post',
       targetId: postId,
+      postId: postId,
       postTitle: (_currentViewingPost.title||'').substring(0, 50),
+      postPreview: (_currentViewingPost.content||'').substring(0, 200),
       authorUid: _currentViewingPost.authorUid || '',
       authorNickname: _currentViewingPost.nickname || '',
       reporterUid: _fbAuthUid,
       reason: reason.trim().substring(0, 200),
       timestamp: Date.now(),
       handled: false
-    });
+    };
+    if(reporterInfo) payload.reporterInfo = reporterInfo;
+    await ref.set(payload);
     alert('✅ 신고가 접수되었어요.\n관리자가 검토 후 조치할게요.');
   } catch(e){
     alert('신고 접수 실패: ' + e.message);
@@ -20560,6 +20683,11 @@ function _renderVclinicPosts(){
     /* 좋아요 카운트 */
     const likeCount = (typeof p.likeCount === 'number' && p.likeCount > 0) ? p.likeCount : 0;
     const likeB = '<span style="font-size:11px;color:#dc2626;font-weight:700;display:inline-flex;align-items:center;gap:3px">❤️ '+likeCount+'</span>';
+    /* 댓글 수 + 피드백 수 */
+    const cmtCnt = (typeof p.commentCount === 'number' && p.commentCount > 0) ? p.commentCount : 0;
+    const fbCnt = (typeof p.feedbackCount === 'number' && p.feedbackCount > 0) ? p.feedbackCount : 0;
+    const cmtB = '<span style="font-size:11px;color:#6b7280;display:inline-flex;align-items:center;gap:3px">💬 '+cmtCnt+'</span>';
+    const fbB = fbCnt > 0 ? '<span style="font-size:11px;color:#1d4ed8;font-weight:700;display:inline-flex;align-items:center;gap:3px" title="트레이너 피드백">💡 '+fbCnt+'</span>' : '';
     const pid = p._id;
     return '<div onclick="_openVclinicView(\''+pid+'\')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'#93c5fd\'" onmouseout="this.style.borderColor=\'#e5e7eb\'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">'
@@ -20569,7 +20697,7 @@ function _renderVclinicPosts(){
       +(srcB||pvrB||retB?'<div style="margin-bottom:6px;line-height:1.4">'+srcB+pvrB+retB+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--mu)">'
       +'<span>'+_escapeHtml(p.nickname||'익명')+' &middot; '+dt+'</span>'
-      +likeB
+      +'<span style="display:flex;align-items:center;gap:10px">'+fbB+cmtB+likeB+'</span>'
       +'</div></div>';
   }).join('');
 }
@@ -21258,8 +21386,23 @@ async function _loadVclinicFeedback(postId){
   try {
     const snap=await _fbDb.ref('vocalClinic/feedback/'+postId).orderByChild('createdAt').once('value');
     const data=snap.val();
-    if(!data){list.innerHTML='<div style="font-size:12px;color:var(--mu);padding:8px">아직 피드백이 없어요</div>'; return;}
+    if(!data){
+      list.innerHTML='<div style="font-size:12px;color:var(--mu);padding:8px">아직 피드백이 없어요</div>';
+      /* 피드백 수 0 동기화 */
+      if(_vclinicCurrentPost && _vclinicCurrentPost._id === postId){
+        _vclinicCurrentPost.feedbackCount = 0;
+      }
+      const listPost0 = _vclinicPosts.find(p => p._id === postId);
+      if(listPost0) listPost0.feedbackCount = 0;
+      return;
+    }
     const items=Object.entries(data).map(([k,v])=>({_id:k,...v})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    /* 정확한 피드백 수 동기화 */
+    if(_vclinicCurrentPost && _vclinicCurrentPost._id === postId){
+      _vclinicCurrentPost.feedbackCount = items.length;
+    }
+    const listPost = _vclinicPosts.find(p => p._id === postId);
+    if(listPost) listPost.feedbackCount = items.length;
     const _isAdminNow = _isAppAdmin();
     list.innerHTML=items.map(fb=>{
       const dt=fb.createdAt?new Date(fb.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
@@ -21355,9 +21498,25 @@ async function _loadVclinicComments(postId){
   try {
     const snap=await _fbDb.ref('vocalClinic/comments/'+postId).orderByChild('createdAt').once('value');
     const data=snap.val();
-    if(!data){list.innerHTML=''; if(cntEl) cntEl.textContent='0'; return;}
+    if(!data){
+      list.innerHTML='';
+      if(cntEl) cntEl.textContent='0';
+      /* 정확한 댓글 수 0을 동기화 */
+      if(_vclinicCurrentPost && _vclinicCurrentPost._id === postId){
+        _vclinicCurrentPost.commentCount = 0;
+      }
+      const listPost0 = _vclinicPosts.find(p => p._id === postId);
+      if(listPost0) listPost0.commentCount = 0;
+      return;
+    }
     const items=Object.entries(data).map(([k,v])=>({_id:k,...v})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     if(cntEl) cntEl.textContent=items.length;
+    /* 정확한 댓글 수를 데이터에 반영 (목록 동기화용) */
+    if(_vclinicCurrentPost && _vclinicCurrentPost._id === postId){
+      _vclinicCurrentPost.commentCount = items.length;
+    }
+    const listPost = _vclinicPosts.find(p => p._id === postId);
+    if(listPost) listPost.commentCount = items.length;
     const isAdmin=_isAppAdmin();
     list.innerHTML=items.map(cm=>{
       const dt=cm.createdAt?new Date(cm.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
@@ -21499,13 +21658,13 @@ async function _toggleVclinicLike(){
       await _fbDb.ref('vocalClinic/posts/'+postId+'/likeCount').transaction(cur => {
         return Math.max(0, (cur || 0) + (currentlyLiked ? -1 : 1));
       });
-    } catch(te){ /* 다른 사람 글 카운트 권한 거부 - 무시. likes에서 다시 계산 */ }
-    /* UI 갱신 */
+    } catch(te){ /* 권한 거부 - likes에서 다시 계산 */ }
+    /* UI 갱신 - likes 노드에서 정확한 카운트 재계산 후 _vclinicCurrentPost.likeCount 설정됨 */
     await _refreshVclinicLikeStatus(postId);
-    /* 목록에도 반영 */
+    /* 목록 카운트도 정확한 값으로 동기화 (덧셈 X, 직접 대입) */
     const listPost = _vclinicPosts.find(p => p._id === postId);
     if(listPost){
-      listPost.likeCount = Math.max(0, (listPost.likeCount || 0) + (currentlyLiked ? -1 : 1));
+      listPost.likeCount = _vclinicCurrentPost.likeCount || 0;
       _renderVclinicPosts();
     }
   } catch(e){
@@ -21519,6 +21678,43 @@ async function _toggleVclinicLike(){
 }
 
 /* ============== 신고 기능 (보컬 진단실) ============== */
+
+/* 신고자/건의자 정보 헬퍼 - 추적 가능한 정보 모두 포함 (관리자만 조회) */
+function _buildReporterInfo(){
+  const info = {
+    uid: _fbAuthUid || '',
+    type: '비로그인',
+    name: '',
+    email: '',
+    provider: '',
+    realName: ''
+  };
+  if(curStudent){
+    info.type = '학생';
+    info.name = curStudent.name || '';
+  } else if(window._generalUser){
+    info.type = '일반';
+    info.name = window._generalUser.nickname || '';
+    info.realName = window._generalUser.realName || '';
+    info.email = window._generalUser.email || '';
+    info.provider = window._generalUser.provider || '';
+    /* Firebase 현재 사용자에서 추가 정보 */
+    try {
+      const cu = firebase.auth().currentUser;
+      if(cu){
+        if(!info.email) info.email = cu.email || '';
+        if(!info.realName) info.realName = cu.displayName || '';
+        if(!info.provider && cu.providerData && cu.providerData[0]){
+          info.provider = cu.providerData[0].providerId || '';
+        }
+      }
+    } catch(e){}
+  } else if(_fbAuthUid){
+    info.type = '익명';
+    info.name = '익명_' + _fbAuthUid.substring(0, 6);
+  }
+  return info;
+}
 
 /* 게시글 신고 */
 async function _reportVclinicPost(){
@@ -21534,13 +21730,17 @@ async function _reportVclinicPost(){
   try {
     const postId = _vclinicCurrentPost._id;
     const ref = _fbDb.ref('vocalClinic/reports/posts/'+postId).push();
+    const reporterInfo = _buildReporterInfo();
     await ref.set({
       type: 'post',
       targetId: postId,
+      postId: postId,
       postTitle: (_vclinicCurrentPost.title||'').substring(0, 50),
+      postPreview: (_vclinicCurrentPost.memo||'').substring(0, 200),
       authorUid: _vclinicCurrentPost.authorUid || '',
       authorNickname: _vclinicCurrentPost.nickname || '',
       reporterUid: _fbAuthUid,
+      reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       handled: false
@@ -21561,13 +21761,35 @@ async function _reportVclinicFeedback(feedbackId, postId, feedbackText){
   const reason = prompt('이 피드백을 신고하는 사유를 입력해주세요:');
   if(!reason || !reason.trim()) return;
   try {
+    /* 피드백 작성자(트레이너) + 원글 정보 조회 */
+    let fbAuthorUid = '', fbAuthorName = '트레이너';
+    let postTitle = '', postAuthorUid = '', postAuthorName = '';
+    try {
+      const fbSnap = await _fbDb.ref('vocalClinic/feedback/'+postId+'/'+feedbackId).once('value');
+      const fb = fbSnap.val() || {};
+      fbAuthorUid = fb.trainerUid || fb.authorUid || '';
+    } catch(e){}
+    try {
+      const postSnap = await _fbDb.ref('vocalClinic/posts/'+postId).once('value');
+      const post = postSnap.val() || {};
+      postTitle = (post.title || '').substring(0, 50);
+      postAuthorUid = post.authorUid || '';
+      postAuthorName = post.nickname || '';
+    } catch(e){}
     const ref = _fbDb.ref('vocalClinic/reports/feedback/'+feedbackId).push();
+    const reporterInfo = _buildReporterInfo();
     await ref.set({
       type: 'feedback',
       targetId: feedbackId,
       postId: postId,
-      feedbackPreview: (feedbackText||'').substring(0, 80),
+      postTitle: postTitle,
+      postAuthorUid: postAuthorUid,
+      postAuthorName: postAuthorName,
+      feedbackPreview: (feedbackText||'').substring(0, 200),
+      authorUid: fbAuthorUid,
+      authorNickname: fbAuthorName,
       reporterUid: _fbAuthUid,
+      reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       handled: false
@@ -21584,13 +21806,36 @@ async function _reportVclinicComment(commentId, postId, commentText){
   const reason = prompt('이 댓글을 신고하는 사유를 입력해주세요:');
   if(!reason || !reason.trim()) return;
   try {
+    /* 댓글 작성자 + 원글 정보 조회 */
+    let cmAuthorUid = '', cmAuthorName = '';
+    let postTitle = '', postAuthorUid = '', postAuthorName = '';
+    try {
+      const cmSnap = await _fbDb.ref('vocalClinic/comments/'+postId+'/'+commentId).once('value');
+      const cm = cmSnap.val() || {};
+      cmAuthorUid = cm.authorUid || '';
+      cmAuthorName = cm.nickname || '';
+    } catch(e){}
+    try {
+      const postSnap = await _fbDb.ref('vocalClinic/posts/'+postId).once('value');
+      const post = postSnap.val() || {};
+      postTitle = (post.title || '').substring(0, 50);
+      postAuthorUid = post.authorUid || '';
+      postAuthorName = post.nickname || '';
+    } catch(e){}
     const ref = _fbDb.ref('vocalClinic/reports/comments/'+commentId).push();
+    const reporterInfo = _buildReporterInfo();
     await ref.set({
       type: 'comment',
       targetId: commentId,
       postId: postId,
-      commentPreview: (commentText||'').substring(0, 80),
+      postTitle: postTitle,
+      postAuthorUid: postAuthorUid,
+      postAuthorName: postAuthorName,
+      commentPreview: (commentText||'').substring(0, 200),
+      authorUid: cmAuthorUid,
+      authorNickname: cmAuthorName,
       reporterUid: _fbAuthUid,
+      reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       handled: false
@@ -21607,13 +21852,36 @@ async function _reportCommunityComment(commentId, postId, commentText){
   const reason = prompt('이 댓글을 신고하는 사유를 입력해주세요:');
   if(!reason || !reason.trim()) return;
   try {
+    /* 댓글 작성자 + 원글 정보 조회 */
+    let cmAuthorUid = '', cmAuthorName = '';
+    let postTitle = '', postAuthorUid = '', postAuthorName = '';
+    try {
+      const cmSnap = await firebase.database().ref('community/comments/'+postId+'/'+commentId).once('value');
+      const cm = cmSnap.val() || {};
+      cmAuthorUid = cm.authorUid || '';
+      cmAuthorName = cm.nickname || '';
+    } catch(e){}
+    try {
+      const postSnap = await firebase.database().ref('community/posts/'+postId).once('value');
+      const post = postSnap.val() || {};
+      postTitle = (post.title || '').substring(0, 50);
+      postAuthorUid = post.authorUid || '';
+      postAuthorName = post.nickname || '';
+    } catch(e){}
     const ref = firebase.database().ref('community/reports/comments/'+commentId).push();
+    const reporterInfo = _buildReporterInfo();
     await ref.set({
       type: 'comment',
       targetId: commentId,
       postId: postId,
-      commentPreview: (commentText||'').substring(0, 80),
+      postTitle: postTitle,
+      postAuthorUid: postAuthorUid,
+      postAuthorName: postAuthorName,
+      commentPreview: (commentText||'').substring(0, 200),
+      authorUid: cmAuthorUid,
+      authorNickname: cmAuthorName,
       reporterUid: _fbAuthUid,
+      reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
       timestamp: Date.now(),
       handled: false
@@ -21686,8 +21954,10 @@ async function _submitSuggestion(){
     } else if(_fbAuthUid){
       userInfo = '익명:' + _fbAuthUid.substring(0, 8);
     }
+    /* 상세 추적 정보 (관리자만 조회) */
+    const reporterInfo = (typeof _buildReporterInfo === 'function') ? _buildReporterInfo() : null;
     const ref = _fbDb.ref('suggestions').push();
-    await ref.set({
+    const payload = {
       type: _suggestionType,
       title: title.substring(0, 50),
       content: content.substring(0, 500),
@@ -21696,7 +21966,9 @@ async function _submitSuggestion(){
       userAgent: (navigator.userAgent || '').substring(0, 200),
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       handled: false
-    });
+    };
+    if(reporterInfo) payload.reporterInfo = reporterInfo;
+    await ref.set(payload);
     _closeSuggestionModal();
     if(typeof showToast === 'function') showToast('✅ 건의가 접수되었어요! 감사합니다.');
     else alert('✅ 건의가 접수되었어요! 감사합니다.');
