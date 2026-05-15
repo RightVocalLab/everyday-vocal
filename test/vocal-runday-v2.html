@@ -9692,10 +9692,14 @@ function _renderAdminReports(){
     /* === 신고 대상 작성자 정보 (악성 사용자) === */
     const targetAuthorName = r.authorNickname || '(이름 없음)';
     const targetAuthorUid = r.authorUid || '(UID 없음)';
+    /* 작성자 출처 뱃지 (게시글에 authorProvider/authorType 저장된 경우) */
+    const targetProviderBadge = (typeof _renderProviderBadge === 'function')
+      ? _renderProviderBadge(r.authorProvider || '', r.authorType || '')
+      : '';
     const targetAuthorBlock =
       '<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:7px 9px;margin-bottom:6px">'
       +'<div style="font-size:10.5px;font-weight:800;color:#991b1b;margin-bottom:3px">⚠️ 신고 대상 '+typeLabel+' 작성자</div>'
-      +'<div style="font-size:11.5px;color:#7f1d1d;font-weight:700">'+_escapeHtml(targetAuthorName)+'</div>'
+      +'<div style="font-size:11.5px;color:#7f1d1d;font-weight:700">'+_escapeHtml(targetAuthorName)+targetProviderBadge+'</div>'
       +'<div style="font-family:monospace;font-size:9.5px;color:#991b1b;margin-top:2px">UID: '+_escapeHtml(targetAuthorUid)+'</div>'
       +'</div>';
     /* === 댓글/피드백 신고면 원글 정보 추가 === */
@@ -9727,14 +9731,16 @@ function _renderAdminReports(){
       : '';
     /* === 신고자 정보 === */
     const ri = r.reporterInfo || {};
+    /* 신고자 출처 뱃지 (한글 + 아이콘) */
+    const reporterProviderBadge = (typeof _renderProviderBadge === 'function')
+      ? _renderProviderBadge(ri.provider || '', ri.type || '')
+      : '';
     let reporterDetails = '';
     if(ri.name || ri.realName || ri.email){
       const parts = [];
-      if(ri.type) parts.push(_escapeHtml(ri.type));
       if(ri.name) parts.push('닉네임: ' + _escapeHtml(ri.name));
       if(ri.realName && ri.realName !== ri.name) parts.push('실명: ' + _escapeHtml(ri.realName));
       if(ri.email) parts.push('이메일: ' + _escapeHtml(ri.email));
-      if(ri.provider) parts.push('제공자: ' + _escapeHtml(ri.provider));
       reporterDetails = parts.join(' / ');
     } else {
       reporterDetails = ri.type ? _escapeHtml(ri.type) : '비로그인';
@@ -9752,7 +9758,7 @@ function _renderAdminReports(){
       +'<div style="font-size:10px;color:#991b1b;margin-bottom:2px">📌 신고 사유</div>'
       +'<div style="font-size:11.5px;color:#7f1d1d;line-height:1.5;white-space:pre-wrap">'+_escapeHtml(r.reason || '')+'</div>'
       +'</div>'
-      +'<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:10.5px;color:#6b7280;padding:3px">👤 신고자 정보 (펼치기)</summary>'
+      +'<details style="margin-bottom:6px"><summary style="cursor:pointer;font-size:10.5px;color:#6b7280;padding:3px">👤 신고자 정보 '+reporterProviderBadge+' (펼치기)</summary>'
       +'<div style="font-size:10.5px;color:#475569;background:#fff;border-radius:4px;padding:4px 7px;margin-top:3px;line-height:1.5">'
       +'<div>'+reporterDetails+'</div>'
       +'<div style="margin-top:2px;font-family:monospace;font-size:9.5px;color:#94a3b8">UID: '+_escapeHtml(reporterUidFull)+'</div>'
@@ -9766,21 +9772,23 @@ function _renderAdminReports(){
 /* 건의자 정보를 풀로 렌더링 (reporterInfo 또는 userInfo 사용) */
 function _renderSuggestionUserInfo(s){
   const ri = s.reporterInfo || null;
+  /* 건의자 출처 뱃지 (한글 + 아이콘) */
+  const providerBadge = (ri && typeof _renderProviderBadge === 'function')
+    ? _renderProviderBadge(ri.provider || '', ri.type || '')
+    : '';
   let details = '';
   if(ri && (ri.name || ri.realName || ri.email)){
     const parts = [];
-    if(ri.type) parts.push(_escapeHtml(ri.type));
     if(ri.name) parts.push('닉네임: ' + _escapeHtml(ri.name));
     if(ri.realName && ri.realName !== ri.name) parts.push('실명: ' + _escapeHtml(ri.realName));
     if(ri.email) parts.push('이메일: ' + _escapeHtml(ri.email));
-    if(ri.provider) parts.push('제공자: ' + _escapeHtml(ri.provider));
     details = parts.join(' / ');
   } else {
     details = _escapeHtml(s.userInfo || '알수없음');
   }
   const uidFull = s.reporterUid || (ri && ri.uid) || '없음';
   return '<div style="font-size:10.5px;color:#475569;background:#fff;border-radius:4px;padding:4px 7px;margin-bottom:4px;line-height:1.5">'
-    +'<div><b>건의자:</b> '+details+'</div>'
+    +'<div><b>건의자:</b> '+details+providerBadge+'</div>'
     +'<div style="margin-top:2px;font-family:monospace;font-size:9.5px;color:#94a3b8">UID: '+_escapeHtml(uidFull)+'</div>'
     +'</div>';
 }
@@ -19548,6 +19556,8 @@ async function _loadCommunityPosts(reset){
     }
     
     _renderCommunityPosts();
+    /* 다른 아이디에서도 정확한 카운트 표시: 실제 자식 노드 개수로 동기화 */
+    _syncCommunityCardCounts();
   } catch(e){
     console.warn('게시글 로드 실패:', e);
     container.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:12px;padding:20px">게시글 로드 실패<br><span style="font-size:10px;color:var(--mu)">' + e.message + '</span></div>';
@@ -19793,12 +19803,16 @@ async function _submitCommunityPost(){
   }
   
   /* 게시글 데이터 (간소화 - 비용 절감) */
+  const _authorInfoForPost = (typeof _buildAuthorInfo === 'function') ? _buildAuthorInfo() : null;
   const post = {
     timestamp: Date.now(),
     nickname: nickname.substring(0, 15),
     title: title.substring(0, 50),
     content: content.substring(0, 200),
     authorUid: _fbAuthUid,
+    /* 작성자 출처 정보 (관리자가 신고/건의 추적용) */
+    authorProvider: _authorInfoForPost ? _authorInfoForPost.provider : '',
+    authorType: _authorInfoForPost ? _authorInfoForPost.type : '',
     likes: 0,
     commentCount: 0,
     /* before/after 핵심 데이터만 저장 */
@@ -20443,11 +20457,15 @@ async function _submitComment(){
   
   const postId = _currentViewingPost._id;
   console.log('[댓글 등록] postId:', postId, 'authorUid:', cu.uid, 'nickname:', nickname);
+  const _commAuthorInfo = (typeof _buildAuthorInfo === 'function') ? _buildAuthorInfo() : null;
   const comment = {
     timestamp: Date.now(),
     nickname: nickname.substring(0, 15),
     text: text.substring(0, 100),
-    authorUid: cu.uid
+    authorUid: cu.uid,
+    /* 작성자 출처 정보 (관리자가 신고 추적용) */
+    authorProvider: _commAuthorInfo ? _commAuthorInfo.provider : '',
+    authorType: _commAuthorInfo ? _commAuthorInfo.type : ''
   };
   
   try {
@@ -20532,6 +20550,9 @@ async function _reportCommunity(){
       postPreview: (_currentViewingPost.content||'').substring(0, 200),
       authorUid: _currentViewingPost.authorUid || '',
       authorNickname: _currentViewingPost.nickname || '',
+      /* 신고 대상 작성자의 출처 (게시글에 저장된 정보) */
+      authorProvider: _currentViewingPost.authorProvider || '',
+      authorType: _currentViewingPost.authorType || '',
       reporterUid: _fbAuthUid,
       reason: reason.trim().substring(0, 200),
       timestamp: Date.now(),
@@ -20661,6 +20682,8 @@ async function _loadVclinicPosts(reset){
       if(moreBtn) moreBtn.style.display=newPosts.length>=_vclinicPostsPerPage?'block':'none';
     }
     _renderVclinicPosts();
+    /* 다른 아이디에서도 정확한 카운트 표시: 실제 자식 노드 개수로 동기화 */
+    _syncVclinicCardCounts();
   } catch(e){if(container) container.innerHTML='<div style="text-align:center;color:#dc2626;font-size:12px;padding:20px">불러오기 실패: '+e.message+'</div>';}
 }
 
@@ -21184,11 +21207,15 @@ async function _submitVclinicPost(){
     const _recDuration = (!_isPvrOnly && _vclinicInputMode==='rec' && _vclinicRecSeconds > 0) ? _vclinicRecSeconds : 0;
     /* 출처 타입: 'rec' = 직접 녹음, 'file' = 파일 업로드, 'pvr' = PVR만 */
     const _sourceType = _isPvrOnly ? 'pvr' : (_vclinicInputMode === 'rec' ? 'rec' : 'file');
+    const _authorInfoForPost = (typeof _buildAuthorInfo === 'function') ? _buildAuthorInfo() : null;
     const postData={
       title, nickname, memo, isPrivate,
       audioUrl: downloadUrl,  /* 빈 문자열일 수 있음 */
       storagePath: storagePath,
       authorUid: _fbAuthUid,
+      /* 작성자 출처 정보 (관리자가 신고/건의 추적용) */
+      authorProvider: _authorInfoForPost ? _authorInfoForPost.provider : '',
+      authorType: _authorInfoForPost ? _authorInfoForPost.type : '',
       feedbackCount: 0, commentCount: 0,
       duration: _recDuration,
       sourceType: _sourceType,
@@ -21470,11 +21497,14 @@ async function _submitVclinicFeedback(){
   const cu = firebase.auth().currentUser;
   console.log('피드백 등록 - auth:', cu?.email, 'uid:', cu?.uid?.substring(0,8));
   try {
-    /* 1. feedback 푸시 */
+    /* 1. feedback 푸시 (트레이너 출처 정보 포함) */
+    const _fbAuthorInfo = (typeof _buildAuthorInfo === 'function') ? _buildAuthorInfo() : null;
     await _fbDb.ref('vocalClinic/feedback/'+postId).push({
       text,
       createdAt:firebase.database.ServerValue.TIMESTAMP,
-      trainerUid: cu?.uid || _fbAuthUid || ''
+      trainerUid: cu?.uid || _fbAuthUid || '',
+      authorProvider: _fbAuthorInfo ? _fbAuthorInfo.provider : '',
+      authorType: _fbAuthorInfo ? _fbAuthorInfo.type : ''
     });
     /* 2. posts 업데이트 (권한 실패 가능 - try로 분리) */
     try {
@@ -21566,13 +21596,29 @@ async function _submitVclinicComment(){
   const liveUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || _fbAuthUid || '';
   const postId=_vclinicCurrentPost._id;
   try {
-    await _fbDb.ref('vocalClinic/comments/'+postId).push({nickname:nick,text,authorUid:liveUid,createdAt:firebase.database.ServerValue.TIMESTAMP});
+    /* 작성자 출처 정보 포함 (관리자 신고 추적용) */
+    const _cmAuthorInfo = (typeof _buildAuthorInfo === 'function') ? _buildAuthorInfo() : null;
+    await _fbDb.ref('vocalClinic/comments/'+postId).push({
+      nickname:nick,
+      text,
+      authorUid:liveUid,
+      authorProvider: _cmAuthorInfo ? _cmAuthorInfo.provider : '',
+      authorType: _cmAuthorInfo ? _cmAuthorInfo.type : '',
+      createdAt:firebase.database.ServerValue.TIMESTAMP
+    });
     /* 카운트 transaction 실패해도 무시 */
     try {
       await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>(v||0)+1);
     } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
     if(inputEl) inputEl.value='';
-    _loadVclinicComments(postId);
+    /* 댓글 새로고침 + 카드 미리보기 카운트 동기화 (좋아요와 동일하게 즉시 반영) */
+    await _loadVclinicComments(postId);
+    /* 리스트 카운트 직접 갱신 (덧셈으로 누락 방지 - _loadVclinicComments는 화면이 닫혀있어도 갱신함) */
+    const listPost = _vclinicPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.commentCount = (listPost.commentCount || 0) + 1;
+      _renderVclinicPosts();
+    }
   } catch(e){alert('댓글 등록 실패: '+e.message);}
 }
 
@@ -21584,7 +21630,13 @@ async function _deleteVclinicComment(postId,commentId){
     try {
       await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>Math.max(0,(v||0)-1));
     } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
-    _loadVclinicComments(postId);
+    /* 댓글 새로고침 + 카드 미리보기 카운트 동기화 */
+    await _loadVclinicComments(postId);
+    const listPost = _vclinicPosts.find(p => p._id === postId);
+    if(listPost){
+      listPost.commentCount = Math.max(0, (listPost.commentCount || 0) - 1);
+      _renderVclinicPosts();
+    }
   } catch(e){alert('삭제 실패: '+e.message);}
 }
 
@@ -21690,6 +21742,113 @@ async function _toggleVclinicLike(){
 
 /* ============== 신고 기능 (보컬 진단실) ============== */
 
+/* 로그인 출처(provider) 한글 + 아이콘 표시 헬퍼
+   학생/익명/이메일/카카오/네이버/구글 등 명확히 구분 */
+function _formatProvider(provider, fallbackType){
+  /* provider raw 값 정규화: 'kakao.com', 'naver.com', 'google.com', 'password', 'oidc.kakao', ... */
+  const p = (provider || '').toLowerCase();
+  if(p.includes('kakao')) return { label: '카카오', icon: '🟡', color: '#FEE500', textColor: '#3C1E1E' };
+  if(p.includes('naver')) return { label: '네이버', icon: '🟢', color: '#03C75A', textColor: '#fff' };
+  if(p.includes('google')) return { label: 'Google', icon: '🔵', color: '#4285F4', textColor: '#fff' };
+  if(p.includes('apple'))  return { label: 'Apple', icon: '⚫', color: '#000', textColor: '#fff' };
+  if(p === 'password' || p === 'email') return { label: '이메일', icon: '✉️', color: '#e0e7ff', textColor: '#3730a3' };
+  /* fallbackType: '학생' / '익명' / '비로그인' */
+  if(fallbackType === '학생')   return { label: '학생', icon: '🎓', color: '#fef3c7', textColor: '#854d0e' };
+  if(fallbackType === '익명')   return { label: '익명', icon: '👤', color: '#f3f4f6', textColor: '#6b7280' };
+  if(fallbackType === '비로그인') return { label: '비로그인', icon: '⚠️', color: '#fee2e2', textColor: '#991b1b' };
+  return { label: '알수없음', icon: '❓', color: '#f3f4f6', textColor: '#6b7280' };
+}
+
+/* 출처 뱃지 HTML 생성 (관리자 화면용) */
+function _renderProviderBadge(provider, fallbackType){
+  const fp = _formatProvider(provider, fallbackType);
+  return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;background:'+fp.color+';color:'+fp.textColor+';border:1px solid rgba(0,0,0,0.08);border-radius:4px;padding:1px 6px;margin-left:4px;vertical-align:middle">'+fp.icon+' '+fp.label+'</span>';
+}
+
+/* 현재 사용자의 작성자 정보 (게시글/댓글/피드백 저장용) */
+function _buildAuthorInfo(){
+  const info = {
+    uid: _fbAuthUid || '',
+    type: '비로그인',
+    name: '',
+    email: '',
+    provider: '',
+    realName: ''
+  };
+  if(curStudent){
+    info.type = '학생';
+    info.name = curStudent.name || '';
+  } else if(window._generalUser){
+    info.type = '일반';
+    info.name = window._generalUser.nickname || '';
+    info.realName = window._generalUser.realName || '';
+    info.email = window._generalUser.email || '';
+    info.provider = window._generalUser.provider || '';
+    try {
+      const cu = firebase.auth().currentUser;
+      if(cu){
+        if(!info.email) info.email = cu.email || '';
+        if(!info.realName) info.realName = cu.displayName || '';
+        if(!info.provider && cu.providerData && cu.providerData[0]){
+          info.provider = cu.providerData[0].providerId || '';
+        }
+      }
+    } catch(e){}
+  } else if(_fbAuthUid){
+    info.type = '익명';
+    info.name = '익명_' + _fbAuthUid.substring(0, 6);
+  }
+  return info;
+}
+
+/* ============== 카드 미리보기 카운트 동기화 ==============
+   문제: Firebase 규칙상 본인 글 아닌 곳의 commentCount/likeCount transaction이 권한거부됨
+        → posts/{id}/commentCount 노드 값이 실제 자식 개수와 안 맞음
+        → 다른 아이디로 보면 카운트가 다르게 표시되는 버그
+   해결: 목록 로드 후 실제 자식 노드 개수(.numChildren)로 강제 동기화 */
+async function _syncCommunityCardCounts(){
+  if(!_fbDb || !_communityPosts.length) return;
+  try {
+    const tasks = _communityPosts.map(async (p) => {
+      try {
+        const [likesSnap, commentsSnap] = await Promise.all([
+          _fbDb.ref('community/likes/'+p._id).once('value'),
+          _fbDb.ref('community/comments/'+p._id).once('value')
+        ]);
+        /* 좋아요: value===true 인 항목만 카운트 (null은 삭제됨) */
+        const likesData = likesSnap.val() || {};
+        const trueLikes = Object.values(likesData).filter(v => v === true).length;
+        p.likes = trueLikes;
+        p.commentCount = commentsSnap.numChildren();
+      } catch(e){ /* 개별 실패 무시 */ }
+    });
+    await Promise.all(tasks);
+    _renderCommunityPosts();
+  } catch(e){ console.warn('발전자랑 카운트 동기화 실패:', e); }
+}
+
+async function _syncVclinicCardCounts(){
+  if(!_fbDb || !_vclinicPosts.length) return;
+  try {
+    const tasks = _vclinicPosts.map(async (p) => {
+      try {
+        const [likesSnap, commentsSnap, feedbackSnap] = await Promise.all([
+          _fbDb.ref('vocalClinic/likes/'+p._id).once('value'),
+          _fbDb.ref('vocalClinic/comments/'+p._id).once('value'),
+          _fbDb.ref('vocalClinic/feedback/'+p._id).once('value')
+        ]);
+        const likesData = likesSnap.val() || {};
+        const trueLikes = Object.values(likesData).filter(v => v === true).length;
+        p.likeCount = trueLikes;
+        p.commentCount = commentsSnap.numChildren();
+        p.feedbackCount = feedbackSnap.numChildren();
+      } catch(e){ /* 개별 실패 무시 */ }
+    });
+    await Promise.all(tasks);
+    _renderVclinicPosts();
+  } catch(e){ console.warn('보컬 진단실 카운트 동기화 실패:', e); }
+}
+
 /* 신고자/건의자 정보 헬퍼 - 추적 가능한 정보 모두 포함 (관리자만 조회) */
 function _buildReporterInfo(){
   const info = {
@@ -21750,6 +21909,9 @@ async function _reportVclinicPost(){
       postPreview: (_vclinicCurrentPost.memo||'').substring(0, 200),
       authorUid: _vclinicCurrentPost.authorUid || '',
       authorNickname: _vclinicCurrentPost.nickname || '',
+      /* 신고 대상 작성자의 출처 (게시글에 저장된 정보) */
+      authorProvider: _vclinicCurrentPost.authorProvider || '',
+      authorType: _vclinicCurrentPost.authorType || '',
       reporterUid: _fbAuthUid,
       reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
@@ -21773,12 +21935,14 @@ async function _reportVclinicFeedback(feedbackId, postId, feedbackText){
   if(!reason || !reason.trim()) return;
   try {
     /* 피드백 작성자(트레이너) + 원글 정보 조회 */
-    let fbAuthorUid = '', fbAuthorName = '트레이너';
+    let fbAuthorUid = '', fbAuthorName = '트레이너', fbAuthorProvider = '', fbAuthorType = '';
     let postTitle = '', postAuthorUid = '', postAuthorName = '';
     try {
       const fbSnap = await _fbDb.ref('vocalClinic/feedback/'+postId+'/'+feedbackId).once('value');
       const fb = fbSnap.val() || {};
       fbAuthorUid = fb.trainerUid || fb.authorUid || '';
+      fbAuthorProvider = fb.authorProvider || '';
+      fbAuthorType = fb.authorType || '';
     } catch(e){}
     try {
       const postSnap = await _fbDb.ref('vocalClinic/posts/'+postId).once('value');
@@ -21799,6 +21963,9 @@ async function _reportVclinicFeedback(feedbackId, postId, feedbackText){
       feedbackPreview: (feedbackText||'').substring(0, 200),
       authorUid: fbAuthorUid,
       authorNickname: fbAuthorName,
+      /* 신고 대상 피드백 작성자(트레이너)의 출처 */
+      authorProvider: fbAuthorProvider,
+      authorType: fbAuthorType,
       reporterUid: _fbAuthUid,
       reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
@@ -21818,13 +21985,15 @@ async function _reportVclinicComment(commentId, postId, commentText){
   if(!reason || !reason.trim()) return;
   try {
     /* 댓글 작성자 + 원글 정보 조회 */
-    let cmAuthorUid = '', cmAuthorName = '';
+    let cmAuthorUid = '', cmAuthorName = '', cmAuthorProvider = '', cmAuthorType = '';
     let postTitle = '', postAuthorUid = '', postAuthorName = '';
     try {
       const cmSnap = await _fbDb.ref('vocalClinic/comments/'+postId+'/'+commentId).once('value');
       const cm = cmSnap.val() || {};
       cmAuthorUid = cm.authorUid || '';
       cmAuthorName = cm.nickname || '';
+      cmAuthorProvider = cm.authorProvider || '';
+      cmAuthorType = cm.authorType || '';
     } catch(e){}
     try {
       const postSnap = await _fbDb.ref('vocalClinic/posts/'+postId).once('value');
@@ -21845,6 +22014,9 @@ async function _reportVclinicComment(commentId, postId, commentText){
       commentPreview: (commentText||'').substring(0, 200),
       authorUid: cmAuthorUid,
       authorNickname: cmAuthorName,
+      /* 신고 대상 댓글 작성자의 출처 */
+      authorProvider: cmAuthorProvider,
+      authorType: cmAuthorType,
       reporterUid: _fbAuthUid,
       reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
@@ -21864,13 +22036,15 @@ async function _reportCommunityComment(commentId, postId, commentText){
   if(!reason || !reason.trim()) return;
   try {
     /* 댓글 작성자 + 원글 정보 조회 */
-    let cmAuthorUid = '', cmAuthorName = '';
+    let cmAuthorUid = '', cmAuthorName = '', cmAuthorProvider = '', cmAuthorType = '';
     let postTitle = '', postAuthorUid = '', postAuthorName = '';
     try {
       const cmSnap = await firebase.database().ref('community/comments/'+postId+'/'+commentId).once('value');
       const cm = cmSnap.val() || {};
       cmAuthorUid = cm.authorUid || '';
       cmAuthorName = cm.nickname || '';
+      cmAuthorProvider = cm.authorProvider || '';
+      cmAuthorType = cm.authorType || '';
     } catch(e){}
     try {
       const postSnap = await firebase.database().ref('community/posts/'+postId).once('value');
@@ -21891,6 +22065,9 @@ async function _reportCommunityComment(commentId, postId, commentText){
       commentPreview: (commentText||'').substring(0, 200),
       authorUid: cmAuthorUid,
       authorNickname: cmAuthorName,
+      /* 신고 대상 댓글 작성자의 출처 */
+      authorProvider: cmAuthorProvider,
+      authorType: cmAuthorType,
       reporterUid: _fbAuthUid,
       reporterInfo: reporterInfo,
       reason: reason.trim().substring(0, 200),
