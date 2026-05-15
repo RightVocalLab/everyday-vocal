@@ -12720,6 +12720,7 @@ function _completeStudentLogin(student){
     try {
       localStorage.removeItem('general_user_uid');
       localStorage.removeItem('general_user_name');
+      localStorage.removeItem('general_user_provider');
     } catch(e){}
   }
   
@@ -13147,10 +13148,23 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
                 console.log('✅ 이메일 사용자 ID:', user.uid.substring(0, 8) + '...');
                 /* 닉네임은 _ensureNickname에서 Firebase users/{uid}/nickname 조회해서 채움
                    (displayName은 실명일 수 있으므로 사용하지 않음) */
+                /* provider 복원: localStorage 백업 우선, 없으면 providerData에서 추정 */
+                let _restoredProv = '';
+                try { _restoredProv = localStorage.getItem('general_user_provider') || ''; } catch(e){}
+                if(!_restoredProv){
+                  try {
+                    if(user.providerData && user.providerData[0]){
+                      const pid = user.providerData[0].providerId || '';
+                      _restoredProv = (pid === 'password') ? 'email' : pid;
+                    }
+                  } catch(e){}
+                  if(!_restoredProv) _restoredProv = 'email';
+                }
                 window._generalUser = {
                   uid: user.uid,
                   email: user.email,
                   nickname: null,  /* _ensureNickname이 채움 */
+                  provider: _restoredProv,
                 };
                 window._userType = 'general';
                 if(typeof _updateUserBtn === 'function') _updateUserBtn();
@@ -13414,10 +13428,23 @@ function _checkAutoLogin(){
       const cu = firebase.auth().currentUser;
       if(cu && !cu.isAnonymous && cu.email && cu.email.toLowerCase() === _DEV_EMAIL){
         _setAdminLogin(true);
+        /* provider 복원 */
+        let _devProv = '';
+        try { _devProv = localStorage.getItem('general_user_provider') || ''; } catch(e){}
+        if(!_devProv){
+          try {
+            if(cu.providerData && cu.providerData[0]){
+              const pid = cu.providerData[0].providerId || '';
+              _devProv = (pid === 'password') ? 'email' : pid;
+            }
+          } catch(e){}
+          if(!_devProv) _devProv = 'email';
+        }
         window._generalUser = {
           uid: cu.uid,
           email: cu.email,
           nickname: cu.displayName || cu.email,
+          provider: _devProv,
         };
         const _kdh = (typeof STUDENTS_DB !== 'undefined') ? (STUDENTS_DB || []).find(s => s.name === '김동현') : null;
         if(_kdh){
@@ -13447,10 +13474,12 @@ function _checkAutoLogin(){
          실제 Firebase 인증은 onAuthStateChanged에서 처리됨
          여기선 인트로 → 홈 전환 판단용으로만 true 반환 */
       const savedName = localStorage.getItem('general_user_name') || '회원';
+      const savedProv = localStorage.getItem('general_user_provider') || '';
       window._generalUser = {
         uid: generalUid,
         email: '',
         nickname: savedName,
+        provider: savedProv,
       };
       return true;
     }
@@ -13726,8 +13755,8 @@ async function _loginWithKakao(){
       }
     }
     
-    /* 7. 공통 성공 처리 (이메일 로그인과 동일) */
-    _onEmailAuthSuccess(user);
+    /* 7. 공통 성공 처리 (이메일 로그인과 동일) - provider='kakao' 명시 */
+    _onEmailAuthSuccess(user, 'kakao');
     
   } catch(err){
     console.warn('카카오 로그인 실패:', err);
@@ -14006,8 +14035,8 @@ async function _loginWithNaver(){
       }
     }
     
-    /* 8. 공통 성공 처리 */
-    _onEmailAuthSuccess(user);
+    /* 8. 공통 성공 처리 - provider='naver' 명시 */
+    _onEmailAuthSuccess(user, 'naver');
     
   } catch(err){
     console.warn('네이버 로그인 실패:', err);
@@ -14171,7 +14200,7 @@ function _submitEmailLogin(){
   firebase.auth().signInWithEmailAndPassword(email, pw)
     .then(function(result){
       console.log('✅ 이메일 로그인 성공:', result.user.uid.substring(0,8)+'...');
-      _onEmailAuthSuccess(result.user);
+      _onEmailAuthSuccess(result.user, 'email');
     })
     .catch(function(err){
       console.warn('이메일 로그인 실패:', err.code, err.message);
@@ -14290,7 +14319,7 @@ function _submitEmailSignup(){
       return user;
     })
     .then(function(user){
-      _onEmailAuthSuccess(user);
+      _onEmailAuthSuccess(user, 'email');
     })
     .catch(function(err){
       console.warn('회원가입 실패:', err.code, err.message);
@@ -14384,7 +14413,20 @@ function _firebaseAuthErrorMessage(err){
 }
 
 /* 이메일 인증 성공 후 처리 (회원가입/로그인 공통) */
-function _onEmailAuthSuccess(user){
+function _onEmailAuthSuccess(user, provider){
+  /* provider 인자: 'kakao' / 'naver' / 'email' (= password) — 명시 안 되면 firebase 정보로 추정 */
+  let _detectedProvider = provider || '';
+  if(!_detectedProvider){
+    try {
+      if(user && user.providerData && user.providerData[0]){
+        const pid = user.providerData[0].providerId || '';
+        _detectedProvider = (pid === 'password') ? 'email' : pid;
+      }
+    } catch(e){}
+    if(!_detectedProvider) _detectedProvider = 'email';
+  }
+  /* localStorage에도 백업 (자동 복원 시 사용) */
+  try { localStorage.setItem('general_user_provider', _detectedProvider); } catch(e){}
   /* === 개발자(동현) 특수 처리: gunfree2@naver.com → 김동현 학생 + 관리자 동시 진입 === */
   const _DEV_EMAIL = 'gunfree2@naver.com';
   const _isDev = user && user.email && user.email.toLowerCase() === _DEV_EMAIL;
@@ -14402,6 +14444,7 @@ function _onEmailAuthSuccess(user){
       uid: user.uid,
       email: user.email,
       nickname: user.displayName || user.email,
+      provider: _detectedProvider,
     };
     /* 3. 김동현 학생 모드 진입 (홈 화면으로 - 숙제 화면 X) */
     const _kdh = (typeof STUDENTS_DB !== 'undefined') ? (STUDENTS_DB || []).find(s => s.name === '김동현') : null;
@@ -14447,6 +14490,7 @@ function _onEmailAuthSuccess(user){
     try {
       localStorage.removeItem('general_user_uid');
       localStorage.removeItem('general_user_name');
+      localStorage.removeItem('general_user_provider');
     } catch(e){}
   }
   
@@ -14455,6 +14499,7 @@ function _onEmailAuthSuccess(user){
     uid: user.uid,
     email: user.email,
     nickname: user.displayName || user.email,
+    provider: _detectedProvider,
   };
   window._userType = 'general';
   
@@ -14780,6 +14825,7 @@ function _logoutGeneralUser(){
     try {
       localStorage.removeItem('general_user_uid');
       localStorage.removeItem('general_user_name');
+      localStorage.removeItem('general_user_provider');
     } catch(e){}
     window._generalUser = null;
     window._userType = null;
@@ -18166,6 +18212,7 @@ function _handleLogout(){
     try {
       localStorage.removeItem('general_user_uid');
       localStorage.removeItem('general_user_name');
+      localStorage.removeItem('general_user_provider');
     } catch(e){}
     console.log('✅ 일반 사용자 세션 정리');
   }
@@ -21611,14 +21658,10 @@ async function _submitVclinicComment(){
       await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>(v||0)+1);
     } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
     if(inputEl) inputEl.value='';
-    /* 댓글 새로고침 + 카드 미리보기 카운트 동기화 (좋아요와 동일하게 즉시 반영) */
+    /* 댓글 새로고침 → _loadVclinicComments가 listPost.commentCount = items.length로 정확히 동기화함
+       그 정확한 값으로 카드 미리보기 다시 렌더 (+1 중복 X) */
     await _loadVclinicComments(postId);
-    /* 리스트 카운트 직접 갱신 (덧셈으로 누락 방지 - _loadVclinicComments는 화면이 닫혀있어도 갱신함) */
-    const listPost = _vclinicPosts.find(p => p._id === postId);
-    if(listPost){
-      listPost.commentCount = (listPost.commentCount || 0) + 1;
-      _renderVclinicPosts();
-    }
+    _renderVclinicPosts();
   } catch(e){alert('댓글 등록 실패: '+e.message);}
 }
 
@@ -21630,13 +21673,9 @@ async function _deleteVclinicComment(postId,commentId){
     try {
       await _fbDb.ref('vocalClinic/posts/'+postId+'/commentCount').transaction(v=>Math.max(0,(v||0)-1));
     } catch(ce){ console.warn('commentCount 실패(무시):', ce.message); }
-    /* 댓글 새로고침 + 카드 미리보기 카운트 동기화 */
+    /* 댓글 새로고침 → listPost.commentCount = items.length 정확히 동기화 후 렌더 */
     await _loadVclinicComments(postId);
-    const listPost = _vclinicPosts.find(p => p._id === postId);
-    if(listPost){
-      listPost.commentCount = Math.max(0, (listPost.commentCount || 0) - 1);
-      _renderVclinicPosts();
-    }
+    _renderVclinicPosts();
   } catch(e){alert('삭제 실패: '+e.message);}
 }
 
@@ -21745,16 +21784,17 @@ async function _toggleVclinicLike(){
 /* 로그인 출처(provider) 한글 + 아이콘 표시 헬퍼
    학생/익명/이메일/카카오/네이버/구글 등 명확히 구분 */
 function _formatProvider(provider, fallbackType){
-  /* provider raw 값 정규화: 'kakao.com', 'naver.com', 'google.com', 'password', 'oidc.kakao', ... */
+  /* provider raw 값 정규화: 'kakao', 'naver', 'google.com', 'password', 'email', ... */
   const p = (provider || '').toLowerCase();
   if(p.includes('kakao')) return { label: '카카오', icon: '🟡', color: '#FEE500', textColor: '#3C1E1E' };
   if(p.includes('naver')) return { label: '네이버', icon: '🟢', color: '#03C75A', textColor: '#fff' };
   if(p.includes('google')) return { label: 'Google', icon: '🔵', color: '#4285F4', textColor: '#fff' };
   if(p.includes('apple'))  return { label: 'Apple', icon: '⚫', color: '#000', textColor: '#fff' };
-  if(p === 'password' || p === 'email') return { label: '이메일', icon: '✉️', color: '#e0e7ff', textColor: '#3730a3' };
-  /* fallbackType: '학생' / '익명' / '비로그인' */
+  if(p === 'password' || p === 'email' || p.includes('email')) return { label: '이메일', icon: '✉️', color: '#e0e7ff', textColor: '#3730a3' };
+  /* fallbackType: '학생' / '익명' / '일반' / '비로그인' */
   if(fallbackType === '학생')   return { label: '학생', icon: '🎓', color: '#fef3c7', textColor: '#854d0e' };
   if(fallbackType === '익명')   return { label: '익명', icon: '👤', color: '#f3f4f6', textColor: '#6b7280' };
+  if(fallbackType === '일반')   return { label: '일반회원', icon: '👥', color: '#e0e7ff', textColor: '#3730a3' };
   if(fallbackType === '비로그인') return { label: '비로그인', icon: '⚠️', color: '#fee2e2', textColor: '#991b1b' };
   return { label: '알수없음', icon: '❓', color: '#f3f4f6', textColor: '#6b7280' };
 }
