@@ -13138,7 +13138,7 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
           });
 
           /* Auth 상태 변경 감지: 익명/일반 사용자 모두 처리 */
-          firebase.auth().onAuthStateChanged(function(user){
+          firebase.auth().onAuthStateChanged(async function(user){
             if(user){
               _fbAuthUid = user.uid;
               if(user.isAnonymous){
@@ -13163,14 +13163,17 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
                 window._generalUser = {
                   uid: user.uid,
                   email: user.email,
-                  nickname: null,  /* _ensureNickname이 채움 */
+                  nickname: null,  /* _loadNicknameQuiet이 채움 */
                   provider: _restoredProv,
                 };
                 window._userType = 'general';
                 if(typeof _updateUserBtn === 'function') _updateUserBtn();
-                /* 닉네임 체크: 미설정이면 모달 표시 (학생 로그인 제외) */
-                if(!curStudent){
-                  setTimeout(function(){ if(typeof _loadNicknameQuiet==='function') _loadNicknameQuiet(); }, 500);
+                /* 닉네임 즉시 로드 (await로 글쓰기 전에 nickname 채워지도록) */
+                if(!curStudent && typeof _loadNicknameQuiet==='function'){
+                  try { await _loadNicknameQuiet(); }
+                  catch(e){ console.warn('자동복원 닉네임 로드 실패:', e); }
+                  /* UI 갱신 (닉네임 표시) */
+                  if(typeof _updateUserBtn === 'function') _updateUserBtn();
                 }
                 /* 인트로/로그인 선택 화면이 보이는 상태면 홈으로 자동 이동 */
                 const introVis = !document.getElementById('scr-intro')?.classList.contains('hidden');
@@ -13734,11 +13737,14 @@ async function _loginWithKakao(){
       const userRef = _fbDb.ref('users/' + user.uid);
       const snap = await userRef.once('value');
       if(snap.exists()){
-        /* 기존 사용자 - 닉네임만 업데이트 */
-        await userRef.update({
-          nickname: nickname,
-          lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
-        });
+        /* 기존 사용자 - 닉네임 변경한 사람은 보존, 아니면 카카오 닉네임으로 갱신 */
+        const existingData = snap.val() || {};
+        const updates = { lastLoginAt: firebase.database.ServerValue.TIMESTAMP };
+        if(!existingData.nicknameChanged){
+          /* 앱 닉네임 설정 안 한 사용자만 카카오 닉네임으로 갱신 */
+          updates.nickname = nickname;
+        }
+        await userRef.update(updates);
       } else {
         /* 신규 사용자 - 전체 정보 저장 */
         await userRef.set({
@@ -13756,7 +13762,7 @@ async function _loginWithKakao(){
     }
     
     /* 7. 공통 성공 처리 (이메일 로그인과 동일) - provider='kakao' 명시 */
-    _onEmailAuthSuccess(user, 'kakao');
+    await _onEmailAuthSuccess(user, 'kakao');
     
   } catch(err){
     console.warn('카카오 로그인 실패:', err);
@@ -14012,10 +14018,12 @@ async function _loginWithNaver(){
       const userRef = _fbDb.ref('users/' + user.uid);
       const snap = await userRef.once('value');
       if(snap.exists()){
-        const updates = {
-          nickname: nickname,
-          lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
-        };
+        /* 기존 사용자 - 닉네임 변경한 사람은 보존, 아니면 네이버 닉네임으로 갱신 */
+        const existingData = snap.val() || {};
+        const updates = { lastLoginAt: firebase.database.ServerValue.TIMESTAMP };
+        if(!existingData.nicknameChanged){
+          updates.nickname = nickname;
+        }
         if(email) updates.email = email;
         await userRef.update(updates);
       } else {
@@ -14036,7 +14044,7 @@ async function _loginWithNaver(){
     }
     
     /* 8. 공통 성공 처리 - provider='naver' 명시 */
-    _onEmailAuthSuccess(user, 'naver');
+    await _onEmailAuthSuccess(user, 'naver');
     
   } catch(err){
     console.warn('네이버 로그인 실패:', err);
@@ -14413,7 +14421,7 @@ function _firebaseAuthErrorMessage(err){
 }
 
 /* 이메일 인증 성공 후 처리 (회원가입/로그인 공통) */
-function _onEmailAuthSuccess(user, provider){
+async function _onEmailAuthSuccess(user, provider){
   /* provider 인자: 'kakao' / 'naver' / 'email' (= password) — 명시 안 되면 firebase 정보로 추정 */
   let _detectedProvider = provider || '';
   if(!_detectedProvider){
@@ -14512,11 +14520,11 @@ function _onEmailAuthSuccess(user, provider){
   setTimeout(function(){
     _showWelcomeToast(user.displayName || '회원');
   }, 300);
-  /* 닉네임 미설정이면 모달 표시 (학생 로그인 제외) */
-  if(!curStudent){
-    setTimeout(function(){
-      if(typeof _loadNicknameQuiet==='function') _loadNicknameQuiet();
-    }, 800);
+  /* 닉네임 즉시 로드 + UI 갱신 (학생 로그인 제외) */
+  if(!curStudent && typeof _loadNicknameQuiet==='function'){
+    try { await _loadNicknameQuiet(); }
+    catch(e){ console.warn('로그인 직후 닉네임 로드 실패:', e); }
+    if(typeof _updateUserBtn === 'function') _updateUserBtn();
   }
 }
 
@@ -18092,6 +18100,16 @@ function _openUserMenu(){
   const typeBadge = info.type === 'student' 
     ? '<span style="font-size:9px;background:#eff6ff;color:#2563eb;padding:2px 7px;border-radius:5px;font-weight:600;border:1px solid #bfdbfe">학생</span>'
     : '<span style="font-size:9px;background:#f3f4f6;color:#374151;padding:2px 7px;border-radius:5px;font-weight:600;border:1px solid #d1d5db">일반</span>';
+  /* 일반 사용자(또는 김동현 등 isGeneralAlso)이고 닉네임을 의도적으로 변경한 경우 표시
+     (변경하지 않은 카카오/네이버 닉네임은 표시 안 함 - 실명/소셜닉네임 그대로니까) */
+  let nicknameRow = '';
+  if((info.type === 'general' || info.isGeneralAlso) && window._generalUser?.nickname && window._generalUser?.nicknameChanged === true){
+    const nk = window._generalUser.nickname;
+    nicknameRow = '<div style="font-size:11px;color:#2563eb;margin-top:3px;font-weight:600;display:flex;align-items:center;gap:4px">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21 C4 16, 7 13, 12 13 C17 13, 20 16, 20 21"/></svg>'
+      +'<span>닉네임: '+_escapeHtml(nk)+'</span>'
+      +'</div>';
+  }
   
   menu.innerHTML = `
     <div style="padding:14px 16px;border-bottom:1px solid #f3f4f6;background:#fafafa">
@@ -18107,6 +18125,7 @@ function _openUserMenu(){
             <span style="font-size:13.5px;font-weight:700;color:#1f2937">${_escapeHtml(info.name)}</span>
             ${trainerBadge}
           </div>
+          ${nicknameRow}
           <div style="font-size:10.5px;color:#6b7280;margin-top:2px;display:flex;align-items:center;gap:6px">
             ${typeBadge}
             <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escapeHtml(info.subtitle)}</span>
@@ -19712,13 +19731,11 @@ async function _openCommunityWrite(){
     if(!ok) return;  /* 사용자가 취소함 */
   }
 
-  /* 로그인 체크 - 학생이면 이름, 일반사용자면 닉네임 우선, 없으면 실명 */
+  /* 로그인 체크 - 헬퍼로 작성자 이름 결정 (닉네임 변경 > 학생명 > 닉네임) */
   const realName = (window._generalUser && (window._generalUser.realName ||
                    (firebase.auth().currentUser && firebase.auth().currentUser.displayName) ||
                    (window._generalUser.email && window._generalUser.email.split('@')[0]))) || null;
-  const loginName = curStudent ? curStudent.name
-                  : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-                  : realName;
+  const loginName = _resolvePostingName() || realName;
   if(!loginName){
     alert('로그인 후 게시글을 작성할 수 있어요.');
     return;
@@ -19831,10 +19848,8 @@ async function _submitCommunityPost(){
   const errEl = document.getElementById('comm-write-err');
   const setErr = (msg) => { if(errEl) errEl.textContent = msg; };
   
-  /* 로그인 이름 자동 사용 */
-  const nickname = curStudent ? curStudent.name
-                 : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-                 : null;
+  /* 로그인 이름 자동 사용 - 헬퍼 사용 (닉네임 변경 > 학생명 > 닉네임) */
+  const nickname = _resolvePostingName();
   if(!nickname){ setErr('⚠️ 로그인 후 게시글을 작성할 수 있어요.'); return; }
   const beforeIdx = document.getElementById('comm-before-idx').value;
   const afterIdx = document.getElementById('comm-after-idx').value;
@@ -20498,10 +20513,8 @@ async function _submitComment(){
     return;
   }
   
-  /* 로그인 이름 자동 사용 */
-  let nickname = curStudent ? curStudent.name
-                 : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-                 : null;
+  /* 로그인 이름 자동 사용 - 헬퍼 (닉네임 변경 > 학생명 > 닉네임) */
+  let nickname = _resolvePostingName();
   if(!nickname){
     /* 닉네임 미설정 시 모달 표시 */
     if(window._generalUser && typeof _ensureNickname==='function'){
@@ -21248,13 +21261,11 @@ async function _submitVclinicPost(){
     }
     if(progBar) progBar.style.width='80%';
     if(progTxt) progTxt.textContent='💾 게시글 저장 중...';
-    /* 닉네임: 학생=이름, 일반사용자=닉네임>실명, 없으면 모달 */
+    /* 닉네임: 헬퍼 (닉네임 변경 > 학생명 > 닉네임) > 실명 fallback */
     const _realName = (window._generalUser && (window._generalUser.realName ||
                      (firebase.auth().currentUser && firebase.auth().currentUser.displayName) ||
                      (window._generalUser.email && window._generalUser.email.split('@')[0]))) || null;
-    let nickname = curStudent ? curStudent.name
-                 : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-                 : _realName;
+    let nickname = _resolvePostingName() || _realName;
     if(!nickname){
       _vclinicShowErr('이름 정보를 확인할 수 없어요.');
       if(submitBtn){submitBtn.disabled=false; submitBtn.style.opacity=''; submitBtn.style.cursor=''; submitBtn.innerHTML='올리기';}
@@ -21637,10 +21648,8 @@ async function _loadVclinicComments(postId){
 
 async function _submitVclinicComment(){
   if(!_vclinicCurrentPost||!_fbDb) return;
-  /* 로그인 이름 자동 사용 (익명 불가) */
-  let nick = curStudent ? curStudent.name
-             : (window._generalUser && window._generalUser.nickname) ? window._generalUser.nickname
-             : null;
+  /* 로그인 이름 자동 사용 (익명 불가) - 헬퍼 (닉네임 변경 > 학생명 > 닉네임) */
+  let nick = _resolvePostingName();
   if(!nick){
     if(window._generalUser && typeof _ensureNickname==='function'){
       alert('먼저 닉네임을 설정해주세요.');
@@ -21815,6 +21824,27 @@ function _formatProvider(provider, fallbackType){
 function _renderProviderBadge(provider, fallbackType){
   const fp = _formatProvider(provider, fallbackType);
   return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;background:'+fp.color+';color:'+fp.textColor+';border:1px solid rgba(0,0,0,0.08);border-radius:4px;padding:1px 6px;margin-left:4px;vertical-align:middle">'+fp.icon+' '+fp.label+'</span>';
+}
+
+/* 게시판에 표시될 작성자 이름 결정 (우선순위: 닉네임 변경됨 > 학생명 > _generalUser.nickname)
+   - 김동현 개발자 자동진입(curStudent+_generalUser 둘 다 있음)이라도 닉네임 변경했으면 닉네임 우선
+   - 일반 학생은 curStudent.name 사용
+   - 닉네임만 있고 학생 아닌 일반 사용자도 닉네임 사용 */
+function _resolvePostingName(){
+  const gu = window._generalUser;
+  /* 닉네임 변경 완료한 경우: 닉네임 최우선 */
+  if(gu && gu.nickname && gu.nicknameChanged === true){
+    return gu.nickname;
+  }
+  /* 학생 로그인: 학생 이름 */
+  if(curStudent && curStudent.name){
+    return curStudent.name;
+  }
+  /* 일반 사용자: 캐시된 닉네임(아직 nicknameChanged=false라도 있으면 사용) */
+  if(gu && gu.nickname){
+    return gu.nickname;
+  }
+  return null;
 }
 
 /* 현재 사용자의 작성자 정보 (게시글/댓글/피드백 저장용) */
