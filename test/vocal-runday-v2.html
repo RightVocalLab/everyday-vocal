@@ -14591,14 +14591,20 @@ async function _promptNicknameChoice(){
   if(!window._generalUser || !_fbDb) return true;
   const uid = window._generalUser.uid;
   if(!uid) return true;
+  let _alreadyChosen = false;
   try {
     /* 한 번이라도 선택했으면 통과 */
     const choiceSnap = await _fbDb.ref('users/'+uid+'/nicknameChoiceMade').once('value');
     if(choiceSnap.val() === true){
       window._generalUser.nicknameChoiceMade = true;
-      return true;
+      _alreadyChosen = true;
     }
-  } catch(e){ return true; }  /* 에러 시 통과 (UX 우선) */
+  } catch(e){
+    /* 권한 거부/네트워크 에러 - 캐시된 플래그로 fallback (서버 모름 → 다시 묻는 게 안전) */
+    console.warn('nicknameChoiceMade 조회 실패, 캐시 사용:', e.message || e);
+    if(window._generalUser.nicknameChoiceMade === true) _alreadyChosen = true;
+  }
+  if(_alreadyChosen) return true;
   /* 첫 글쓰기 - 모달 표시 */
   const realName = window._generalUser.realName ||
                    firebase.auth().currentUser?.displayName ||
@@ -17990,11 +17996,16 @@ function _closePtResult(){
 /* 현재 로그인 상태 정보 반환 */
 function _getUserInfo(){
   if(typeof curStudent !== 'undefined' && curStudent){
+    /* 김동현 개발자 자동진입: curStudent + _generalUser 둘 다 있음
+       → student 타입이지만 _generalUser 정보도 있으니 닉네임/건의 등 일반 기능도 사용 가능
+       → isGeneralAlso 플래그로 표시 */
+    const hasGeneral = !!(typeof window._generalUser !== 'undefined' && window._generalUser);
     return {
       type: 'student',
       name: curStudent.name || '학생',
       subtitle: '학생 계정',
       isTrainer: (curStudent.name === '김동현'),
+      isGeneralAlso: hasGeneral,  /* 일반 사용자 기능도 활성 (닉네임 등) */
     };
   }
   if(typeof window._generalUser !== 'undefined' && window._generalUser){
@@ -18004,6 +18015,7 @@ function _getUserInfo(){
       name: u.nickname || u.email || '사용자',
       subtitle: u.email || '일반 계정',
       isTrainer: false,
+      isGeneralAlso: false,
     };
   }
   return null;  /* 로그인 안 됨 */
@@ -18103,7 +18115,7 @@ function _openUserMenu(){
       </div>
     </div>
     <div style="padding:6px 0">
-      ${(info.type === 'general' && !window._generalUser?.nicknameChanged) ? `
+      ${((info.type === 'general' || info.isGeneralAlso) && !window._generalUser?.nicknameChanged) ? `
       <button onclick="_closeUserMenu();if(typeof _ensureNickname==='function')_ensureNickname()"
         style="width:100%;background:transparent;border:none;padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:#2563eb;text-align:left;transition:background 0.12s"
         onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
