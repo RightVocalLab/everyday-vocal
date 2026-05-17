@@ -14308,19 +14308,22 @@ function _submitEmailLogin(){
 }
 
 /* ============================================================
-   📧 이메일 인증 코드 시스템 (단계별 작업 - 현재 임시 구현)
-   ⚠️ 임시: 가짜 코드 '123456'으로 작동
-   ⏳ 다음 세션: Cloud Function `sendEmailCode` + `verifyEmailCode` 연결
+   📧 이메일 인증 코드 시스템 (Cloud Function 연동)
+   sendEmailCode  : 코드 발송 (Resend로 메일)
+   verifyEmailCode: 코드 검증
+   서버 측에서 이메일 중복 체크/Rate Limit/시도 횟수 제한
    ============================================================ */
+
+/* Cloud Function URL (asia-northeast3, ttsProxy와 동일 region) */
+const _SEND_EMAIL_CODE_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/sendEmailCode';
+const _VERIFY_EMAIL_CODE_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/verifyEmailCode';
 
 /* 인증 상태 전역 변수 */
 let _signupVerifiedEmail = '';   /* 인증 완료된 이메일 (가입 시 입력 이메일과 일치해야 함) */
 let _signupCodeTimerInterval = null;
-let _signupCodeExpiresAt = 0;    /* timestamp - 만료 시각 */
+let _signupCodeExpiresAt = 0;    /* timestamp - 만료 시각 (서버에서 받은 값 사용) */
 let _signupCodeSent = false;     /* 현재 코드 발송 상태 */
 
-/* 임시 가짜 코드 (다음 세션에 Cloud Function 도입 시 제거) */
-const _FAKE_VERIFY_CODE = '123456';
 const _CODE_VALID_MINUTES = 5;
 
 /* 이메일 입력 변경 시 인증 상태 초기화 */
@@ -14410,30 +14413,59 @@ async function _sendVerifyCode(isResend){
     return;
   }
   
-  /* 이미 가입된 이메일인지 확인 (Firebase Auth) */
+  /* 인증하기 버튼 상태: 발송 중 */
   const sendBtn = document.getElementById('signup-send-code-btn');
-  if(sendBtn){ sendBtn.disabled = true; sendBtn.style.opacity = '0.6'; sendBtn.textContent = '확인 중...'; }
+  if(sendBtn){ sendBtn.disabled = true; sendBtn.style.opacity = '0.6'; sendBtn.textContent = '발송 중...'; }
   
+  /* Cloud Function sendEmailCode 호출 — 서버 측에서:
+     1) 이미 가입된 이메일이면 차단 (Firebase Auth Admin SDK)
+     2) Rate Limit (1분 쿨다운, 시간당 5회)
+     3) 6자리 코드 생성 + Resend로 이메일 발송 */
   try {
-    if(typeof firebase !== 'undefined' && firebase.auth){
-      const methods = await firebase.auth().fetchSignInMethodsForEmail(email);
-      if(methods && methods.length > 0){
-        _showFieldError('signup-email-err', '이미 가입된 이메일입니다.');
-        if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '인증하기'; }
-        return;
-      }
+    /* 30초 timeout (Cloud Function cold start 대비) */
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    let resp;
+    try {
+      resp = await fetch(_SEND_EMAIL_CODE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
     }
-  } catch(e){
-    console.warn('이메일 중복 체크 실패(계속 진행):', e.message);
+    const data = await resp.json().catch(() => ({}));
+    
+    if(!resp.ok){
+      /* 서버 측 차단 (가입된 이메일, Rate Limit 등) */
+      const errMsg = data.error || '인증 메일 발송에 실패했어요. 잠시 후 다시 시도해주세요.';
+      _showFieldError('signup-email-err', errMsg);
+      if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '인증하기'; }
+      return;
+    }
+    
+    /* 서버에서 받은 만료 시각 사용 (서버 시간 기준) */
+    if(data.expiresAt){
+      _signupCodeExpiresAt = data.expiresAt;
+    } else {
+      _signupCodeExpiresAt = Date.now() + _CODE_VALID_MINUTES * 60 * 1000;
+    }
+    
+  } catch(networkErr){
+    console.warn('[sendEmailCode] 네트워크 에러:', networkErr);
+    const isTimeout = networkErr && networkErr.name === 'AbortError';
+    const msg = isTimeout 
+      ? '서버 응답이 너무 늦어요. 잠시 후 다시 시도해주세요.'
+      : '네트워크 오류로 메일을 보낼 수 없어요. 잠시 후 다시 시도해주세요.';
+    _showFieldError('signup-email-err', msg);
+    if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '인증하기'; }
+    return;
   }
   
-  /* ⚠️ 임시: 가짜 코드 시스템 (다음 세션에 Cloud Function 연동 예정)
-     실제로는 sendEmailCode Cloud Function 호출해서 Resend로 메일 발송 */
-  console.log('[임시 인증코드 시스템] 가짜 코드 사용:', _FAKE_VERIFY_CODE);
-  
-  /* 발송 상태로 전환 */
+  /* 발송 성공 — 상태 전환 */
   _signupCodeSent = true;
-  _signupCodeExpiresAt = Date.now() + _CODE_VALID_MINUTES * 60 * 1000;
   
   /* UI 갱신 */
   const codeRow = document.getElementById('signup-code-row');
@@ -14480,11 +14512,10 @@ async function _sendVerifyCode(isResend){
   /* 타이머 시작 */
   _startVerifyTimer();
   
-  /* ⚠️ 임시 안내: 가짜 코드 안내 toast (다음 세션에 제거) */
   if(isResend){
-    _showToast('인증 코드를 다시 발송했어요 (임시: 코드 = 123456)');
+    _showToast('인증 코드를 다시 발송했어요. 메일함을 확인해주세요.');
   } else {
-    _showToast('인증 코드를 발송했어요 (임시: 코드 = 123456)');
+    _showToast('인증 코드를 발송했어요. 메일함을 확인해주세요.');
   }
 }
 
@@ -14511,7 +14542,7 @@ function _startVerifyTimer(){
 }
 
 /* 입력한 코드 검증 */
-function _verifyEmailCode(){
+async function _verifyEmailCode(){
   _showFieldError('signup-code-err', '');
   const codeInput = document.getElementById('signup-code-input');
   const code = (codeInput?.value || '').trim();
@@ -14529,22 +14560,71 @@ function _verifyEmailCode(){
     return;
   }
   
-  /* ⚠️ 임시: 가짜 코드 비교 (다음 세션에 Cloud Function verifyEmailCode 호출로 대체) */
-  if(code !== _FAKE_VERIFY_CODE){
-    _showFieldError('signup-code-err', '인증 코드가 일치하지 않아요.');
+  const email = (document.getElementById('signup-email-input')?.value || '').trim();
+  const verifyBtn = document.getElementById('signup-verify-btn');
+  
+  /* 확인 버튼: 처리 중 상태 */
+  if(verifyBtn){ verifyBtn.disabled = true; verifyBtn.style.opacity = '0.6'; verifyBtn.textContent = '확인 중...'; }
+  
+  /* Cloud Function verifyEmailCode 호출 — 서버에서:
+     1) DB에서 저장된 코드와 비교
+     2) 만료 체크
+     3) 5회 시도 제한
+     4) 성공 시 verified=true 마킹 */
+  try {
+    /* 20초 timeout */
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    let resp;
+    try {
+      resp = await fetch(_VERIFY_EMAIL_CODE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, code: code }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    const data = await resp.json().catch(() => ({}));
+    
+    if(!resp.ok){
+      let errMsg = data.error || '인증 코드 검증에 실패했어요.';
+      if(data.code === 'CODE_MISMATCH' && typeof data.remaining === 'number'){
+        errMsg += ` (남은 시도: ${data.remaining}회)`;
+      }
+      _showFieldError('signup-code-err', errMsg);
+      /* 확인 버튼 복구 */
+      if(verifyBtn){ verifyBtn.disabled = false; verifyBtn.style.opacity = '1'; verifyBtn.textContent = '확인'; }
+      return;
+    }
+    
+    if(!data.ok || !data.verified){
+      _showFieldError('signup-code-err', '인증 검증에 실패했어요. 다시 시도해주세요.');
+      if(verifyBtn){ verifyBtn.disabled = false; verifyBtn.style.opacity = '1'; verifyBtn.textContent = '확인'; }
+      return;
+    }
+    
+  } catch(networkErr){
+    console.warn('[verifyEmailCode] 네트워크 에러:', networkErr);
+    const isTimeout = networkErr && networkErr.name === 'AbortError';
+    const msg = isTimeout 
+      ? '서버 응답이 너무 늦어요. 잠시 후 다시 시도해주세요.'
+      : '네트워크 오류로 검증을 못했어요. 잠시 후 다시 시도해주세요.';
+    _showFieldError('signup-code-err', msg);
+    if(verifyBtn){ verifyBtn.disabled = false; verifyBtn.style.opacity = '1'; verifyBtn.textContent = '확인'; }
     return;
   }
   
   /* 인증 성공 */
-  const email = (document.getElementById('signup-email-input')?.value || '').trim();
   _signupVerifiedEmail = email;
   
   /* UI 업데이트: 성공 표시 */
   const codeOk = document.getElementById('signup-code-ok');
   const codeErr = document.getElementById('signup-code-err');
   const codeInputEl = document.getElementById('signup-code-input');
-  const verifyBtn = document.getElementById('signup-verify-btn');
   const sendBtn = document.getElementById('signup-send-code-btn');
+  /* verifyBtn은 함수 상단에서 이미 선언됨 — 재사용 */
   
   if(codeOk) codeOk.style.display = 'block';
   if(codeErr) codeErr.style.display = 'none';
