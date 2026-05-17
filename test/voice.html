@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>음성 데이터 수집·이용 동의서 - 바른발성연구소</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f8fafc;color:#1e293b;line-height:1.7;font-size:15px}
+  .container{max-width:780px;margin:0 auto;padding:32px 20px 80px}
+  header{padding:20px 0;border-bottom:2px solid #14b8a6;margin-bottom:28px}
+  h1{font-size:24px;margin:0 0 6px;color:#0f172a;font-weight:900}
+  .subtitle{font-size:13px;color:#64748b}
+  h2{font-size:17px;margin:28px 0 10px;color:#0f766e;font-weight:800;padding-top:8px}
+  p{margin:8px 0}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin:4px 0}
+  a{color:#0f766e;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .info-box{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:14px 18px;margin:14px 0;font-size:13px;color:#115e59}
+  .warning-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;margin:14px 0;font-size:13px;color:#991b1b}
+  .footer-note{margin-top:36px;padding-top:20px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center}
+  .back-link{display:inline-block;margin-top:20px;padding:10px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;color:#475569;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;font-weight:700;color:#334155}
+  strong{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>음성 데이터 수집·이용 동의서</h1>
+    <div class="subtitle">바른발성연구소(RightVocalLab) · 시행일 2026년 5월 17일</div>
+  </header>
+
+  <div class="info-box">바른발성연구소는 음역대 측정(PVR) 및 보컬 진단실 등 음성을 활용하는 서비스 제공을 위해 회원의 음성 데이터를 수집·이용합니다. 본 동의서는 음성 데이터 처리에 관한 별도 동의 사항을 안내합니다.</div>
+
+  <h2>1. 수집 항목</h2>
+  <table>
+    <tr><th>구분</th><th>수집 항목</th></tr>
+    <tr><td><strong>음역대 측정(PVR)</strong></td><td>마이크 입력 음성에서 추출한 음정(주파수, Hz/세미톤), 강도(dB) 수치</td></tr>
+    <tr><td><strong>보컬 진단실</strong></td><td>회원이 직접 녹음하거나 업로드한 음성 파일(최대 5분/5MB, .webm/.mp3/.m4a 등)</td></tr>
+  </table>
+
+  <h2>2. 수집·이용 목적</h2>
+  <ul>
+    <li>실시간 음역대 측정 및 그래프 분석 결과 제공</li>
+    <li>성종(소프라노/알토/테너/베이스 등) 추정 및 발성 훈련 추천</li>
+    <li>학습 진도 추적 및 비포&애프터 비교 결과 제공</li>
+    <li>보컬 진단실: 트레이너에게 음성을 전달하여 텍스트 피드백을 받음</li>
+    <li>학생 회원의 경우, 선생님과 진도 공유</li>
+  </ul>
+
+  <h2>3. 처리 방식 및 저장 정책</h2>
+  <div class="info-box">⚠️ 음역대 측정(PVR)과 보컬 진단실의 처리 방식이 다릅니다. 아래를 자세히 확인해주세요.</div>
+
+  <h3 style="font-size:15px;margin-top:18px;color:#0f766e">A. 음역대 측정(PVR)</h3>
+  <ul>
+    <li>마이크 입력 음성은 <strong>브라우저 내에서 실시간 분석</strong>됩니다.</li>
+    <li>음정·강도 등 <strong>수치 데이터만</strong> Firebase 데이터베이스에 저장됩니다.</li>
+    <li><strong>원본 음성 녹음 파일은 저장되지 않습니다.</strong></li>
+    <li>저장된 수치 데이터는 회원 본인의 이력 관리용으로만 사용됩니다.</li>
+  </ul>
+
+  <h3 style="font-size:15px;margin-top:18px;color:#0f766e">B. 보컬 진단실</h3>
+  <ul>
+    <li>회원이 직접 녹음·업로드한 음성 파일은 Firebase Storage에 저장됩니다.</li>
+    <li>저장 경로: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px">vocal-clinic/{회원ID}/{게시글ID}</code></li>
+    <li>본인 또는 회사가 지정한 트레이너만 청취 가능합니다(비공개 토글 시 트레이너 전용).</li>
+    <li>회원은 언제든지 본인 게시글과 음성 파일을 삭제할 수 있습니다.</li>
+    <li>탈퇴 시 모든 음성 파일이 즉시 삭제됩니다.</li>
+  </ul>
+
+  <h2>4. 보유 기간</h2>
+  <ul>
+    <li><strong>음역대 측정 수치</strong>: 회원 탈퇴 시까지 (회원은 측정 이력을 개별 삭제 가능)</li>
+    <li><strong>보컬 진단실 음성 파일</strong>: 회원이 게시글 삭제 시 또는 탈퇴 시 즉시 삭제</li>
+    <li>관련 법령상 보존 의무가 있는 경우에 한해 해당 기간 동안 보관 후 즉시 파기</li>
+  </ul>
+
+  <h2>5. 동의 거부 권리 및 영향</h2>
+  <ul>
+    <li>본 항목에 동의하지 않을 경우 <strong>음역대 측정(PVR)</strong> 및 <strong>보컬 진단실</strong> 기능을 이용할 수 없습니다.</li>
+    <li>다만 다른 서비스(발성 이론, 훈련 가이드, 자유 연습 등)는 정상 이용 가능합니다.</li>
+    <li>동의 후에도 언제든지 철회할 수 있으며, 철회 시 위 두 기능 이용이 제한됩니다.</li>
+  </ul>
+
+  <h2>6. 음성 데이터 제3자 제공</h2>
+  <p>회사는 회원의 음성 데이터를 외부에 제공하지 않습니다. 단, 다음의 경우는 예외로 합니다.</p>
+  <ul>
+    <li>회원이 사전에 동의한 경우 (예: 보컬 진단실 공개 게시 시 다른 회원이 청취)</li>
+    <li>법령에 의거하거나 수사기관의 적법한 요청이 있는 경우</li>
+    <li>학생 회원이 본인의 학습 진도를 선생님과 공유하는 데 동의한 경우</li>
+  </ul>
+
+  <h2>7. 만 14세 미만 아동의 음성 데이터 처리</h2>
+  <p>만 14세 미만 아동의 음성 데이터 처리는 법정대리인의 동의를 받은 후에만 가능합니다. 가입 시 법정대리인이 본 동의서를 포함한 모든 동의 항목에 동의해야 음역대 측정 및 보컬 진단실을 이용할 수 있습니다.</p>
+
+  <h2>8. 의료 목적이 아님 (책임 제한)</h2>
+  <div class="warning-box">⚠️ <strong>중요:</strong> 본 서비스의 음역대 측정 및 발성 분석은 <strong>발성 학습 보조용</strong>이며, <strong>음성·성대 관련 의학적 진단이나 치료를 대신할 수 없습니다.</strong>
+  <br><br>
+  쉰 목소리·통증·이물감 등 의학적 우려가 있으시면 반드시 <strong>이비인후과 전문의의 상담</strong>을 받으시기 바랍니다.</div>
+
+  <h2>9. 보안 조치</h2>
+  <p>음성 데이터는 다음과 같이 안전하게 처리됩니다.</p>
+  <ul>
+    <li><strong>전송 암호화</strong>: 모든 음성 데이터는 HTTPS 암호화 채널로 전송됩니다.</li>
+    <li><strong>접근 제어</strong>: Firebase Storage 보안 규칙으로 본인 또는 허가된 사용자만 접근 가능합니다.</li>
+    <li><strong>저장 위치</strong>: 음성 파일은 Google Firebase Storage(싱가포르 리전)에 저장됩니다.</li>
+    <li><strong>비인가 접근 차단</strong>: Firebase Authentication을 통한 본인 확인 후에만 음성 파일 접근이 허용됩니다.</li>
+  </ul>
+
+  <h2>10. 문의</h2>
+  <p>음성 데이터 처리와 관련된 문의는 다음 연락처로 보내주시기 바랍니다.</p>
+  <ul>
+    <li>이메일: <a href="mailto:rightvocallab@gmail.com">rightvocallab@gmail.com</a></li>
+    <li>개인정보 보호책임자: 김동현 (운영자)</li>
+  </ul>
+
+  <h2>부칙</h2>
+  <p>본 동의서는 <strong>2026년 5월 17일</strong>부터 시행됩니다.</p>
+
+  <div class="footer-note">
+    바른발성연구소(RightVocalLab) · 대표 김동현<br>
+    경기도 남양주시 별내동 999<br>
+    문의: <a href="mailto:rightvocallab@gmail.com">rightvocallab@gmail.com</a>
+  </div>
+
+  <a href="vocal-runday-v2.html" class="back-link">← 앱으로 돌아가기</a>
+</div>
+</body>
+</html>

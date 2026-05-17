@@ -15485,113 +15485,298 @@ function _updateUserBtn(){
    _showTerms / _showPrivacy / _showVoiceConsent: 각 본문을 모달로 표시
    _closeLegalModal: 모달 닫기 */
 
-/* 법적 문서 본문 (실제 출시 전 법무 검토 필요) */
+/* 법적 문서 본문 (시행일 2026-05-17 · 정적 페이지와 동일 내용 동기화 유지)
+   - 별도 정적 페이지: terms.html / privacy.html / voice.html (네이버 검수용 URL)
+   - 변경 시 정적 페이지도 반드시 동기화 할 것 */
 const LEGAL_CONTENT = {
   terms: {
     title: '서비스 이용약관',
     body: `
 <p><strong>제1조 (목적)</strong></p>
-<p>본 약관은 바른발성연구소(이하 "회사")가 제공하는 발성 훈련 서비스(이하 "서비스")의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+<p>본 약관은 바른발성연구소(이하 "회사")가 제공하는 발성 훈련 서비스(이하 "서비스")를 이용함에 있어, 회사와 회원 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.</p>
 
-<p style="margin-top:14px"><strong>제2조 (서비스 이용)</strong></p>
-<p>회원은 회사가 제공하는 서비스를 본인의 발성 훈련 및 학습 목적으로만 이용해야 하며, 다음 행위를 해서는 안 됩니다:</p>
+<p style="margin-top:14px"><strong>제2조 (정의)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>"서비스"란 회사가 제공하는 발성 훈련 웹 애플리케이션(PWA) 및 관련 부가 서비스를 말합니다.</li>
+  <li>"회원"이란 본 약관에 동의하고 서비스에 가입한 사람을 말합니다.</li>
+  <li>"학생 회원"이란 회사가 발급한 학생 코드를 통해 로그인하여 숙제 및 기록 관리 기능을 이용하는 회원을 말합니다.</li>
+  <li>"일반 회원"이란 이메일/카카오/네이버 계정으로 가입하여 일반 학습 기능을 이용하는 회원을 말합니다.</li>
+  <li>"콘텐츠"란 회사가 서비스 내에서 제공하는 발성 이론, 훈련 가이드, 음역대 측정, TTS 음성 안내 등 모든 디지털 자료를 말합니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>제3조 (회사 정보)</strong></p>
 <ul style="padding-left:20px;margin:8px 0">
-  <li>타인의 개인정보를 도용하는 행위</li>
-  <li>서비스의 운영을 방해하는 행위</li>
-  <li>저작권 등 타인의 권리를 침해하는 행위</li>
-  <li>음란물·폭력물 등 부적절한 콘텐츠를 게시·전송하는 행위</li>
+  <li>상호: 바른발성연구소(RightVocalLab)</li>
+  <li>대표자: 김동현</li>
+  <li>주소: 경기도 남양주시 별내동 999</li>
+  <li>사업자등록: 사업자 미등록 (개인 운영) · 유료 전환 시점에 등록 예정</li>
+  <li>문의: <a href="mailto:rightvocallab@gmail.com" style="color:#c2410c">rightvocallab@gmail.com</a></li>
 </ul>
 
-<p style="margin-top:14px"><strong>제3조 (서비스의 변경 및 중단)</strong></p>
-<p>회사는 서비스의 내용·운영상·기술상 사양 등을 변경하거나 일시 중단할 수 있으며, 이 경우 변경 사항을 사전에 공지합니다.</p>
+<p style="margin-top:14px"><strong>제4조 (약관의 게시 및 개정)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>회사는 본 약관의 내용을 회원이 쉽게 알 수 있도록 서비스 초기 화면 및 가입 화면에 게시합니다.</li>
+  <li>회사는 관련 법령을 위배하지 않는 범위에서 본 약관을 개정할 수 있으며, 개정 시 적용일자 및 개정 사유를 명시하여 시행일로부터 최소 7일 전(회원에게 불리한 변경의 경우 30일 전)에 공지합니다.</li>
+  <li>회원이 개정 약관에 동의하지 않을 경우 서비스 이용을 중단하고 탈퇴할 수 있으며, 공지 후에도 서비스를 계속 이용할 경우 개정 약관에 동의한 것으로 간주됩니다.</li>
+</ol>
 
-<p style="margin-top:14px"><strong>제4조 (책임 제한)</strong></p>
-<p>본 서비스의 발성 훈련 콘텐츠는 일반 학습 목적으로 제공되며, 의학적 진단이나 치료를 대신하지 않습니다. 음성·성대 관련 의학적 문제가 있는 경우 이비인후과 전문의 상담을 권장합니다.</p>
+<p style="margin-top:14px"><strong>제5조 (회원가입)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>회원가입은 가입 신청자가 본 약관과 개인정보처리방침에 동의하고, 회사가 정한 절차에 따라 가입 신청을 완료함으로써 성립합니다.</li>
+  <li>회원은 가입 시 본인의 정확한 정보(이메일, 닉네임 등)를 제공해야 하며, 타인의 정보를 도용하여 가입할 수 없습니다.</li>
+  <li>회사는 타인 명의 도용·허위 정보 기재·약관 위반 이력 등의 경우 가입을 거부하거나 사후 해지할 수 있습니다.</li>
+</ol>
 
-<p style="margin-top:14px"><strong>제5조 (회원 탈퇴)</strong></p>
-<p>회원은 언제든지 서비스 이용을 중단하고 탈퇴할 수 있으며, 회사는 회원의 개인정보를 즉시 삭제 또는 분리 보관합니다(관련 법령에 따른 보존 기간 제외).</p>
+<p style="margin-top:14px"><strong>제6조 (만 14세 미만 회원의 가입)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>회사는 정보통신망법 및 개인정보보호법에 따라, 만 14세 미만 아동의 회원가입 시 법정대리인의 동의를 받습니다.</li>
+  <li>만 14세 미만 가입 신청자는 가입 화면에서 생년월일을 입력하고, 법정대리인(부모 등)의 이메일 주소를 입력해야 합니다.</li>
+  <li>회사는 입력된 법정대리인 이메일로 동의 요청 메일을 발송하며, 법정대리인이 메일 내 링크를 통해 동의를 완료한 경우에 한하여 가입을 승인합니다.</li>
+  <li>법정대리인은 언제든지 자녀의 개인정보 열람·정정·삭제·처리정지를 회사에 요구할 수 있습니다.</li>
+  <li>법정대리인 동의 없이 가입한 사실이 확인된 경우, 회사는 해당 계정을 즉시 정지하고 개인정보를 파기합니다.</li>
+</ol>
 
-<p style="margin-top:14px"><strong>제6조 (문의)</strong></p>
-<p>서비스 이용에 관한 문의는 다음 연락처로 보내주시기 바랍니다.<br>
-이메일: <a href="mailto:rightvocallab@gmail.com" style="color:#c2410c">rightvocallab@gmail.com</a></p>
+<p style="margin-top:14px"><strong>제7조 (서비스의 제공)</strong></p>
+<p>회사는 발성 훈련 콘텐츠, 음역대 측정(PVR), 학생 회원 대상 숙제 관리, 회원 간 소통 게시판 등의 서비스를 연중무휴 1일 24시간 제공함을 원칙으로 합니다. 시스템 점검, 천재지변, 통신장애 등 불가항력적 사유 발생 시 일시 중단될 수 있습니다.</p>
 
-<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 6월 1일 (예정)</p>
+<p style="margin-top:14px"><strong>제8조 (서비스의 변경 및 중단)</strong></p>
+<p>회사는 운영상·기술상의 필요에 따라 제공 중인 서비스의 전부 또는 일부를 변경할 수 있으며, 변경 사항은 사전에 공지합니다. 시스템 점검, 기간통신사업자 장애, 불가항력 사유 발생 시 서비스 제공이 일시 중단될 수 있습니다.</p>
+
+<p style="margin-top:14px"><strong>제9조 (회원의 의무)</strong></p>
+<p>회원은 다음 각 호의 행위를 해서는 안 됩니다.</p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>타인의 개인정보·계정·이메일을 도용하는 행위</li>
+  <li>회사 및 타인의 저작권 등 지적재산권을 침해하는 행위</li>
+  <li>서비스의 운영을 고의로 방해하거나 시스템을 해킹·역공학하는 행위</li>
+  <li>음란물·폭력물·차별·혐오 표현 등 부적절한 콘텐츠를 게시·전송하는 행위</li>
+  <li>회사가 제공하는 콘텐츠를 무단으로 복제·배포·상업적으로 이용하는 행위</li>
+  <li>다른 회원에게 욕설·비방·괴롭힘을 가하는 행위</li>
+</ul>
+
+<p style="margin-top:14px"><strong>제10조 (회사의 의무)</strong></p>
+<p>회사는 관계 법령과 본 약관을 준수하며, 계속적·안정적인 서비스 제공과 개인정보 보호를 위해 노력합니다. 회원의 합리적 의견·불만을 적극 수렴하여 처리 결과를 이메일로 회신합니다.</p>
+
+<p style="margin-top:14px"><strong>제11조 (유료 서비스)</strong></p>
+<p style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 12px;font-size:13px;color:#7c2d12">⚠️ 현재 서비스는 <strong>전부 무료</strong>로 제공됩니다. 본 조항은 향후 유료 전환 시 적용될 사항을 사전 안내하는 것으로, 실제 유료 전환 시점에는 별도로 30일 전 공지합니다.</p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>회사는 서비스의 일부 또는 전부를 유료로 전환할 수 있으며, 유료 전환 시 대상 기능·요금·결제 수단(Google Play 인앱결제, App Store 인앱결제, 신용카드 등)·구독 주기·환불 정책을 사전 공지합니다.</li>
+  <li>학생 회원은 학생 코드 로그인 시 무료로 전체 기능을 이용할 수 있으며, 일반 회원은 무료 사용자(기본 기능)와 유료 사용자(전체 기능)로 구분될 수 있습니다.</li>
+  <li>유료 결제 시점에 본 약관과 별도로 유료 서비스 이용약관에 동의해야 합니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>제12조 (결제 및 환불)</strong></p>
+<p style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 12px;font-size:13px;color:#7c2d12">⚠️ 현재 무료 서비스이므로 본 조항은 적용되지 않습니다. 유료 전환 시 적용됩니다.</p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>유료 결제는 회사가 지정하는 결제 수단을 통해 이루어집니다.</li>
+  <li>환불은 「전자상거래 등에서의 소비자보호에 관한 법률」 및 앱마켓(Google Play, App Store) 환불 정책에 따릅니다.</li>
+  <li>이미 사용·다운로드한 콘텐츠로 가치가 현저히 감소한 경우, 환불 신청 기간(결제일로부터 7일)이 경과한 경우, 회원의 귀책 사유로 콘텐츠가 훼손된 경우 환불이 제한될 수 있습니다.</li>
+  <li>구독형 결제(월간/연간)의 경우, 다음 결제일 이전 해지 시 다음 주기부터 결제가 중단되며, 이미 결제된 기간은 정상 이용이 가능합니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>제13조 (청약철회)</strong></p>
+<p>유료 콘텐츠의 청약철회는 「전자상거래법」 제17조에 따라 결제일로부터 7일 이내에 신청할 수 있습니다. 단, 디지털 콘텐츠 특성상 사용·다운로드를 개시한 콘텐츠는 청약철회가 제한될 수 있으며, 이 경우 결제 전 사전 고지합니다.</p>
+
+<p style="margin-top:14px"><strong>제14조 (콘텐츠 저작권)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>회사가 제공하는 모든 콘텐츠의 저작권은 회사에 귀속됩니다.</li>
+  <li>회원은 콘텐츠를 개인 학습 목적으로만 이용할 수 있으며, 회사의 사전 서면 동의 없이 복제·배포·전송·전시·2차적 저작물 작성 등 어떠한 형태의 상업적 이용도 할 수 없습니다.</li>
+  <li>회원이 서비스 내 게시판에 게시한 글·댓글의 저작권은 회원 본인에게 귀속됩니다. 회사는 서비스 운영·홍보·개선 목적 범위에서 해당 게시물을 사용할 수 있습니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>제15조 (책임 제한)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>본 서비스의 발성 훈련 콘텐츠는 <strong>일반 학습 목적</strong>으로 제공되며, <strong>의학적 진단·치료를 대신하지 않습니다.</strong> 음성·성대 관련 의학적 문제가 있는 경우 반드시 이비인후과 전문의의 상담을 받으시기 바랍니다.</li>
+  <li>회사는 천재지변, 정전, 통신장애 등 불가항력으로 인한 서비스 중단에 대해 책임지지 않습니다.</li>
+  <li>회사는 회원이 서비스를 이용하여 기대하는 효과를 보장하지 않으며, 개인차에 따른 결과의 차이에 대해 책임지지 않습니다.</li>
+  <li>회사는 회원 간 또는 회원과 제3자 간 분쟁에 대해 개입할 의무가 없으며, 이로 인한 손해를 배상할 책임이 없습니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>제16조 (회원 탈퇴 및 자격 상실)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>회원은 언제든지 서비스 내 설정에서 직접 탈퇴할 수 있으며, 탈퇴 즉시 회사는 회원의 개인정보를 파기합니다(관련 법령에 따른 보존 기간 제외).</li>
+  <li>회사는 회원이 본 약관 또는 관련 법령을 위반한 경우, 사전 통지 후 회원 자격을 정지하거나 박탈할 수 있습니다.</li>
+  <li>중대한 위반의 경우 사전 통지 없이 즉시 자격을 박탈할 수 있습니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>제17조 (분쟁 해결 및 관할 법원)</strong></p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>서비스 이용과 관련하여 발생한 분쟁은 우선 회원과 회사 간 협의를 통해 해결합니다.</li>
+  <li>협의가 이루어지지 않을 경우, 한국소비자원·전자거래분쟁조정위원회 등 분쟁조정기관에 조정을 신청할 수 있습니다.</li>
+  <li>관할 법원은 민사소송법상의 관할 법원으로 하며, 준거법은 대한민국 법률로 합니다.</li>
+</ol>
+
+<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 5월 17일</p>
 `
   },
   privacy: {
     title: '개인정보처리방침',
     body: `
-<p><strong>1. 수집하는 개인정보 항목</strong></p>
-<ul style="padding-left:20px;margin:8px 0">
-  <li><strong>필수</strong>: 이메일, 비밀번호, 닉네임</li>
-  <li><strong>소셜 로그인 시</strong>: 카카오/네이버 식별자, 이메일</li>
-  <li><strong>서비스 이용 중 자동 수집</strong>: 음성 데이터(음역대 측정 시), 훈련 기록, 접속 로그</li>
-</ul>
+<p>바른발성연구소(이하 "회사")는 정보통신망 이용촉진 및 정보보호 등에 관한 법률, 개인정보보호법 등 관련 법령을 준수하며, 회원의 개인정보를 소중히 보호합니다.</p>
 
-<p style="margin-top:14px"><strong>2. 개인정보의 수집·이용 목적</strong></p>
+<p style="margin-top:14px"><strong>1. 처리 목적</strong></p>
 <ul style="padding-left:20px;margin:8px 0">
   <li>회원 식별 및 본인 확인</li>
-  <li>발성 훈련 서비스 제공 (음역대 분석, 학습 기록 관리)</li>
-  <li>서비스 개선 및 통계 분석 (익명화)</li>
-  <li>고객 문의 응대</li>
+  <li>발성 훈련 서비스 제공 (음역대 분석, 학습 기록 관리, 숙제 관리)</li>
+  <li>회원 간 소통 게시판 운영 (발전 자랑, 보컬 진단실)</li>
+  <li>고객 문의 응대 및 민원 처리</li>
+  <li>서비스 개선을 위한 통계 분석 (익명화)</li>
+  <li>법령 및 약관 위반 행위에 대한 대응</li>
 </ul>
 
-<p style="margin-top:14px"><strong>3. 개인정보의 보유 및 이용 기간</strong></p>
-<p>회원 탈퇴 시 즉시 파기합니다. 단, 다음의 경우 관련 법령에 따라 일정 기간 보관합니다:</p>
+<p style="margin-top:14px"><strong>2. 수집하는 개인정보 항목</strong></p>
 <ul style="padding-left:20px;margin:8px 0">
-  <li>전자상거래법: 결제 기록 5년</li>
-  <li>통신비밀보호법: 접속 로그 3개월</li>
+  <li><strong>필수 (이메일 가입)</strong>: 이메일, 비밀번호(암호화 저장), 닉네임</li>
+  <li><strong>필수 (소셜 가입)</strong>: 카카오/네이버 식별자, 이메일, 프로필 닉네임</li>
+  <li><strong>선택</strong>: 마케팅 수신 동의 여부</li>
+  <li><strong>서비스 이용 중</strong>: 음성 수치(원본 미저장), 훈련 기록, 게시글, 댓글</li>
+  <li><strong>자동 생성</strong>: 접속 IP, 접속 시각, 기기 정보, 쿠키</li>
+  <li><strong>학생 회원</strong>: 실명, 학생 코드, 숙제 진도</li>
+  <li><strong>만 14세 미만</strong>: 생년월일, 법정대리인 이메일</li>
 </ul>
 
-<p style="margin-top:14px"><strong>4. 개인정보의 제3자 제공</strong></p>
-<p>회사는 회원의 동의 없이 개인정보를 외부에 제공하지 않습니다. 다만 법령에 의거하거나 수사기관의 요청이 있는 경우 예외로 합니다.</p>
-
-<p style="margin-top:14px"><strong>5. 개인정보의 안전성 확보 조치</strong></p>
+<p style="margin-top:14px"><strong>3. 보유 및 이용 기간</strong></p>
+<p>회사는 회원 탈퇴 시 개인정보를 즉시 파기합니다. 다만 관련 법령에 따라 다음 기간 동안 보관합니다:</p>
 <ul style="padding-left:20px;margin:8px 0">
-  <li>비밀번호 암호화 저장</li>
+  <li>전자상거래 계약·청약철회 기록: 5년 (전자상거래법)</li>
+  <li>대금결제 및 재화공급 기록: 5년 (전자상거래법)</li>
+  <li>소비자 불만 또는 분쟁처리 기록: 3년 (전자상거래법)</li>
+  <li>웹사이트 접속 로그: 3개월 (통신비밀보호법)</li>
+  <li>부정 이용 기록: 1년 (회사 내부 정책 - 재가입 방지)</li>
+</ul>
+
+<p style="margin-top:14px"><strong>4. 제3자 제공</strong></p>
+<p>회사는 회원의 개인정보를 원칙적으로 외부에 제공하지 않습니다. 다만 회원의 사전 동의가 있거나, 법령에 의거하거나 수사기관의 요청이 있는 경우, 통계 작성·학술 연구 목적의 익명화 처리 후 제공 시는 예외로 합니다.</p>
+
+<p style="margin-top:14px"><strong>5. 개인정보 처리 위탁</strong></p>
+<p>회사는 원활한 서비스 제공을 위해 다음 업체에 개인정보 처리 업무를 위탁합니다.</p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li><strong>Google LLC (Firebase)</strong>: 회원 인증·DB·파일 저장·서버리스 함수 - 싱가포르/일본</li>
+  <li><strong>Resend Inc.</strong>: 이메일 인증 코드 발송 - 미국</li>
+  <li><strong>Cloudflare Inc.</strong>: DNS 관리·트래픽 보안 - 미국(글로벌)</li>
+  <li><strong>ElevenLabs Inc.</strong>: 음성 합성(TTS) 서비스 - 미국</li>
+  <li><strong>Kakao Corp.</strong>: 카카오 로그인 인증 - 대한민국</li>
+  <li><strong>NAVER Corp.</strong>: 네이버 로그인 인증 - 대한민국</li>
+  <li><strong>GitHub Inc.</strong>: 웹 페이지(PWA) 호스팅 - 미국</li>
+</ul>
+<p style="font-size:12px;color:#64748b">위 수탁업체는 위탁 계약 및 관련 법령에 따라 개인정보 보호 의무를 부담하며, 회사는 정기 점검합니다.</p>
+
+<p style="margin-top:14px"><strong>6. 만 14세 미만 아동의 개인정보 처리</strong></p>
+<p style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:13px;color:#1e40af">⚠️ 만 14세 미만 아동은 정보통신망법에 따라 법정대리인의 동의를 받아야 가입할 수 있습니다.</p>
+<ol style="padding-left:20px;margin:8px 0">
+  <li>만 14세 미만 가입 시 생년월일과 법정대리인 이메일을 입력받습니다.</li>
+  <li>법정대리인 이메일로 동의 요청 메일을 발송하고, 동의 완료 시에만 가입을 승인합니다.</li>
+  <li>법정대리인 이메일은 동의 절차 완료 후 즉시 파기합니다.</li>
+  <li>법정대리인은 언제든 자녀 개인정보 열람·정정·삭제·처리정지를 요구할 수 있습니다.</li>
+  <li>법정대리인 동의 없이 가입한 사실이 확인되면 즉시 계정 정지 및 개인정보 파기합니다.</li>
+</ol>
+
+<p style="margin-top:14px"><strong>7. 이용자의 권리</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>열람 요구: 본인의 개인정보 처리 현황을 열람할 권리</li>
+  <li>정정·삭제 요구: 오류가 있을 경우 정정·삭제를 요구할 권리</li>
+  <li>처리 정지 요구: 본인의 개인정보 처리 정지를 요구할 권리</li>
+  <li>동의 철회: 수집·이용 동의 철회 (탈퇴로 행사 가능)</li>
+</ul>
+<p>이메일(<a href="mailto:rightvocallab@gmail.com" style="color:#c2410c">rightvocallab@gmail.com</a>)로 요청 시 10일 이내 처리·회신합니다.</p>
+
+<p style="margin-top:14px"><strong>8. 안전성 확보 조치</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>비밀번호 일방향 해시 암호화</li>
   <li>전송 데이터 HTTPS 암호화</li>
   <li>접근 권한 최소화 및 접근 기록 관리</li>
+  <li>Firebase 및 Cloudflare 보안 시스템으로 외부 침입 차단</li>
+  <li>DB 보안 규칙으로 본인 정보만 접근 가능</li>
 </ul>
 
-<p style="margin-top:14px"><strong>6. 이용자의 권리</strong></p>
-<p>회원은 언제든지 개인정보 열람·정정·삭제·처리정지를 요구할 수 있습니다.</p>
+<p style="margin-top:14px"><strong>9. 쿠키 및 자동 수집 장치</strong></p>
+<p>회사는 회원 식별, 로그인 유지, 환경 설정 저장을 위해 쿠키와 localStorage를 사용합니다. 브라우저 설정으로 거부 가능하나, 일부 서비스 이용에 제한이 있을 수 있습니다.</p>
 
-<p style="margin-top:14px"><strong>7. 개인정보 보호책임자</strong></p>
-<p>문의: <a href="mailto:rightvocallab@gmail.com" style="color:#c2410c">rightvocallab@gmail.com</a></p>
+<p style="margin-top:14px"><strong>10. 개인정보 보호책임자</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>성명: 김동현 (운영자)</li>
+  <li>이메일: <a href="mailto:rightvocallab@gmail.com" style="color:#c2410c">rightvocallab@gmail.com</a></li>
+</ul>
+<p>문의·민원·구제는 영업일 기준 3일 이내 응답합니다.</p>
 
-<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 6월 1일 (예정)</p>
+<p style="margin-top:14px"><strong>11. 권익침해 구제 방법</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>개인정보 분쟁조정위원회: 1833-6972 / kopico.go.kr</li>
+  <li>개인정보 침해신고센터: 118 / privacy.kisa.or.kr</li>
+  <li>대검찰청 사이버범죄수사단: 1301</li>
+  <li>경찰청 사이버수사국: 182</li>
+</ul>
+
+<p style="margin-top:14px"><strong>12. 개인정보처리방침 변경</strong></p>
+<p>본 방침은 법령·정책·보안 기술 변경에 따라 수정될 수 있으며, 변경 시 서비스 초기 화면 공지를 통해 시행일로부터 최소 7일 전(중요 변경 시 30일 전) 사전 공지합니다.</p>
+
+<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 5월 17일</p>
 `
   },
   voice: {
     title: '음성 데이터 수집·이용 동의서',
     body: `
-<p><strong>1. 수집 항목</strong></p>
-<p>음역대 측정(PVR) 시 마이크를 통해 입력되는 음성 데이터 (음정·강도 정보)</p>
+<p>회사는 음역대 측정(PVR) 및 보컬 진단실 등 음성을 활용하는 서비스 제공을 위해 회원의 음성 데이터를 수집·이용합니다.</p>
+
+<p style="margin-top:14px"><strong>1. 수집 항목</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li><strong>음역대 측정(PVR)</strong>: 마이크 입력 음성에서 추출한 음정(주파수), 강도(dB) 수치</li>
+  <li><strong>보컬 진단실</strong>: 회원이 직접 녹음·업로드한 음성 파일(최대 5분/5MB)</li>
+</ul>
 
 <p style="margin-top:14px"><strong>2. 수집·이용 목적</strong></p>
 <ul style="padding-left:20px;margin:8px 0">
-  <li>실시간 음역대 측정 및 분석</li>
+  <li>실시간 음역대 측정 및 분석 결과 제공</li>
   <li>성종 추정 및 발성 훈련 추천</li>
-  <li>학습 진도 추적 (선생님 공유)</li>
+  <li>학습 진도 추적 및 비포&애프터 비교</li>
+  <li>보컬 진단실: 트레이너에게 음성 전달 후 텍스트 피드백</li>
+  <li>학생 회원: 선생님과 진도 공유</li>
 </ul>
 
-<p style="margin-top:14px"><strong>3. 처리 방식</strong></p>
+<p style="margin-top:14px"><strong>3. 처리 방식 및 저장 정책</strong></p>
+<p><strong>A. 음역대 측정(PVR)</strong></p>
 <ul style="padding-left:20px;margin:8px 0">
-  <li>음성은 분석 후 <strong>수치 데이터(음정·dB)</strong>로만 저장됩니다</li>
-  <li>원본 음성 녹음 파일은 저장하지 않습니다</li>
-  <li>수치 데이터는 회원 본인의 이력 관리용으로만 사용됩니다</li>
+  <li>음성은 브라우저 내에서 실시간 분석됩니다</li>
+  <li>음정·강도 등 <strong>수치 데이터만</strong> Firebase DB에 저장됩니다</li>
+  <li><strong>원본 음성 녹음 파일은 저장되지 않습니다</strong></li>
+</ul>
+<p><strong>B. 보컬 진단실</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>녹음·업로드한 음성 파일은 Firebase Storage에 저장됩니다</li>
+  <li>본인 또는 회사가 지정한 트레이너만 청취 가능합니다</li>
+  <li>회원은 언제든 본인 게시글 및 음성을 삭제할 수 있습니다</li>
+  <li>탈퇴 시 모든 음성 파일이 즉시 삭제됩니다</li>
 </ul>
 
 <p style="margin-top:14px"><strong>4. 보유 기간</strong></p>
-<p>회원 탈퇴 시 즉시 삭제됩니다. 회원이 원할 경우 언제든 측정 이력을 개별 삭제할 수 있습니다.</p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>음역대 측정 수치: 회원 탈퇴 시까지 (개별 삭제 가능)</li>
+  <li>보컬 진단실 음성 파일: 게시글 삭제 시 또는 탈퇴 시 즉시 삭제</li>
+</ul>
 
-<p style="margin-top:14px"><strong>5. 동의 거부 시 영향</strong></p>
-<p>본 항목에 동의하지 않을 경우 음역대 측정 기능을 이용할 수 없습니다. 다만 다른 서비스(발성 이론, 훈련 가이드 등)는 이용 가능합니다.</p>
+<p style="margin-top:14px"><strong>5. 동의 거부 권리 및 영향</strong></p>
+<p>본 항목에 동의하지 않을 경우 음역대 측정 및 보컬 진단실 기능을 이용할 수 없습니다. 다만 다른 서비스(발성 이론, 훈련 가이드 등)는 정상 이용 가능합니다. 동의 후에도 언제든 철회할 수 있습니다.</p>
 
-<p style="margin-top:14px"><strong>6. 의료 목적이 아님</strong></p>
-<p>음역대 측정은 발성 학습 보조용이며, 음성·성대 관련 의학적 진단을 대신할 수 없습니다. 의학적 우려가 있으시면 이비인후과 전문의 상담을 권장합니다.</p>
+<p style="margin-top:14px"><strong>6. 음성 데이터 제3자 제공</strong></p>
+<p>음성 데이터는 외부에 제공하지 않습니다. 단, 회원이 사전 동의한 경우(보컬 진단실 공개 게시), 법령 및 적법한 수사 요청, 학생-선생님 진도 공유 동의 시 예외로 합니다.</p>
 
-<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 6월 1일 (예정)</p>
+<p style="margin-top:14px"><strong>7. 만 14세 미만 처리</strong></p>
+<p>만 14세 미만 아동의 음성 데이터 처리는 법정대리인의 동의를 받은 후에만 가능합니다.</p>
+
+<p style="margin-top:14px"><strong>8. 의료 목적이 아님</strong></p>
+<p style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:13px;color:#991b1b">⚠️ <strong>중요</strong>: 본 서비스의 음역대 측정 및 발성 분석은 <strong>발성 학습 보조용</strong>이며, <strong>음성·성대 관련 의학적 진단·치료를 대신할 수 없습니다.</strong> 의학적 우려가 있으시면 반드시 이비인후과 전문의의 상담을 받으시기 바랍니다.</p>
+
+<p style="margin-top:14px"><strong>9. 보안 조치</strong></p>
+<ul style="padding-left:20px;margin:8px 0">
+  <li>전송 시 HTTPS 암호화</li>
+  <li>Firebase Storage 보안 규칙으로 본인/허가자만 접근</li>
+  <li>저장 위치: Firebase Storage (싱가포르 리전)</li>
+  <li>Firebase Authentication 후에만 음성 파일 접근 허용</li>
+</ul>
+
+<p style="margin-top:14px"><strong>10. 문의</strong></p>
+<p>이메일: <a href="mailto:rightvocallab@gmail.com" style="color:#c2410c">rightvocallab@gmail.com</a></p>
+
+<p style="margin-top:14px;font-size:11px;color:#94a3b8">시행일: 2026년 5월 17일</p>
 `
   }
 };
