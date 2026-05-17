@@ -14783,6 +14783,8 @@ function _submitEmailSignup(){
       if(_fbDb){
         return _fbDb.ref('users/' + user.uid).set({
           nickname: name,
+          nicknameChanged: true,        /* 이메일 가입은 사용자가 직접 입력한 닉네임 = 최종 (수정 불가) */
+          nicknameChoiceMade: true,     /* 닉네임 선택 모달 안 띄움 (이미 의도적으로 입력) */
           email: email,
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           agreedTerms: true,
