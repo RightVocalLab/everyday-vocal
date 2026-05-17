@@ -14321,25 +14321,67 @@ function _onSignupEmailChange(){
   }
 }
 
-/* 인증 상태 초기화 */
+/* 인증 상태 초기화 - 모든 UI를 완전 초기 상태로 복원
+   호출 시점: 이메일 변경 시, 탭 전환 시
+   _verifyEmailCode 인증 성공 시 잠긴 16가지 속성 모두 복원 */
 function _resetVerifyState(){
+  /* 1. 상태 변수 리셋 */
   _signupVerifiedEmail = '';
   _signupCodeSent = false;
   _signupCodeExpiresAt = 0;
+  
+  /* 2. 타이머 중단 */
   if(_signupCodeTimerInterval){
     clearInterval(_signupCodeTimerInterval);
     _signupCodeTimerInterval = null;
   }
+  
+  /* 3. DOM 요소 참조 */
   const codeRow = document.getElementById('signup-code-row');
   const okEl = document.getElementById('signup-code-ok');
+  const errEl = document.getElementById('signup-code-err');
   const emailInfo = document.getElementById('signup-email-info');
   const codeInput = document.getElementById('signup-code-input');
+  const verifyBtn = document.getElementById('signup-verify-btn');
   const sendBtn = document.getElementById('signup-send-code-btn');
+  const resendBtn = document.getElementById('signup-resend-btn');
+  const timerEl = document.getElementById('signup-code-timer');
+  
+  /* 4. 영역 표시 숨김 */
   if(codeRow) codeRow.style.display = 'none';
   if(okEl) okEl.style.display = 'none';
+  if(errEl){ errEl.style.display = 'none'; errEl.textContent = ''; }
   if(emailInfo) emailInfo.style.display = 'none';
-  if(codeInput) codeInput.value = '';
-  if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '인증하기'; }
+  if(resendBtn) resendBtn.style.display = 'none';
+  
+  /* 5. 코드 입력란: 값 비우기 + 잠금 해제 + 스타일 초기화 */
+  if(codeInput){
+    codeInput.value = '';
+    codeInput.disabled = false;
+    codeInput.style.background = '#fff';
+    codeInput.style.borderColor = '#e2e8f0';
+  }
+  
+  /* 6. 확인 버튼: 잠금 해제 + 텍스트/스타일 초기화 */
+  if(verifyBtn){
+    verifyBtn.disabled = false;
+    verifyBtn.style.opacity = '1';
+    verifyBtn.textContent = '확인';
+    verifyBtn.style.background = '#c2410c';
+  }
+  
+  /* 7. 인증하기 버튼: 잠금 해제 + 텍스트/스타일 초기화 */
+  if(sendBtn){
+    sendBtn.disabled = false;
+    sendBtn.style.opacity = '1';
+    sendBtn.textContent = '인증하기';
+    sendBtn.style.background = '#fff7ed';
+    sendBtn.style.borderColor = '#c2410c';
+    sendBtn.style.color = '#c2410c';
+  }
+  
+  /* 8. 타이머 표시 초기화 (다음 발송 시 _startVerifyTimer가 다시 채움) */
+  if(timerEl) timerEl.textContent = '05:00';
 }
 
 /* 인증 코드 발송 (재전송 = isResend=true) */
@@ -14389,15 +14431,40 @@ async function _sendVerifyCode(isResend){
   const resendBtn = document.getElementById('signup-resend-btn');
   const codeErr = document.getElementById('signup-code-err');
   const codeOk = document.getElementById('signup-code-ok');
+  const verifyBtn = document.getElementById('signup-verify-btn');
   
   if(codeRow) codeRow.style.display = 'block';
   if(emailInfo) emailInfo.style.display = 'block';
-  if(codeInput){ codeInput.value = ''; codeInput.focus(); }
+  /* 재전송 시: 코드 입력란 잠금 해제 + 값 초기화 + 스타일 복원 */
+  if(codeInput){
+    codeInput.value = '';
+    codeInput.disabled = false;
+    codeInput.style.background = '#fff';
+    codeInput.style.borderColor = '#e2e8f0';
+    codeInput.focus();
+  }
+  /* 재전송 시: 확인 버튼 잠금 해제 + 텍스트/스타일 복원 */
+  if(verifyBtn){
+    verifyBtn.disabled = false;
+    verifyBtn.style.opacity = '1';
+    verifyBtn.textContent = '확인';
+    verifyBtn.style.background = '#c2410c';
+  }
+  /* 재전송 시: 이전 인증 완료 상태 무효화 (코드 새로 받았으니까) */
+  _signupVerifiedEmail = '';
   if(resendBtn) resendBtn.style.display = 'inline-block';
   if(codeErr) codeErr.style.display = 'none';
   if(codeOk) codeOk.style.display = 'none';
   
-  if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '코드 발송됨 ✓'; }
+  /* 인증하기 버튼: 발송됨 상태 + 스타일 복원 (이전 인증 완료 스타일 제거) */
+  if(sendBtn){
+    sendBtn.disabled = false;
+    sendBtn.style.opacity = '1';
+    sendBtn.textContent = '코드 발송됨 ✓';
+    sendBtn.style.background = '#fff7ed';
+    sendBtn.style.borderColor = '#c2410c';
+    sendBtn.style.color = '#c2410c';
+  }
   
   /* 타이머 시작 */
   _startVerifyTimer();
