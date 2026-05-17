@@ -487,10 +487,10 @@ input,select,button,textarea{font-family:inherit;}
                  onblur="this.style.borderColor='#e2e8f0'"
                  oninput="_onSignupEmailChange()">
           <button type="button" id="signup-send-code-btn" onclick="_sendVerifyCode()"
-                  style="height:48px;padding:0 14px;border:1.5px solid #c2410c;border-radius:10px;background:#fff7ed;color:#c2410c;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap;min-width:90px">코드 보내기</button>
+                  style="height:48px;padding:0 14px;border:1.5px solid #c2410c;border-radius:10px;background:#fff7ed;color:#c2410c;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap;min-width:90px">인증하기</button>
         </div>
         <div id="signup-email-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
-        <div id="signup-email-info" style="font-size:11px;color:#0369a1;margin-top:4px;display:none">📧 메일함을 확인해주세요 (스팸함도 함께)</div>
+        <div id="signup-email-info" style="font-size:11px;color:#0369a1;margin-top:4px;display:none">📧 메일함에 전송 된 코드를 입력해주세요 (스팸메일함도 함께)</div>
       </div>
       
       <!-- 인증 코드 입력 영역 (코드 보내기 누른 후 표시) -->
@@ -14339,7 +14339,7 @@ function _resetVerifyState(){
   if(okEl) okEl.style.display = 'none';
   if(emailInfo) emailInfo.style.display = 'none';
   if(codeInput) codeInput.value = '';
-  if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '코드 보내기'; }
+  if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '인증하기'; }
 }
 
 /* 인증 코드 발송 (재전송 = isResend=true) */
@@ -14366,7 +14366,7 @@ async function _sendVerifyCode(isResend){
       const methods = await firebase.auth().fetchSignInMethodsForEmail(email);
       if(methods && methods.length > 0){
         _showFieldError('signup-email-err', '이미 가입된 이메일입니다.');
-        if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '코드 보내기'; }
+        if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '인증하기'; }
         return;
       }
     }
@@ -14397,7 +14397,7 @@ async function _sendVerifyCode(isResend){
   if(codeErr) codeErr.style.display = 'none';
   if(codeOk) codeOk.style.display = 'none';
   
-  if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '발송됨 ✓'; }
+  if(sendBtn){ sendBtn.disabled = false; sendBtn.style.opacity = '1'; sendBtn.textContent = '코드 발송됨 ✓'; }
   
   /* 타이머 시작 */
   _startVerifyTimer();
@@ -14439,7 +14439,7 @@ function _verifyEmailCode(){
   const code = (codeInput?.value || '').trim();
   
   if(!_signupCodeSent){
-    _showFieldError('signup-code-err', '먼저 "코드 보내기"를 눌러 코드를 받아주세요.');
+    _showFieldError('signup-code-err', '먼저 "인증하기"를 눌러 코드를 받아주세요.');
     return;
   }
   if(Date.now() > _signupCodeExpiresAt){
