@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>법정대리인 동의 - 바른발성연구소</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f8fafc;color:#1e293b;line-height:1.7;font-size:15px}
+  .container{max-width:560px;margin:0 auto;padding:32px 20px}
+  header{padding:20px 0;border-bottom:2px solid #ea580c;margin-bottom:28px;text-align:center}
+  h1{font-size:22px;margin:0 0 6px;color:#0f172a;font-weight:900}
+  .subtitle{font-size:13px;color:#64748b}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(15,23,42,0.05)}
+  .status-icon{font-size:48px;text-align:center;margin-bottom:12px;line-height:1}
+  .status-title{font-size:20px;font-weight:900;color:#0f172a;text-align:center;margin-bottom:8px}
+  .status-desc{font-size:14px;color:#475569;line-height:1.7;margin-bottom:20px;text-align:center}
+  .info-box{background:#f8fafc;border-radius:10px;padding:14px 16px;margin:14px 0;font-size:13px;color:#475569;line-height:1.7}
+  .info-box strong{color:#0f172a}
+  .ok{color:#059669}
+  .warn{color:#dc2626}
+  .pending{color:#0891b2}
+  .btn{display:inline-block;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;text-decoration:none;text-align:center;transition:transform 0.15s, box-shadow 0.15s}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+  .btn-secondary{background:#fff;color:#475569;border:1px solid #cbd5e1}
+  .footer-note{margin-top:32px;padding-top:20px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.7}
+  .footer-note a{color:#c2410c;text-decoration:none}
+  #loading{text-align:center;padding:40px 20px}
+  .spinner{display:inline-block;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#c2410c;border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>바른발성연구소</h1>
+    <div class="subtitle">법정대리인 동의 처리</div>
+  </header>
+
+  <div id="loading" class="card">
+    <div class="spinner"></div>
+    <p style="margin-top:14px;color:#64748b;font-size:14px">처리 중입니다…</p>
+  </div>
+
+  <div id="result" class="card" style="display:none">
+    <div class="status-icon" id="result-icon"></div>
+    <div class="status-title" id="result-title"></div>
+    <div class="status-desc" id="result-desc"></div>
+    <div id="result-extra"></div>
+  </div>
+
+  <div class="footer-note">
+    바른발성연구소(RightVocalLab) · 대표 김동현<br>
+    문의: <a href="mailto:rightvocallab@gmail.com">rightvocallab@gmail.com</a><br>
+    <a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="voice.html">음성 데이터 동의서</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  
+  const VERIFY_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/verifyParentalConsent';
+  
+  // URL 파라미터 파싱
+  const params = new URLSearchParams(window.location.search);
+  const token = (params.get('token') || '').trim();
+  const action = (params.get('action') || '').trim().toLowerCase();
+  
+  function showResult(opts){
+    document.getElementById('loading').style.display = 'none';
+    const result = document.getElementById('result');
+    result.style.display = 'block';
+    document.getElementById('result-icon').textContent = opts.icon || '';
+    document.getElementById('result-title').textContent = opts.title || '';
+    document.getElementById('result-title').className = 'status-title ' + (opts.titleClass || '');
+    document.getElementById('result-desc').innerHTML = opts.desc || '';
+    document.getElementById('result-extra').innerHTML = opts.extra || '';
+  }
+  
+  function showError(title, desc){
+    showResult({
+      icon: '⚠️',
+      title: title,
+      titleClass: 'warn',
+      desc: desc,
+    });
+  }
+  
+  // 입력 검증
+  if(!token || token.length !== 32 || !/^[a-f0-9]+$/.test(token)){
+    showError('유효하지 않은 링크', '동의 링크가 잘못되었거나 손상되었습니다.<br>이메일에서 다시 링크를 확인해주세요.');
+    return;
+  }
+  if(action !== 'approve' && action !== 'reject'){
+    showError('잘못된 요청', '동의 또는 거부 행동이 지정되지 않았습니다.<br>이메일에서 다시 버튼을 눌러주세요.');
+    return;
+  }
+  
+  // Cloud Function 호출
+  fetch(VERIFY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: token, action: action }),
+  })
+  .then(async function(res){
+    const data = await res.json().catch(function(){ return {}; });
+    
+    if(res.status === 200 && data.success){
+      // 성공
+      if(data.status === 'approved'){
+        showResult({
+          icon: '✅',
+          title: '동의가 완료되었습니다',
+          titleClass: 'ok',
+          desc: '자녀(<strong>' + (data.childNickname || '') + '</strong>)의 회원가입에 동의해 주셔서 감사합니다.<br>아동이 앱에서 다시 로그인하면 가입이 완료됩니다.',
+          extra: '<div class="info-box"><strong>📌 다음 안내</strong><br>자녀에게 앱에서 본인 이메일과 비밀번호로 로그인하라고 알려주세요. 로그인 시 자동으로 가입이 활성화됩니다.<br><br>본 동의 절차에서 수집한 부모님 이메일은 <strong>즉시 파기</strong>되었습니다.</div>',
+        });
+      } else if(data.status === 'rejected'){
+        showResult({
+          icon: '❌',
+          title: '가입이 거부되었습니다',
+          titleClass: 'warn',
+          desc: '자녀(<strong>' + (data.childNickname || '') + '</strong>)의 회원가입이 거부되었습니다.<br>자녀의 가입은 자동으로 취소됩니다.',
+          extra: '<div class="info-box">본 동의 절차에서 수집한 부모님 이메일과 자녀의 가입 정보는 <strong>즉시 파기</strong>됩니다.<br>자녀가 다시 가입을 원하면 앱에서 새로 시도할 수 있습니다.</div>',
+        });
+      }
+    } else if(res.status === 410 || (data.code === 'TOKEN_EXPIRED')){
+      showResult({
+        icon: '⏰',
+        title: '동의 기간이 만료되었습니다',
+        titleClass: 'warn',
+        desc: '동의 가능 기간(7일)이 지났습니다.<br>자녀가 앱에서 다시 회원가입을 진행하면 새로운 동의 메일이 발송됩니다.',
+      });
+    } else if(res.status === 409 || (data.code === 'ALREADY_PROCESSED')){
+      const prevStatus = data.status || '';
+      let title = '이미 처리된 요청입니다';
+      let desc = '본 동의 요청은 이미 처리되었습니다. ';
+      if(prevStatus === 'approved'){
+        desc += '<br><strong class="ok">✅ 이전에 동의 완료</strong> 되었습니다.';
+      } else if(prevStatus === 'rejected'){
+        desc += '<br><strong class="warn">❌ 이전에 가입 거부</strong> 되었습니다.';
+      }
+      showResult({
+        icon: 'ℹ️',
+        title: title,
+        titleClass: 'pending',
+        desc: desc,
+      });
+    } else if(res.status === 404){
+      showError('동의 요청을 찾을 수 없습니다', '링크가 만료되었거나 잘못된 경로입니다.<br>자녀가 앱에서 다시 가입을 시도하면 새로운 메일이 발송됩니다.');
+    } else {
+      showError('처리에 실패했습니다', (data.error || '잠시 후 다시 시도해주세요.') + '<br><br>문제가 지속되면 rightvocallab@gmail.com으로 문의해주세요.');
+    }
+  })
+  .catch(function(e){
+    console.error('verifyParentalConsent 호출 실패:', e);
+    showError('네트워크 오류', '서버에 연결할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
+  });
+})();
+</script>
+</body>
+</html>
