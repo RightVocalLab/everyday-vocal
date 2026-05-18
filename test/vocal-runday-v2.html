@@ -12922,14 +12922,15 @@ function _hwUploadParseExcel(file){
         if(wb.SheetNames.indexOf('학생 목록') >= 0){
           const listSheet = wb.Sheets['학생 목록'];
           const listJson = XLSX.utils.sheet_to_json(listSheet, { header: 1, defval: '' });
-          /* 4행부터 데이터 (header 1행, 시행일 2행, 빈 3행, 헤더 4행, 데이터 5행~) */
           for(let i = 0; i < listJson.length; i++){
             const row = listJson[i] || [];
             const name = String(row[1] || '').trim();
             const pw = String(row[2] || '').trim();
-            if(name && pw && name !== '이름' && pw !== '비밀번호'){
-              pwMap[name] = pw;
-            }
+            /* 헤더 행 거르기: '이름'/'비밀번호' 포함 or 별표 포함 */
+            if(!name || !pw) continue;
+            if(name.indexOf('이름') >= 0 || pw.indexOf('비밀번호') >= 0) continue;
+            if(name.indexOf('*') >= 0 || pw.indexOf('*') >= 0) continue;
+            pwMap[name] = pw;
           }
         }
         
@@ -12960,6 +12961,10 @@ function _hwUploadParseExcel(file){
             const scaleId = String(row[2] || '').trim();
             const repeat = parseInt(row[3], 10) || 1;
             const comment = String(row[4] || '').trim();
+            /* F=활성 컬럼: 'N'이면 active=false, 그 외(Y/빈)는 active=true */
+            const activeRaw = String(row[5] || '').trim().toUpperCase();
+            const active = (activeRaw === 'N') ? false : true;
+            /* G=메모 컬럼은 선생님 본인용 (Firebase 업로드 X) — 파서에서 무시 */
             homework.push({
               exId: exName,
               exName: exName,
@@ -12967,7 +12972,7 @@ function _hwUploadParseExcel(file){
               scaleId: scaleId,
               repeat: repeat,
               comment: comment,
-              active: true,
+              active: active,
               num: homework.length,
               name: exName,
             });
