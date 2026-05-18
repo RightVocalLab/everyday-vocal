@@ -743,6 +743,46 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
 
+    <!-- 📤 학생 숙제 일괄 업데이트 (Phase D-1) -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">📤 학생 숙제 일괄 업데이트</div>
+      <div style="font-size:11px;color:var(--mu);line-height:1.6;margin-bottom:10px">
+        학생 숙제 마스터 엑셀을 업로드하면 Firebase에 반영되어 모든 학생 앱에 자동 적용됩니다.
+      </div>
+
+      <!-- 현재 버전 -->
+      <div style="background:#f0f9ff;border:1.5px solid #7dd3fc;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;font-weight:700;color:#0369a1">📊 현재 Firebase 버전</div>
+          <button onclick="_hwUploadCheckVersion()" style="background:#0284c7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer">🔄 확인</button>
+        </div>
+        <div id="hw-upload-version-info" style="margin-top:6px;font-size:10px;color:#0284c7;line-height:1.7">버전 확인 버튼을 눌러주세요</div>
+      </div>
+
+      <!-- 파일 업로드 -->
+      <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:#9a3412;margin-bottom:8px">📁 마스터 엑셀 업로드</div>
+        <input type="file" id="hw-upload-file" accept=".xlsx,.xlsm" onchange="_hwUploadFileChange(event)" style="width:100%;font-size:11px;padding:6px;background:#fff;border:1px dashed #fb923c;border-radius:6px;cursor:pointer">
+        <div id="hw-upload-status" style="margin-top:8px;font-size:10.5px;color:#9a3412;line-height:1.7;min-height:14px"></div>
+      </div>
+
+      <!-- 미리보기 영역 -->
+      <div id="hw-upload-preview" style="display:none;background:#fafaf9;border:1.5px solid #e7e5e4;border-radius:10px;padding:12px;margin-bottom:10px;max-height:380px;overflow-y:auto">
+        <div style="font-size:12px;font-weight:700;color:#57534e;margin-bottom:8px">📝 변경 사항 미리보기</div>
+        <div id="hw-upload-diff-summary" style="font-size:10.5px;color:#57534e;line-height:1.8;margin-bottom:8px"></div>
+        <div id="hw-upload-diff-detail" style="font-size:10px;color:#78716c;line-height:1.7;border-top:1px solid #e7e5e4;padding-top:8px;margin-top:8px"></div>
+      </div>
+
+      <!-- 액션 버튼 -->
+      <div id="hw-upload-actions" style="display:none;gap:6px">
+        <button onclick="_hwUploadCancel()" style="flex:1;background:#fff;color:#78716c;border:1.5px solid #d6d3d1;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer">취소</button>
+        <button onclick="_hwUploadConfirm()" style="flex:2;background:#ea580c;color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer">✅ Firebase에 반영</button>
+      </div>
+
+      <!-- 결과 메시지 -->
+      <div id="hw-upload-result" style="margin-top:10px;font-size:11px;line-height:1.7;display:none"></div>
+    </div>
+
   </div></div>
 </div>
 
@@ -8583,6 +8623,359 @@ sub.style.color = '';
 }
 }
 
+/* ============================================================
+   Phase D: 학생 숙제 동적 업데이트 시스템 (v1)
+   - HTML 내장 STUDENTS_DB는 3단 폴백의 마지막 수단
+   - 정상 흐름: localStorage(1차) → Firebase(2차) → HTML(3차)
+   ============================================================ */
+const _STUDENTS_DB_FALLBACK = JSON.parse(JSON.stringify(STUDENTS_DB || []));
+const _STUDENTS_LS_VER_KEY = 'ev_students_schema_version';
+let _hwUploadParsed = null;
+let _hwUploadDiff = null;
+let _hwUploadSheetJSLoaded = false;
+
+function _hwUploadLoadSheetJS(){
+  return new Promise(function(resolve, reject){
+    if(_hwUploadSheetJSLoaded && typeof XLSX !== 'undefined'){ resolve(); return; }
+    if(typeof XLSX !== 'undefined'){ _hwUploadSheetJSLoaded = true; resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = function(){ _hwUploadSheetJSLoaded = true; resolve(); };
+    script.onerror = function(){ reject(new Error('SheetJS 로드 실패')); };
+    document.head.appendChild(script);
+  });
+}
+
+function _hwUploadCheckVersion(){
+  const el = document.getElementById('hw-upload-version-info');
+  if(!el) return;
+  el.innerHTML = '확인 중...';
+  if(typeof firebase === 'undefined' || !firebase.database){
+    el.innerHTML = '<span style="color:#dc2626">⚠ Firebase 미연결</span>';
+    return;
+  }
+  firebase.database().ref('students_meta').once('value').then(function(snap){
+    const meta = snap.val();
+    if(!meta){
+      el.innerHTML = '<span style="color:#9a3412">📭 아직 업로드된 데이터 없음 (최초 업로드 필요)</span>';
+      return;
+    }
+    const localVer = parseInt(localStorage.getItem(_STUDENTS_LS_VER_KEY) || '0', 10);
+    const dt = meta.lastUpdatedAt ? new Date(meta.lastUpdatedAt) : null;
+    const dtStr = dt ? (dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0') + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0')) : '-';
+    el.innerHTML = 
+      '✅ <strong>Firebase 버전:</strong> v' + (meta.schemaVersion || 0) + 
+      ' <span style="color:#94a3b8">(이 기기 캐시: v' + localVer + ')</span><br>' +
+      '🕐 <strong>마지막 업데이트:</strong> ' + dtStr + '<br>' +
+      '👥 <strong>학생 수:</strong> ' + (meta.studentCount || 0) + '명<br>' +
+      '✍ <strong>업데이트한 사람:</strong> ' + (meta.lastUpdatedBy || '-');
+  }).catch(function(e){
+    el.innerHTML = '<span style="color:#dc2626">⚠ 조회 실패: ' + (e.message || e) + '</span>';
+  });
+}
+
+async function _hwUploadFileChange(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('hw-upload-status');
+  status.innerHTML = '⏳ SheetJS 로딩 중...';
+  try{
+    await _hwUploadLoadSheetJS();
+    status.innerHTML = '⏳ 엑셀 파싱 중...';
+    const parsed = await _hwUploadParseExcel(file);
+    if(!parsed || !parsed.students || parsed.students.length === 0){
+      status.innerHTML = '<span style="color:#dc2626">⚠ 학생 시트를 찾을 수 없습니다. (예: "학생_박주은")</span>';
+      return;
+    }
+    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료</span>';
+    const diff = _hwUploadComputeDiff(parsed.students, STUDENTS_DB || []);
+    _hwUploadParsed = parsed;
+    _hwUploadDiff = diff;
+    _hwUploadShowPreview(parsed, diff);
+  }catch(e){
+    console.error('[hwUpload] 파일 처리 실패:', e);
+    status.innerHTML = '<span style="color:#dc2626">⚠ 처리 실패: ' + (e.message || e) + '</span>';
+  }
+}
+
+function _hwUploadParseExcel(file){
+  return new Promise(function(resolve, reject){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const pwMap = {};
+        if(wb.SheetNames.indexOf('학생 목록') >= 0){
+          const listSheet = wb.Sheets['학생 목록'];
+          const listJson = XLSX.utils.sheet_to_json(listSheet, { header: 1, defval: '' });
+          for(let i = 0; i < listJson.length; i++){
+            const row = listJson[i] || [];
+            const name = String(row[1] || '').trim();
+            const pw = String(row[2] || '').trim();
+            if(name && pw && name !== '이름' && pw !== '비밀번호'){
+              pwMap[name] = pw;
+            }
+          }
+        }
+        const students = [];
+        wb.SheetNames.forEach(function(sn){
+          if(!sn.startsWith('학생_')) return;
+          const name = sn.substring(3).trim();
+          if(!name) return;
+          const sheet = wb.Sheets[sn];
+          const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          let pw = pwMap[name] || '';
+          if(!pw && json[0] && json[0][0]){
+            const m = String(json[0][0]).match(/비밀번호\s*[:|]\s*([^\s|]+)/);
+            if(m) pw = m[1].trim();
+          }
+          const homework = [];
+          for(let i = 3; i < json.length; i++){
+            const row = json[i] || [];
+            const col1 = String(row[0] || '').trim();
+            if(col1.indexOf('📝') >= 0 || col1.indexOf('메모 영역') >= 0) break;
+            const exName = String(row[1] || '').trim();
+            if(!exName) continue;
+            const scaleId = String(row[2] || '').trim();
+            const repeat = parseInt(row[3], 10) || 1;
+            const comment = String(row[4] || '').trim();
+            homework.push({
+              exId: exName,
+              exName: exName,
+              displayLabel: exName,
+              scaleId: scaleId,
+              repeat: repeat,
+              comment: comment,
+              active: true,
+              num: homework.length,
+              name: exName,
+            });
+          }
+          students.push({ name: name, pw: pw, homework: homework });
+        });
+        resolve({ students: students });
+      }catch(err){
+        reject(err);
+      }
+    };
+    reader.onerror = function(){ reject(new Error('파일 읽기 실패')); };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function _hwUploadComputeDiff(newStudents, currentDb){
+  const result = {
+    studentsAdded: [], studentsRemoved: [], studentsModified: [], studentsUnchanged: [],
+    pwChanged: [], newComments: [],
+  };
+  const curMap = {};
+  (currentDb || []).forEach(function(s){ curMap[s.name] = s; });
+  const newMap = {};
+  newStudents.forEach(function(s){ newMap[s.name] = s; });
+  newStudents.forEach(function(ns){
+    const cs = curMap[ns.name];
+    if(!cs){
+      result.studentsAdded.push(ns.name);
+      (ns.homework || []).forEach(function(hw){ if(hw.comment) result.newComments.push(hw.comment); });
+      return;
+    }
+    if(ns.pw && cs.pw && ns.pw !== cs.pw){
+      result.pwChanged.push({ name: ns.name, old: cs.pw, new: ns.pw });
+    }
+    const curHwMap = {};
+    (cs.homework || []).forEach(function(hw){ 
+      const k = (hw.exName || hw.name || '') + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
+      curHwMap[k] = hw;
+    });
+    const newHwKeys = {};
+    let hwAdded = 0, hwChanged = 0;
+    (ns.homework || []).forEach(function(hw){
+      const k = hw.exName + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
+      newHwKeys[k] = true;
+      const cur = curHwMap[k];
+      if(!cur){
+        hwAdded++;
+        if(hw.comment) result.newComments.push(hw.comment);
+      } else if((cur.comment || '') !== (hw.comment || '')){
+        hwChanged++;
+        if(hw.comment) result.newComments.push(hw.comment);
+      }
+    });
+    let hwRemoved = 0;
+    Object.keys(curHwMap).forEach(function(k){ if(!newHwKeys[k]) hwRemoved++; });
+    if(hwAdded || hwChanged || hwRemoved){
+      result.studentsModified.push({ name: ns.name, hwAdded: hwAdded, hwChanged: hwChanged, hwRemoved: hwRemoved });
+    } else if(!result.pwChanged.find(function(p){ return p.name === ns.name; })){
+      result.studentsUnchanged.push(ns.name);
+    }
+  });
+  Object.keys(curMap).forEach(function(n){ if(!newMap[n]) result.studentsRemoved.push(n); });
+  return result;
+}
+
+function _hwUploadShowPreview(parsed, diff){
+  const previewEl = document.getElementById('hw-upload-preview');
+  const summaryEl = document.getElementById('hw-upload-diff-summary');
+  const detailEl = document.getElementById('hw-upload-diff-detail');
+  const actionsEl = document.getElementById('hw-upload-actions');
+  let summary = '';
+  summary += '🆕 추가: <strong style="color:#059669">' + diff.studentsAdded.length + '명</strong> · ';
+  summary += '🗑 제거: <strong style="color:#dc2626">' + diff.studentsRemoved.length + '명</strong> · ';
+  summary += '✏️ 변경: <strong style="color:#ea580c">' + diff.studentsModified.length + '명</strong> · ';
+  summary += '✅ 유지: <strong style="color:#64748b">' + diff.studentsUnchanged.length + '명</strong><br>';
+  summary += '🔑 비밀번호 변경: <strong>' + diff.pwChanged.length + '건</strong> · ';
+  summary += '🎙 새 TTS 멘트: <strong style="color:#7c3aed">' + diff.newComments.length + '개</strong>';
+  summaryEl.innerHTML = summary;
+  let detail = '';
+  if(diff.studentsAdded.length) detail += '<div style="margin-bottom:6px"><strong style="color:#059669">🆕 추가:</strong> ' + diff.studentsAdded.join(', ') + '</div>';
+  if(diff.studentsRemoved.length) detail += '<div style="margin-bottom:6px"><strong style="color:#dc2626">🗑 제거:</strong> ' + diff.studentsRemoved.join(', ') + '</div>';
+  if(diff.studentsModified.length){
+    detail += '<div style="margin-bottom:6px"><strong style="color:#ea580c">✏️ 변경:</strong><br>';
+    diff.studentsModified.forEach(function(m){
+      const parts = [];
+      if(m.hwAdded) parts.push('+' + m.hwAdded);
+      if(m.hwChanged) parts.push('수정 ' + m.hwChanged);
+      if(m.hwRemoved) parts.push('-' + m.hwRemoved);
+      detail += '&nbsp;&nbsp;• ' + m.name + ' (' + parts.join(', ') + ')<br>';
+    });
+    detail += '</div>';
+  }
+  if(diff.pwChanged.length){
+    detail += '<div style="margin-bottom:6px"><strong>🔑 비밀번호 변경:</strong><br>';
+    diff.pwChanged.forEach(function(p){
+      detail += '&nbsp;&nbsp;• ' + p.name + ': <code>' + p.old + '</code> → <code>' + p.new + '</code><br>';
+    });
+    detail += '</div>';
+  }
+  if(!detail) detail = '<span style="color:#94a3b8">변경 사항이 없습니다.</span>';
+  detailEl.innerHTML = detail;
+  previewEl.style.display = 'block';
+  actionsEl.style.display = 'flex';
+}
+
+function _hwUploadCancel(){
+  _hwUploadParsed = null;
+  _hwUploadDiff = null;
+  const fileInput = document.getElementById('hw-upload-file');
+  if(fileInput) fileInput.value = '';
+  const previewEl = document.getElementById('hw-upload-preview');
+  const actionsEl = document.getElementById('hw-upload-actions');
+  const statusEl = document.getElementById('hw-upload-status');
+  const resultEl = document.getElementById('hw-upload-result');
+  if(previewEl) previewEl.style.display = 'none';
+  if(actionsEl) actionsEl.style.display = 'none';
+  if(statusEl) statusEl.innerHTML = '';
+  if(resultEl) resultEl.style.display = 'none';
+}
+
+async function _hwUploadConfirm(){
+  if(!_hwUploadParsed || !_hwUploadDiff){ alert('업로드할 데이터가 없습니다.'); return; }
+  if(typeof firebase === 'undefined' || !firebase.database){ alert('Firebase 미연결 상태입니다.'); return; }
+  const user = firebase.auth().currentUser;
+  if(!user || !user.email || user.email !== 'gunfree2@naver.com'){
+    alert('⚠ 관리자 이메일(gunfree2@naver.com)로 로그인된 상태에서만 업로드할 수 있습니다.\n현재: ' + (user ? user.email || '익명' : '로그인 안됨'));
+    return;
+  }
+  const diff = _hwUploadDiff;
+  let msg = '다음 변경 사항을 Firebase에 반영합니다.\n\n';
+  msg += '🆕 추가: ' + diff.studentsAdded.length + '명\n';
+  msg += '🗑 제거: ' + diff.studentsRemoved.length + '명\n';
+  msg += '✏️ 변경: ' + diff.studentsModified.length + '명\n';
+  msg += '🔑 비밀번호 변경: ' + diff.pwChanged.length + '건\n';
+  msg += '🎙 새 TTS 멘트: ' + diff.newComments.length + '개\n\n계속하시겠어요?';
+  if(!confirm(msg)) return;
+  const resultEl = document.getElementById('hw-upload-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="color:#0284c7">⏳ Firebase에 쓰는 중...</div>';
+  try{
+    const now = Date.now();
+    const db = firebase.database();
+    const metaSnap = await db.ref('students_meta').once('value');
+    const curMeta = metaSnap.val() || {};
+    const newVer = (parseInt(curMeta.schemaVersion, 10) || 0) + 1;
+    const updates = {};
+    _hwUploadParsed.students.forEach(function(s){
+      updates['students/' + s.name] = { pw: s.pw, homework: s.homework, updatedAt: now };
+    });
+    diff.studentsRemoved.forEach(function(name){ updates['students/' + name] = null; });
+    updates['students_meta/schemaVersion'] = newVer;
+    updates['students_meta/lastUpdatedAt'] = now;
+    updates['students_meta/lastUpdatedBy'] = user.email;
+    updates['students_meta/studentCount'] = _hwUploadParsed.students.length;
+    await db.ref().update(updates);
+    STUDENTS_DB = _hwUploadParsed.students.map(function(s){ return { name: s.name, pw: s.pw, homework: s.homework }; });
+    localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
+    localStorage.setItem(_STUDENTS_LS_VER_KEY, String(newVer));
+    if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
+    let ttsMsg = '';
+    if(diff.newComments.length > 0){
+      ttsMsg = '<div style="margin-top:6px;color:#7c3aed">🎙 TTS 자동 생성 대상 ' + diff.newComments.length + '개 — Cloud Function 배포 후 자동 처리됩니다.</div>';
+    }
+    resultEl.innerHTML = 
+      '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:10px;color:#166534">' +
+      '✅ <strong>업로드 완료!</strong><br>' +
+      '📊 Firebase 버전: v' + newVer + '<br>' +
+      '👥 학생 수: ' + _hwUploadParsed.students.length + '명<br>' +
+      '🕐 ' + new Date(now).toLocaleString('ko-KR') + ttsMsg + '</div>';
+    setTimeout(function(){
+      document.getElementById('hw-upload-preview').style.display = 'none';
+      document.getElementById('hw-upload-actions').style.display = 'none';
+      const fileInput = document.getElementById('hw-upload-file');
+      if(fileInput) fileInput.value = '';
+      _hwUploadParsed = null;
+      _hwUploadDiff = null;
+      _hwUploadCheckVersion();
+    }, 800);
+  }catch(e){
+    console.error('[hwUpload] Firebase 쓰기 실패:', e);
+    resultEl.innerHTML = '<div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:8px;padding:10px;color:#991b1b">⚠ 업로드 실패: ' + (e.message || e) + '</div>';
+  }
+}
+
+function _syncStudentsFromFirebase(){
+  if(typeof firebase === 'undefined' || !firebase.database){
+    if(!STUDENTS_DB || !STUDENTS_DB.length){
+      STUDENTS_DB = JSON.parse(JSON.stringify(_STUDENTS_DB_FALLBACK));
+      console.log('[students-sync] Firebase 미연결 - HTML 내장 백업 사용');
+    }
+    return;
+  }
+  const tryFetch = function(){
+    firebase.database().ref('students_meta').once('value').then(function(snap){
+      const meta = snap.val();
+      if(!meta){ console.log('[students-sync] Firebase에 데이터 없음 - 캐시/백업 유지'); return; }
+      const remoteVer = parseInt(meta.schemaVersion, 10) || 0;
+      const localVer = parseInt(localStorage.getItem(_STUDENTS_LS_VER_KEY) || '0', 10);
+      if(remoteVer > localVer){
+        console.log('[students-sync] Firebase 버전이 더 새로움 (v' + remoteVer + ' > v' + localVer + ') - 동기화 시작');
+        firebase.database().ref('students').once('value').then(function(s){
+          const data = s.val();
+          if(!data) return;
+          const newDb = [];
+          Object.keys(data).forEach(function(name){
+            const row = data[name] || {};
+            newDb.push({ name: name, pw: row.pw || '', homework: row.homework || [] });
+          });
+          STUDENTS_DB = newDb;
+          localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
+          localStorage.setItem(_STUDENTS_LS_VER_KEY, String(remoteVer));
+          if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
+          console.log('[students-sync] 동기화 완료: ' + newDb.length + '명');
+        }).catch(function(e){ console.warn('[students-sync] students fetch 실패:', e.message); });
+      } else {
+        console.log('[students-sync] 최신 버전 (v' + localVer + ' >= v' + remoteVer + ')');
+      }
+    }).catch(function(e){ console.warn('[students-sync] students_meta 읽기 실패:', e.message); });
+  };
+  if(firebase.auth().currentUser){
+    tryFetch();
+  } else {
+    const off = firebase.auth().onAuthStateChanged(function(u){ if(u){ off(); tryFetch(); } });
+    setTimeout(function(){ if(firebase.auth().currentUser) tryFetch(); }, 5000);
+  }
+}
+
 function openStudentLogin(){
 if(curStudent){
 
@@ -9149,7 +9542,7 @@ function _fbLoadAllToday(callback){
   }catch(e){ callback({},{}); }
 }
 
-window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();});
+window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buildTheoryList();setTimeout(updateElUI,300);_loadStudentsFromStorage();_loadPianoSamples();setTimeout(function(){ try{ _syncStudentsFromFirebase(); }catch(e){ console.warn('[students-sync] 호출 실패:', e); } }, 1500);});
 
 /* 백그라운드 전환 감지 */
 document.addEventListener('visibilitychange', function(){
