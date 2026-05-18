@@ -544,10 +544,15 @@ input,select,button,textarea{font-family:inherit;}
         <input type="text" id="signup-name-input" 
                placeholder="앱 내 표시될 이름"
                maxlength="12"
+               oninput="_onSignupNicknameInput()"
                style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
                onfocus="this.style.borderColor='#c2410c'"
                onblur="this.style.borderColor='#e2e8f0'">
+        <div id="signup-name-status" style="font-size:11.5px;margin-top:4px;display:none;font-weight:600"></div>
         <div id="signup-name-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+        <div style="margin-top:6px;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412;line-height:1.5">
+          ⚠️ <strong>한번 설정한 닉네임은 변경할 수 없습니다.</strong> 신중히 입력해주세요.
+        </div>
       </div>
       
       <!-- 약관 동의 체크박스 -->
@@ -14256,6 +14261,174 @@ function _isValidNickname(name){
   return typeof name === 'string' && name.trim().length >= 2 && name.trim().length <= 12;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   닉네임 중복 체크 시스템 (2026-05-18 추가)
+   - Firebase nicknames/{normalized}: uid 인덱스 사용 (O(1) 조회)
+   - 정규화: trim + lowercase (대소문자 무시, 공백은 보존)
+   - 예약어: 관리자/시스템 + 학생 14명 실명 + 욕설
+   - 실시간 체크: 500ms debounce
+   - 가입 시점: 트랜잭션으로 등록 (동시성 안전)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 닉네임 정규화 (DB 키용) - 옵션 A: 보수적 (trim + lowercase)
+   + Firebase RTDB 키 금지 문자 변환 (. $ # [ ] / → _) */
+function _normalizeNickname(name){
+  if(typeof name !== 'string') return '';
+  return name.trim().toLowerCase()
+    /* Firebase RTDB 키 금지 문자 → '_'로 치환 (저장 실패 방지) */
+    .replace(/[.$#\[\]\/]/g, '_')
+    /* ASCII 제어문자(0-31, 127) 제거 */
+    .replace(/[\x00-\x1F\x7F]/g, '');
+}
+
+/* 예약어 목록 - 관리자/시스템 + 학생 14명 실명 + 기본 욕설 */
+const _RESERVED_NICKNAMES = (function(){
+  const reserved = [
+    /* 관리자/시스템 (한/영) */
+    'admin','administrator','관리자','운영자','system','시스템',
+    'root','superuser','staff','operator','관리','운영','어드민',
+    /* 회사명 (도용 방지) */
+    '바른발성연구소','rightvocallab','right vocal lab','right-vocal-lab',
+    '바른발성','발성연구소',
+    /* 익명/null */
+    'null','undefined','none','anonymous','익명','사용자','user','guest',
+    'noreply','no-reply','support','help','contact','문의','고객센터',
+    /* 학생 14명 실명 (사칭 방지) */
+    '박주은','김동현','최서진','박수연','박지유','허율아','권나예',
+    '박한솔','김아성','김예은','최민근','최은채','강다인','오정민',
+    /* 기본 욕설 (확장 가능) */
+    '시발','씨발','병신','개새끼','좆','존나','지랄','fuck','shit','bitch','asshole',
+    '미친','꺼져','죽어','자살','새끼',
+  ];
+  return new Set(reserved.map(s => s.toLowerCase()));
+})();
+
+/* 예약어 체크 (정규화된 닉네임 받음) */
+function _isReservedNickname(normalized){
+  return _RESERVED_NICKNAMES.has(normalized);
+}
+
+/* Firebase에서 닉네임 사용 여부 조회 (단일 조회, O(1)) */
+async function _isNicknameTaken(normalized){
+  if(!_fbDb || !normalized) return false;
+  try {
+    const snap = await _fbDb.ref('nicknames/' + normalized).get();
+    return snap.exists();
+  } catch(e) {
+    console.warn('[닉네임 중복 조회 실패]', e);
+    return false; /* 실패 시 통과 (가입 시점 트랜잭션이 최종 방어선) */
+  }
+}
+
+/* 실시간 닉네임 상태 표시 (가입 화면 input 이벤트) */
+let _nicknameCheckTimer = null;
+let _nicknameLastChecked = ''; /* 마지막 체크한 정규화된 닉네임 (중복 호출 방지) */
+let _nicknameLastResult = null; /* {available:bool, reason:string} */
+
+function _onSignupNicknameInput(){
+  const input = document.getElementById('signup-name-input');
+  const status = document.getElementById('signup-name-status');
+  const errDiv = document.getElementById('signup-name-err');
+  if(!input || !status) return;
+  
+  /* 에러 메시지 초기화 */
+  if(errDiv){ errDiv.style.display = 'none'; }
+  
+  const raw = input.value;
+  const trimmed = raw.trim();
+  
+  /* 디바운스 클리어 */
+  if(_nicknameCheckTimer){ clearTimeout(_nicknameCheckTimer); _nicknameCheckTimer = null; }
+  
+  /* 너무 짧으면 상태 숨김 */
+  if(trimmed.length === 0){
+    status.style.display = 'none';
+    _nicknameLastResult = null;
+    return;
+  }
+  
+  /* 길이 검증 - 즉시 표시 */
+  if(trimmed.length < 2){
+    status.style.display = 'block';
+    status.style.color = '#dc2626';
+    status.textContent = '⚠️ 2자 이상 입력해주세요.';
+    _nicknameLastResult = {available: false, reason: 'too_short'};
+    return;
+  }
+  if(trimmed.length > 12){
+    status.style.display = 'block';
+    status.style.color = '#dc2626';
+    status.textContent = '⚠️ 12자 이하로 입력해주세요.';
+    _nicknameLastResult = {available: false, reason: 'too_long'};
+    return;
+  }
+  
+  /* 예약어 체크 - 즉시 표시 */
+  const normalized = _normalizeNickname(trimmed);
+  if(_isReservedNickname(normalized)){
+    status.style.display = 'block';
+    status.style.color = '#dc2626';
+    status.textContent = '❌ 사용할 수 없는 닉네임입니다.';
+    _nicknameLastResult = {available: false, reason: 'reserved'};
+    return;
+  }
+  
+  /* 체크 중 표시 */
+  status.style.display = 'block';
+  status.style.color = '#64748b';
+  status.textContent = '⏳ 확인 중...';
+  
+  /* 500ms debounce 후 Firebase 조회 */
+  _nicknameCheckTimer = setTimeout(async function(){
+    /* 호출 시점 입력값 재확인 (사용자가 더 입력했을 수도) */
+    const curInput = document.getElementById('signup-name-input');
+    if(!curInput) return;
+    const curTrimmed = (curInput.value || '').trim();
+    const curNormalized = _normalizeNickname(curTrimmed);
+    
+    /* 입력값이 바뀌었으면 무시 (가장 마지막 입력만 체크) */
+    if(curNormalized !== normalized) return;
+    
+    /* 최근 결과 캐시 활용 (같은 값 재조회 방지) */
+    if(_nicknameLastChecked === normalized && _nicknameLastResult){
+      _renderNicknameStatus(_nicknameLastResult);
+      return;
+    }
+    
+    const taken = await _isNicknameTaken(normalized);
+    _nicknameLastChecked = normalized;
+    _nicknameLastResult = taken
+      ? {available: false, reason: 'taken'}
+      : {available: true, reason: 'ok'};
+    
+    /* 상태 표시 (다시 한번 현재 input과 일치하는지 확인) */
+    const finalInput = document.getElementById('signup-name-input');
+    if(finalInput && _normalizeNickname((finalInput.value || '').trim()) === normalized){
+      _renderNicknameStatus(_nicknameLastResult);
+    }
+  }, 500);
+}
+
+/* 상태 표시 렌더링 */
+function _renderNicknameStatus(result){
+  const status = document.getElementById('signup-name-status');
+  if(!status || !result) return;
+  status.style.display = 'block';
+  if(result.available){
+    status.style.color = '#059669';
+    status.textContent = '✅ 사용 가능한 닉네임입니다.';
+  } else {
+    status.style.color = '#dc2626';
+    if(result.reason === 'taken'){
+      status.textContent = '❌ 이미 사용 중인 닉네임입니다.';
+    } else if(result.reason === 'reserved'){
+      status.textContent = '❌ 사용할 수 없는 닉네임입니다.';
+    } else {
+      status.textContent = '❌ 사용할 수 없는 닉네임입니다.';
+    }
+  }
+}
+
 /* 에러 표시 헬퍼 */
 function _showFieldError(errId, msg){
   const el = document.getElementById(errId);
@@ -14727,6 +14900,17 @@ function _submitEmailSignup(){
   } else if(!_isValidNickname(name)){
     _showFieldError('signup-name-err', '닉네임은 2~12자로 입력해주세요.');
     hasError = true;
+  } else {
+    /* 예약어 체크 (정규화) */
+    const _normName = _normalizeNickname(name);
+    if(_isReservedNickname(_normName)){
+      _showFieldError('signup-name-err', '사용할 수 없는 닉네임입니다. 다른 닉네임을 선택해주세요.');
+      hasError = true;
+    } else if(_nicknameLastChecked === _normName && _nicknameLastResult && !_nicknameLastResult.available){
+      /* 실시간 체크에서 이미 불가 판정 */
+      _showFieldError('signup-name-err', '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.');
+      hasError = true;
+    }
   }
   
   /* 필수 약관 동의 검사 */
@@ -14779,6 +14963,34 @@ function _submitEmailSignup(){
       return user.updateProfile({ displayName: name }).then(function(){ return user; });
     })
     .then(function(user){
+      /* ⭐ 닉네임 트랜잭션 등록 (동시성 안전장치)
+         - nicknames/{normalized}: uid 인덱스에 본인 UID 등록
+         - 다른 사람이 이미 차지했으면 트랜잭션 실패 → 가입 롤백 */
+      if(!_fbDb) return user;
+      const _normName = _normalizeNickname(name);
+      const _nickRef = _fbDb.ref('nicknames/' + _normName);
+      return _nickRef.transaction(function(current){
+        if(current === null){
+          /* 비어있으면 본인 UID 등록 */
+          return user.uid;
+        }
+        if(current === user.uid){
+          /* 이미 본인이 등록한 상태 (재시도 케이스) */
+          return current;
+        }
+        /* 다른 사람이 이미 차지함 → 트랜잭션 중단 */
+        return; /* undefined 반환 → abort */
+      }).then(function(result){
+        if(!result.committed){
+          /* 트랜잭션 실패: 다른 사람이 닉네임 차지 */
+          const err = new Error('NICKNAME_TAKEN');
+          err.code = 'app/nickname-taken';
+          throw err;
+        }
+        return user;
+      });
+    })
+    .then(function(user){
       /* Realtime DB에 사용자 정보 저장 (선택 정보 포함) */
       if(_fbDb){
         return _fbDb.ref('users/' + user.uid).set({
@@ -14809,6 +15021,15 @@ function _submitEmailSignup(){
         _showFieldError('signup-pw-err', '비밀번호가 너무 약합니다. 8자 이상의 영문/숫자 조합을 사용하세요.');
       } else if(err.code === 'auth/invalid-email'){
         _showFieldError('signup-email-err', '이메일 형식이 올바르지 않습니다.');
+      } else if(err.code === 'app/nickname-taken'){
+        /* 닉네임이 트랜잭션 직전에 누가 가져감 - Auth 계정 롤백 */
+        _showFieldError('signup-name-err', '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.');
+        try {
+          const cu = firebase.auth().currentUser;
+          if(cu && cu.email === email){
+            cu.delete().catch(function(e){ console.warn('롤백용 계정 삭제 실패:', e); });
+          }
+        } catch(e){ console.warn('롤백 처리 중 오류:', e); }
       } else {
         alert(msg);
       }
@@ -15187,6 +15408,14 @@ async function _submitNickname(){
   if(nick.length > 15){ if(err) err.textContent='닉네임은 15자 이하여야 해요.'; return; }
   if(!window._generalUser || !_fbDb){ if(err) err.textContent='로그인 정보가 없어요.'; return; }
   const uid = window._generalUser.uid;
+  
+  /* 예약어 체크 (2026-05-18 추가) */
+  const _normNick = _normalizeNickname(nick);
+  if(_isReservedNickname(_normNick)){
+    if(err) err.textContent='사용할 수 없는 닉네임이에요. 다른 닉네임을 선택해주세요.';
+    return;
+  }
+  
   try {
     /* 이미 변경했는지 한 번 더 확인 (1회만) */
     const exist = await _fbDb.ref('users/'+uid).once('value');
@@ -15197,6 +15426,19 @@ async function _submitNickname(){
       document.getElementById('nickname-modal')?.classList.remove('open');
       return;
     }
+    
+    /* ⭐ 닉네임 트랜잭션 등록 (동시성 안전, 2026-05-18 추가) */
+    const _nickRef = _fbDb.ref('nicknames/' + _normNick);
+    const _txResult = await _nickRef.transaction(function(current){
+      if(current === null) return uid;
+      if(current === uid) return current; /* 본인이 이미 등록 */
+      return; /* 다른 사람이 차지 → abort */
+    });
+    if(!_txResult.committed){
+      if(err) err.textContent='이미 사용 중인 닉네임이에요. 다른 닉네임을 선택해주세요.';
+      return;
+    }
+    
     /* 저장 - nicknameChoiceMade=true + nicknameChanged=true */
     await _saveNicknameChoice(true, nick);
     try { localStorage.setItem('general_user_name', nick); } catch(e){}
