@@ -15244,6 +15244,30 @@ async function _loadNicknameQuiet(){
     if(data.nickname && typeof data.nickname==='string' && data.nickname.length>=1){
       window._generalUser.nickname = data.nickname;
       try { localStorage.setItem('general_user_name', data.nickname); } catch(e){}
+      /* ⭐ 자동 마이그레이션 (2026-05-18): 
+         닉네임 중복 체크 시스템 도입 전 가입한 사용자를 nicknames 인덱스에 자동 등록.
+         - nicknameChanged: true 인 사용자만 (의도적으로 설정한 닉네임)
+         - 정규화된 닉네임이 nicknames 인덱스에 없으면 본인 UID로 등록
+         - 충돌(다른 UID가 이미 점유) 시 조용히 skip (수동 정리 필요한 케이스) */
+      if(data.nicknameChanged === true && typeof _normalizeNickname === 'function'){
+        const _normName = _normalizeNickname(data.nickname);
+        if(_normName && _normName.length >= 2 && _normName.length <= 64){
+          /* 비동기로 백그라운드 등록 (await X - UI 막지 않음) */
+          _fbDb.ref('nicknames/' + _normName).transaction(function(current){
+            if(current === null) return uid;          /* 비어있으면 등록 */
+            if(current === uid) return current;       /* 본인이 이미 등록 (멱등) */
+            return;                                    /* 타인 점유 → abort (수동 정리 필요) */
+          }).then(function(result){
+            if(result.committed){
+              console.log('[닉네임 인덱스 자동 마이그레이션 완료]', data.nickname, '→', uid.substring(0,8)+'...');
+            } else {
+              console.warn('[닉네임 인덱스 충돌]', data.nickname, '- 다른 사용자가 점유 중. 수동 정리 필요.');
+            }
+          }).catch(function(e){
+            console.warn('[닉네임 인덱스 마이그레이션 실패]', e.message || e);
+          });
+        }
+      }
     }
     /* 선택 상태 캐시 */
     window._generalUser.nicknameChoiceMade = !!data.nicknameChoiceMade;
