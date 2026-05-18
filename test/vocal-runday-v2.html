@@ -555,6 +555,40 @@ input,select,button,textarea{font-family:inherit;}
         </div>
       </div>
       
+      <!-- 생년월일 입력 (만 14세 미만 분기용) -->
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">생년월일 *</label>
+        <input type="date" id="signup-birthdate-input" 
+               onchange="_onSignupBirthdateChange()"
+               style="width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#fff;color:#334155;outline:none;transition:border-color 0.15s"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#e2e8f0'">
+        <div id="signup-birthdate-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+        <div id="signup-age-info" style="font-size:11.5px;margin-top:4px;display:none;font-weight:600"></div>
+      </div>
+      
+      <!-- 법정대리인 이메일 (만 14세 미만일 때만 표시) -->
+      <div id="signup-parental-section" style="margin-bottom:20px;display:none;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;padding:14px">
+        <div style="font-size:13px;font-weight:700;color:#9a3412;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          👨‍👩‍👧 법정대리인 동의 필요
+        </div>
+        <div style="font-size:11.5px;color:#7c2d12;line-height:1.6;margin-bottom:10px">
+          만 14세 미만은 정보통신망법에 따라 <strong>부모님(법정대리인)의 동의</strong>가 필요합니다.<br>
+          부모님 이메일을 입력하시면, 가입 신청 시 동의 메일을 보내드립니다.
+        </div>
+        <label style="display:block;font-size:11.5px;font-weight:600;color:#9a3412;margin-bottom:4px">법정대리인(부모님) 이메일 *</label>
+        <input type="email" id="signup-parent-email-input" 
+               placeholder="예: parent@example.com"
+               style="width:100%;height:44px;padding:0 12px;border:1.5px solid #fed7aa;border-radius:8px;font-size:13px;background:#fff;color:#334155;outline:none"
+               onfocus="this.style.borderColor='#c2410c'"
+               onblur="this.style.borderColor='#fed7aa'">
+        <div id="signup-parent-email-err" style="font-size:11px;color:#dc2626;margin-top:4px;display:none"></div>
+        <div style="margin-top:8px;padding:6px 8px;background:#fff;border-radius:6px;font-size:10.5px;color:#7c2d12;line-height:1.5">
+          📧 입력하신 이메일로 동의 안내 메일이 발송됩니다.<br>
+          부모님이 이메일에서 동의를 완료한 후 7일 이내에 다시 로그인하시면 가입이 완료됩니다.
+        </div>
+      </div>
+      
       <!-- 약관 동의 체크박스 -->
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:20px">
         <!-- 전체 동의 -->
@@ -14429,6 +14463,185 @@ function _renderNicknameStatus(result){
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   만 14세 미만 가입 시스템 (2026-05-18 추가, Phase B)
+   - 생년월일 입력 → 만 14세 미만이면 법정대리인 이메일 입력 영역 표시
+   - 가입 시 Cloud Function 호출 → 대리인에게 동의 메일 발송
+   - 대리인이 메일 링크 클릭 → parental-consent.html → 동의 완료
+   - 아동 재로그인 시 동의 확인 → 가입 활성화
+   ═══════════════════════════════════════════════════════════ */
+
+/* 만 나이 계산 (한국식 만 나이 기준일: 오늘) */
+function _calculateAge(birthdateStr){
+  if(!birthdateStr) return null;
+  const birth = new Date(birthdateStr);
+  if(isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if(m < 0 || (m === 0 && today.getDate() < birth.getDate())){
+    age--;
+  }
+  return age;
+}
+
+/* 생년월일 유효성 검사 (1900~오늘) */
+function _isValidBirthdate(birthdateStr){
+  if(!birthdateStr) return false;
+  const birth = new Date(birthdateStr);
+  if(isNaN(birth.getTime())) return false;
+  const today = new Date();
+  const minDate = new Date('1900-01-01');
+  return birth >= minDate && birth <= today;
+}
+
+/* 생년월일 입력 시 호출 - 만 14세 미만이면 법정대리인 영역 표시 */
+function _onSignupBirthdateChange(){
+  const input = document.getElementById('signup-birthdate-input');
+  const errDiv = document.getElementById('signup-birthdate-err');
+  const ageInfo = document.getElementById('signup-age-info');
+  const parentalSection = document.getElementById('signup-parental-section');
+  if(!input) return;
+  
+  /* 에러 초기화 */
+  if(errDiv){ errDiv.style.display = 'none'; }
+  
+  const value = input.value;
+  if(!value){
+    if(ageInfo){ ageInfo.style.display = 'none'; }
+    if(parentalSection){ parentalSection.style.display = 'none'; }
+    return;
+  }
+  
+  /* 유효성 검사 */
+  if(!_isValidBirthdate(value)){
+    if(errDiv){
+      errDiv.textContent = '올바른 생년월일을 입력해주세요.';
+      errDiv.style.display = 'block';
+    }
+    if(ageInfo){ ageInfo.style.display = 'none'; }
+    if(parentalSection){ parentalSection.style.display = 'none'; }
+    return;
+  }
+  
+  const age = _calculateAge(value);
+  if(age === null){
+    if(ageInfo){ ageInfo.style.display = 'none'; }
+    if(parentalSection){ parentalSection.style.display = 'none'; }
+    return;
+  }
+  
+  /* 나이 정보 표시 */
+  if(ageInfo){
+    ageInfo.style.display = 'block';
+    if(age < 14){
+      ageInfo.style.color = '#9a3412';
+      ageInfo.textContent = `만 ${age}세 - 법정대리인 동의가 필요해요.`;
+    } else {
+      ageInfo.style.color = '#059669';
+      ageInfo.textContent = `만 ${age}세 - 가입 가능합니다.`;
+    }
+  }
+  
+  /* 만 14세 미만 → 법정대리인 영역 표시 */
+  if(parentalSection){
+    parentalSection.style.display = (age < 14) ? 'block' : 'none';
+  }
+}
+
+/* 이메일 형식 검증 (재사용) */
+/* (_isValidEmail는 이미 존재) */
+
+/* 대리인 동의 Cloud Function URL */
+const _SEND_PARENTAL_CONSENT_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/sendParentalConsent';
+const _VERIFY_PARENTAL_CONSENT_URL = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/verifyParentalConsent';
+
+/* 대리인 동의 메일 요청 - Cloud Function 호출 */
+async function _requestParentalConsent(user, parentEmail, childNickname){
+  if(!user || !parentEmail) throw new Error('Missing parameters');
+  /* Firebase ID 토큰 가져오기 (Cloud Function 인증) */
+  const idToken = await user.getIdToken();
+  const res = await fetch(_SEND_PARENTAL_CONSENT_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + idToken,
+    },
+    body: JSON.stringify({
+      uid: user.uid,
+      childEmail: user.email,
+      childNickname: childNickname,
+      parentEmail: parentEmail,
+    }),
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(function(){ return ''; });
+    throw new Error('대리인 동의 메일 발송 실패 (HTTP ' + res.status + '): ' + errText);
+  }
+  const data = await res.json();
+  if(!data.success){
+    throw new Error(data.error || '대리인 동의 메일 발송 실패');
+  }
+  return data;
+}
+
+/* 만 14세 미만 가입 후 대리인 동의 대기 안내 화면 표시 */
+function _showParentalConsentPendingScreen(parentEmail){
+  /* 가입 화면 폼 숨기고 안내 화면으로 전환 */
+  const signupForm = document.getElementById('email-form-signup');
+  if(signupForm){ signupForm.style.display = 'none'; }
+  const loginForm = document.getElementById('email-form-login');
+  if(loginForm){ loginForm.style.display = 'none'; }
+  
+  /* 안내 모달 또는 화면 표시 */
+  let modal = document.getElementById('parental-pending-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'parental-pending-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.7);display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:48px;line-height:1">📧</div>
+        </div>
+        <div style="font-size:18px;font-weight:900;color:#0f172a;text-align:center;margin-bottom:8px">대리인 동의 메일이 발송되었습니다</div>
+        <div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:18px">
+          <p style="margin:0 0 10px"><strong style="color:#c2410c">${parentEmail}</strong> 으로<br>법정대리인 동의 안내 메일을 보냈습니다.</p>
+          <p style="margin:0 0 10px">📩 부모님께 받은 편지함을 확인해 달라고 요청하세요.<br>(스팸함도 함께 확인해 주세요)</p>
+          <p style="margin:0 0 10px">✅ 부모님이 동의 링크를 클릭하시면 가입이 완료됩니다.</p>
+          <p style="margin:0;color:#9a3412;font-size:12px"><strong>⚠️ 7일 이내에 동의가 완료되지 않으면 가입이 자동 취소됩니다.</strong></p>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;margin-bottom:18px;font-size:12px;color:#166534;line-height:1.6">
+          <strong>📝 다음 안내</strong><br>
+          부모님이 동의를 완료하시면 본인 이메일과 비밀번호로 <strong>로그인</strong>해주세요. 그때 가입이 완료됩니다.
+        </div>
+        <button onclick="_closeParentalPendingModal()" 
+          style="width:100%;height:48px;background:#c2410c;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">
+          확인
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    modal.style.display = 'flex';
+  }
+}
+
+/* 안내 모달 닫기 - 로그인 화면으로 복귀 */
+function _closeParentalPendingModal(){
+  const modal = document.getElementById('parental-pending-modal');
+  if(modal){ modal.style.display = 'none'; }
+  /* 로그인 탭으로 전환 */
+  if(typeof _switchAuthTab === 'function'){
+    _switchAuthTab('login');
+  } else {
+    const signupForm = document.getElementById('email-form-signup');
+    const loginForm = document.getElementById('email-form-login');
+    if(signupForm){ signupForm.style.display = 'none'; }
+    if(loginForm){ loginForm.style.display = 'block'; }
+  }
+}
+
 /* 에러 표시 헬퍼 */
 function _showFieldError(errId, msg){
   const el = document.getElementById(errId);
@@ -14858,12 +15071,14 @@ function _showToast(msg){
 /* 이메일 회원가입 제출 (Firebase Auth 실제 연동) */
 function _submitEmailSignup(){
   /* 에러 초기화 */
-  ['signup-email-err','signup-pw-err','signup-pw2-err','signup-name-err'].forEach(id => _showFieldError(id, ''));
+  ['signup-email-err','signup-pw-err','signup-pw2-err','signup-name-err','signup-birthdate-err','signup-parent-email-err'].forEach(id => _showFieldError(id, ''));
   
   const email = (document.getElementById('signup-email-input')?.value || '').trim();
   const pw = document.getElementById('signup-pw-input')?.value || '';
   const pw2 = document.getElementById('signup-pw2-input')?.value || '';
   const name = (document.getElementById('signup-name-input')?.value || '').trim();
+  const birthdate = (document.getElementById('signup-birthdate-input')?.value || '').trim();
+  const parentEmail = (document.getElementById('signup-parent-email-input')?.value || '').trim();
   
   /* 유효성 검사 */
   let hasError = false;
@@ -14910,6 +15125,36 @@ function _submitEmailSignup(){
       /* 실시간 체크에서 이미 불가 판정 */
       _showFieldError('signup-name-err', '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.');
       hasError = true;
+    }
+  }
+  
+  /* 생년월일 검증 (2026-05-18 추가, Phase B) */
+  let userAge = null;
+  let needsParentalConsent = false;
+  if(!birthdate){
+    _showFieldError('signup-birthdate-err', '생년월일을 입력해주세요.');
+    hasError = true;
+  } else if(!_isValidBirthdate(birthdate)){
+    _showFieldError('signup-birthdate-err', '올바른 생년월일을 입력해주세요.');
+    hasError = true;
+  } else {
+    userAge = _calculateAge(birthdate);
+    if(userAge === null || userAge < 0){
+      _showFieldError('signup-birthdate-err', '생년월일을 다시 확인해주세요.');
+      hasError = true;
+    } else if(userAge < 14){
+      needsParentalConsent = true;
+      /* 만 14세 미만 → 법정대리인 이메일 검증 */
+      if(!parentEmail){
+        _showFieldError('signup-parent-email-err', '법정대리인(부모님) 이메일을 입력해주세요.');
+        hasError = true;
+      } else if(!_isValidEmail(parentEmail)){
+        _showFieldError('signup-parent-email-err', '이메일 형식이 올바르지 않습니다.');
+        hasError = true;
+      } else if(parentEmail.toLowerCase() === email.toLowerCase()){
+        _showFieldError('signup-parent-email-err', '본인 이메일과 다른 부모님의 이메일을 입력해주세요.');
+        hasError = true;
+      }
     }
   }
   
@@ -14993,22 +15238,49 @@ function _submitEmailSignup(){
     .then(function(user){
       /* Realtime DB에 사용자 정보 저장 (선택 정보 포함) */
       if(_fbDb){
-        return _fbDb.ref('users/' + user.uid).set({
+        const userData = {
           nickname: name,
           nicknameChanged: true,        /* 이메일 가입은 사용자가 직접 입력한 닉네임 = 최종 (수정 불가) */
           nicknameChoiceMade: true,     /* 닉네임 선택 모달 안 띄움 (이미 의도적으로 입력) */
           email: email,
+          birthdate: birthdate,         /* 생년월일 (YYYY-MM-DD) - 만 14세 미만 분기 + 향후 통계용 */
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           agreedTerms: true,
           agreedPrivacy: true,
           agreedVoice: true,
           agreedMarketing: marketingOk,
           agreedAt: firebase.database.ServerValue.TIMESTAMP,
-        }).then(function(){ return user; });
+        };
+        /* 만 14세 미만이면 가입 보류 플래그 (대리인 동의 대기) */
+        if(needsParentalConsent){
+          userData.pendingParentalConsent = true;
+          userData.parentalConsentStatus = 'pending'; /* pending | approved | rejected | expired */
+          userData.parentalConsentRequestedAt = firebase.database.ServerValue.TIMESTAMP;
+          userData.parentEmail = parentEmail; /* 안내 화면 + 재발송용 (동의 완료 후 즉시 파기) */
+        }
+        return _fbDb.ref('users/' + user.uid).set(userData).then(function(){ return user; });
       }
       return user;
     })
     .then(function(user){
+      /* 만 14세 미만 → 대리인 동의 메일 발송 후 로그아웃 + 안내 화면 */
+      if(needsParentalConsent){
+        return _requestParentalConsent(user, parentEmail, name)
+          .then(function(){
+            /* 로그아웃 + 안내 화면 표시 */
+            return firebase.auth().signOut().catch(function(){}).then(function(){
+              _showParentalConsentPendingScreen(parentEmail);
+            });
+          })
+          .catch(function(err){
+            console.warn('대리인 동의 메일 발송 실패:', err);
+            alert('대리인 동의 메일 발송에 실패했습니다.\n\n잠시 후 다시 로그인하시면 자동으로 재시도됩니다.\n문제 지속 시 rightvocallab@gmail.com으로 문의해주세요.');
+            return firebase.auth().signOut().catch(function(){}).then(function(){
+              _showParentalConsentPendingScreen(parentEmail);
+            });
+          });
+      }
+      /* 만 14세 이상 → 기존 흐름 (자동 로그인 + 홈) */
       _onEmailAuthSuccess(user, 'email');
     })
     .catch(function(err){
@@ -15126,6 +15398,56 @@ async function _onEmailAuthSuccess(user, provider){
   }
   /* localStorage에도 백업 (자동 복원 시 사용) */
   try { localStorage.setItem('general_user_provider', _detectedProvider); } catch(e){}
+  
+  /* ⭐ 만 14세 미만 대리인 동의 체크 (2026-05-18 Phase B 추가) 
+     - users/{uid}/pendingParentalConsent 가 true 면 동의 상태 확인
+     - approved → 활성화 후 정상 진입
+     - pending → 안내 화면 + 로그아웃
+     - rejected/expired → 가입 실패 안내 + 로그아웃 */
+  if(_fbDb && user && user.uid){
+    try {
+      const _consentSnap = await _fbDb.ref('users/' + user.uid).once('value');
+      const _userData = _consentSnap.val() || {};
+      if(_userData.pendingParentalConsent === true){
+        const status = _userData.parentalConsentStatus || 'pending';
+        if(status === 'approved'){
+          /* 동의 완료 → 플래그 제거 + 활성화 + 대리인 이메일 즉시 파기 (Q6=A: 법적 의무) */
+          await _fbDb.ref('users/' + user.uid).update({
+            pendingParentalConsent: false,
+            parentalConsentApprovedAt: firebase.database.ServerValue.TIMESTAMP,
+            parentEmail: null, /* 동의 완료 후 즉시 삭제 (개인정보처리방침 6항 준수) */
+          });
+          /* 활성화 완료 - 정상 흐름 진행 */
+          showToast && showToast('🎉 부모님 동의가 완료되어 가입이 활성화되었습니다!');
+        } else if(status === 'rejected'){
+          alert('부모님께서 가입에 동의하지 않으셨습니다.\n\n다시 시도하시려면 새로 회원가입을 진행해주세요.');
+          /* 계정 삭제 + 로그아웃 */
+          try { await _fbDb.ref('users/' + user.uid).remove(); } catch(e){}
+          try { await user.delete(); } catch(e){ await firebase.auth().signOut(); }
+          return;
+        } else if(status === 'expired'){
+          alert('대리인 동의 기간(7일)이 만료되었습니다.\n\n새로 회원가입을 진행해주세요.');
+          try { await _fbDb.ref('users/' + user.uid).remove(); } catch(e){}
+          try { await user.delete(); } catch(e){ await firebase.auth().signOut(); }
+          return;
+        } else {
+          /* pending - 아직 동의 안 됨 → 안내 화면 + 로그아웃 */
+          const parentEmail = _userData.parentEmail || '부모님 이메일';
+          await firebase.auth().signOut().catch(function(){});
+          if(typeof _showParentalConsentPendingScreen === 'function'){
+            _showParentalConsentPendingScreen(parentEmail);
+          } else {
+            alert('아직 부모님의 동의가 완료되지 않았습니다.\n동의 메일을 확인해주세요.');
+          }
+          return;
+        }
+      }
+    } catch(e){
+      console.warn('[대리인 동의 체크 실패]', e);
+      /* 체크 실패해도 진행 (안전장치 부재 시 차단하지 않음) */
+    }
+  }
+  
   /* === 개발자(동현) 특수 처리: gunfree2@naver.com → 김동현 학생 + 관리자 동시 진입 === */
   const _DEV_EMAIL = 'gunfree2@naver.com';
   const _isDev = user && user.email && user.email.toLowerCase() === _DEV_EMAIL;
