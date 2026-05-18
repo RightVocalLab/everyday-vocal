@@ -8678,6 +8678,8 @@ async function _hwUploadFileChange(ev){
   const file = ev.target.files && ev.target.files[0];
   if(!file) return;
   const status = document.getElementById('hw-upload-status');
+  const prevResult = document.getElementById('hw-upload-result');
+  if(prevResult) prevResult.style.display = 'none';
   status.innerHTML = '⏳ SheetJS 로딩 중...';
   try{
     await _hwUploadLoadSheetJS();
@@ -8687,8 +8689,31 @@ async function _hwUploadFileChange(ev){
       status.innerHTML = '<span style="color:#dc2626">⚠ 학생 시트를 찾을 수 없습니다. (예: "학생_박주은")</span>';
       return;
     }
-    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료</span>';
-    const diff = _hwUploadComputeDiff(parsed.students, STUDENTS_DB || []);
+    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료 · ⏳ Firebase 최신 데이터 fetch 중...</span>';
+    let baseDb = [];
+    if(typeof firebase !== 'undefined' && firebase.database){
+      try{
+        const snap = await firebase.database().ref('students').once('value');
+        const data = snap.val();
+        if(data){
+          Object.keys(data).forEach(function(name){
+            const row = data[name] || {};
+            baseDb.push({ name: name, pw: row.pw || '', homework: row.homework || [] });
+          });
+          console.log('[hwUpload] Firebase 최신 데이터 사용:', baseDb.length, '명');
+        } else {
+          console.log('[hwUpload] Firebase 비어있음 → 모두 신규 추가로 처리');
+        }
+      }catch(e){
+        console.warn('[hwUpload] Firebase fetch 실패 - 캐시로 대체:', e.message);
+        baseDb = STUDENTS_DB || [];
+        status.innerHTML = '<span style="color:#9a3412">⚠ Firebase 접근 실패 - 캐시 기준 (부정확할 수 있음)</span>';
+      }
+    } else {
+      baseDb = STUDENTS_DB || [];
+    }
+    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료 · Firebase 기준 ' + baseDb.length + '명과 비교</span>';
+    const diff = _hwUploadComputeDiff(parsed.students, baseDb);
     _hwUploadParsed = parsed;
     _hwUploadDiff = diff;
     _hwUploadShowPreview(parsed, diff);
@@ -8792,23 +8817,35 @@ function _hwUploadComputeDiff(newStudents, currentDb){
       curHwMap[k] = hw;
     });
     const newHwKeys = {};
-    let hwAdded = 0, hwChanged = 0;
+    const addedItems = [], changedItems = [];
     (ns.homework || []).forEach(function(hw){
       const k = hw.exName + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
       newHwKeys[k] = true;
       const cur = curHwMap[k];
       if(!cur){
-        hwAdded++;
+        addedItems.push(hw.exName + (hw.scaleId ? ' ('+hw.scaleId+')' : ''));
         if(hw.comment) result.newComments.push(hw.comment);
       } else if((cur.comment || '') !== (hw.comment || '')){
-        hwChanged++;
+        changedItems.push({
+          name: hw.exName + (hw.scaleId ? ' ('+hw.scaleId+')' : ''),
+          oldLen: (cur.comment || '').length,
+          newLen: (hw.comment || '').length,
+        });
         if(hw.comment) result.newComments.push(hw.comment);
       }
     });
-    let hwRemoved = 0;
-    Object.keys(curHwMap).forEach(function(k){ if(!newHwKeys[k]) hwRemoved++; });
-    if(hwAdded || hwChanged || hwRemoved){
-      result.studentsModified.push({ name: ns.name, hwAdded: hwAdded, hwChanged: hwChanged, hwRemoved: hwRemoved });
+    const removedItems = [];
+    Object.keys(curHwMap).forEach(function(k){
+      if(!newHwKeys[k]){
+        const hw = curHwMap[k];
+        removedItems.push((hw.exName || hw.name || '?') + (hw.scaleId ? ' ('+hw.scaleId+')' : ''));
+      }
+    });
+    if(addedItems.length || changedItems.length || removedItems.length){
+      result.studentsModified.push({ 
+        name: ns.name, hwAdded: addedItems.length, hwChanged: changedItems.length, hwRemoved: removedItems.length,
+        addedItems: addedItems, changedItems: changedItems, removedItems: removedItems,
+      });
     } else if(!result.pwChanged.find(function(p){ return p.name === ns.name; })){
       result.studentsUnchanged.push(ns.name);
     }
@@ -8834,13 +8871,27 @@ function _hwUploadShowPreview(parsed, diff){
   if(diff.studentsAdded.length) detail += '<div style="margin-bottom:6px"><strong style="color:#059669">🆕 추가:</strong> ' + diff.studentsAdded.join(', ') + '</div>';
   if(diff.studentsRemoved.length) detail += '<div style="margin-bottom:6px"><strong style="color:#dc2626">🗑 제거:</strong> ' + diff.studentsRemoved.join(', ') + '</div>';
   if(diff.studentsModified.length){
-    detail += '<div style="margin-bottom:6px"><strong style="color:#ea580c">✏️ 변경:</strong><br>';
+    detail += '<div style="margin-bottom:6px"><strong style="color:#ea580c">✏️ 변경 상세:</strong><br>';
     diff.studentsModified.forEach(function(m){
+      detail += '<div style="margin:4px 0 6px 8px;padding-left:6px;border-left:2px solid #fed7aa">';
+      detail += '<strong>' + m.name + '</strong> ';
       const parts = [];
-      if(m.hwAdded) parts.push('+' + m.hwAdded);
-      if(m.hwChanged) parts.push('수정 ' + m.hwChanged);
-      if(m.hwRemoved) parts.push('-' + m.hwRemoved);
-      detail += '&nbsp;&nbsp;• ' + m.name + ' (' + parts.join(', ') + ')<br>';
+      if(m.hwAdded) parts.push('<span style="color:#059669">+' + m.hwAdded + '</span>');
+      if(m.hwChanged) parts.push('<span style="color:#ea580c">수정 ' + m.hwChanged + '</span>');
+      if(m.hwRemoved) parts.push('<span style="color:#dc2626">-' + m.hwRemoved + '</span>');
+      detail += '(' + parts.join(', ') + ')<br>';
+      if(m.addedItems && m.addedItems.length){
+        detail += '<span style="color:#059669">  ➕ </span>' + m.addedItems.join(', ') + '<br>';
+      }
+      if(m.changedItems && m.changedItems.length){
+        m.changedItems.forEach(function(ci){
+          detail += '<span style="color:#ea580c">  ✏️ </span>' + ci.name + ' <span style="color:#94a3b8">(코멘트 ' + ci.oldLen + '자→' + ci.newLen + '자)</span><br>';
+        });
+      }
+      if(m.removedItems && m.removedItems.length){
+        detail += '<span style="color:#dc2626">  ➖ </span>' + m.removedItems.join(', ') + '<br>';
+      }
+      detail += '</div>';
     });
     detail += '</div>';
   }
