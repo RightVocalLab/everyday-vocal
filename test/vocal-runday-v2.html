@@ -14264,6 +14264,17 @@ function _checkAutoLogin(){
     /* 학생 자동로그인 체크 (우선순위 높음) */
     const autoStudent = localStorage.getItem('auto_student_name');
     if(autoStudent && typeof STUDENTS_DB !== 'undefined'){
+      /* ★ 김동현(개발자 본인) 자동 진입은 admin_auto_login 플래그 체크 필수
+         일반 학생(다른 학생들)은 기존 동작 그대로 - 이 분기는 김동현만 차단 */
+      if(autoStudent === '김동현'){
+        let _adminAutoOk2 = false;
+        try { _adminAutoOk2 = localStorage.getItem('admin_auto_login') === '1'; } catch(e){}
+        if(!_adminAutoOk2){
+          try { localStorage.removeItem('auto_student_name'); } catch(e){}
+          console.log('ℹ️ 김동현 자동 진입 차단 (admin_auto_login 플래그 없음)');
+          return false;
+        }
+      }
       const matched = (STUDENTS_DB || []).find(s => s.name === autoStudent);
       if(matched){
         curStudent = matched;
