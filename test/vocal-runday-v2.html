@@ -14223,6 +14223,15 @@ function _checkAutoLogin(){
     if(typeof firebase !== 'undefined' && firebase.auth){
       const cu = firebase.auth().currentUser;
       if(cu && !cu.isAnonymous && cu.email && cu.email.toLowerCase() === _DEV_EMAIL){
+        /* ★ 자동 로그인 플래그 체크 - 체크박스로 명시적으로 켰을 때만 자동 진입
+           미체크 시 로그인 선택 화면 표시 (기존 학생 자동 진입 흔적도 정리) */
+        let _adminAutoOk = false;
+        try { _adminAutoOk = localStorage.getItem('admin_auto_login') === '1'; } catch(e){}
+        if(!_adminAutoOk){
+          try { localStorage.removeItem('auto_student_name'); } catch(e){}
+          console.log('ℹ️ 자동 로그인 미설정 - 로그인 선택 화면으로');
+          return false;
+        }
         _setAdminLogin(true);
         /* provider 복원 */
         let _devProv = '';
@@ -15334,6 +15343,19 @@ function _submitEmailLogin(){
     const remember = document.getElementById('login-remember-me')?.checked;
     if(remember){ localStorage.setItem('remember_email', email); }
     else { localStorage.removeItem('remember_email'); }
+  } catch(e){}
+
+  /* 로그인 상태 유지 (자동 로그인 플래그) 저장/삭제
+     - 체크 시: 다음 접속 시 자동 진입 (관리자/김동현 모드 자동 복원)
+     - 미체크: 다음 접속 시 로그인 선택 화면 표시 */
+  try {
+    const adminAuto = document.getElementById('email-remember-me')?.checked;
+    if(adminAuto){ localStorage.setItem('admin_auto_login', '1'); }
+    else { 
+      localStorage.removeItem('admin_auto_login');
+      /* 자동 진입 누적 흔적도 함께 정리 */
+      localStorage.removeItem('auto_student_name');
+    }
   } catch(e){}
 
   
