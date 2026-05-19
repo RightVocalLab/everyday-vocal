@@ -8801,6 +8801,16 @@ function _hwUploadComputeDiff(newStudents, currentDb){
   (currentDb || []).forEach(function(s){ curMap[s.name] = s; });
   const newMap = {};
   newStudents.forEach(function(s){ newMap[s.name] = s; });
+  function _hwBuildKeyedList(hwArr){
+    const seenCount = {};
+    const out = [];
+    (hwArr || []).forEach(function(hw, idx){
+      const baseKey = (hw.exName || hw.name || '') + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
+      seenCount[baseKey] = (seenCount[baseKey] || 0) + 1;
+      out.push({ key: baseKey + '#' + seenCount[baseKey], hw: hw, idx: idx });
+    });
+    return out;
+  }
   newStudents.forEach(function(ns){
     const cs = curMap[ns.name];
     if(!cs){
@@ -8811,17 +8821,16 @@ function _hwUploadComputeDiff(newStudents, currentDb){
     if(ns.pw && cs.pw && ns.pw !== cs.pw){
       result.pwChanged.push({ name: ns.name, old: cs.pw, new: ns.pw });
     }
+    const curList = _hwBuildKeyedList(cs.homework);
+    const newList = _hwBuildKeyedList(ns.homework);
     const curHwMap = {};
-    (cs.homework || []).forEach(function(hw){ 
-      const k = (hw.exName || hw.name || '') + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
-      curHwMap[k] = hw;
-    });
+    curList.forEach(function(it){ curHwMap[it.key] = it.hw; });
     const newHwKeys = {};
     const addedItems = [], changedItems = [];
-    (ns.homework || []).forEach(function(hw){
-      const k = hw.exName + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
-      newHwKeys[k] = true;
-      const cur = curHwMap[k];
+    newList.forEach(function(it){
+      const hw = it.hw;
+      newHwKeys[it.key] = true;
+      const cur = curHwMap[it.key];
       if(!cur){
         addedItems.push(hw.exName + (hw.scaleId ? ' ('+hw.scaleId+')' : ''));
         if(hw.comment) result.newComments.push(hw.comment);
@@ -8835,9 +8844,9 @@ function _hwUploadComputeDiff(newStudents, currentDb){
       }
     });
     const removedItems = [];
-    Object.keys(curHwMap).forEach(function(k){
-      if(!newHwKeys[k]){
-        const hw = curHwMap[k];
+    curList.forEach(function(it){
+      if(!newHwKeys[it.key]){
+        const hw = it.hw;
         removedItems.push((hw.exName || hw.name || '?') + (hw.scaleId ? ' ('+hw.scaleId+')' : ''));
       }
     });
