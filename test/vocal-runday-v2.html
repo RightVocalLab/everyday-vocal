@@ -12886,6 +12886,9 @@ async function _hwUploadFileChange(ev){
   const file = ev.target.files && ev.target.files[0];
   if(!file) return;
   const status = document.getElementById('hw-upload-status');
+  /* 이전 결과 메시지 닫기 (UX) */
+  const prevResult = document.getElementById('hw-upload-result');
+  if(prevResult) prevResult.style.display = 'none';
   status.innerHTML = '⏳ SheetJS 로딩 중...';
   try{
     await _hwUploadLoadSheetJS();
@@ -12895,10 +12898,36 @@ async function _hwUploadFileChange(ev){
       status.innerHTML = '<span style="color:#dc2626">⚠ 학생 시트를 찾을 수 없습니다. (예: "학생_박주은")</span>';
       return;
     }
-    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료</span>';
+    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료 · ⏳ Firebase 최신 데이터 fetch 중...</span>';
     
-    /* Diff 계산: 현재 STUDENTS_DB와 비교 */
-    const diff = _hwUploadComputeDiff(parsed.students, STUDENTS_DB || []);
+    /* ★ 중요: Diff는 Firebase 최신 데이터와 비교 (클라이언트 캐시 X) */
+    let baseDb = [];
+    if(typeof firebase !== 'undefined' && firebase.database){
+      try{
+        const snap = await firebase.database().ref('students').once('value');
+        const data = snap.val();
+        if(data){
+          Object.keys(data).forEach(function(name){
+            const row = data[name] || {};
+            baseDb.push({ name: name, pw: row.pw || '', homework: row.homework || [] });
+          });
+          console.log('[hwUpload] Firebase 최신 데이터 사용:', baseDb.length, '명');
+        } else {
+          console.log('[hwUpload] Firebase 비어있음 → 모두 신규 추가로 처리');
+        }
+      }catch(e){
+        console.warn('[hwUpload] Firebase fetch 실패 - 클라이언트 캐시로 대체:', e.message);
+        baseDb = STUDENTS_DB || [];
+        status.innerHTML = '<span style="color:#9a3412">⚠ Firebase 접근 실패 - 캐시 기준으로 비교 (부정확할 수 있음)</span>';
+      }
+    } else {
+      baseDb = STUDENTS_DB || [];
+    }
+    
+    status.innerHTML = '<span style="color:#059669">✅ ' + parsed.students.length + '명 학생 데이터 파싱 완료 · Firebase 기준 ' + baseDb.length + '명과 비교</span>';
+    
+    /* Diff 계산 */
+    const diff = _hwUploadComputeDiff(parsed.students, baseDb);
     _hwUploadParsed = parsed;
     _hwUploadDiff = diff;
     _hwUploadShowPreview(parsed, diff);
@@ -12996,10 +13025,10 @@ function _hwUploadComputeDiff(newStudents, currentDb){
   const result = {
     studentsAdded: [],     /* 새 학생 */
     studentsRemoved: [],   /* 제거된 학생 */
-    studentsModified: [],  /* 숙제 변경된 학생 [{name, hwAdded, hwRemoved, hwChanged}] */
+    studentsModified: [],  /* 숙제 변경된 학생 */
     studentsUnchanged: [], /* 변경 없는 학생 */
     pwChanged: [],         /* 비밀번호 변경된 학생 */
-    newComments: [],       /* TTS 자동 생성 대상 (새/변경된 멘트) */
+    newComments: [],       /* TTS 자동 생성 대상 */
   };
   
   const curMap = {};
@@ -13007,55 +13036,77 @@ function _hwUploadComputeDiff(newStudents, currentDb){
   const newMap = {};
   newStudents.forEach(function(s){ newMap[s.name] = s; });
   
-  /* 추가/유지/변경 */
+  /* 헬퍼: 같은 키가 N번 등장하면 키 뒤에 #N 붙임 */
+  function _hwBuildKeyedList(hwArr){
+    const seenCount = {};
+    const result = [];
+    (hwArr || []).forEach(function(hw, idx){
+      const baseKey = (hw.exName || hw.name || '') + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
+      seenCount[baseKey] = (seenCount[baseKey] || 0) + 1;
+      const key = baseKey + '#' + seenCount[baseKey];
+      result.push({ key: key, hw: hw, idx: idx });
+    });
+    return result;
+  }
+  
   newStudents.forEach(function(ns){
     const cs = curMap[ns.name];
     if(!cs){
       result.studentsAdded.push(ns.name);
-      /* 새 학생의 모든 멘트는 새 멘트 */
       (ns.homework || []).forEach(function(hw){
         if(hw.comment) result.newComments.push(hw.comment);
       });
       return;
     }
-    /* 비밀번호 변경 확인 */
     if(ns.pw && cs.pw && ns.pw !== cs.pw){
       result.pwChanged.push({ name: ns.name, old: cs.pw, new: ns.pw });
     }
-    /* 숙제 비교 - 키: exName + scaleId + repeat */
+    /* 중복 키 안전 처리: 같은 (exName,scaleId,repeat)이 여러 개면 #1, #2 ... */
+    const curList = _hwBuildKeyedList(cs.homework);
+    const newList = _hwBuildKeyedList(ns.homework);
     const curHwMap = {};
-    (cs.homework || []).forEach(function(hw){ 
-      const k = (hw.exName || hw.name || '') + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
-      curHwMap[k] = hw;
-    });
+    curList.forEach(function(it){ curHwMap[it.key] = it.hw; });
     const newHwKeys = {};
-    let hwAdded = 0, hwChanged = 0;
-    (ns.homework || []).forEach(function(hw){
-      const k = hw.exName + '|' + (hw.scaleId || '') + '|' + (hw.repeat || 1);
-      newHwKeys[k] = true;
-      const cur = curHwMap[k];
+    const addedItems = [];
+    const changedItems = [];
+    newList.forEach(function(it){
+      const hw = it.hw;
+      newHwKeys[it.key] = true;
+      const cur = curHwMap[it.key];
       if(!cur){
-        hwAdded++;
-        /* 새 숙제의 멘트는 새 멘트 */
+        addedItems.push(hw.exName + (hw.scaleId ? ' ('+hw.scaleId+')' : ''));
         if(hw.comment) result.newComments.push(hw.comment);
       } else if((cur.comment || '') !== (hw.comment || '')){
-        hwChanged++;
-        /* 코멘트 변경된 경우 새 멘트 */
+        changedItems.push({
+          name: hw.exName + (hw.scaleId ? ' ('+hw.scaleId+')' : ''),
+          oldLen: (cur.comment || '').length,
+          newLen: (hw.comment || '').length,
+        });
         if(hw.comment) result.newComments.push(hw.comment);
       }
     });
-    let hwRemoved = 0;
-    Object.keys(curHwMap).forEach(function(k){
-      if(!newHwKeys[k]) hwRemoved++;
+    const removedItems = [];
+    curList.forEach(function(it){
+      if(!newHwKeys[it.key]){
+        const hw = it.hw;
+        removedItems.push((hw.exName || hw.name || '?') + (hw.scaleId ? ' ('+hw.scaleId+')' : ''));
+      }
     });
-    if(hwAdded || hwChanged || hwRemoved){
-      result.studentsModified.push({ name: ns.name, hwAdded: hwAdded, hwChanged: hwChanged, hwRemoved: hwRemoved });
+    if(addedItems.length || changedItems.length || removedItems.length){
+      result.studentsModified.push({ 
+        name: ns.name, 
+        hwAdded: addedItems.length, 
+        hwChanged: changedItems.length, 
+        hwRemoved: removedItems.length,
+        addedItems: addedItems,
+        changedItems: changedItems,
+        removedItems: removedItems,
+      });
     } else if(!result.pwChanged.find(function(p){ return p.name === ns.name; })){
       result.studentsUnchanged.push(ns.name);
     }
   });
   
-  /* 제거된 학생 */
   Object.keys(curMap).forEach(function(n){
     if(!newMap[n]) result.studentsRemoved.push(n);
   });
@@ -13087,13 +13138,27 @@ function _hwUploadShowPreview(parsed, diff){
     detail += '<div style="margin-bottom:6px"><strong style="color:#dc2626">🗑 제거:</strong> ' + diff.studentsRemoved.join(', ') + '</div>';
   }
   if(diff.studentsModified.length){
-    detail += '<div style="margin-bottom:6px"><strong style="color:#ea580c">✏️ 변경:</strong><br>';
+    detail += '<div style="margin-bottom:6px"><strong style="color:#ea580c">✏️ 변경 상세:</strong><br>';
     diff.studentsModified.forEach(function(m){
+      detail += '<div style="margin:4px 0 6px 8px;padding-left:6px;border-left:2px solid #fed7aa">';
+      detail += '<strong>' + m.name + '</strong> ';
       const parts = [];
-      if(m.hwAdded) parts.push('+' + m.hwAdded);
-      if(m.hwChanged) parts.push('수정 ' + m.hwChanged);
-      if(m.hwRemoved) parts.push('-' + m.hwRemoved);
-      detail += '&nbsp;&nbsp;• ' + m.name + ' (' + parts.join(', ') + ')<br>';
+      if(m.hwAdded) parts.push('<span style="color:#059669">+' + m.hwAdded + '</span>');
+      if(m.hwChanged) parts.push('<span style="color:#ea580c">수정 ' + m.hwChanged + '</span>');
+      if(m.hwRemoved) parts.push('<span style="color:#dc2626">-' + m.hwRemoved + '</span>');
+      detail += '(' + parts.join(', ') + ')<br>';
+      if(m.addedItems && m.addedItems.length){
+        detail += '<span style="color:#059669">  ➕ </span>' + m.addedItems.join(', ') + '<br>';
+      }
+      if(m.changedItems && m.changedItems.length){
+        m.changedItems.forEach(function(ci){
+          detail += '<span style="color:#ea580c">  ✏️ </span>' + ci.name + ' <span style="color:#94a3b8">(코멘트 ' + ci.oldLen + '자→' + ci.newLen + '자)</span><br>';
+        });
+      }
+      if(m.removedItems && m.removedItems.length){
+        detail += '<span style="color:#dc2626">  ➖ </span>' + m.removedItems.join(', ') + '<br>';
+      }
+      detail += '</div>';
     });
     detail += '</div>';
   }
