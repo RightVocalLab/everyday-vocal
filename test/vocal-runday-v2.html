@@ -14893,10 +14893,12 @@ function _openEmailLogin(){
       const emailEl = document.getElementById('login-email-input');
       if(saved && remEl && emailEl){ remEl.checked = true; emailEl.value = saved; }
     } catch(e){}
-    /* 로그인 상태 유지 체크박스 복원 */
+    /* 로그인 상태 유지 체크박스 복원 (admin_auto_login 플래그 기준)
+       - 체크 상태 = 다음 접속 시 자동 진입 의도
+       - 옛 general_user_uid 기준은 의도와 무관하게 켜져서 버그였음 */
     try {
       const rememberEl = document.getElementById('email-remember-me');
-      if(rememberEl) rememberEl.checked = !!localStorage.getItem('general_user_uid');
+      if(rememberEl) rememberEl.checked = (localStorage.getItem('admin_auto_login') === '1');
     } catch(e){}
     /* 에러 메시지 초기화 */
     ['signup-email-err','signup-pw-err','signup-pw2-err','signup-name-err','signup-code-err'].forEach(id => {
@@ -16172,7 +16174,16 @@ async function _onEmailAuthSuccess(user, provider){
     /* 3. 김동현 학생 모드 진입 (홈 화면으로 - 숙제 화면 X) */
     const _kdh = (typeof STUDENTS_DB !== 'undefined') ? (STUDENTS_DB || []).find(s => s.name === '김동현') : null;
     if(_kdh){
-      try { localStorage.setItem('auto_student_name', '김동현'); } catch(e){}
+      /* ★ 자동 진입용 auto_student_name은 admin_auto_login 플래그 있을 때만 저장
+         체크박스 미체크 시 새로고침해도 김동현 자동 진입 안 되도록 함 */
+      try {
+        if(localStorage.getItem('admin_auto_login') === '1'){
+          localStorage.setItem('auto_student_name', '김동현');
+        } else {
+          /* 혹시 남아있던 흔적 정리 */
+          localStorage.removeItem('auto_student_name');
+        }
+      } catch(e){}
       curStudent = _kdh;
       window._userType = 'student';
       if(typeof closeStudentLogin === 'function') closeStudentLogin();
@@ -20170,7 +20181,11 @@ function _handleLogout(){
     if(typeof _saveHwList === 'function') _saveHwList();
     curStudent = null;
     if(typeof hwList !== 'undefined') hwList = [];
-    try { localStorage.removeItem('auto_student_name'); } catch(e){}
+    try { 
+      localStorage.removeItem('auto_student_name');
+      /* 강사 자동 로그인 플래그도 함께 정리 - 로그아웃 = 자동 진입 의도 해제 */
+      localStorage.removeItem('admin_auto_login');
+    } catch(e){}
     if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
     console.log('✅ 학생 세션 정리');
   }
