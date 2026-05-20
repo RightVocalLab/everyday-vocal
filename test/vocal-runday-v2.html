@@ -14803,7 +14803,7 @@ async function _loginWithNaver(){
       throw new Error(errData.error || `서버 오류 (${fnResponse.status})`);
     }
     
-    const { firebaseToken, uid, nickname, email } = await fnResponse.json();
+    const { firebaseToken, uid, nickname, email, gender, birthyear } = await fnResponse.json();
     
     if(!firebaseToken){
       throw new Error('Firebase 토큰을 받지 못했습니다.');
@@ -14838,6 +14838,10 @@ async function _loginWithNaver(){
           updates.nickname = nickname;
         }
         if(email) updates.email = email;
+        /* 네이버에서 받은 성별/출생연도 — 매 로그인마다 최신값으로 갱신
+           (네이버 프로필에서 사용자가 수정했을 수 있음) */
+        if(gender) updates.gender = gender;
+        if(birthyear) updates.birthyear = birthyear;
         await userRef.update(updates);
       } else {
         const userData = {
@@ -14852,6 +14856,8 @@ async function _loginWithNaver(){
           agreedAt: firebase.database.ServerValue.TIMESTAMP,
         };
         if(email) userData.email = email;
+        if(gender) userData.gender = gender;
+        if(birthyear) userData.birthyear = birthyear;
         await userRef.set(userData);
       }
     }
