@@ -5257,20 +5257,13 @@ clrCT();
 
 /* ── 화이팅 멘트만 자동재생 (설명은 버튼으로만) ── */
 
-/* 숙제 코멘트 — 학생 로그인 시에만, 전체 스케일 훈련 길이 기준 3회 균등 배분 */
+/* 숙제 코멘트 — 학생 로그인 시에만, 훈련 시작 직후 1회만 재생 (화이팅 멘트와의 충돌 방지) */
 const hwComment = mod.hwComment || '';
 if(hwComment && curStudent){
-  const steps_hw = allSteps.length;
-  const spb_hw = 60 / (curBpm || mod.bpm || 60);
-  const patLen_hw = (mod.pattern||[]).filter(p=>typeof p==='number').length || 1;
-  const totalSec_hw = steps_hw * patLen_hw * spb_hw * 1.05;
-  /* 20%, 50%, 80% 구간에 균등 배분 (descAutoPlay 토글 OFF면 재생 스킵) */
-  [0.20, 0.50, 0.80].forEach(function(ratio){
-    const t = Math.max(8, totalSec_hw * ratio);
-    coachT.push(setTimeout(()=>{
-      if(playing && (typeof descAutoPlay === 'undefined' || descAutoPlay)) speakEL(hwComment);
-    }, t*1000));
-  });
+  /* 0% 시점 (시작 1초 후) 1회 재생. descAutoPlay 토글 OFF면 재생 스킵 */
+  coachT.push(setTimeout(()=>{
+    if(playing && (typeof descAutoPlay === 'undefined' || descAutoPlay)) speakEL(hwComment);
+  }, 1000));
 }
 
 /* 화이팅 멘트 — cheerAuto ON일 때만, 전체 구간 균등 배분 */
