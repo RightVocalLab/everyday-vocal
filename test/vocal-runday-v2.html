@@ -8858,7 +8858,7 @@ showDone('✅',_ttl,'수고했습니다!',[
 }
 if(isSeq&&seqIdx<seqList.length-1){
 const _goN=()=>{
-  if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
+  if(curStudent&&seqList[seqIdx].hwIdx!==undefined)_incHwRepeat(seqList[seqIdx].hwIdx);
   closeDone();seqIdx++;updSeqBar();prepTrain(seqList[seqIdx]);
   const lbl=seqList[seqIdx].label||seqList[seqIdx].exId||'훈련';
   speakEL(lbl+'. 시작합니다.',function(){
@@ -8874,7 +8874,7 @@ showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
   {label:'▶ 다음',fn:_goN}
 ]);
 } else {
-if(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined)_markHwDone(seqList[seqIdx].hwIdx);
+if(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined)_incHwRepeat(seqList[seqIdx].hwIdx);
 const _fromStep = scrStack.includes('scr-step');
 const _hasMoreStep = _fromStep && stepIdx < stepItems.length-1;
 showDone('🎉', isSeq?'전체 완주!':'훈련 완료!', isSeq?'모두 완주했습니다! 🎉':'수고했습니다!', [
@@ -13569,6 +13569,20 @@ _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
       });
       try{ localStorage.setItem(_hwProgressKey(),JSON.stringify(localProg)); }catch(e){}
     }
+    /* === 자동 마이그레이션: hwDone에 있지만 progress 부족한 항목 정리 === */
+    const _doneNow=_getHwDone();
+    const _progNow=_getHwProgress();
+    const _cleaned=_doneNow.filter(function(idx){
+      const item=(hwList||[])[idx];
+      if(!item) return false;
+      const need=(item.repeat)||1;
+      const cur=parseInt(_progNow[idx])||0;
+      return cur>=need; /* 회차 충족된 것만 유지 */
+    });
+    if(_cleaned.length !== _doneNow.length){
+      console.log('[숙제 정합성 마이그레이션] '+_doneNow.length+'→'+_cleaned.length+' 항목으로 정리');
+      _setHwDone(_cleaned);
+    }
     push('scr-homework');
     rndrHw();_updateHwProgress();
   });
@@ -13640,17 +13654,26 @@ rndrHw();_updateHwProgress();
 
 function _updateHwProgress(){
 const done=_getHwDone();
-const total=(hwList||[]).length;
-/* done 배열에서 현재 hwList 범위 내인 것만 카운트 (숙제 개수 줄어든 경우 대비) */
-const validDone = Array.isArray(done) ? done.filter(idx => typeof idx === 'number' && idx >= 0 && idx < total) : [];
-const validCount = validDone.length;
-const pct=total>0?Math.min(100, Math.round(validCount/total*100)):0;
+const progress=_getHwProgress();
+const list=hwList||[];
+const total=list.length;
+/* 회차 단위 진행도 계산 — 각 숙제의 필요 회차 합 vs 실제 완료 회차 합 */
+let totalReps=0, doneReps=0, finishedItems=0;
+list.forEach(function(item,i){
+const need=(item.repeat)||1;
+const cur=Math.min(progress[i]||0, need);
+totalReps += need;
+doneReps += cur;
+/* 정합성: hwDone에 있고 progress도 충족하면 완료 */
+if(done.includes(i) && cur>=need) finishedItems++;
+});
+const pct=totalReps>0?Math.min(100, Math.round(doneReps/totalReps*100)):0;
 const bar=document.getElementById('hw-progress-bar');
 const txt=document.getElementById('hw-progress-text');
 if(bar) bar.style.width=pct+'%';
-if(txt) txt.textContent=validCount+' / '+total;
+if(txt) txt.textContent=finishedItems+' / '+total;
 const resetBtn=document.getElementById('hw-reset-btn');
-if(total>0 && validCount>=total){
+if(total>0 && finishedItems>=total){
   if(txt){ txt.textContent='🎉 전체 완료!'; }
   /* 전체 완료 시 초기화 버튼 활성화 + 다시하기 모드 */
   if(resetBtn){
@@ -13690,9 +13713,10 @@ const progress=_getHwProgress();
 hwList.forEach((item, i) => {
 const hasScale = !!item.scaleId && !!(DB.scales||[]).find(s=>s.id===item.scaleId);
 const sc = hasScale ? (DB.scales||[]).find(s=>s.id===item.scaleId) : null;
-const isDone=done.includes(i);
 const need=item.repeat||1;
 const cur=Math.min(progress[i]||0, need);
+/* 정합성 검증: 옛날 잘못된 hwDone이 있어도 progress가 부족하면 완료 무시 */
+const isDone = done.includes(i) && cur>=need;
 const isInProgress = !isDone && cur>0;
 const repeatLabel = need>1 ? ' · '+cur+'/'+need+'회' : '';
 
@@ -13770,6 +13794,15 @@ function _setHwDone(arr){
 try{ localStorage.setItem(_hwDoneKey(),JSON.stringify(arr)); }catch(e){}
 }
 function _markHwDone(i){
+/* 정합성 검증: 필요 회차에 도달했는지 확인 */
+const item=(hwList||[])[i];
+const need=(item && item.repeat) || 1;
+const prog=_getHwProgress();
+const cur=prog[i]||0;
+if(cur<need){
+  console.warn('[_markHwDone] 회차 부족으로 완료 등록 거부: idx='+i+', '+cur+'/'+need);
+  return;
+}
 const done=_getHwDone();
 if(!done.includes(i)) done.push(i);
 _setHwDone(done);
