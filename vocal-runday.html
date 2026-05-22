@@ -5570,12 +5570,23 @@ document.getElementById('prog').style.width='100%';document.getElementById('pct'
 updDots(true);if(coachAuto)speak('수고했습니다! 훈련을 완료했습니다.');
 
 if(_hwReturnIdx>=0 && curStudent){
-_markHwDone(_hwReturnIdx);
+/* 시퀀스 진행 중(반복 회차 도중) — 회차만 증가하고 다음 회차로 진행 */
+if(isSeq && seqIdx < seqList.length-1){
+_incHwRepeat(_hwReturnIdx);
+/* 다음 회차 진행은 아래 isSeq 블록에서 자동 처리되도록 폴스루 */
+} else {
+/* 마지막 회차 또는 단일 훈련 — 마지막 회차 카운트 후 완료 처리 */
+_incHwRepeat(_hwReturnIdx); /* 필요 회차 도달 시 _markHwDone 자동 호출 */
 const _ridx=_hwReturnIdx; _hwReturnIdx=-1;
-showDone('✅','훈련 완료!','수고했습니다!',[
+const _item=(hwList||[])[_ridx];
+const _need=(_item && _item.repeat) || 1;
+const _cur=Math.min(_getHwProgress()[_ridx]||0, _need);
+const _ttl=_need>1?`훈련 완료! (${_cur}/${_need})`:'훈련 완료!';
+showDone('✅',_ttl,'수고했습니다!',[
 {label:'숙제로 돌아가기',fn:()=>{closeDone();_returnToHomework();}},
 {label:'↺ 다시',fn:()=>{closeDone();doRestart();}},
 ]); return;
+}
 }
 if(isSeq&&seqIdx<seqList.length-1){
 const _goN=()=>{
@@ -9165,16 +9176,27 @@ document.getElementById('hw-topbar-title').textContent = curStudent.name + '님 
 document.getElementById('hw-student-name').textContent = curStudent.name + '님 숙제';
 const saved = localStorage.getItem('ev_hw_time_' + curStudent.name);
 document.getElementById('hw-update-time').textContent = saved ? '마지막 저장: ' + saved : '선생님 최신 숙제';
-/* Firebase에서 오늘 완료 기록 동기화 후 화면 열기 */
+/* Firebase에서 오늘 완료 기록 + 회차 진행도 동기화 후 화면 열기 */
 _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
   if(fbDone && fbDone.length > 0){
     const local = _getHwDone();
     const merged = Array.from(new Set([].concat(local, fbDone)));
     _setHwDone(merged);
   }
-  push('scr-homework');
-  rndrHw();_updateHwProgress();
-if(curStudent&&_fbReady){_fbLoadHwDone(curStudent.name,_fbDateKey(),function(fbDone){if(Array.isArray(fbDone)&&fbDone.length>0){const local=_getHwDone();const merged=Array.from(new Set([...local,...fbDone]));_setHwDone(merged);rndrHw();_updateHwProgress();}});}
+  /* 회차 진행도도 함께 로드 (더 큰 값으로 머지) */
+  _fbLoadHwProgress(curStudent.name, _fbDateKey(), function(fbProg){
+    if(fbProg && typeof fbProg==='object'){
+      const localProg=_getHwProgress();
+      Object.keys(fbProg).forEach(function(k){
+        const a=parseInt(localProg[k])||0;
+        const b=parseInt(fbProg[k])||0;
+        localProg[k]=Math.max(a,b);
+      });
+      try{ localStorage.setItem(_hwProgressKey(),JSON.stringify(localProg)); }catch(e){}
+    }
+    push('scr-homework');
+    rndrHw();_updateHwProgress();
+  });
 });
 }
 
@@ -9230,7 +9252,15 @@ function resetHomework(){
 if(!confirm('오늘 완료 기록을 초기화할까요?')) return;
 
 try{ localStorage.removeItem(_hwDoneKey()); }catch(e){}
-rndrHw();
+try{ localStorage.removeItem(_hwProgressKey()); }catch(e){}
+/* Firebase에서도 오늘 기록 초기화 */
+if(curStudent && _fbReady){
+  const sKey=curStudent.name.replace(/\s/g,'_');
+  const dKey=_fbDateKey();
+  try{ _fbDb.ref('hwDone/'+sKey+'/'+dKey).remove(); }catch(e){}
+  try{ _fbDb.ref('hwProgress/'+sKey+'/'+dKey).remove(); }catch(e){}
+}
+rndrHw();_updateHwProgress();
 }
 
 function _updateHwProgress(){
@@ -9276,20 +9306,27 @@ c.innerHTML = '<div class="empty" style="padding:16px">숙제가 없습니다</d
 return;
 }
 const done=_getHwDone();
+const progress=_getHwProgress();
 hwList.forEach((item, i) => {
 const hasScale = !!item.scaleId && !!(DB.scales||[]).find(s=>s.id===item.scaleId);
 const sc = hasScale ? (DB.scales||[]).find(s=>s.id===item.scaleId) : null;
 const isDone=done.includes(i);
+const need=item.repeat||1;
+const cur=Math.min(progress[i]||0, need);
+const isInProgress = !isDone && cur>0;
+const repeatLabel = need>1 ? ' · '+cur+'/'+need+'회' : '';
 
 const d = document.createElement('div');
-/* 코스 UI처럼 카드 스타일 */
+/* 코스 UI처럼 카드 스타일 — 완료(녹색)/진행중(노랑)/미시작(흰색) */
 d.className='cc';
-d.style.cssText='background:'+(isDone?'#f0fdf4':'#fff')+';border:1.5px solid '+(isDone?'#bbf7d0':'var(--bd)')+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:default';
+const bgColor=isDone?'#f0fdf4':(isInProgress?'#fffbeb':'#fff');
+const bdColor=isDone?'#bbf7d0':(isInProgress?'#fde68a':'var(--bd)');
+d.style.cssText='background:'+bgColor+';border:1.5px solid '+bdColor+';border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:default';
 
 /* 번호 뱃지 */
-const numBg=isDone?'#16a34a':'var(--or-l)';
-const numFg=isDone?'#fff':'var(--or)';
-const numBorder=isDone?'#16a34a':'var(--or-m)';
+const numBg=isDone?'#16a34a':(isInProgress?'#f59e0b':'var(--or-l)');
+const numFg=(isDone||isInProgress)?'#fff':'var(--or)';
+const numBorder=isDone?'#16a34a':(isInProgress?'#f59e0b':'var(--or-m)');
 
 d.innerHTML=`
 <div style="width:36px;height:36px;border-radius:10px;background:${numBg};border:1.5px solid ${numBorder};display:flex;align-items:center;justify-content:center;font-size:${isDone?'16px':'12px'};font-weight:800;color:${numFg};flex-shrink:0">
@@ -9298,10 +9335,10 @@ d.innerHTML=`
 <div style="flex:1;min-width:0">
   <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">
     ${item.label||item.name||item.exId||''}
-    ${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':''}
+    ${isDone?'<span style="font-size:10px;background:#16a34a;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">완료</span>':(isInProgress?'<span style="font-size:10px;background:#f59e0b;color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:700">진행중</span>':'')}
   </div>
-  <div style="font-size:10px;color:${isDone?'#16a34a':'var(--mu)'};margin-top:2px">
-    ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+(item.repeat>1?' · '+item.repeat+'회':'') : '설명만 (스케일 없음)'}${isDone?' ✓':''}
+  <div style="font-size:10px;color:${isDone?'#16a34a':(isInProgress?'#b45309':'var(--mu)')};margin-top:2px">
+    ${sc ? sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60)+repeatLabel : '설명만 (스케일 없음)'+repeatLabel}${isDone?' ✓':''}
   </div>
   ${item.comment&&!isDone?`<div style="font-size:10px;color:#166534;margin-top:4px;line-height:1.5;background:#f0fdf4;border-radius:6px;padding:4px 7px">${item.comment}</div>`:''}
 </div>`;
@@ -9338,6 +9375,29 @@ if(curStudent){
   /* 날짜별 완료 카운트 누적 기록 */
   _fbRecordDailyCount(curStudent.name, done.length);
 }
+}
+
+/* === 회차 진행도 (반복 횟수 추적) === */
+function _hwProgressKey(){
+const d=new Date();
+const dateStr=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+return 'ev_hw_progress_'+(curStudent?curStudent.name:'')+'_'+dateStr;
+}
+function _getHwProgress(){
+try{ return JSON.parse(localStorage.getItem(_hwProgressKey())||'{}'); }catch(e){ return {}; }
+}
+function _setHwProgress(obj){
+try{ localStorage.setItem(_hwProgressKey(),JSON.stringify(obj)); }catch(e){}
+if(curStudent && typeof _fbSaveHwProgress==='function'){ _fbSaveHwProgress(curStudent.name, obj); }
+}
+/* 회차 +1 증가. 필요 회차 도달 시 자동 완료 처리. */
+function _incHwRepeat(i){
+const prog=_getHwProgress();
+prog[i]=(prog[i]||0)+1;
+_setHwProgress(prog);
+const item=(hwList||[])[i];
+const need=(item && item.repeat) || 1;
+if(prog[i]>=need){ _markHwDone(i); }
 }
 
 function startHwItem(i){
@@ -9624,6 +9684,23 @@ function _fbLoadHwDone(studentName, dateKey, callback){
       callback(snap.val() || []);
     }).catch(function(){ callback([]); });
   }catch(e){ callback([]); }
+}
+
+/* 회차 진행도 Firebase 저장/로드 */
+function _fbSaveHwProgress(studentName, progObj){
+  if(!_fbReady || !studentName) return;
+  const key = _fbDateKey();
+  const path = 'hwProgress/' + studentName.replace(/\s/g,'_') + '/' + key;
+  try{ _fbDb.ref(path).set(progObj); }catch(e){ console.warn('Firebase 진행도 저장 실패:', e); }
+}
+function _fbLoadHwProgress(studentName, dateKey, callback){
+  if(!_fbReady || !studentName){ callback({}); return; }
+  const path = 'hwProgress/' + studentName.replace(/\s/g,'_') + '/' + dateKey;
+  try{
+    _fbDb.ref(path).once('value').then(function(snap){
+      callback(snap.val() || {});
+    }).catch(function(){ callback({}); });
+  }catch(e){ callback({}); }
 }
 
 /* 특정 학생의 특정 날짜 완료 기록 로드 (관리자용) */
