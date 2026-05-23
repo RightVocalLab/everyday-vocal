@@ -123,6 +123,30 @@ input,select,button,textarea{font-family:inherit;}
 .step-screen.hidden{transform:translateX(100%);pointer-events:none;}
 .step-prog-bar{height:4px;background:var(--or-m);flex-shrink:0;}
 .step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
+/* 카드뉴스 슬라이더 */
+.guide-card{min-width:100%;padding:14px 16px 10px;flex-shrink:0;box-sizing:border-box;}
+.guide-card-body{font-size:13px;line-height:1.8;color:#166534;}
+.guide-card-body strong,.guide-card-body b{font-weight:800;color:#14532d;}
+.guide-card-body ul,.guide-card-body ol{padding-left:18px;margin:6px 0;}
+.guide-card-body li{margin-bottom:4px;}
+.guide-card-body p{margin-bottom:8px;}
+.guide-card-body hr{border:none;border-top:1px solid #bbf7d0;margin:10px 0;}
+.card-dot{transition:all .25s cubic-bezier(.4,0,.2,1);}
+.seg-nav-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:1.5px solid #86efac;font-size:18px;cursor:pointer;color:#166534;line-height:1;flex-shrink:0;transition:all .12s;}
+.seg-nav-btn:hover{background:#dcfce7;}
+.seg-nav-btn:disabled{opacity:.3;cursor:default;}
+/* 카드뉴스 슬라이더 */
+.guide-card{min-width:100%;padding:14px 16px 10px;flex-shrink:0;box-sizing:border-box;}
+.guide-card-body{font-size:13px;line-height:1.8;color:#166534;}
+.guide-card-body strong,.guide-card-body b{font-weight:800;color:#14532d;}
+.guide-card-body ul,.guide-card-body ol{padding-left:18px;margin:6px 0;}
+.guide-card-body li{margin-bottom:4px;}
+.guide-card-body p{margin-bottom:8px;}
+.guide-card-body hr{border:none;border-top:1px solid #bbf7d0;margin:10px 0;}
+.card-dot{transition:all .25s cubic-bezier(.4,0,.2,1);}
+.seg-nav-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:1.5px solid #86efac;font-size:18px;cursor:pointer;color:#166534;line-height:1;flex-shrink:0;transition:all .12s;}
+.seg-nav-btn:hover{background:#dcfce7;}
+.seg-nav-btn:disabled{opacity:.3;cursor:default;}
 
 /* ── THEORY ── */
 .th-item{display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid var(--bd2);
@@ -1085,34 +1109,41 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
     </div>
 
-    <!-- 안내 멘트 박스 (음성 재생 + 진행 게이지) -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:16px">
-      <!-- 헤더: 제목 + 다시듣기 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <!-- 카드뉴스 안내 섹션 -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;overflow:hidden">
+      <!-- 섹션 게이지바 (유튜브 챕터 스타일) -->
+      <div id="step-seg-bar" style="display:flex;gap:3px;height:5px;padding:10px 12px 0"></div>
+      <!-- 헤더: 섹션 번호 + 상태 + 다시듣기 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 4px">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:11px;font-weight:800;color:#166534">🎙 훈련 안내</span>
-          <span id="step-tts-status" style="font-size:10px;color:#4ade80;font-weight:700">재생 중...</span>
+          <span id="step-card-num" style="font-size:10px;color:#4ade80;font-weight:700">1 / 1</span>
         </div>
-        <button onclick="replayStepGuide()" id="step-replay-btn"
-          style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#dcfce7;border:1px solid #86efac;border-radius:99px;font-size:10px;font-weight:700;color:#15803d;cursor:pointer">
-          ↺ 다시듣기
-        </button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span id="step-tts-status" style="font-size:10px;color:#4ade80;font-weight:700"></span>
+          <button onclick="replayStepGuide()" style="padding:3px 9px;background:#dcfce7;border:1px solid #86efac;border-radius:99px;font-size:10px;font-weight:700;color:#15803d;cursor:pointer">↺ 다시듣기</button>
+        </div>
       </div>
-      <!-- TTS 진행 게이지 -->
-      <div style="background:#bbf7d0;border-radius:99px;height:6px;margin-bottom:12px;overflow:hidden">
-        <div id="step-tts-gauge" style="height:100%;background:#16a34a;border-radius:99px;width:0%;transition:width .3s linear"></div>
+      <!-- 카드 슬라이더 컨테이너 -->
+      <div style="position:relative;overflow:hidden">
+        <div id="step-cards-track" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);align-items:stretch;min-height:140px">
+          <!-- JS로 채워짐 -->
+        </div>
+        <!-- 좌우 네비 버튼 -->
+        <button id="step-card-prev" onclick="_guideCardPrev()" class="seg-nav-btn"
+          style="position:absolute;left:6px;top:50%;transform:translateY(-50%);display:none">‹</button>
+        <button id="step-card-next" onclick="_guideCardNext()" class="seg-nav-btn"
+          style="position:absolute;right:6px;top:50%;transform:translateY(-50%)">›</button>
       </div>
-      <!-- 안내 멘트 텍스트 (숨김 — 음성만 재생, 접근성용으로 유지) -->
+      <!-- 닷 인디케이터 -->
+      <div id="step-card-dots" style="display:flex;justify-content:center;align-items:center;gap:5px;padding:8px 0 10px"></div>
+      <!-- 숨김: 원본 가이드 (접근성 + 참조용) -->
       <div id="step-guide" style="display:none">—</div>
-      <!-- 훈련 설명 (exercises DB desc) -->
-      <div id="step-ex-desc" style="font-size:13px;color:#166534;line-height:1.7;opacity:.85">—</div>
-      <!-- 미디어 영역 아래 공지 -->
       <div id="step-tts-notice" style="display:none"></div>
-      <!-- 영상 + 이미지 미디어 영역 -->
-      <div id="step-media" style="margin-top:10px;display:none">
-        <!-- 인라인 유튜브 플레이어 -->
+      <!-- 미디어 영역 -->
+      <div id="step-media" style="margin:0 12px 12px;display:none">
         <div id="step-yt-area" style="display:none;margin-bottom:8px">
-          <div style="border-radius:10px;overflow:hidden;background:#000;position:relative">
+          <div style="border-radius:10px;overflow:hidden;background:#000">
             <div style="padding-bottom:56.25%;position:relative">
               <iframe id="step-yt-frame" style="position:absolute;inset:0;width:100%;height:100%;border:none" allowfullscreen allow="autoplay"></iframe>
             </div>
@@ -1125,11 +1156,12 @@ input,select,button,textarea{font-family:inherit;}
           </div>
           <div id="step-yt-more" style="display:none;margin-top:4px"></div>
         </div>
-        <!-- 이미지 영역 -->
         <div id="step-img-area" style="display:none">
           <div id="step-img-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         </div>
       </div>
+      <!-- exercises desc -->
+      <div id="step-ex-desc" style="display:none"></div>
     </div>
 
     <!-- 버튼 영역 -->
@@ -8719,16 +8751,9 @@ function _stepYtPlay(){
         if(d.event==='onStateChange'&&d.info===0){
           /* 0 = 재생 종료 */
           window.removeEventListener('message',window._ytMsgHandler);
-          const guide=document.getElementById('step-guide')?.dataset.raw||'';
-          if(guide){
-            const sEl=document.getElementById('step-tts-status');
-            if(sEl) sEl.textContent='재생 중...';
-            _stepGaugeStart(guide.length);
-            speakEL(guide,()=>{
-              _stepGaugeFinish();
-              const s2=document.getElementById('step-tts-status');
-              if(s2) s2.textContent='재생 완료 ✅';
-            });
+          /* 유튜브 종료 → 현재 카드 TTS 재개 */
+          if(_guideCards&&_guideCards.length){
+            _showGuideCard(_guideCardIdx,false);
           }
         }
       }catch(e2){}
@@ -10611,7 +10636,7 @@ function openDaySelect(course){
         <div class="dc-left"><div class="dc-num">${d}</div><div class="dc-label">일차</div></div>
         <div class="dc-body">
           <div class="dc-title">${dayTitle}</div>
-          <div class="dc-slots">${d-1}일차 완료 후 해금됩니다</div>
+          <div class="dc-slots">${d-1}일차 완료 시 잠금 해제</div>
         </div>
         <div class="dc-right">🔒</div>
       </div>`;
@@ -10697,90 +10722,180 @@ document.getElementById('step-prev-btn').disabled=(stepIdx===0);
 document.getElementById('step-next-btn').textContent=
 stepIdx===total-1?'✅ 오늘 훈련 완료':'다음 훈련 →';
 
-/* topbar notice 숨김 (코스에서는 항상 자동재생) */
+/* topbar notice 숨김 */
 const tnc=document.getElementById('step-tts-topbar-notice');
 if(tnc)tnc.style.display='none';
 
-/* exercises DB에서 훈련 설명(desc) 가져와서 표시 */
-const _exForDesc=(DB.exercises||[]).find(e=>e.id===item.exId);
-const _exDescEl=document.getElementById('step-ex-desc');
-if(_exDescEl){
-  const _rawDesc=(_exForDesc?.desc||'').replace(/[*#]+/g,'').replace(/\s+/g,' ').trim();
-  _exDescEl.textContent=_rawDesc?_rawDesc.slice(0,120)+(_rawDesc.length>120?'…':''):'';
+/* 카드뉴스 슬라이더 초기화 */
+_initGuideCards(guide);
 }
 
-/* 게이지 초기화 */
-_stepGaugeReset();
-
-/* 코스에서는 무조건 자동 재생 */
-stopEL();
-if(window.speechSynthesis)speechSynthesis.cancel();
-_stepGaugeStart(guide.length);
-speakEL(guide,()=>{
-  _stepGaugeFinish();
-  document.getElementById('step-tts-status').textContent='재생 완료 ✅';
-  setTimeout(()=>{
-    const s=document.getElementById('step-tts-status');
-    if(s) s.textContent='';
-  }, 2000);
-});
-}
-
-/* TTS 게이지 제어 */
+/* ══════════════════════════════════════
+   카드뉴스 슬라이더 시스템
+══════════════════════════════════════ */
+let _guideCards=[];
+let _guideCardIdx=0;
 let _stepGaugeTimer=null;
 let _stepGaugeTotalMs=0;
 let _stepGaugeElapsed=0;
-function _stepGaugeReset(){
-  clearInterval(_stepGaugeTimer);
-  _stepGaugeTimer=null;
-  _stepGaugeElapsed=0;
-  const g=document.getElementById('step-tts-gauge');
-  if(g){g.style.width='0%';g.style.transition='none';}
-  const s=document.getElementById('step-tts-status');
-  if(s) s.textContent='재생 중...';
-}
-function _stepGaugeStart(charLen){
-  /* 한글 약 5.5자/초 기준으로 예상 시간 계산 */
-  _stepGaugeTotalMs=Math.max(3000, charLen*185);
-  _stepGaugeElapsed=0;
-  const g=document.getElementById('step-tts-gauge');
-  if(g){g.style.transition='width .3s linear';g.style.width='0%';}
-  clearInterval(_stepGaugeTimer);
-  _stepGaugeTimer=setInterval(()=>{
-    _stepGaugeElapsed+=300;
-    const pct=Math.min(95, (_stepGaugeElapsed/_stepGaugeTotalMs)*100);
-    const g2=document.getElementById('step-tts-gauge');
-    if(g2) g2.style.width=pct+'%';
-    if(_stepGaugeElapsed>=_stepGaugeTotalMs) clearInterval(_stepGaugeTimer);
-  },300);
-}
-function _stepGaugeFinish(){
-  clearInterval(_stepGaugeTimer);
-  const g=document.getElementById('step-tts-gauge');
-  if(g){g.style.transition='width .4s ease';g.style.width='100%';}
-  setTimeout(()=>{
-    const g2=document.getElementById('step-tts-gauge');
-    if(g2){g2.style.transition='width .6s ease';g2.style.width='0%';}
-  },1200);
+
+/* 가이드 텍스트 → 카드 배열로 분할 */
+function _splitGuideIntoCards(text){
+  if(!text||!text.trim()) return [text||''];
+  /* 이중 줄바꿈으로 단락 분리 */
+  const paras=text.split(/[\n]{2,}/).map(p=>p.trim()).filter(Boolean);
+  const cards=[];
+  let cur='';
+  const LIMIT=280;
+  const isBreaker=p=>
+    /^[⚠️💡📌✅❗─]/.test(p)||
+    /^【/.test(p)||
+    /^(방법|주의|핵심|포인트|목표)/.test(p.split('\\n')[0])||
+    /^슬롯\d/.test(p);
+
+  for(const para of paras){
+    const willBreak=isBreaker(para)&&cur.trim();
+    const willOverflow=cur.length+para.length>LIMIT&&cur.trim();
+    if(willBreak||willOverflow){
+      cards.push(cur.trim());
+      cur=para;
+    } else {
+      cur=cur?cur+'\n\n'+para:para;
+    }
+  }
+  if(cur.trim()) cards.push(cur.trim());
+  /* 너무 짧은 카드(─── 구분선 단독 등) 다음 카드에 병합 */
+  const merged=[];
+  for(let i=0;i<cards.length;i++){
+    if(cards[i].replace(/─+/g,'').trim().length<15&&i<cards.length-1){
+      cards[i+1]=cards[i]+'\n\n'+cards[i+1];
+    } else {
+      merged.push(cards[i]);
+    }
+  }
+  return merged.length?merged:[text];
 }
 
-/* 다시듣기 */
-function replayStepGuide(){
-  const guide=document.getElementById('step-guide')?.dataset.raw||'';
-  if(!guide)return;
+/* 슬라이더 DOM 빌드 */
+function _buildCardSlider(cards){
+  const track=document.getElementById('step-cards-track');
+  const dots=document.getElementById('step-card-dots');
+  const segBar=document.getElementById('step-seg-bar');
+  if(!track)return;
+  const N=cards.length;
+  /* 카드 트랙 */
+  track.innerHTML=cards.map((txt,i)=>
+    `<div class="guide-card" id="guide-card-${i}">
+      <div class="guide-card-body">${_md2html(txt)}</div>
+    </div>`
+  ).join('');
+  /* 닷 인디케이터 */
+  if(dots) dots.innerHTML=cards.map((_,i)=>
+    `<div class="card-dot" id="card-dot-${i}"
+      style="width:6px;height:6px;border-radius:99px;background:#bbf7d0;transition:all .25s cubic-bezier(.4,0,.2,1)"></div>`
+  ).join('');
+  /* 섹션 게이지바 세그먼트 */
+  if(segBar) segBar.innerHTML=cards.map((_,i)=>
+    `<div id="seg-${i}"
+      style="flex:1;height:100%;background:#bbf7d0;border-radius:99px;overflow:hidden;transition:background .3s">
+      <div id="seg-fill-${i}"
+        style="height:100%;background:#16a34a;width:0%;border-radius:99px;transition:width .3s linear"></div>
+    </div>`
+  ).join('');
+}
+
+/* 카드 표시 + TTS 재생 */
+function _showGuideCard(idx,animate){
+  const N=_guideCards.length;
+  if(idx<0||idx>=N)return;
+  _guideCardIdx=idx;
+  /* 슬라이드 */
+  const track=document.getElementById('step-cards-track');
+  if(track){
+    if(animate===false) track.style.transition='none';
+    track.style.transform=`translateX(-${idx*100}%)`;
+    if(animate===false) setTimeout(()=>{ track.style.transition='transform .35s cubic-bezier(.4,0,.2,1)'; },30);
+  }
+  /* 닷 */
+  for(let i=0;i<N;i++){
+    const dot=document.getElementById('card-dot-'+i);
+    if(!dot)continue;
+    dot.style.background=i===idx?'#16a34a':'#bbf7d0';
+    dot.style.width=i===idx?'18px':'6px';
+  }
+  /* 세그먼트 — 이전 완료, 현재 0%, 미래 대기 */
+  for(let i=0;i<N;i++){
+    const seg=document.getElementById('seg-'+i);
+    const fill=document.getElementById('seg-fill-'+i);
+    if(seg) seg.style.background=i<idx?'#86efac':'#bbf7d0';
+    if(fill){ fill.style.transition='none'; fill.style.width=i<idx?'100%':'0%'; }
+  }
+  /* 버튼 */
+  const prev=document.getElementById('step-card-prev');
+  const next=document.getElementById('step-card-next');
+  if(prev) prev.style.display=idx>0?'flex':'none';
+  if(next) next.style.display=idx<N-1?'flex':'none';
+  /* 카드 번호 */
+  const numEl=document.getElementById('step-card-num');
+  if(numEl) numEl.textContent=`${idx+1} / ${N}`;
+  /* TTS */
+  clearInterval(_stepGaugeTimer);
+  _stepGaugeElapsed=0;
   stopEL();
   if(window.speechSynthesis)speechSynthesis.cancel();
-  _stepGaugeReset();
-  _stepGaugeStart(guide.length);
-  const s=document.getElementById('step-tts-status');
-  if(s) s.textContent='재생 중...';
-  speakEL(guide,()=>{
-    _stepGaugeFinish();
-    const s2=document.getElementById('step-tts-status');
-    if(s2) s2.textContent='재생 완료 ✅';
-    setTimeout(()=>{ const s3=document.getElementById('step-tts-status'); if(s3) s3.textContent=''; },2000);
+  const cardText=_guideCards[idx];
+  const status=document.getElementById('step-tts-status');
+  if(status) status.textContent='재생 중...';
+  /* 현재 세그먼트 게이지 시작 */
+  _stepGaugeTotalMs=Math.max(2000,cardText.length*185);
+  const fillEl=document.getElementById('seg-fill-'+idx);
+  if(fillEl){ fillEl.style.transition='width .3s linear'; fillEl.style.width='0%'; }
+  _stepGaugeTimer=setInterval(()=>{
+    _stepGaugeElapsed+=300;
+    const pct=Math.min(95,(_stepGaugeElapsed/_stepGaugeTotalMs)*100);
+    const f=document.getElementById('seg-fill-'+idx);
+    if(f) f.style.width=pct+'%';
+    if(_stepGaugeElapsed>=_stepGaugeTotalMs) clearInterval(_stepGaugeTimer);
+  },300);
+  speakEL(cardText,()=>{
+    clearInterval(_stepGaugeTimer);
+    /* 세그먼트 100% 완료 */
+    const f2=document.getElementById('seg-fill-'+idx);
+    if(f2){ f2.style.transition='width .3s ease'; f2.style.width='100%'; }
+    const s2=document.getElementById('seg-'+idx);
+    if(s2) s2.style.background='#86efac';
+    if(status) status.textContent='';
+    /* 자동 다음 카드 */
+    if(idx<N-1){
+      setTimeout(()=>_showGuideCard(idx+1,true),500);
+    } else {
+      if(status) status.textContent='완료 ✅';
+      setTimeout(()=>{ if(status) status.textContent=''; },2000);
+    }
   });
 }
+
+function _initGuideCards(guide){
+  _guideCards=_splitGuideIntoCards(guide);
+  _guideCardIdx=0;
+  _buildCardSlider(_guideCards);
+  _showGuideCard(0,false);
+}
+
+function _guideCardPrev(){
+  if(_guideCardIdx>0){ stopEL();if(window.speechSynthesis)speechSynthesis.cancel();_showGuideCard(_guideCardIdx-1,true); }
+}
+function _guideCardNext(){
+  if(_guideCardIdx<_guideCards.length-1){ stopEL();if(window.speechSynthesis)speechSynthesis.cancel();_showGuideCard(_guideCardIdx+1,true); }
+}
+function replayStepGuide(){
+  stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
+  _showGuideCard(_guideCardIdx,false);
+}
+/* 하위 호환 (유튜브 종료 후 재개) */
+function _stepGaugeReset(){}
+function _stepGaugeStart(){}
+function _stepGaugeFinish(){}
 function nextStep(){
 if(stepIdx>=stepItems.length-1){
 
