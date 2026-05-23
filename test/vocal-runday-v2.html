@@ -729,6 +729,13 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
     
+    <!-- 관리자 진입 버튼 (gunfree2@naver.com 전용) -->
+    <div id="mypage-admin-row" style="display:none;padding:0 22px 14px">
+      <button onclick="_closeMyPage();openAdminPW()"
+        style="width:100%;padding:11px;background:#1e293b;border:none;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;color:#fff;letter-spacing:0.3px">
+        ⚙️ 관리자 페이지 진입
+      </button>
+    </div>
     <!-- 하단 버튼 -->
     <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fafafa;display:flex;gap:8px">
       <button onclick="_logoutGeneralUser()" 
@@ -763,8 +770,12 @@ input,select,button,textarea{font-family:inherit;}
         </svg>
       </button>
 
-      <button class="ico" onclick="openSettings()" title="설정">🔊</button>
-      <button class="ico" onclick="openAdminPW()">⚙</button>
+      <button class="ico" onclick="openSettings()" title="설정" aria-label="설정">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
     </div>
   </div>
   <div class="body"><div class="inner" style="padding-bottom:24px">
@@ -1094,7 +1105,12 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:10px;color:var(--mu)" id="t-sub">—</div>
     </div>
     <div style="display:flex;align-items:center;gap:2px">
-      <button class="ico" style="font-size:15px" onclick="openSettings()" title="설정">🔊</button>
+      <button class="ico" onclick="openSettings()" title="설정" aria-label="설정">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
       <button class="ico" onclick="exitTrain();goHome()" title="홈">🏠</button>
     </div>
   </div>
@@ -2376,15 +2392,19 @@ input,select,button,textarea{font-family:inherit;}
     <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div style="font-size:13px;font-weight:800">💪 화이팅 멘트 음량</div><div style="font-size:10px;color:var(--mu);margin-top:1px">훈련 중 응원 멘트</div></div><div style="font-size:15px;font-weight:900;color:var(--or);min-width:36px;text-align:right" id="vol-coach-val">10</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mu)">0</span><input type="range" min="0" max="100" value="10" id="vol-coach-sl" style="flex:1;accent-color:var(--or);height:4px" oninput="_setStudentCoachVol(this.value)"><span style="font-size:11px;color:var(--mu)">100</span></div></div>
     <!-- WiFi 전용 영상 재생 설정 -->
     <div style="margin-bottom:8px;padding-top:16px;border-top:1px solid var(--line)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:13px;font-weight:800">📶 영상 재생 설정</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:2px">WiFi에서만 재생 시 모바일 데이터 절약</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800">📶 WiFi 모드에서만 영상 재생하기</div>
+          <div style="font-size:10px;color:var(--mu);margin-top:2px">켜면 모바일 데이터로는 영상이 재생되지 않아요</div>
         </div>
-        <button id="wifi-only-toggle" onclick="_toggleWifiOnly()"
-          style="min-width:80px;padding:5px 10px;font-size:11px;font-weight:700;border-radius:99px;border:1.5px solid var(--bd2);background:transparent;color:var(--mu);cursor:pointer">
-          WiFi만
-        </button>
+        <!-- iOS 스타일 토글 -->
+        <div onclick="_toggleWifiOnly()" id="wifi-only-toggle"
+          style="position:relative;width:51px;height:31px;border-radius:99px;background:#e5e7eb;cursor:pointer;transition:background .25s;flex-shrink:0">
+          <div id="wifi-toggle-knob"
+            style="position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .25s"></div>
+          <span id="wifi-toggle-label"
+            style="position:absolute;top:50%;right:6px;transform:translateY(-50%);font-size:9px;font-weight:800;color:#9ca3af;pointer-events:none">꺼짐</span>
+        </div>
       </div>
     </div>
     <div style="text-align:center;font-size:11px;color:var(--mu);margin-top:12px">변경 즉시 자동 저장됩니다</div>
@@ -8247,11 +8267,14 @@ if(seqList[0]&&seqList[0].noScale){
 function openVid(){openVidUrl(curMod?.videoId||'');}
 function openVidUrl(url){
 if(!url)return;
-if(!_canPlayVideo()){_showWifiWarning();return;}
-let vid=url.trim();
-const m=vid.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(m)vid=m[1];
-document.getElementById('yt').src=`https://www.youtube.com/embed/${vid}?autoplay=1`;
-document.getElementById('vid-modal').classList.add('open');
+const _doPlay=()=>{
+  let vid=url.trim();
+  const m=vid.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(m)vid=m[1];
+  document.getElementById('yt').src=`https://www.youtube.com/embed/${vid}?autoplay=1`;
+  document.getElementById('vid-modal').classList.add('open');
+};
+if(!_canPlayVideo(_doPlay))return;
+_doPlay();
 }
 function closeVidM(e){if(e&&e.target!==document.getElementById('vid-modal'))return;document.getElementById('yt').src='';document.getElementById('vid-modal').classList.remove('open');}
 
@@ -8266,9 +8289,16 @@ function _setWifiOnly(val){
   const m=document.getElementById('wifi-ask-modal');
   if(m)m.style.display='none';
   _applyWifiToggleUI();
-  /* 설정 변경 안내 토스트 */
   _showToast(val?'📶 WiFi에서만 영상이 재생됩니다':'🌐 항상 영상을 재생합니다');
   _showToast('⚙️ 설정 아이콘을 눌러 언제든 변경할 수 있어요', 2800);
+  /* 설정 후 대기 중인 재생 콜백 실행 */
+  if(!val && window._pendingVideoCallback){
+    const cb=window._pendingVideoCallback;
+    window._pendingVideoCallback=null;
+    setTimeout(cb, 200);
+  } else {
+    window._pendingVideoCallback=null;
+  }
 }
 function _toggleWifiOnly(){
   const cur=localStorage.getItem('ev_wifi_only_video')==='1';
@@ -8276,33 +8306,46 @@ function _toggleWifiOnly(){
 }
 function _applyWifiToggleUI(){
   const isOn=localStorage.getItem('ev_wifi_only_video')==='1';
-  const btn=document.getElementById('wifi-only-toggle');
-  if(!btn)return;
+  const track=document.getElementById('wifi-only-toggle');
+  const knob=document.getElementById('wifi-toggle-knob');
+  const label=document.getElementById('wifi-toggle-label');
+  if(!track)return;
   if(isOn){
-    btn.textContent='📶 WiFi만';
-    btn.style.background='var(--or)';
-    btn.style.color='#fff';
-    btn.style.borderColor='var(--or)';
+    track.style.background='#22c55e'; /* 초록 */
+    if(knob){knob.style.transform='translateX(20px)';}
+    if(label){label.textContent='켬';label.style.color='#fff';label.style.right='';label.style.left='6px';}
   } else {
-    btn.textContent='🌐 항상 재생';
-    btn.style.background='transparent';
-    btn.style.color='var(--mu)';
-    btn.style.borderColor='var(--bd2)';
+    track.style.background='#e5e7eb'; /* 회색 */
+    if(knob){knob.style.transform='translateX(0)';}
+    if(label){label.textContent='꺼짐';label.style.color='#9ca3af';label.style.left='';label.style.right='6px';}
   }
 }
-function _canPlayVideo(){
+function _canPlayVideo(callback){
   const setting=localStorage.getItem('ev_wifi_only_video');
-  /* 미설정 → 영상 첫 재생 시 모달 표시 후 false 반환 (모달에서 선택 후 재시도) */
+  /* 미설정 → 첫 재생 시 설정 모달 */
   if(setting===null){
     const m=document.getElementById('wifi-ask-modal');
     if(m)m.style.display='flex';
+    window._pendingVideoCallback=callback||null;
     return false;
   }
+  /* WiFi 전용 모드가 아니면 항상 허용 */
   if(setting==='0')return true;
-  /* WiFi 감지 */
+  /* WiFi 전용 모드: Network Information API로 감지 시도 */
   const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-  if(!conn)return true; /* API 없으면 허용 */
-  return conn.type==='wifi'||conn.effectiveType==='4g';
+  if(conn && conn.type){
+    /* type 값이 있으면 정확히 판단 */
+    return conn.type==='wifi';
+  }
+  /* API 미지원(iOS 등): 경고 팝업으로 사용자 선택 위임 */
+  if(callback){
+    showDone('📶','WiFi 연결 확인','현재 네트워크 상태를 자동으로 확인하기 어려워요.\nWiFi에 연결되어 있다면 재생해주세요.',[
+      {label:'📶 WiFi 연결됨 — 재생', fn:()=>{closeDone();if(callback)callback();}},
+      {label:'취소', fn:()=>closeDone()},
+    ]);
+    return false;
+  }
+  return false;
 }
 function _showWifiWarning(){
   showDone('📶','WiFi 연결이 필요해요','현재 WiFi 전용 재생 모드입니다.\nWiFi에 연결하거나 설정에서 변경해주세요.',[
@@ -8376,12 +8419,15 @@ function _renderStepMedia(item){
 
 function _stepYtPlay(){
   if(_stepCurrentYtIds.length===0)return;
-  if(!_canPlayVideo()){_showWifiWarning();return;}
-  const id=_stepCurrentYtIds[_stepCurrentYtIdx]||_stepCurrentYtIds[0];
-  const frame=document.getElementById('step-yt-frame');
-  frame.src=`https://www.youtube.com/embed/${id}?autoplay=1`;
-  const btn=document.getElementById('step-yt-play-btn');
-  if(btn)btn.textContent='⏹ 정지';
+  const _doPlay=()=>{
+    const id=_stepCurrentYtIds[_stepCurrentYtIdx]||_stepCurrentYtIds[0];
+    const frame=document.getElementById('step-yt-frame');
+    frame.src=`https://www.youtube.com/embed/${id}?autoplay=1`;
+    const btn=document.getElementById('step-yt-play-btn');
+    if(btn)btn.textContent='⏹ 정지';
+  };
+  if(!_canPlayVideo(_doPlay))return;
+  _doPlay();
 }
 function _stepYtSelect(idx){
   _stepCurrentYtIdx=idx;
@@ -16263,6 +16309,12 @@ function _openMyPage(){
   } else {
     if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
     if(createdEl) createdEl.textContent = '-';
+  }
+  /* gunfree2@naver.com 이면 관리자 버튼 표시 */
+  const adminRow = document.getElementById('mypage-admin-row');
+  if(adminRow){
+    const userEmail = u && u.email ? u.email : '';
+    adminRow.style.display = (userEmail === 'gunfree2@naver.com') ? 'block' : 'none';
   }
 }
 
