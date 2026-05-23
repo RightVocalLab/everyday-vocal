@@ -10580,8 +10580,7 @@ if(tnc)tnc.style.display='none';
 const _exForDesc=(DB.exercises||[]).find(e=>e.id===item.exId);
 const _exDescEl=document.getElementById('step-ex-desc');
 if(_exDescEl){
-  const _rawDesc=(_exForDesc?.desc||'').replace(/\*\*[^*]+\*\*/g,'').replace(/
-+/g,' ').trim();
+  const _rawDesc=(_exForDesc?.desc||'').replace(/[*#]+/g,'').replace(/\s+/g,' ').trim();
   _exDescEl.textContent=_rawDesc?_rawDesc.slice(0,120)+(_rawDesc.length>120?'…':''):'';
 }
 
