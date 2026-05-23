@@ -124,25 +124,25 @@ input,select,button,textarea{font-family:inherit;}
 .step-prog-bar{height:4px;background:var(--or-m);flex-shrink:0;}
 .step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
 /* 카드뉴스 슬라이더 */
-.guide-card{min-width:100%;padding:14px 16px 10px;flex-shrink:0;box-sizing:border-box;}
-.guide-card-body{font-size:13px;line-height:1.8;color:#166534;}
+.guide-card{width:100%;flex-shrink:0;padding:16px 18px 14px;box-sizing:border-box;word-break:keep-all;overflow-wrap:break-word;}
+.guide-card-body{font-size:15px;line-height:1.85;color:#166534;}
 .guide-card-body strong,.guide-card-body b{font-weight:800;color:#14532d;}
-.guide-card-body ul,.guide-card-body ol{padding-left:18px;margin:6px 0;}
-.guide-card-body li{margin-bottom:4px;}
-.guide-card-body p{margin-bottom:8px;}
-.guide-card-body hr{border:none;border-top:1px solid #bbf7d0;margin:10px 0;}
+.guide-card-body ul,.guide-card-body ol{padding-left:20px;margin:8px 0;}
+.guide-card-body li{margin-bottom:5px;}
+.guide-card-body p{margin-bottom:10px;}
+.guide-card-body hr{border:none;border-top:1px solid #bbf7d0;margin:12px 0;}
 .card-dot{transition:all .25s cubic-bezier(.4,0,.2,1);}
 .seg-nav-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:1.5px solid #86efac;font-size:18px;cursor:pointer;color:#166534;line-height:1;flex-shrink:0;transition:all .12s;}
 .seg-nav-btn:hover{background:#dcfce7;}
 .seg-nav-btn:disabled{opacity:.3;cursor:default;}
 /* 카드뉴스 슬라이더 */
-.guide-card{min-width:100%;padding:14px 16px 10px;flex-shrink:0;box-sizing:border-box;}
-.guide-card-body{font-size:13px;line-height:1.8;color:#166534;}
+.guide-card{width:100%;flex-shrink:0;padding:16px 18px 14px;box-sizing:border-box;word-break:keep-all;overflow-wrap:break-word;}
+.guide-card-body{font-size:15px;line-height:1.85;color:#166534;}
 .guide-card-body strong,.guide-card-body b{font-weight:800;color:#14532d;}
-.guide-card-body ul,.guide-card-body ol{padding-left:18px;margin:6px 0;}
-.guide-card-body li{margin-bottom:4px;}
-.guide-card-body p{margin-bottom:8px;}
-.guide-card-body hr{border:none;border-top:1px solid #bbf7d0;margin:10px 0;}
+.guide-card-body ul,.guide-card-body ol{padding-left:20px;margin:8px 0;}
+.guide-card-body li{margin-bottom:5px;}
+.guide-card-body p{margin-bottom:10px;}
+.guide-card-body hr{border:none;border-top:1px solid #bbf7d0;margin:12px 0;}
 .card-dot{transition:all .25s cubic-bezier(.4,0,.2,1);}
 .seg-nav-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:1.5px solid #86efac;font-size:18px;cursor:pointer;color:#166534;line-height:1;flex-shrink:0;transition:all .12s;}
 .seg-nav-btn:hover{background:#dcfce7;}
@@ -1125,8 +1125,8 @@ input,select,button,textarea{font-family:inherit;}
         </div>
       </div>
       <!-- 카드 슬라이더 컨테이너 -->
-      <div style="position:relative;overflow:hidden">
-        <div id="step-cards-track" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);align-items:stretch;min-height:140px">
+      <div id="step-slider-outer" style="position:relative;overflow:hidden;width:100%">
+        <div id="step-cards-track" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1)">
           <!-- JS로 채워짐 -->
         </div>
         <!-- 좌우 네비 버튼 -->
@@ -1170,9 +1170,8 @@ input,select,button,textarea{font-family:inherit;}
         🎹 피아노 훈련 시작
       </button>
     </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ol" onclick="prevStep()" id="step-prev-btn" style="flex:1;padding:13px;font-size:13px" disabled>← 이전</button>
-      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="flex:1;padding:13px;font-size:14px">다음 →</button>
+    <div id="step-next-row" style="display:none;padding:0 0 4px">
+      <button class="btn btn-or" onclick="nextStep()" id="step-next-btn" style="width:100%;padding:14px;font-size:14px;font-weight:800">다음 훈련 →</button>
     </div>
   </div></div>
 </div>
@@ -10718,9 +10717,11 @@ const hasScale=!!_rawSid&&!!(DB.scales||[]).find(s=>s.id===_rawSid);
 const pb=document.getElementById('step-piano-btn');
 pb.style.display=hasScale?'':'none';
 
-document.getElementById('step-prev-btn').disabled=(stepIdx===0);
-document.getElementById('step-next-btn').textContent=
-stepIdx===total-1?'✅ 오늘 훈련 완료':'다음 훈련 →';
+/* 다음 훈련 버튼 — 카드 완료 후 표시 (_showGuideCard 콜백에서 처리) */
+const _snr=document.getElementById('step-next-row');
+if(_snr) _snr.style.display='none';
+const _snt=document.getElementById('step-next-btn');
+if(_snt) _snt.textContent=stepIdx===total-1?'✅ 오늘 훈련 완료':'다음 훈련 →';
 
 /* topbar notice 숨김 */
 const tnc=document.getElementById('step-tts-topbar-notice');
@@ -10809,6 +10810,8 @@ function _showGuideCard(idx,animate){
   const N=_guideCards.length;
   if(idx<0||idx>=N)return;
   _guideCardIdx=idx;
+  /* 토큰 발급: 이전 카드의 콜백은 무시됨 */
+  const myToken=++_guideCardToken;
   /* 슬라이드 */
   const track=document.getElementById('step-cards-track');
   if(track){
@@ -10858,38 +10861,66 @@ function _showGuideCard(idx,animate){
     if(_stepGaugeElapsed>=_stepGaugeTotalMs) clearInterval(_stepGaugeTimer);
   },300);
   speakEL(cardText,()=>{
+    /* 토큰 체크: 다른 카드로 이동했으면 무시 */
+    if(myToken!==_guideCardToken)return;
     clearInterval(_stepGaugeTimer);
-    /* 세그먼트 100% 완료 */
     const f2=document.getElementById('seg-fill-'+idx);
     if(f2){ f2.style.transition='width .3s ease'; f2.style.width='100%'; }
     const s2=document.getElementById('seg-'+idx);
     if(s2) s2.style.background='#86efac';
     if(status) status.textContent='';
-    /* 자동 다음 카드 */
     if(idx<N-1){
-      setTimeout(()=>_showGuideCard(idx+1,true),500);
+      setTimeout(()=>{ if(myToken===_guideCardToken) _showGuideCard(idx+1,true); },500);
     } else {
+      /* 마지막 카드 완료 → 다음 훈련 버튼 표시 */
       if(status) status.textContent='완료 ✅';
-      setTimeout(()=>{ if(status) status.textContent=''; },2000);
+      const nr=document.getElementById('step-next-row');
+      if(nr) nr.style.display='block';
+      setTimeout(()=>{ if(status&&myToken===_guideCardToken) status.textContent=''; },2000);
     }
   });
 }
 
+let _guideCardToken=0;
+
 function _initGuideCards(guide){
   _guideCards=_splitGuideIntoCards(guide);
   _guideCardIdx=0;
+  _guideCardToken=0;
   _buildCardSlider(_guideCards);
-  _showGuideCard(0,false);
+  /* 카드 width를 컨테이너 실제 너비로 설정 (텍스트 짤림 방지) */
+  requestAnimationFrame(()=>{
+    const outer=document.getElementById('step-slider-outer');
+    if(!outer)return;
+    const w=outer.clientWidth;
+    document.querySelectorAll('.guide-card').forEach(c=>{c.style.width=w+'px';});
+    /* 트랙 너비 = N × 카드너비 */
+    const track=document.getElementById('step-cards-track');
+    if(track) track.style.width=(_guideCards.length*w)+'px';
+    _showGuideCard(0,false);
+  });
 }
 
 function _guideCardPrev(){
-  if(_guideCardIdx>0){ stopEL();if(window.speechSynthesis)speechSynthesis.cancel();_showGuideCard(_guideCardIdx-1,true); }
+  if(_guideCardIdx>0){
+    ++_guideCardToken; /* 먼저 토큰 무효화 → 진행중 콜백 차단 */
+    stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
+    clearInterval(_stepGaugeTimer);
+    _showGuideCard(_guideCardIdx-1,true);
+  }
 }
 function _guideCardNext(){
-  if(_guideCardIdx<_guideCards.length-1){ stopEL();if(window.speechSynthesis)speechSynthesis.cancel();_showGuideCard(_guideCardIdx+1,true); }
+  if(_guideCardIdx<_guideCards.length-1){
+    ++_guideCardToken;
+    stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
+    clearInterval(_stepGaugeTimer);
+    _showGuideCard(_guideCardIdx+1,true);
+  }
 }
 function replayStepGuide(){
+  ++_guideCardToken;
   stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
+  clearInterval(_stepGaugeTimer);
   _showGuideCard(_guideCardIdx,false);
 }
 /* 하위 호환 (유튜브 종료 후 재개) */
