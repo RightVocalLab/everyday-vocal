@@ -2399,11 +2399,11 @@ input,select,button,textarea{font-family:inherit;}
         </div>
         <!-- iOS 스타일 토글 -->
         <div onclick="_toggleWifiOnly()" id="wifi-only-toggle"
-          style="position:relative;width:51px;height:31px;border-radius:99px;background:#e5e7eb;cursor:pointer;transition:background .25s;flex-shrink:0">
+          style="position:relative;width:51px;height:31px;border-radius:99px;background:#e5e7eb;cursor:pointer;transition:background .25s;flex-shrink:0;user-select:none;-webkit-user-select:none">
           <div id="wifi-toggle-knob"
-            style="position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .25s"></div>
+            style="position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .25s;pointer-events:none"></div>
           <span id="wifi-toggle-label"
-            style="position:absolute;top:50%;right:6px;transform:translateY(-50%);font-size:9px;font-weight:800;color:#9ca3af;pointer-events:none">꺼짐</span>
+            style="position:absolute;top:50%;right:6px;transform:translateY(-50%);font-size:9px;font-weight:800;color:#9ca3af;pointer-events:none;user-select:none;-webkit-user-select:none">꺼짐</span>
         </div>
       </div>
     </div>
