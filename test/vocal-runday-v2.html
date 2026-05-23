@@ -125,6 +125,22 @@ input,select,button,textarea{font-family:inherit;}
 .step-prog-fill{height:100%;background:var(--or);transition:width .3s;}
 /* 카드뉴스 슬라이더 */
 .guide-card{width:100%;flex-shrink:0;padding:16px 18px 14px;box-sizing:border-box;word-break:keep-all;overflow-wrap:break-word;}
+#step-slider-outer{transition:height .35s cubic-bezier(.4,0,.2,1);}
+.card-media-ph{border-radius:10px;margin:12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 0;}
+.card-vid-ph{background:#0f172a;min-height:140px;}
+.card-vid-ph .card-ph-icon{font-size:28px;color:#94a3b8;}
+.card-vid-ph .card-ph-label{font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;}
+.card-img-ph{background:#e5e7eb;min-height:100px;}
+.card-img-ph .card-ph-icon{font-size:24px;}
+.card-img-ph .card-ph-label{font-size:11px;font-weight:700;color:#6b7280;}
+#step-slider-outer{transition:height .35s cubic-bezier(.4,0,.2,1);}
+.card-media-ph{border-radius:10px;margin:12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 0;}
+.card-vid-ph{background:#0f172a;min-height:140px;}
+.card-vid-ph .card-ph-icon{font-size:28px;color:#94a3b8;}
+.card-vid-ph .card-ph-label{font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;}
+.card-img-ph{background:#e5e7eb;min-height:100px;}
+.card-img-ph .card-ph-icon{font-size:24px;}
+.card-img-ph .card-ph-label{font-size:11px;font-weight:700;color:#6b7280;}
 .guide-card-body{font-size:15px;line-height:1.85;color:#166534;}
 .guide-card-body strong,.guide-card-body b{font-weight:800;color:#14532d;}
 .guide-card-body ul,.guide-card-body ol{padding-left:20px;margin:8px 0;}
@@ -10736,174 +10752,209 @@ _initGuideCards(guide);
 ══════════════════════════════════════ */
 let _guideCards=[];
 let _guideCardIdx=0;
+let _guideCardToken=0;
+let _guideCardWidth=0;
 let _stepGaugeTimer=null;
 let _stepGaugeTotalMs=0;
 let _stepGaugeElapsed=0;
 
-/* 가이드 텍스트 → 카드 배열로 분할 */
+/* ─ 미디어 마커 감지 ─ */
+function _detectMedia(txt){
+  const hasBoth=/\(참조\s*영상\s*링크,\s*참조\s*사진\s*첨부\)|\(동영상[^)]*사진[^)]*첨부\)/i.test(txt);
+  const hasVid=hasBoth||/\(참조\s*영상\s*링크\)/i.test(txt);
+  const hasImg=hasBoth||/\(참조\s*사진\s*첨부\)|\(참조\s*이미지\s*첨부\)/i.test(txt);
+  const clean=txt.replace(/\([^)]*영상[^)]*\)/gi,'').replace(/\([^)]*사진[^)]*\)/gi,'').replace(/\([^)]*이미지[^)]*\)/gi,'').trim();
+  return {hasVid,hasImg,clean};
+}
+
+/* ─ 카드 HTML 렌더링 (미디어 플레이스홀더 포함) ─ */
+function _renderCardHtml(txt){
+  const {hasVid,hasImg,clean}=_detectMedia(txt);
+  let html=_md2html(clean);
+  if(hasVid){
+    html+='<div class="card-media-ph card-vid-ph">'
+        +'<div class="card-ph-icon">▶</div>'
+        +'<div class="card-ph-label">참조 영상</div>'
+        +'</div>';
+  }
+  if(hasImg){
+    html+='<div class="card-media-ph card-img-ph">'
+        +'<div class="card-ph-icon">📷</div>'
+        +'<div class="card-ph-label">참조 사진</div>'
+        +'</div>';
+  }
+  return html;
+}
+
+/* ─ 가이드 텍스트 → 카드 배열 분할 ─ */
 function _splitGuideIntoCards(text){
   if(!text||!text.trim()) return [text||''];
-  /* 이중 줄바꿈으로 단락 분리 */
-  const paras=text.split(/[\n]{2,}/).map(p=>p.trim()).filter(Boolean);
+  const paras=text.split(/[\n]{2,}/).map(function(p){return p.trim();}).filter(Boolean);
+  const LIMIT=280;
+  function isBreaker(p){
+    return /^[⚠️💡📌✅❗─]/.test(p)||/^【/.test(p)||/^(방법|주의|핵심|포인트|목표)\s/.test(p)||/^슬롯\d/.test(p);
+  }
   const cards=[];
   let cur='';
-  const LIMIT=280;
-  const isBreaker=p=>
-    /^[⚠️💡📌✅❗─]/.test(p)||
-    /^【/.test(p)||
-    /^(방법|주의|핵심|포인트|목표)/.test(p.split('\\n')[0])||
-    /^슬롯\d/.test(p);
-
-  for(const para of paras){
-    const willBreak=isBreaker(para)&&cur.trim();
-    const willOverflow=cur.length+para.length>LIMIT&&cur.trim();
-    if(willBreak||willOverflow){
-      cards.push(cur.trim());
-      cur=para;
-    } else {
-      cur=cur?cur+'\n\n'+para:para;
-    }
+  for(var pi=0;pi<paras.length;pi++){
+    var para=paras[pi];
+    var willBreak=isBreaker(para)&&cur.trim();
+    var willOverflow=cur.length+para.length>LIMIT&&cur.trim();
+    if(willBreak||willOverflow){cards.push(cur.trim());cur=para;}
+    else{cur=cur?cur+'\n\n'+para:para;}
   }
   if(cur.trim()) cards.push(cur.trim());
-  /* 너무 짧은 카드(─── 구분선 단독 등) 다음 카드에 병합 */
-  const merged=[];
-  for(let i=0;i<cards.length;i++){
-    if(cards[i].replace(/─+/g,'').trim().length<15&&i<cards.length-1){
-      cards[i+1]=cards[i]+'\n\n'+cards[i+1];
+  /* 너무 짧은 카드 다음과 병합 */
+  /* 후처리: 너무 짧은 카드 다음과 병합 (구분선·짧은 헤더 포함) */
+  var merged=[];
+  for(var ci=0;ci<cards.length;ci++){
+    var stripped=cards[ci].replace(/─+/g,'').replace(/\([^)]*\)/g,'').replace(/[⚠️💡📌✅❗]/gu,'').trim();
+    var nextExists=ci<cards.length-1;
+    var tooShort=stripped.length<50;
+    var wouldFit=nextExists&&(cards[ci].length+cards[ci+1].length<400);
+    if(nextExists&&(tooShort||!stripped)&&wouldFit){
+      cards[ci+1]=cards[ci]+'\n\n'+cards[ci+1];
     } else {
-      merged.push(cards[i]);
+      merged.push(cards[ci]);
     }
   }
   return merged.length?merged:[text];
 }
 
-/* 슬라이더 DOM 빌드 */
+/* ─ 슬라이더 DOM 빌드 ─ */
 function _buildCardSlider(cards){
-  const track=document.getElementById('step-cards-track');
-  const dots=document.getElementById('step-card-dots');
-  const segBar=document.getElementById('step-seg-bar');
+  var track=document.getElementById('step-cards-track');
+  var dots=document.getElementById('step-card-dots');
+  var segBar=document.getElementById('step-seg-bar');
   if(!track)return;
-  const N=cards.length;
-  /* 카드 트랙 */
-  track.innerHTML=cards.map((txt,i)=>
-    `<div class="guide-card" id="guide-card-${i}">
-      <div class="guide-card-body">${_md2html(txt)}</div>
-    </div>`
-  ).join('');
-  /* 닷 인디케이터 */
-  if(dots) dots.innerHTML=cards.map((_,i)=>
-    `<div class="card-dot" id="card-dot-${i}"
-      style="width:6px;height:6px;border-radius:99px;background:#bbf7d0;transition:all .25s cubic-bezier(.4,0,.2,1)"></div>`
-  ).join('');
-  /* 섹션 게이지바 세그먼트 */
-  if(segBar) segBar.innerHTML=cards.map((_,i)=>
-    `<div id="seg-${i}"
-      style="flex:1;height:100%;background:#bbf7d0;border-radius:99px;overflow:hidden;transition:background .3s">
-      <div id="seg-fill-${i}"
-        style="height:100%;background:#16a34a;width:0%;border-radius:99px;transition:width .3s linear"></div>
-    </div>`
-  ).join('');
+  var N=cards.length;
+  track.innerHTML=cards.map(function(txt,i){
+    return '<div class="guide-card" id="guide-card-'+i+'"><div class="guide-card-body">'+_renderCardHtml(txt)+'</div></div>';
+  }).join('');
+  if(dots) dots.innerHTML=cards.map(function(_,i){
+    return '<div class="card-dot" id="card-dot-'+i+'" style="width:6px;height:6px;border-radius:99px;background:#bbf7d0;transition:all .25s cubic-bezier(.4,0,.2,1)"></div>';
+  }).join('');
+  if(segBar) segBar.innerHTML=cards.map(function(_,i){
+    return '<div id="seg-'+i+'" style="flex:1;height:100%;background:#bbf7d0;border-radius:99px;overflow:hidden;transition:background .3s"><div id="seg-fill-'+i+'" style="height:100%;background:#16a34a;width:0%;border-radius:99px;transition:width .3s linear"></div></div>';
+  }).join('');
 }
 
-/* 카드 표시 + TTS 재생 */
+/* ─ 카드 높이 업데이트 ─ */
+function _updateCardHeight(idx){
+  var card=document.getElementById('guide-card-'+idx);
+  var outer=document.getElementById('step-slider-outer');
+  if(card&&outer){
+    outer.style.height=(card.scrollHeight)+'px';
+  }
+}
+
+/* ─ 카드 표시 + TTS 재생 ─ */
 function _showGuideCard(idx,animate){
-  const N=_guideCards.length;
+  var N=_guideCards.length;
   if(idx<0||idx>=N)return;
   _guideCardIdx=idx;
-  /* 토큰 발급: 이전 카드의 콜백은 무시됨 */
-  const myToken=++_guideCardToken;
-  /* 슬라이드 */
-  const track=document.getElementById('step-cards-track');
+  var myToken=++_guideCardToken;
+
+  /* 픽셀 기반 슬라이드 */
+  var track=document.getElementById('step-cards-track');
   if(track){
-    if(animate===false) track.style.transition='none';
-    track.style.transform=`translateX(-${idx*100}%)`;
-    if(animate===false) setTimeout(()=>{ track.style.transition='transform .35s cubic-bezier(.4,0,.2,1)'; },30);
+    if(animate===false){track.style.transition='none';}
+    track.style.transform='translateX(-'+(idx*_guideCardWidth)+'px)';
+    if(animate===false){setTimeout(function(){track.style.transition='transform .35s cubic-bezier(.4,0,.2,1)';},30);}
   }
+
+  /* 높이 자동 조절 (애니메이션 후) */
+  setTimeout(function(){_updateCardHeight(idx);},animate===false?0:360);
+
   /* 닷 */
-  for(let i=0;i<N;i++){
-    const dot=document.getElementById('card-dot-'+i);
+  for(var di=0;di<N;di++){
+    var dot=document.getElementById('card-dot-'+di);
     if(!dot)continue;
-    dot.style.background=i===idx?'#16a34a':'#bbf7d0';
-    dot.style.width=i===idx?'18px':'6px';
+    dot.style.background=di===idx?'#16a34a':'#bbf7d0';
+    dot.style.width=di===idx?'18px':'6px';
+    dot.style.borderRadius='99px';
   }
-  /* 세그먼트 — 이전 완료, 현재 0%, 미래 대기 */
-  for(let i=0;i<N;i++){
-    const seg=document.getElementById('seg-'+i);
-    const fill=document.getElementById('seg-fill-'+i);
-    if(seg) seg.style.background=i<idx?'#86efac':'#bbf7d0';
-    if(fill){ fill.style.transition='none'; fill.style.width=i<idx?'100%':'0%'; }
+
+  /* 세그먼트 */
+  for(var si=0;si<N;si++){
+    var seg=document.getElementById('seg-'+si);
+    var fill=document.getElementById('seg-fill-'+si);
+    if(seg) seg.style.background=si<idx?'#86efac':'#bbf7d0';
+    if(fill){fill.style.transition='none';fill.style.width=si<idx?'100%':'0%';}
   }
-  /* 버튼 */
-  const prev=document.getElementById('step-card-prev');
-  const next=document.getElementById('step-card-next');
+
+  /* 네비 버튼 */
+  var prev=document.getElementById('step-card-prev');
+  var next=document.getElementById('step-card-next');
   if(prev) prev.style.display=idx>0?'flex':'none';
   if(next) next.style.display=idx<N-1?'flex':'none';
+
   /* 카드 번호 */
-  const numEl=document.getElementById('step-card-num');
-  if(numEl) numEl.textContent=`${idx+1} / ${N}`;
+  var numEl=document.getElementById('step-card-num');
+  if(numEl) numEl.textContent=(idx+1)+' / '+N;
+
   /* TTS */
   clearInterval(_stepGaugeTimer);
   _stepGaugeElapsed=0;
   stopEL();
   if(window.speechSynthesis)speechSynthesis.cancel();
-  const cardText=_guideCards[idx];
-  const status=document.getElementById('step-tts-status');
+  var cardText=_guideCards[idx];
+  var status=document.getElementById('step-tts-status');
   if(status) status.textContent='재생 중...';
-  /* 현재 세그먼트 게이지 시작 */
+
+  /* 세그먼트 게이지 */
   _stepGaugeTotalMs=Math.max(2000,cardText.length*185);
-  const fillEl=document.getElementById('seg-fill-'+idx);
-  if(fillEl){ fillEl.style.transition='width .3s linear'; fillEl.style.width='0%'; }
-  _stepGaugeTimer=setInterval(()=>{
+  var fillEl=document.getElementById('seg-fill-'+idx);
+  if(fillEl){fillEl.style.transition='width .3s linear';fillEl.style.width='0%';}
+  _stepGaugeTimer=setInterval(function(){
     _stepGaugeElapsed+=300;
-    const pct=Math.min(95,(_stepGaugeElapsed/_stepGaugeTotalMs)*100);
-    const f=document.getElementById('seg-fill-'+idx);
-    if(f) f.style.width=pct+'%';
-    if(_stepGaugeElapsed>=_stepGaugeTotalMs) clearInterval(_stepGaugeTimer);
+    var pct=Math.min(95,(_stepGaugeElapsed/_stepGaugeTotalMs)*100);
+    var f=document.getElementById('seg-fill-'+myToken._idx);
+    /* myToken._idx 트릭 대신 클로저로 idx 캡처 */
+    document.getElementById('seg-fill-'+idx)&&(document.getElementById('seg-fill-'+idx).style.width=pct+'%');
+    if(_stepGaugeElapsed>=_stepGaugeTotalMs)clearInterval(_stepGaugeTimer);
   },300);
-  speakEL(cardText,()=>{
-    /* 토큰 체크: 다른 카드로 이동했으면 무시 */
-    if(myToken!==_guideCardToken)return;
+
+  speakEL(cardText,function(){
+    if(myToken!==_guideCardToken)return; /* 취소된 토큰 */
     clearInterval(_stepGaugeTimer);
-    const f2=document.getElementById('seg-fill-'+idx);
-    if(f2){ f2.style.transition='width .3s ease'; f2.style.width='100%'; }
-    const s2=document.getElementById('seg-'+idx);
+    var f2=document.getElementById('seg-fill-'+idx);
+    if(f2){f2.style.transition='width .3s ease';f2.style.width='100%';}
+    var s2=document.getElementById('seg-'+idx);
     if(s2) s2.style.background='#86efac';
     if(status) status.textContent='';
     if(idx<N-1){
-      setTimeout(()=>{ if(myToken===_guideCardToken) _showGuideCard(idx+1,true); },500);
+      setTimeout(function(){if(myToken===_guideCardToken)_showGuideCard(idx+1,true);},500);
     } else {
-      /* 마지막 카드 완료 → 다음 훈련 버튼 표시 */
       if(status) status.textContent='완료 ✅';
-      const nr=document.getElementById('step-next-row');
+      var nr=document.getElementById('step-next-row');
       if(nr) nr.style.display='block';
-      setTimeout(()=>{ if(status&&myToken===_guideCardToken) status.textContent=''; },2000);
+      setTimeout(function(){if(status&&myToken===_guideCardToken)status.textContent='';},2000);
     }
   });
 }
 
-let _guideCardToken=0;
-
+/* ─ 초기화 ─ */
 function _initGuideCards(guide){
   _guideCards=_splitGuideIntoCards(guide);
   _guideCardIdx=0;
   _guideCardToken=0;
   _buildCardSlider(_guideCards);
-  /* 카드 width를 컨테이너 실제 너비로 설정 (텍스트 짤림 방지) */
-  requestAnimationFrame(()=>{
-    const outer=document.getElementById('step-slider-outer');
+  requestAnimationFrame(function(){
+    var outer=document.getElementById('step-slider-outer');
     if(!outer)return;
-    const w=outer.clientWidth;
-    document.querySelectorAll('.guide-card').forEach(c=>{c.style.width=w+'px';});
-    /* 트랙 너비 = N × 카드너비 */
-    const track=document.getElementById('step-cards-track');
-    if(track) track.style.width=(_guideCards.length*w)+'px';
+    _guideCardWidth=outer.clientWidth;
+    var track=document.getElementById('step-cards-track');
+    if(track) track.style.width=(_guideCards.length*_guideCardWidth)+'px';
+    document.querySelectorAll('.guide-card').forEach(function(c){c.style.width=_guideCardWidth+'px';});
     _showGuideCard(0,false);
   });
 }
 
+/* ─ 네비게이션 ─ */
 function _guideCardPrev(){
   if(_guideCardIdx>0){
-    ++_guideCardToken; /* 먼저 토큰 무효화 → 진행중 콜백 차단 */
+    ++_guideCardToken;
     stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
     clearInterval(_stepGaugeTimer);
     _showGuideCard(_guideCardIdx-1,true);
@@ -10923,10 +10974,11 @@ function replayStepGuide(){
   clearInterval(_stepGaugeTimer);
   _showGuideCard(_guideCardIdx,false);
 }
-/* 하위 호환 (유튜브 종료 후 재개) */
+/* 하위 호환 stub */
 function _stepGaugeReset(){}
 function _stepGaugeStart(){}
 function _stepGaugeFinish(){}
+
 function nextStep(){
 if(stepIdx>=stepItems.length-1){
 
