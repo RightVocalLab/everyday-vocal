@@ -91,22 +91,34 @@ input,select,button,textarea{font-family:inherit;}
 .cc:hover{border-color:var(--or);transform:translateY(-1px);}
 
 /* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
+.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:6px;}
 @media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
 .day-cell{
-  aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
+  aspect-ratio:1;border-radius:16px;border:none;background:linear-gradient(145deg,#fff 0%,#fff8f3 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .13s;gap:2px;
+  cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);gap:3px;
+  box-shadow:0 2px 8px rgba(249,115,22,.10),inset 0 1px 0 rgba(255,255,255,.9);
+  position:relative;overflow:hidden;
 }
-.day-cell:hover:not(.rest-c):not(.future-c){border-color:var(--or);background:var(--or-l);}
-.day-cell .dc-num{font-size:26px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:600;}
-.day-cell.rest-c{background:#f5f5f4;border-color:#e5e5e4;cursor:default;}
-.day-cell.rest-c .dc-num{color:var(--mu2);}
-.day-cell.future-c{opacity:.45;}
-.day-cell.done-c{background:#f0fdf4;border-color:#86efac;}
+.day-cell::before{content:'';position:absolute;inset:0;border-radius:16px;border:1.5px solid rgba(249,115,22,.15);pointer-events:none;}
+.day-cell:hover:not(.rest-c):not(.future-c){
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(249,115,22,.22),inset 0 1px 0 rgba(255,255,255,.9);
+  background:linear-gradient(145deg,#fff7ed,#fff);
+}
+.day-cell:hover:not(.rest-c):not(.future-c)::before{border-color:var(--or);}
+.day-cell:active:not(.rest-c){transform:scale(.96);}
+.day-cell .dc-num{font-size:24px;font-weight:900;color:var(--or-d);line-height:1;}
+.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:700;letter-spacing:-.2px;}
+.day-cell.rest-c{background:#f9f9f9;box-shadow:none;cursor:default;}
+.day-cell.rest-c::before{border-color:#e5e5e5;}
+.day-cell.rest-c .dc-num{color:#c4c4c4;}
+.day-cell.rest-c .dc-sub{color:#d1d1d1;}
+.day-cell.future-c{opacity:.40;}
+.day-cell.done-c{background:linear-gradient(145deg,#f0fdf4,#dcfce7);}
+.day-cell.done-c::before{border-color:#86efac;}
 .day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#16a34a;font-weight:700;}
+.day-cell.done-c .dc-sub{color:#15803d;font-weight:800;}
 
 /* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
 .step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
@@ -1035,10 +1047,7 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:10px;color:var(--mu)" id="step-counter">—</div>
     </div>
     <div style="display:flex;align-items:center;gap:5px">
-      <div id="step-tts-topbar-notice" style="font-size:9px;color:var(--mu2);line-height:1.3;text-align:right;max-width:60px">
-        ⏳ 잠시 후<br>음성 시작
-      </div>
-      <button class="ico" id="step-tts-btn" onclick="toggleStepTTS()" title="읽기/정지" style="font-size:13px">⏹</button>
+      <div id="step-tts-topbar-notice" style="display:none"></div>
       <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
     </div>
   </div>
@@ -1052,14 +1061,29 @@ input,select,button,textarea{font-family:inherit;}
       <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
     </div>
 
-    <!-- 안내 멘트 박스 -->
-    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:800;color:#166534">📋 안내 멘트</div>
-        <button id="step-auto-btn" class="btn-ghost on" onclick="toggleStepAuto()" style="padding:3px 9px;font-size:11px;border-radius:99px">자동읽기 ON</button>
+    <!-- 안내 멘트 박스 (음성 재생 + 진행 게이지) -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:16px">
+      <!-- 헤더: 제목 + 다시듣기 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:800;color:#166534">🎙 훈련 안내</span>
+          <span id="step-tts-status" style="font-size:10px;color:#4ade80;font-weight:700">재생 중...</span>
+        </div>
+        <button onclick="replayStepGuide()" id="step-replay-btn"
+          style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#dcfce7;border:1px solid #86efac;border-radius:99px;font-size:10px;font-weight:700;color:#15803d;cursor:pointer">
+          ↺ 다시듣기
+        </button>
       </div>
-      <div id="step-tts-notice" style="font-size:10px;color:#6b7280;margin-bottom:8px">⏳ 2~3초 후 자동으로 음성이 나옵니다</div>
-      <div style="font-size:14px;color:#1c1917;line-height:1.75" id="step-guide">—</div>
+      <!-- TTS 진행 게이지 -->
+      <div style="background:#bbf7d0;border-radius:99px;height:6px;margin-bottom:12px;overflow:hidden">
+        <div id="step-tts-gauge" style="height:100%;background:#16a34a;border-radius:99px;width:0%;transition:width .3s linear"></div>
+      </div>
+      <!-- 안내 멘트 텍스트 (숨김 — 음성만 재생, 접근성용으로 유지) -->
+      <div id="step-guide" style="display:none">—</div>
+      <!-- 훈련 설명 (exercises DB desc) -->
+      <div id="step-ex-desc" style="font-size:13px;color:#166534;line-height:1.7;opacity:.85">—</div>
+      <!-- 미디어 영역 아래 공지 -->
+      <div id="step-tts-notice" style="display:none"></div>
       <!-- 영상 + 이미지 미디어 영역 -->
       <div id="step-media" style="margin-top:10px;display:none">
         <!-- 인라인 유튜브 플레이어 -->
@@ -2659,22 +2683,34 @@ input,select,button,textarea{font-family:inherit;}
 .cc:hover{border-color:var(--or);transform:translateY(-1px);}
 
 /* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
+.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:6px;}
 @media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
 .day-cell{
-  aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
+  aspect-ratio:1;border-radius:16px;border:none;background:linear-gradient(145deg,#fff 0%,#fff8f3 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .13s;gap:2px;
+  cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);gap:3px;
+  box-shadow:0 2px 8px rgba(249,115,22,.10),inset 0 1px 0 rgba(255,255,255,.9);
+  position:relative;overflow:hidden;
 }
-.day-cell:hover:not(.rest-c):not(.future-c){border-color:var(--or);background:var(--or-l);}
-.day-cell .dc-num{font-size:26px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:600;}
-.day-cell.rest-c{background:#f5f5f4;border-color:#e5e5e4;cursor:default;}
-.day-cell.rest-c .dc-num{color:var(--mu2);}
-.day-cell.future-c{opacity:.45;}
-.day-cell.done-c{background:#f0fdf4;border-color:#86efac;}
+.day-cell::before{content:'';position:absolute;inset:0;border-radius:16px;border:1.5px solid rgba(249,115,22,.15);pointer-events:none;}
+.day-cell:hover:not(.rest-c):not(.future-c){
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(249,115,22,.22),inset 0 1px 0 rgba(255,255,255,.9);
+  background:linear-gradient(145deg,#fff7ed,#fff);
+}
+.day-cell:hover:not(.rest-c):not(.future-c)::before{border-color:var(--or);}
+.day-cell:active:not(.rest-c){transform:scale(.96);}
+.day-cell .dc-num{font-size:24px;font-weight:900;color:var(--or-d);line-height:1;}
+.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:700;letter-spacing:-.2px;}
+.day-cell.rest-c{background:#f9f9f9;box-shadow:none;cursor:default;}
+.day-cell.rest-c::before{border-color:#e5e5e5;}
+.day-cell.rest-c .dc-num{color:#c4c4c4;}
+.day-cell.rest-c .dc-sub{color:#d1d1d1;}
+.day-cell.future-c{opacity:.40;}
+.day-cell.done-c{background:linear-gradient(145deg,#f0fdf4,#dcfce7);}
+.day-cell.done-c::before{border-color:#86efac;}
 .day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#16a34a;font-weight:700;}
+.day-cell.done-c .dc-sub{color:#15803d;font-weight:800;}
 
 /* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
 .step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
@@ -8644,9 +8680,38 @@ function _stepYtPlay(){
   const _doPlay=()=>{
     const id=_stepCurrentYtIds[_stepCurrentYtIdx]||_stepCurrentYtIds[0];
     const frame=document.getElementById('step-yt-frame');
-    frame.src=`https://www.youtube.com/embed/${id}?autoplay=1`;
+    /* 유튜브 재생 시 TTS 정지 */
+    stopEL();
+    if(window.speechSynthesis)speechSynthesis.cancel();
+    _stepGaugeReset();
+    const s=document.getElementById('step-tts-status');
+    if(s) s.textContent='▶ 영상 재생 중';
+    /* enablejsapi=1 + origin으로 종료 감지 시도 (postMessage) */
+    frame.src=`https://www.youtube.com/embed/${id}?autoplay=1&enablejsapi=1`;
     const btn=document.getElementById('step-yt-play-btn');
     if(btn)btn.textContent='⏹ 정지';
+    /* YouTube postMessage 종료 감지 → TTS 재개 */
+    window._ytMsgHandler=function(e){
+      try{
+        const d=typeof e.data==='string'?JSON.parse(e.data):e.data;
+        if(d.event==='onStateChange'&&d.info===0){
+          /* 0 = 재생 종료 */
+          window.removeEventListener('message',window._ytMsgHandler);
+          const guide=document.getElementById('step-guide')?.dataset.raw||'';
+          if(guide){
+            const sEl=document.getElementById('step-tts-status');
+            if(sEl) sEl.textContent='재생 중...';
+            _stepGaugeStart(guide.length);
+            speakEL(guide,()=>{
+              _stepGaugeFinish();
+              const s2=document.getElementById('step-tts-status');
+              if(s2) s2.textContent='재생 완료 ✅';
+            });
+          }
+        }
+      }catch(e2){}
+    };
+    window.addEventListener('message',window._ytMsgHandler);
   };
   if(!_canPlayVideo(_doPlay))return;
   _doPlay();
@@ -10474,7 +10539,10 @@ document.getElementById('step-prog').style.width=`${((stepIdx+1)/total)*100}%`;
 document.getElementById('step-title').textContent=stepTitle;
 document.getElementById('step-counter').textContent=`${stepIdx+1} / ${total}`;
 
-document.getElementById('step-ex-name').textContent=item.exId||item.exLabel||'—';
+/* 실제 훈련명: exercises DB에서 이름 찾기, 없으면 exLabel 사용 */
+const _exObj=(DB.exercises||[]).find(e=>e.id===item.exId);
+const _exDisplayName=_exObj?.name||item.exLabel||item.exId||'—';
+document.getElementById('step-ex-name').textContent=_exDisplayName;
 
 let scaleInfo='';
 if(item.scaleId){
@@ -10504,21 +10572,90 @@ document.getElementById('step-prev-btn').disabled=(stepIdx===0);
 document.getElementById('step-next-btn').textContent=
 stepIdx===total-1?'✅ 오늘 훈련 완료':'다음 훈련 →';
 
+/* topbar notice 숨김 (코스에서는 항상 자동재생) */
 const tnc=document.getElementById('step-tts-topbar-notice');
-if(tnc)tnc.style.display=stepAutoRead?'block':'none';
+if(tnc)tnc.style.display='none';
 
-const notice=document.getElementById('step-tts-notice');
-if(notice)notice.style.display=stepAutoRead?'block':'none';
-if(stepAutoRead){
-stopEL();if(window.speechSynthesis)speechSynthesis.cancel();
+/* exercises DB에서 훈련 설명(desc) 가져와서 표시 */
+const _exForDesc=(DB.exercises||[]).find(e=>e.id===item.exId);
+const _exDescEl=document.getElementById('step-ex-desc');
+if(_exDescEl){
+  const _rawDesc=(_exForDesc?.desc||'').replace(/\*\*[^*]+\*\*/g,'').replace(/
++/g,' ').trim();
+  _exDescEl.textContent=_rawDesc?_rawDesc.slice(0,120)+(_rawDesc.length>120?'…':''):'';
+}
+
+/* 게이지 초기화 */
+_stepGaugeReset();
+
+/* 코스에서는 무조건 자동 재생 */
+stopEL();
+if(window.speechSynthesis)speechSynthesis.cancel();
+_stepGaugeStart(guide.length);
 speakEL(guide,()=>{
-
-const tnc2=document.getElementById('step-tts-topbar-notice');
-if(tnc2)tnc2.style.display='none';
-const n2=document.getElementById('step-tts-notice');
-if(n2)n2.style.display='none';
+  _stepGaugeFinish();
+  document.getElementById('step-tts-status').textContent='재생 완료 ✅';
+  setTimeout(()=>{
+    const s=document.getElementById('step-tts-status');
+    if(s) s.textContent='';
+  }, 2000);
 });
 }
+
+/* TTS 게이지 제어 */
+let _stepGaugeTimer=null;
+let _stepGaugeTotalMs=0;
+let _stepGaugeElapsed=0;
+function _stepGaugeReset(){
+  clearInterval(_stepGaugeTimer);
+  _stepGaugeTimer=null;
+  _stepGaugeElapsed=0;
+  const g=document.getElementById('step-tts-gauge');
+  if(g){g.style.width='0%';g.style.transition='none';}
+  const s=document.getElementById('step-tts-status');
+  if(s) s.textContent='재생 중...';
+}
+function _stepGaugeStart(charLen){
+  /* 한글 약 5.5자/초 기준으로 예상 시간 계산 */
+  _stepGaugeTotalMs=Math.max(3000, charLen*185);
+  _stepGaugeElapsed=0;
+  const g=document.getElementById('step-tts-gauge');
+  if(g){g.style.transition='width .3s linear';g.style.width='0%';}
+  clearInterval(_stepGaugeTimer);
+  _stepGaugeTimer=setInterval(()=>{
+    _stepGaugeElapsed+=300;
+    const pct=Math.min(95, (_stepGaugeElapsed/_stepGaugeTotalMs)*100);
+    const g2=document.getElementById('step-tts-gauge');
+    if(g2) g2.style.width=pct+'%';
+    if(_stepGaugeElapsed>=_stepGaugeTotalMs) clearInterval(_stepGaugeTimer);
+  },300);
+}
+function _stepGaugeFinish(){
+  clearInterval(_stepGaugeTimer);
+  const g=document.getElementById('step-tts-gauge');
+  if(g){g.style.transition='width .4s ease';g.style.width='100%';}
+  setTimeout(()=>{
+    const g2=document.getElementById('step-tts-gauge');
+    if(g2){g2.style.transition='width .6s ease';g2.style.width='0%';}
+  },1200);
+}
+
+/* 다시듣기 */
+function replayStepGuide(){
+  const guide=document.getElementById('step-guide')?.dataset.raw||'';
+  if(!guide)return;
+  stopEL();
+  if(window.speechSynthesis)speechSynthesis.cancel();
+  _stepGaugeReset();
+  _stepGaugeStart(guide.length);
+  const s=document.getElementById('step-tts-status');
+  if(s) s.textContent='재생 중...';
+  speakEL(guide,()=>{
+    _stepGaugeFinish();
+    const s2=document.getElementById('step-tts-status');
+    if(s2) s2.textContent='재생 완료 ✅';
+    setTimeout(()=>{ const s3=document.getElementById('step-tts-status'); if(s3) s3.textContent=''; },2000);
+  });
 }
 function nextStep(){
 if(stepIdx>=stepItems.length-1){
