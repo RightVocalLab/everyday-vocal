@@ -91,34 +91,32 @@ input,select,button,textarea{font-family:inherit;}
 .cc:hover{border-color:var(--or);transform:translateY(-1px);}
 
 /* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
-.day-cell{
-  aspect-ratio:1;border-radius:16px;border:none;background:linear-gradient(145deg,#fff 0%,#fff8f3 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);gap:3px;
-  box-shadow:0 2px 8px rgba(249,115,22,.10),inset 0 1px 0 rgba(255,255,255,.9);
+.day-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+.day-card{
+  border-radius:16px;border:none;background:#fff;
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
   position:relative;overflow:hidden;
 }
-.day-cell::before{content:'';position:absolute;inset:0;border-radius:16px;border:1.5px solid rgba(249,115,22,.15);pointer-events:none;}
-.day-cell:hover:not(.rest-c):not(.future-c){
-  transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(249,115,22,.22),inset 0 1px 0 rgba(255,255,255,.9);
-  background:linear-gradient(145deg,#fff7ed,#fff);
-}
-.day-cell:hover:not(.rest-c):not(.future-c)::before{border-color:var(--or);}
-.day-cell:active:not(.rest-c){transform:scale(.96);}
-.day-cell .dc-num{font-size:24px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:700;letter-spacing:-.2px;}
-.day-cell.rest-c{background:#f9f9f9;box-shadow:none;cursor:default;}
-.day-cell.rest-c::before{border-color:#e5e5e5;}
-.day-cell.rest-c .dc-num{color:#c4c4c4;}
-.day-cell.rest-c .dc-sub{color:#d1d1d1;}
-.day-cell.future-c{opacity:.40;}
-.day-cell.done-c{background:linear-gradient(145deg,#f0fdf4,#dcfce7);}
-.day-cell.done-c::before{border-color:#86efac;}
-.day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#15803d;font-weight:800;}
+.day-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--or);border-radius:4px 0 0 4px;}
+.day-card:hover:not(.dc-locked):not(.dc-rest){transform:translateX(3px);box-shadow:0 4px 16px rgba(249,115,22,.18);}
+.day-card:active:not(.dc-locked){transform:scale(.98);}
+.day-card .dc-left{display:flex;flex-direction:column;align-items:center;min-width:42px;}
+.day-card .dc-num{font-size:22px;font-weight:900;color:var(--or-d);line-height:1;}
+.day-card .dc-label{font-size:9px;color:var(--mu);font-weight:700;margin-top:1px;}
+.day-card .dc-body{flex:1;min-width:0;}
+.day-card .dc-title{font-size:13px;font-weight:800;color:#1c1917;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.day-card .dc-slots{font-size:10px;color:var(--mu);font-weight:600;}
+.day-card .dc-right{flex-shrink:0;font-size:18px;}
+.day-card.dc-done{background:linear-gradient(135deg,#f0fdf4 0%,#fff 100%);}
+.day-card.dc-done::before{background:#16a34a;}
+.day-card.dc-done .dc-num{color:#16a34a;}
+.day-card.dc-locked{opacity:.55;cursor:not-allowed;}
+.day-card.dc-locked::before{background:#d4d4d4;}
+.day-card.dc-locked .dc-num{color:#a3a3a3;}
+.day-card.dc-rest{cursor:default;opacity:.5;}
+.day-card.dc-rest::before{background:#e5e5e5;}
 
 /* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
 .step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
@@ -1031,11 +1029,37 @@ input,select,button,textarea{font-family:inherit;}
 
 <!-- DAY SELECT (일차 그리드) -->
 <div id="scr-day-select" class="scr hidden">
-  <div class="topbar"><button class="ico" onclick="cancelTTS();pop()">←</button><div class="tb" id="ds-title">—</div><button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button></div>
-  <div class="body"><div class="inner">
-    <div style="font-size:12px;color:var(--mu);margin-bottom:14px" id="ds-info"></div>
-    <div id="ds-grid"></div>
-  </div></div>
+  <div class="topbar">
+    <button class="ico" onclick="cancelTTS();pop()">←</button>
+    <div class="tb" id="ds-title">—</div>
+    <button class="ico" onclick="cancelTTS();goHome()" title="홈">🏠</button>
+  </div>
+  <div class="body">
+    <!-- 코스 헤더 -->
+    <div id="ds-hero" style="background:linear-gradient(135deg,#fff7ed 0%,#fff 60%);border-bottom:1px solid var(--bd2);padding:18px 16px 14px">
+      <div style="font-size:11px;color:var(--or);font-weight:800;letter-spacing:.5px;margin-bottom:4px" id="ds-badge">14일 코스</div>
+      <div style="font-size:18px;font-weight:900;color:#1c1917;margin-bottom:8px" id="ds-hero-title">—</div>
+      <!-- 진행률 바 -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="flex:1;height:6px;background:#fed7aa;border-radius:99px;overflow:hidden">
+          <div id="ds-progress-bar" style="height:100%;background:var(--or);border-radius:99px;transition:width .4s ease;width:0%"></div>
+        </div>
+        <span id="ds-progress-txt" style="font-size:11px;font-weight:700;color:var(--or);min-width:32px;text-align:right">0%</span>
+      </div>
+      <!-- 전체 흐름 토글 -->
+      <button onclick="_toggleDsFlow()" id="ds-flow-btn"
+        style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:#fff;border:1.5px solid var(--bd2);border-radius:8px;font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;width:100%;justify-content:space-between">
+        <span>📋 전체 커리큘럼 보기</span>
+        <span id="ds-flow-arrow" style="transition:transform .2s">▼</span>
+      </button>
+      <div id="ds-flow-panel" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border:1px solid var(--bd2);border-radius:10px">
+        <div id="ds-flow-content" style="font-size:11px;color:#57534e;line-height:2"></div>
+      </div>
+    </div>
+    <div class="inner" style="padding-top:12px;padding-bottom:24px">
+      <div id="ds-grid"></div>
+    </div>
+  </div>
 </div>
 
 <!-- STEP PLAYER (안내멘트 + 다음 버튼) -->
@@ -2683,34 +2707,32 @@ input,select,button,textarea{font-family:inherit;}
 .cc:hover{border-color:var(--or);transform:translateY(-1px);}
 
 /* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
-.day-cell{
-  aspect-ratio:1;border-radius:16px;border:none;background:linear-gradient(145deg,#fff 0%,#fff8f3 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);gap:3px;
-  box-shadow:0 2px 8px rgba(249,115,22,.10),inset 0 1px 0 rgba(255,255,255,.9);
+.day-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+.day-card{
+  border-radius:16px;border:none;background:#fff;
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
   position:relative;overflow:hidden;
 }
-.day-cell::before{content:'';position:absolute;inset:0;border-radius:16px;border:1.5px solid rgba(249,115,22,.15);pointer-events:none;}
-.day-cell:hover:not(.rest-c):not(.future-c){
-  transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(249,115,22,.22),inset 0 1px 0 rgba(255,255,255,.9);
-  background:linear-gradient(145deg,#fff7ed,#fff);
-}
-.day-cell:hover:not(.rest-c):not(.future-c)::before{border-color:var(--or);}
-.day-cell:active:not(.rest-c){transform:scale(.96);}
-.day-cell .dc-num{font-size:24px;font-weight:900;color:var(--or-d);line-height:1;}
-.day-cell .dc-sub{font-size:9px;color:var(--mu);font-weight:700;letter-spacing:-.2px;}
-.day-cell.rest-c{background:#f9f9f9;box-shadow:none;cursor:default;}
-.day-cell.rest-c::before{border-color:#e5e5e5;}
-.day-cell.rest-c .dc-num{color:#c4c4c4;}
-.day-cell.rest-c .dc-sub{color:#d1d1d1;}
-.day-cell.future-c{opacity:.40;}
-.day-cell.done-c{background:linear-gradient(145deg,#f0fdf4,#dcfce7);}
-.day-cell.done-c::before{border-color:#86efac;}
-.day-cell.done-c .dc-num{color:#16a34a;}
-.day-cell.done-c .dc-sub{color:#15803d;font-weight:800;}
+.day-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--or);border-radius:4px 0 0 4px;}
+.day-card:hover:not(.dc-locked):not(.dc-rest){transform:translateX(3px);box-shadow:0 4px 16px rgba(249,115,22,.18);}
+.day-card:active:not(.dc-locked){transform:scale(.98);}
+.day-card .dc-left{display:flex;flex-direction:column;align-items:center;min-width:42px;}
+.day-card .dc-num{font-size:22px;font-weight:900;color:var(--or-d);line-height:1;}
+.day-card .dc-label{font-size:9px;color:var(--mu);font-weight:700;margin-top:1px;}
+.day-card .dc-body{flex:1;min-width:0;}
+.day-card .dc-title{font-size:13px;font-weight:800;color:#1c1917;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.day-card .dc-slots{font-size:10px;color:var(--mu);font-weight:600;}
+.day-card .dc-right{flex-shrink:0;font-size:18px;}
+.day-card.dc-done{background:linear-gradient(135deg,#f0fdf4 0%,#fff 100%);}
+.day-card.dc-done::before{background:#16a34a;}
+.day-card.dc-done .dc-num{color:#16a34a;}
+.day-card.dc-locked{opacity:.55;cursor:not-allowed;}
+.day-card.dc-locked::before{background:#d4d4d4;}
+.day-card.dc-locked .dc-num{color:#a3a3a3;}
+.day-card.dc-rest{cursor:default;opacity:.5;}
+.day-card.dc-rest::before{background:#e5e5e5;}
 
 /* ── 훈련 항목 세로 스텝 (3번 요청: 안내멘트 화면) ── */
 .step-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;}
@@ -10496,30 +10518,133 @@ function _markDayDone(courseName, day){
 try{ localStorage.setItem(_courseDayKey(courseName,day),'1'); }catch(e){}
 }
 
+/* ── 일차별 제목 데이터 ── */
+const _COURSE_DAY_TITLES = {
+  '호흡 훈련하기': {
+    1:'복식호흡 입문',2:'자세별 복식호흡',3:'복식호흡 통합',
+    4:'준비자세 자연호흡',5:'코 저항 호흡 입문',6:'코 저항 + 준비자세',
+    7:'코 저항 호흡 마스터',8:'늑간근 훈련',9:'늑간근 안정화',
+    10:'S로 호흡 뱉기 ①',11:'S로 호흡 뱉기 ②',
+    12:'울트라브리드 훈련',13:'요방형근 활성화',14:'완주 & 마무리',
+  }
+};
+/* ── 코스 전체 흐름 ── */
+const _COURSE_FLOW = {
+  '호흡 훈련하기': [
+    {range:'1~3일차', desc:'복식호흡 체득 (누워→앉아→서서→준비자세)'},
+    {range:'4일차',   desc:'준비자세 자연호흡 — 횡격막만 집중'},
+    {range:'5~7일차', desc:'코 저항 호흡 마스터'},
+    {range:'8~9일차', desc:'늑간근 훈련 — 갈비뼈 공간 열기'},
+    {range:'10~11일차',desc:'S로 호흡 뱉기 — 방법1·2 + 스타카토'},
+    {range:'12일차',  desc:'울트라브리드 & 주먹말아 강화 훈련'},
+    {range:'13일차',  desc:'요방형근 활성화 — 허리 뒤 지지'},
+    {range:'14일차',  desc:'완주 🎉 + 노래 적용 주의사항'},
+  ]
+};
+
+let _dsFlowOpen = false;
+function _toggleDsFlow(){
+  _dsFlowOpen = !_dsFlowOpen;
+  const panel = document.getElementById('ds-flow-panel');
+  const arrow = document.getElementById('ds-flow-arrow');
+  if(panel) panel.style.display = _dsFlowOpen ? 'block' : 'none';
+  if(arrow) arrow.style.transform = _dsFlowOpen ? 'rotate(180deg)' : '';
+}
+
 function openDaySelect(course){
-document.getElementById('ds-title').textContent=course.name;
-document.getElementById('ds-info').textContent=`총 ${course.totalDays||'?'}일 코스`;
-const days=[...new Set((course.items||[]).map(x=>x.dayNum))].sort((a,b)=>a-b);
-const maxDay=Math.max(...days);
-let html=`<div class="day-grid">`;
-for(let d=1;d<=maxDay;d++){
-const dayItems=course.items.filter(x=>x.dayNum===d);
-const isRest=dayItems.length===0||dayItems.every(x=>x.isRest);
-if(isRest){
-html+=`<div class="day-cell rest-c"><div class="dc-num">${d}</div><div class="dc-sub">휴식 😴</div></div>`;
-} else {
-const exCount=dayItems.filter(x=>!x.isRest).length;
-const done=_isDayDone(course.name,d);
-html+=`<div class="day-cell${done?' done-c':''}" onclick="openStepPlayer('${d}일차',window._dayItems_${d})">
-<div class="dc-num">${d}</div>
-<div class="dc-sub">${done?'✅ 완료':exCount+'개 훈련'}</div>
-</div>`;
-window[`_dayItems_${d}`]=dayItems.filter(x=>!x.isRest);
+  /* 헤더 */
+  document.getElementById('ds-title').textContent = course.name;
+  document.getElementById('ds-hero-title').textContent = course.name;
+  document.getElementById('ds-badge').textContent = `총 ${course.totalDays||'?'}일 코스`;
+
+  /* 전체 흐름 */
+  const flowData = _COURSE_FLOW[course.name] || [];
+  const flowEl = document.getElementById('ds-flow-content');
+  if(flowEl){
+    flowEl.innerHTML = flowData.map(f=>
+      `<div style="display:flex;gap:8px;align-items:baseline">
+        <span style="min-width:72px;font-weight:700;color:var(--or-d)">${f.range}</span>
+        <span>${f.desc}</span>
+       </div>`
+    ).join('') || '커리큘럼 정보가 없습니다.';
+  }
+
+  /* 진행률 */
+  const maxDay = course.totalDays || 14;
+  let doneCount = 0;
+  for(let d=1;d<=maxDay;d++){ if(_isDayDone(course.name,d)) doneCount++; }
+  const pct = Math.round((doneCount/maxDay)*100);
+  const pb = document.getElementById('ds-progress-bar');
+  const pt = document.getElementById('ds-progress-txt');
+  if(pb) pb.style.width = pct+'%';
+  if(pt) pt.textContent = pct+'%';
+
+  /* 일차 카드 목록 */
+  const days=[...new Set((course.items||[]).map(x=>x.dayNum))].sort((a,b)=>a-b);
+  const dayTitles = _COURSE_DAY_TITLES[course.name] || {};
+  let html = `<div class="day-grid">`;
+
+  for(let d=1;d<=maxDay;d++){
+    const dayItems = (course.items||[]).filter(x=>x.dayNum===d);
+    const isRest = dayItems.length===0 || dayItems.every(x=>x.isRest);
+    const done = _isDayDone(course.name, d);
+    /* 잠금 조건: 1일차는 항상 열림, N일차는 N-1 완료 필요 */
+    const locked = d > 1 && !_isDayDone(course.name, d-1) && !done;
+    const dayTitle = dayTitles[d] || `${d}일차 훈련`;
+    const slotItems = dayItems.filter(x=>!x.isRest);
+
+    /* 슬롯 미리보기 (첫 2개) */
+    const slotPreview = slotItems.slice(0,2)
+      .map(s=>s.exLabel||s.exId||'훈련')
+      .join(' · ');
+    const slotCount = slotItems.length;
+    window[`_dayItems_${d}`] = slotItems;
+
+    if(isRest){
+      html += `<div class="day-card dc-rest">
+        <div class="dc-left"><div class="dc-num">${d}</div><div class="dc-label">일차</div></div>
+        <div class="dc-body"><div class="dc-title">휴식일 😴</div><div class="dc-slots">오늘은 쉬어요</div></div>
+        <div class="dc-right">💤</div>
+      </div>`;
+    } else if(locked){
+      html += `<div class="day-card dc-locked" onclick="_showLockedMsg(${d})">
+        <div class="dc-left"><div class="dc-num">${d}</div><div class="dc-label">일차</div></div>
+        <div class="dc-body">
+          <div class="dc-title">${dayTitle}</div>
+          <div class="dc-slots">${d-1}일차 완료 후 해금됩니다</div>
+        </div>
+        <div class="dc-right">🔒</div>
+      </div>`;
+    } else if(done){
+      html += `<div class="day-card dc-done tap" onclick="openStepPlayer('${d}일차',window._dayItems_${d})">
+        <div class="dc-left"><div class="dc-num">${d}</div><div class="dc-label">일차</div></div>
+        <div class="dc-body">
+          <div class="dc-title">${dayTitle}</div>
+          <div class="dc-slots" style="color:#16a34a;font-weight:700">✅ 완료 · 다시하기 가능</div>
+        </div>
+        <div class="dc-right">✅</div>
+      </div>`;
+    } else {
+      html += `<div class="day-card tap" onclick="openStepPlayer('${d}일차',window._dayItems_${d})">
+        <div class="dc-left"><div class="dc-num">${d}</div><div class="dc-label">일차</div></div>
+        <div class="dc-body">
+          <div class="dc-title">${dayTitle}</div>
+          <div class="dc-slots">${slotPreview}${slotCount>2?' 외 '+(slotCount-2)+'개':''}</div>
+        </div>
+        <div class="dc-right" style="color:var(--or);font-size:22px;font-weight:300">›</div>
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  document.getElementById('ds-grid').innerHTML = html;
+  push('scr-day-select');
 }
-}
-html+=`</div>`;
-document.getElementById('ds-grid').innerHTML=html;
-push('scr-day-select');
+
+function _showLockedMsg(day){
+  showDone('🔒',`${day}일차는 잠겨 있어요`,`${day-1}일차 훈련을 완료하면
+${day}일차가 열립니다!`,[
+    {label:'확인', fn:()=>closeDone()},
+  ]);
 }
 
 let stepItems=[],stepIdx=0,stepTitle='';
