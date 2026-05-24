@@ -129,13 +129,17 @@ input,select,button,textarea{font-family:inherit;}
 /* 카드뉴스 슬라이더 */
 .guide-card{width:100%;flex-shrink:0;padding:16px 18px 14px;box-sizing:border-box;word-break:keep-all;overflow-wrap:break-word;}
 #step-slider-outer{transition:height .35s cubic-bezier(.4,0,.2,1);}
-.voice-only-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;gap:10px;}
-.voice-only-icon{font-size:36px;animation:voicePulse 1.5s ease-in-out infinite;}
-.voice-only-label{font-size:13px;font-weight:700;color:#16a34a;letter-spacing:.5px;}
+.voice-after-badge{
+  display:inline-flex;align-items:center;gap:5px;margin:10px 0 2px;
+  padding:5px 12px;background:#dcfce7;border-radius:99px;
+  font-size:11px;font-weight:700;color:#15803d;border:1px solid #bbf7d0;
+}
 @keyframes voicePulse{0%,100%{transform:scale(1);opacity:.8;}50%{transform:scale(1.15);opacity:1;}}
-.voice-only-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;gap:10px;}
-.voice-only-icon{font-size:36px;animation:voicePulse 1.5s ease-in-out infinite;}
-.voice-only-label{font-size:13px;font-weight:700;color:#16a34a;letter-spacing:.5px;}
+.voice-after-badge{
+  display:inline-flex;align-items:center;gap:5px;margin:10px 0 2px;
+  padding:5px 12px;background:#dcfce7;border-radius:99px;
+  font-size:11px;font-weight:700;color:#15803d;border:1px solid #bbf7d0;
+}
 @keyframes voicePulse{0%,100%{transform:scale(1);opacity:.8;}50%{transform:scale(1.15);opacity:1;}}
 .card-media-ph{border-radius:10px;margin:12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 0;}
 .card-vid-ph{background:#0f172a;min-height:140px;}
@@ -10800,13 +10804,8 @@ function _detectMedia(txt){
 
 /* ─ 카드 HTML 렌더링 (미디어 플레이스홀더 포함) ─ */
 function _renderCardHtml(txt){
-  /* [멘트만] 마커 — 화면에는 빈 카드, TTS만 재생 */
-  if(txt.trim().startsWith('[멘트만]')){
-    return '<div class="voice-only-card">'
-         +'<div class="voice-only-icon">🎙</div>'
-         +'<div class="voice-only-label">음성 안내</div>'
-         +'</div>';
-  }
+  /* [멘트만]이 단독으로 오면 무시 (앞 카드에 병합됨) */
+  if(txt.trim().startsWith('[멘트만]')) return '';
   const {hasVid,hasImg,clean}=_detectMedia(txt);
   let html=_md2html(clean);
   if(hasVid){
@@ -10827,9 +10826,25 @@ function _renderCardHtml(txt){
 /* ─ 가이드 텍스트 → 카드 배열 분할 ─ */
 function _splitGuideIntoCards(text){
   if(!text||!text.trim()) return [text||''];
-  /* [===] 마커로 강제 카드 분리 — txt에서 직접 분리 가능 */
+  /* [===] 마커로 강제 카드 분리 */
   if(text.indexOf('[===]')>=0){
-    return text.split('[===]').map(function(s){return s.trim();}).filter(Boolean);
+    var rawCards=text.split('[===]').map(function(s){return s.trim();}).filter(Boolean);
+    /* [멘트만] 블록은 앞 카드의 .voiceAfter 속성으로 붙임 (별도 카드 아님) */
+    var result=[];
+    for(var ri=0;ri<rawCards.length;ri++){
+      var c=rawCards[ri];
+      if(c.startsWith('[멘트만]')){
+        /* 앞 카드에 붙이기 */
+        if(result.length>0){
+          result[result.length-1]._voiceAfter=(result[result.length-1]._voiceAfter||'')
+            +' '+c.replace(/^\[멘트만\]\s*/,'').trim();
+        }
+      } else {
+        var cardObj={text:c, _voiceAfter:''};
+        result.push(cardObj);
+      }
+    }
+    return result; /* {text, _voiceAfter} 객체 배열 */
   }
   const paras=text.split(/[\n]{2,}/).map(function(p){return p.trim();}).filter(Boolean);
   const LIMIT=280;
@@ -10870,8 +10885,15 @@ function _buildCardSlider(cards){
   var segBar=document.getElementById('step-seg-bar');
   if(!track)return;
   var N=cards.length;
-  track.innerHTML=cards.map(function(txt,i){
-    return '<div class="guide-card" id="guide-card-'+i+'"><div class="guide-card-body">'+_renderCardHtml(txt)+'</div></div>';
+  track.innerHTML=cards.map(function(item,i){
+    var txt=typeof item==='string'?item:item.text;
+    var hasVoiceAfter=item&&item._voiceAfter;
+    return '<div class="guide-card" id="guide-card-'+i+'">'
+      +'<div class="guide-card-body">'+_renderCardHtml(txt)+'</div>'
+      +(hasVoiceAfter
+        ?'<div class="voice-after-badge">🎙 훈련 중 음성 안내 있음</div>'
+        :'')
+      +'</div>';
   }).join('');
   if(dots) dots.innerHTML=cards.map(function(_,i){
     return '<div class="card-dot" id="card-dot-'+i+'" style="width:6px;height:6px;border-radius:99px;background:#bbf7d0;transition:all .25s cubic-bezier(.4,0,.2,1)"></div>';
@@ -10957,24 +10979,45 @@ function _showGuideCard(idx,animate){
     if(_stepGaugeElapsed>=_stepGaugeTotalMs)clearInterval(_stepGaugeTimer);
   },300);
 
-  /* [멘트만] 카드는 마커 제거 후 TTS */
-  var ttsText=cardText.replace(/^\[멘트만\]\s*/,'');
-  speakEL(ttsText,function(){
-    if(myToken!==_guideCardToken)return; /* 취소된 토큰 */
+  /* 카드 텍스트 추출 (객체/문자열 모두 처리) */
+  var cardItem=_guideCards[idx];
+  var cardTtsText=typeof cardItem==='string'
+    ?cardItem
+    :cardItem.text.replace(/^\[멘트만\]\s*/,'');
+  var voiceAfterText=typeof cardItem==='object'?cardItem._voiceAfter:'';
+
+  function _playVoiceAfter(onDone){
+    if(!voiceAfterText||!voiceAfterText.trim()){onDone();return;}
+    var va=voiceAfterText.trim();
+    var vStatus=document.getElementById('step-tts-status');
+    if(vStatus) vStatus.textContent='🎙 안내 중...';
+    speakEL(va,function(){
+      if(myToken!==_guideCardToken)return;
+      if(vStatus) vStatus.textContent='';
+      onDone();
+    });
+  }
+
+  speakEL(cardTtsText,function(){
+    if(myToken!==_guideCardToken)return;
     clearInterval(_stepGaugeTimer);
     var f2=document.getElementById('seg-fill-'+idx);
     if(f2){f2.style.transition='width .3s ease';f2.style.width='100%';}
     var s2=document.getElementById('seg-'+idx);
     if(s2) s2.style.background='#86efac';
-    if(status) status.textContent='';
-    if(idx<N-1){
-      setTimeout(function(){if(myToken===_guideCardToken)_showGuideCard(idx+1,true);},500);
-    } else {
-      if(status) status.textContent='완료 ✅';
-      var nr=document.getElementById('step-next-row');
-      if(nr) nr.style.display='block';
-      setTimeout(function(){if(status&&myToken===_guideCardToken)status.textContent='';},2000);
-    }
+    /* voiceAfter 재생 — 끝나도 자동 넘김 없음, 수동으로만 이동 */
+    _playVoiceAfter(function(){
+      if(myToken!==_guideCardToken)return;
+      if(status) status.textContent='';
+      /* 마지막 카드면 다음 훈련 버튼만 표시 */
+      if(idx===N-1){
+        if(status) status.textContent='완료 ✅';
+        var nr=document.getElementById('step-next-row');
+        if(nr) nr.style.display='block';
+        setTimeout(function(){if(status&&myToken===_guideCardToken)status.textContent='';},2000);
+      }
+      /* 나머지는 사용자가 › 버튼으로 직접 넘김 */
+    });
   });
 }
 
