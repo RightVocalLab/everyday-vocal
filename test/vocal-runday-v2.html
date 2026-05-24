@@ -7221,6 +7221,24 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
 
 function _normTTS(txt){
 txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
+/* 한자어 환각 차단: 한자 어원으로 분해 가능한 의학 용어들 사이에
+   zero-width space(\u200B)를 삽입해 ElevenLabs가 별개 음절로 인식하게 함.
+   화면 표시는 그대로 "횡격막"이지만 TTS에는 "횡\u200B격\u200B막"으로 전달
+   → ElevenLabs가 한자 어원 추측 차단 → 한국어 발음으로 강제 */
+var _hanjaWords=[
+  '횡격막','늑간근','외늑간근','내늑간근','요방형근',
+  '상복부','하복부','복강','복부','흉곽','흉부','복식','흉식','흉복식',
+  '비강','비갑개','인두','후두','성대','성문','성도',
+  '진성','가성','두성','흉성','중성','반가성',
+  '음역','발성','발음','공명','연구개','경구개',
+  '횡경막','횡복근','복횡근','복직근','복사근'
+];
+_hanjaWords.forEach(function(w){
+  if(txt.indexOf(w)<0) return;
+  /* 단어의 각 글자 사이에 zero-width space 삽입 */
+  var split=w.split('').join('\u200B');
+  txt=txt.split(w).join(split);
+});
 txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
 /* 숫자 사이의 물결표(~, 〜, ∼)를 '에서'로 변환 (예: 17~24mm → 17 에서 24mm) */
 txt=txt.replace(/(\d)\s*[~〜∼]\s*(\d)/g, '$1 에서 $2');
