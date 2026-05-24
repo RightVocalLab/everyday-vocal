@@ -6742,6 +6742,12 @@ window._elSrc=null;
 }
 
 function cancelTTS(){
+/* 코스 전용 파라미터 해제 (다른 TTS는 기본값 사용) */
+window._courseStability=undefined;
+window._courseStyle=undefined;
+window._courseSpeed=undefined;
+window._courseSpeakerBoost=undefined;
+
 _ttsToken++;
 if(typeof _chunkSession !== 'undefined') _chunkSession++; /* 청크 재생도 중단 */
 stopEL();
@@ -7312,8 +7318,10 @@ xhr.timeout = 30000;
 xhr.send(JSON.stringify({
 text: cleanTxt,
 voiceId: useVid,
-stability: (_stab!==undefined?_stab:EL.stability)||0.95,
-speed: (_spd!==undefined?_spd:EL.speed)||0.80
+stability: (window._courseStability!==undefined?window._courseStability:(_stab!==undefined?_stab:EL.stability))||0.95,
+speed: (window._courseSpeed!==undefined?window._courseSpeed:(_spd!==undefined?_spd:EL.speed))||0.80,
+style: (window._courseStyle!==undefined?window._courseStyle:0),
+use_speaker_boost: !!window._courseSpeakerBoost
 }));
 });
 const ctx=gCtx();
@@ -9370,7 +9378,19 @@ function _toggleAdminAcc(id){
 
 /* 관리자 로그인 세션 - sessionStorage 사용 */
 function _isAdminLoggedIn(){
-  try{ return sessionStorage.getItem('ev_admin_logged') === '1'; }catch(e){ return false; }
+  try{
+    /* 1) 세션에서 명시적으로 비밀번호 로그인한 경우 */
+    if(sessionStorage.getItem('ev_admin_logged') === '1') return true;
+    /* 2) 관리자 자동 로그인 상태 + 현재 김동현 학생 계정인 경우 → 비밀번호 스킵 */
+    if(localStorage.getItem('admin_auto_login') === '1'){
+      if(typeof curStudent !== 'undefined' && curStudent && curStudent.name === '김동현'){
+        /* 자동 진입한 김동현은 관리자 권한 자동 부여 */
+        sessionStorage.setItem('ev_admin_logged', '1');
+        return true;
+      }
+    }
+  }catch(e){}
+  return false;
 }
 function _setAdminLogin(yes){
   try{
@@ -10979,6 +10999,11 @@ function _showGuideCard(idx,animate){
     if(_stepGaugeElapsed>=_stepGaugeTotalMs)clearInterval(_stepGaugeTimer);
   },300);
 
+  /* 코스 전용 TTS 파라미터 활성화 (에너지 톤 고정) */
+  window._courseStability=0.30;
+  window._courseStyle=0.60;
+  window._courseSpeed=0.95;
+  window._courseSpeakerBoost=true;
   /* 카드 텍스트 추출 (객체/문자열 모두 처리) */
   var cardItem=_guideCards[idx];
   var cardTtsText=typeof cardItem==='string'
@@ -13098,10 +13123,37 @@ let curStudent = null;
 let hwList = []; 
 let hwDragSrc = null;
 
+/* ─ repeat > 1 항목을 자동으로 N개 슬롯으로 분리 ─
+   학생 화면/관리자 화면 모두 정확히 N번 완료해야 진행도 100% 표시
+   원본 데이터(Firebase/엑셀)는 그대로 두고 메모리 단계에서만 분리 */
+function _expandRepeatItems(students){
+  if(!Array.isArray(students)) return students;
+  students.forEach(function(s){
+    if(!s || !Array.isArray(s.homework)) return;
+    const expanded=[];
+    s.homework.forEach(function(h){
+      const r=Math.max(1, parseInt(h.repeat,10)||1);
+      if(r<=1){
+        expanded.push(h);
+      } else {
+        for(let i=1;i<=r;i++){
+          expanded.push(Object.assign({}, h, {
+            repeat: 1,
+            _expandedFromRepeat: r,
+            _expandedIndex: i
+          }));
+        }
+      }
+    });
+    s.homework=expanded;
+  });
+  return students;
+}
+
 function _loadStudentsFromStorage(){
 try{
 const s=localStorage.getItem('ev_students_db');
-if(s){ STUDENTS_DB=JSON.parse(s); _updateHwMenuSub(); }
+if(s){ STUDENTS_DB=JSON.parse(s); _expandRepeatItems(STUDENTS_DB); _updateHwMenuSub(); }
 }catch(e){}
 }
 function _saveStudentsToStorage(){
@@ -13556,6 +13608,7 @@ async function _hwUploadConfirm(){
     STUDENTS_DB = _hwUploadParsed.students.map(function(s){
       return { name: s.name, pw: s.pw, homework: s.homework };
     });
+    _expandRepeatItems(STUDENTS_DB); /* repeat > 1 자동 분리 */
     localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
     localStorage.setItem(_STUDENTS_LS_VER_KEY, String(newVer));
     if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
@@ -13603,6 +13656,7 @@ function _syncStudentsFromFirebase(){
     /* Firebase 미연결 - localStorage 또는 내장 백업으로 진행 */
     if(!STUDENTS_DB || !STUDENTS_DB.length){
       STUDENTS_DB = JSON.parse(JSON.stringify(_STUDENTS_DB_FALLBACK));
+      _expandRepeatItems(STUDENTS_DB);
       console.log('[students-sync] Firebase 미연결 - HTML 내장 백업 사용');
     }
     return;
@@ -13636,6 +13690,7 @@ function _syncStudentsFromFirebase(){
             });
           });
           STUDENTS_DB = newDb;
+          _expandRepeatItems(STUDENTS_DB); /* repeat > 1 자동 분리 */
           localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
           localStorage.setItem(_STUDENTS_LS_VER_KEY, String(remoteVer));
           if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
