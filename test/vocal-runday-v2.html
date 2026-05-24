@@ -13590,10 +13590,13 @@ async function _hwUploadConfirm(){
     return;
   }
   
-  /* 관리자 이메일 확인 */
+  /* 관리자 권한 확인 (이메일 로그인 또는 자동로그인 모두 허용) */
   const user = firebase.auth().currentUser;
-  if(!user || !user.email || user.email !== 'gunfree2@naver.com'){
-    alert('⚠ 관리자 이메일(gunfree2@naver.com)로 로그인된 상태에서만 업로드할 수 있습니다.\n현재: ' + (user ? user.email || '익명' : '로그인 안됨'));
+  const isAdminEmail = user && user.email === 'gunfree2@naver.com';
+  const isAutoAdmin = localStorage.getItem('admin_auto_login') === '1'
+    && typeof curStudent !== 'undefined' && curStudent && curStudent.name === '김동현';
+  if(!isAdminEmail && !isAutoAdmin){
+    alert('⚠ 관리자 권한이 필요합니다.\n관리자(gunfree2@naver.com)로 로그인하거나 김동현 자동로그인을 사용해주세요.\n현재: ' + (user ? (user.email || '익명') : '로그인 안됨'));
     return;
   }
   
