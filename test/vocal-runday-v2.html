@@ -6700,6 +6700,11 @@ const content = line.slice(2);
 return `<div style="display:flex;gap:7px;margin:2px 0"><span style="color:var(--or);font-weight:900;flex-shrink:0;margin-top:1px">•</span><span>${_inlineMd(content)}</span></div>`;
 }
 
+/* ─ 또는 ─────... 라인 → 자동 늘어나는 hr (모바일 대응) */
+if(/^[─━—\-]{3,}$/.test(line.replace(/\s/g,''))){
+return `<hr style="border:none;border-top:1.5px solid #bbf7d0;margin:8px 0 10px;">`;
+}
+
 /* 이미지 마크다운: ![alt](url) → <img> 태그 변환 */
 const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
 if(imgMatch){
