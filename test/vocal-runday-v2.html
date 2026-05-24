@@ -11054,10 +11054,10 @@ function _showGuideCard(idx,animate){
     if(_stepGaugeElapsed>=_stepGaugeTotalMs)clearInterval(_stepGaugeTimer);
   },300);
 
-  /* 코스 전용 TTS 파라미터 (에너지 톤 고정) */
-  /* 모델: eleven_turbo_v2_5 (한국어 정확) — 사용자 선호값 그대로 */
-  window._courseStability=0.30;
-  window._courseStyle=0.60;
+  /* 코스 전용 TTS 파라미터 (한자 환각 차단 우선) */
+  /* 모델 eleven_v3 + stability 상향: 한자 발음 환각 강력 차단 */
+  window._courseStability=0.50;
+  window._courseStyle=0.50;
   window._courseSpeed=0.95;
   window._courseSpeakerBoost=true;
   /* 카드 텍스트 추출 (객체/문자열 모두 처리) */
