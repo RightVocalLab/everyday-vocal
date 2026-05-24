@@ -6756,6 +6756,7 @@ window._courseStability=undefined;
 window._courseStyle=undefined;
 window._courseSpeed=undefined;
 window._courseSpeakerBoost=undefined;
+window._courseVoiceId=undefined;
 
 _ttsToken++;
 if(typeof _chunkSession !== 'undefined') _chunkSession++; /* 청크 재생도 중단 */
@@ -7303,7 +7304,7 @@ async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken,_isCoachFlag){
 const cleanTxt=_prepTxt(txt);
 
 /* 화이팅 멘트(isCoach=true)는 별도 보이스 ID 사용 (선생님 본인 목소리) */
-const useVid = _isCoachFlag ? EL_VOICE_CHEER : (vid || EL.voiceId);
+const useVid = _isCoachFlag ? EL_VOICE_CHEER : (window._courseVoiceId || vid || EL.voiceId);
 
 /* 🔐 보안: Firebase Auth 토큰 가져와서 Cloud Function 호출 */
 let idToken = '';
@@ -11056,10 +11057,11 @@ function _showGuideCard(idx,animate){
 
   /* 코스 전용 TTS 파라미터 (한자 환각 차단 우선) */
   /* 모델 eleven_v3 + stability 상향: 한자 발음 환각 강력 차단 */
-  window._courseStability=0.25;
-  window._courseStyle=0.75;
-  window._courseSpeed=0.95;
+  window._courseStability=0.30;
+  window._courseStyle=0.40;
+  window._courseSpeed=1.00;
   window._courseSpeakerBoost=true;
+  window._courseVoiceId='Qn32lGMcT0Ni8avpZKD1';
   /* 카드 텍스트 추출 (객체/문자열 모두 처리) */
   var cardItem=_guideCards[idx];
   var cardTtsText=typeof cardItem==='string'
