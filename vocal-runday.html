@@ -8680,10 +8680,37 @@ let curStudent = null;
 let hwList = []; 
 let hwDragSrc = null;
 
+/* ─ repeat > 1 항목을 자동으로 N개 슬롯으로 분리 ─
+   학생 화면/관리자 화면 모두 정확히 N번 완료해야 진행도 100% 표시
+   원본 데이터(Firebase/엑셀)는 그대로 두고 메모리 단계에서만 분리 */
+function _expandRepeatItems(students){
+  if(!Array.isArray(students)) return students;
+  students.forEach(function(s){
+    if(!s || !Array.isArray(s.homework)) return;
+    const expanded=[];
+    s.homework.forEach(function(h){
+      const r=Math.max(1, parseInt(h.repeat,10)||1);
+      if(r<=1){
+        expanded.push(h);
+      } else {
+        for(let i=1;i<=r;i++){
+          expanded.push(Object.assign({}, h, {
+            repeat: 1,
+            _expandedFromRepeat: r,
+            _expandedIndex: i
+          }));
+        }
+      }
+    });
+    s.homework=expanded;
+  });
+  return students;
+}
+
 function _loadStudentsFromStorage(){
 try{
 const s=localStorage.getItem('ev_students_db');
-if(s){ STUDENTS_DB=JSON.parse(s); _updateHwMenuSub(); }
+if(s){ STUDENTS_DB=JSON.parse(s); _expandRepeatItems(STUDENTS_DB); _updateHwMenuSub(); }
 }catch(e){}
 }
 function _saveStudentsToStorage(){
@@ -9052,6 +9079,7 @@ async function _hwUploadConfirm(){
     updates['students_meta/studentCount'] = _hwUploadParsed.students.length;
     await db.ref().update(updates);
     STUDENTS_DB = _hwUploadParsed.students.map(function(s){ return { name: s.name, pw: s.pw, homework: s.homework }; });
+    _expandRepeatItems(STUDENTS_DB); /* repeat > 1 자동 분리 */
     localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
     localStorage.setItem(_STUDENTS_LS_VER_KEY, String(newVer));
     if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
@@ -9084,6 +9112,7 @@ function _syncStudentsFromFirebase(){
   if(typeof firebase === 'undefined' || !firebase.database){
     if(!STUDENTS_DB || !STUDENTS_DB.length){
       STUDENTS_DB = JSON.parse(JSON.stringify(_STUDENTS_DB_FALLBACK));
+      _expandRepeatItems(STUDENTS_DB);
       console.log('[students-sync] Firebase 미연결 - HTML 내장 백업 사용');
     }
     return;
@@ -9105,6 +9134,7 @@ function _syncStudentsFromFirebase(){
             newDb.push({ name: name, pw: row.pw || '', homework: row.homework || [] });
           });
           STUDENTS_DB = newDb;
+          _expandRepeatItems(STUDENTS_DB); /* repeat > 1 자동 분리 */
           localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
           localStorage.setItem(_STUDENTS_LS_VER_KEY, String(remoteVer));
           if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
