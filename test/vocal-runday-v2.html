@@ -129,6 +129,14 @@ input,select,button,textarea{font-family:inherit;}
 /* 카드뉴스 슬라이더 */
 .guide-card{width:100%;flex-shrink:0;padding:16px 18px 14px;box-sizing:border-box;word-break:keep-all;overflow-wrap:break-word;}
 #step-slider-outer{transition:height .35s cubic-bezier(.4,0,.2,1);}
+.voice-only-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;gap:10px;}
+.voice-only-icon{font-size:36px;animation:voicePulse 1.5s ease-in-out infinite;}
+.voice-only-label{font-size:13px;font-weight:700;color:#16a34a;letter-spacing:.5px;}
+@keyframes voicePulse{0%,100%{transform:scale(1);opacity:.8;}50%{transform:scale(1.15);opacity:1;}}
+.voice-only-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;gap:10px;}
+.voice-only-icon{font-size:36px;animation:voicePulse 1.5s ease-in-out infinite;}
+.voice-only-label{font-size:13px;font-weight:700;color:#16a34a;letter-spacing:.5px;}
+@keyframes voicePulse{0%,100%{transform:scale(1);opacity:.8;}50%{transform:scale(1.15);opacity:1;}}
 .card-media-ph{border-radius:10px;margin:12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 0;}
 .card-vid-ph{background:#0f172a;min-height:140px;}
 .card-vid-ph .card-ph-icon{font-size:28px;color:#94a3b8;}
@@ -10792,6 +10800,13 @@ function _detectMedia(txt){
 
 /* ─ 카드 HTML 렌더링 (미디어 플레이스홀더 포함) ─ */
 function _renderCardHtml(txt){
+  /* [멘트만] 마커 — 화면에는 빈 카드, TTS만 재생 */
+  if(txt.trim().startsWith('[멘트만]')){
+    return '<div class="voice-only-card">'
+         +'<div class="voice-only-icon">🎙</div>'
+         +'<div class="voice-only-label">음성 안내</div>'
+         +'</div>';
+  }
   const {hasVid,hasImg,clean}=_detectMedia(txt);
   let html=_md2html(clean);
   if(hasVid){
@@ -10942,7 +10957,9 @@ function _showGuideCard(idx,animate){
     if(_stepGaugeElapsed>=_stepGaugeTotalMs)clearInterval(_stepGaugeTimer);
   },300);
 
-  speakEL(cardText,function(){
+  /* [멘트만] 카드는 마커 제거 후 TTS */
+  var ttsText=cardText.replace(/^\[멘트만\]\s*/,'');
+  speakEL(ttsText,function(){
     if(myToken!==_guideCardToken)return; /* 취소된 토큰 */
     clearInterval(_stepGaugeTimer);
     var f2=document.getElementById('seg-fill-'+idx);
