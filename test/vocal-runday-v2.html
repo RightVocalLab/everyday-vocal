@@ -8890,6 +8890,10 @@ function pop(){
     prevEl.classList.remove('behind');
     prevEl.classList.remove('hidden');
   }
+  /* scr-step으로 복귀 시 현재 카드 자동 재개 */
+  if(prevId === 'scr-step' && Array.isArray(_guideCards) && _guideCards.length > 0){
+    setTimeout(function(){ _showGuideCard(_guideCardIdx, false); }, 300);
+  }
 }
 
 const _APW='Zmtxa2RybmVrMSE=';
@@ -11032,9 +11036,10 @@ function _showGuideCard(idx,animate){
     if(_stepGaugeElapsed>=_stepGaugeTotalMs)clearInterval(_stepGaugeTimer);
   },300);
 
-  /* 코스 전용 TTS 파라미터 활성화 (에너지 톤 고정) */
-  window._courseStability=0.30;
-  window._courseStyle=0.60;
+  /* 코스 전용 TTS 파라미터 (에너지 톤 + 한국어 환각 감소) */
+  /* stability 0.30 → 0.42: 표현력 유지하면서 한자 발음 환각 줄임 */
+  window._courseStability=0.42;
+  window._courseStyle=0.55;
   window._courseSpeed=0.95;
   window._courseSpeakerBoost=true;
   /* 카드 텍스트 추출 (객체/문자열 모두 처리) */
