@@ -7226,6 +7226,8 @@ txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
    zero-width space(\u200B)를 삽입해 ElevenLabs가 별개 음절로 인식하게 함.
    화면 표시는 그대로 "횡격막"이지만 TTS에는 "횡\u200B격\u200B막"으로 전달
    → ElevenLabs가 한자 어원 추측 차단 → 한국어 발음으로 강제 */
+/* zero-width space 삽입 비활성화 — multilingual_v2 + 본인 보이스에서는
+   끊김 발음("상!복!부", "횡!격!막") 유발. 한자환각 발생 시에만 개별 단어 처리 권장.
 var _hanjaWords=[
   '횡격막','늑간근','외늑간근','내늑간근','요방형근',
   '상복부','하복부','복강','복부','흉곽','흉부','복식','흉식','흉복식',
@@ -7236,10 +7238,10 @@ var _hanjaWords=[
 ];
 _hanjaWords.forEach(function(w){
   if(txt.indexOf(w)<0) return;
-  /* 단어의 각 글자 사이에 zero-width space 삽입 */
   var split=w.split('').join('\u200B');
   txt=txt.split(w).join(split);
 });
+*/
 txt=txt.replace(/[xX]\s*(\d+)/g,function(_,n){return n+'번 반복';});
 /* 숫자 사이의 물결표(~, 〜, ∼)를 '에서'로 변환 (예: 17~24mm → 17 에서 24mm) */
 txt=txt.replace(/(\d)\s*[~〜∼]\s*(\d)/g, '$1 에서 $2');
