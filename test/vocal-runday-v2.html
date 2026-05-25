@@ -7222,6 +7222,9 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
 }
 
 function _normTTS(txt){
+/* 참조 마커 제거: (참조 영상 링크), (참조 사진 첨부), (참조 영상 링크, 참조 사진 첨부) 등 모두 제거.
+   TTS로 읽혔을 때 어색하므로 캐싱 전에 제거. 화면에는 그대로 표시됨. */
+txt=txt.replace(/\([^)]*참조[^)]*\)/g, '');
 txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
 /* 한자어 환각 차단: 한자 어원으로 분해 가능한 의학 용어들 사이에
    zero-width space(\u200B)를 삽입해 ElevenLabs가 별개 음절로 인식하게 함.
@@ -11070,7 +11073,12 @@ function _showGuideCard(idx,animate){
   var cardTtsText=typeof cardItem==='string'
     ?cardItem
     :cardItem.text.replace(/^\[멘트만\]\s*/,'');
+  /* 참조 마커 제거: (참조 영상 링크), (참조 사진 첨부) 등 → TTS에서 안 읽힘 */
+  cardTtsText=cardTtsText.replace(/\([^)]*참조[^)]*\)/g, '').replace(/\s+/g, ' ').trim();
   var voiceAfterText=typeof cardItem==='object'?cardItem._voiceAfter:'';
+  if(voiceAfterText){
+    voiceAfterText=voiceAfterText.replace(/\([^)]*참조[^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  }
 
   function _playVoiceAfter(onDone){
     if(!voiceAfterText||!voiceAfterText.trim()){onDone();return;}
