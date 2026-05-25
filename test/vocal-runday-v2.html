@@ -7176,8 +7176,9 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
   /* 문단(\n\n) 단위로 1차 분할 */
   let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
   
-  /* 각 문단이 250자 초과면 마침표/물음표/느낌표/줄바꿈 단위로 추가 분할 */
-  const MAX_LEN = 250;
+  /* 각 문단이 120자 초과면 마침표/물음표/느낌표/줄바꿈 단위로 추가 분할
+     (multilingual_v2 + 본인 보이스에서 한자환각 방지 검증된 한계값) */
+  const MAX_LEN = 120;
   const finalChunks = [];
   for(const c of chunks){
     if(c.length <= MAX_LEN){
@@ -11076,14 +11077,16 @@ function _showGuideCard(idx,animate){
     var va=voiceAfterText.trim();
     var vStatus=document.getElementById('step-tts-status');
     if(vStatus) vStatus.textContent='🎙 안내 중...';
-    speakEL(va,function(){
+    _speakChunked(va,function(){
       if(myToken!==_guideCardToken)return;
       if(vStatus) vStatus.textContent='';
       onDone();
     });
   }
 
-  speakEL(cardTtsText,function(){
+  /* 긴 카드 텍스트는 _speakChunked로 청크 분할 재생 (한자환각 방지)
+     짧은 카드(120자 이하)는 _speakChunked가 1청크로 처리하므로 안전 */
+  _speakChunked(cardTtsText,function(){
     if(myToken!==_guideCardToken)return;
     clearInterval(_stepGaugeTimer);
     var f2=document.getElementById('seg-fill-'+idx);
