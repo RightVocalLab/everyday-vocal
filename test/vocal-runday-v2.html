@@ -11056,10 +11056,10 @@ function _showGuideCard(idx,animate){
   },300);
 
   /* 코스 전용 TTS 파라미터 (한자 환각 차단 우선) */
-  /* 모델 eleven_v3 + stability 상향: 한자 발음 환각 강력 차단 */
-  window._courseStability=0.55;
-  window._courseStyle=0.45;
-  window._courseSpeed=1.05;
+  /* 모델 multilingual_v2 복귀 + stability 0.20/style 0.30: 페이지 18 본인 직접 테스트 결정값 (가장 자연스러운 본인 톤) */
+  window._courseStability=0.20;
+  window._courseStyle=0.30;
+  window._courseSpeed=1.00;
   window._courseSpeakerBoost=true;
   window._courseVoiceId='Mny3tJezAvDLdb8JlyUs';
   /* 카드 텍스트 추출 (객체/문자열 모두 처리) */
