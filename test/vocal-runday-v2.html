@@ -7225,7 +7225,7 @@ function _normTTS(txt){
 /* 참조 마커 제거: (참조 영상 링크), (참조 사진 첨부), (참조 영상 링크, 참조 사진 첨부) 등 모두 제거.
    TTS로 읽혔을 때 어색하므로 캐싱 전에 제거. 화면에는 그대로 표시됨. */
 txt=txt.replace(/\([^)]*참조[^)]*\)/g, '');
-txt=txt.replace(/\*\*/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
+txt=txt.replace(/\*\*/g,'').replace(/['']/g,'').replace(/[""]/g,'').replace(/\n\n+/g,' ').replace(/\n/g,' ');
 /* 한자어 환각 차단: 한자 어원으로 분해 가능한 의학 용어들 사이에
    zero-width space(\u200B)를 삽입해 ElevenLabs가 별개 음절로 인식하게 함.
    화면 표시는 그대로 "횡격막"이지만 TTS에는 "횡\u200B격\u200B막"으로 전달
