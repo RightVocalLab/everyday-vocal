@@ -7811,11 +7811,11 @@ if(isTransition && prevRootMidi!=null){
   /* polling 시스템에 예비음 등록 (sIdx -1로 구분) */
   _scheduledNotes.push({sT:t, m:prevRootMidi, si:0, dir:'up', sIdx:-1, total:1, isPreview:true});
   /* 둘째 박: 새 키 5도화음 + 건반 표시 (2박 후 — 홀드 1박 추가) */
-  const t2=t+tspb*2;
+  const t2=t+tspb*1.8; /* 홀드 0.8박 */
   setTimeout(function(){
     if(!playing)return;
     [0,4,7,12,16].forEach(function(off){ playPiano(rootMidi+off, dur, 0.24); });
-  }, tspb*2000);
+  }, tspb*1800);
   _scheduledNotes.push({sT:t2, m:rootMidi, si:0, dir:'up', sIdx:-2, total:1, isPreview:true});
 } else {
   /* 처음 시작 예비음: 4박 서스테인 + 건반 표시 */
@@ -8373,7 +8373,7 @@ if(playing)playPreviewChord(newR,curMod.previewType,curBpm,true,prevR);
 },dl);
 })(previewNr, previewPrevR, sch.nx);
 /* 예비음 2박 후 다음 스케일 시작 */
-sch.nx+=tspb_wait*3.0; /* 예비음 전체 3박 (첫박1+홀드1+둘째박1) */
+sch.nx+=tspb_wait*2.8; /* 예비음 전체 2.8박 (첫박1+홀드0.8+둘째박1) */
 } else {
 sch.nx+=spb*0.15;
 }
