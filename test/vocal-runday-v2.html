@@ -1701,7 +1701,11 @@ input,select,button,textarea{font-family:inherit;}
     <div id="admin-reports-section" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:14px;font-weight:800;color:#1f2937">🚨 신고/건의 관리</div>
+        <div style="display:flex;gap:6px;align-items:center">
         <button onclick="_loadAdminReports()" style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">새로고침</button>
+        <button onclick="_clearHandledAdminData()" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:4px 10px;font-size:11px;color:#c2410c;cursor:pointer">처리됨 비우기</button>
+        <button onclick="_clearAllAdminData()" style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer">전부 비우기</button>
+      </div>
       </div>
       <!-- 탭 -->
       <div style="display:flex;gap:6px;margin-bottom:10px">
@@ -9675,6 +9679,56 @@ function adminLogout(){
 }
 
 /* ============== 관리자: 신고/건의 목록 ============== */
+/* 신고/건의 일괄 삭제 함수 */
+async function _clearAllAdminData(){
+  const tab = _adminCurrentTab;
+  const label = tab === 'reports' ? '신고' : '건의';
+  if(!confirm('현재 탭의 ' + label + ' 전체를 삭제합니다. 되돌릴 수 없습니다.')) return;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '삭제 중...';
+  try {
+    if(tab === 'reports'){
+      const paths = [
+        'community/reports/posts','community/reports/comments',
+        'vocalClinic/reports/posts','vocalClinic/reports/feedback','vocalClinic/reports/comments'
+      ];
+      for(const p of paths){ try{ await _fbDb.ref(p).remove(); }catch(e){} }
+    } else {
+      /* 건의 전체 삭제 */
+      for(const s of _adminSuggestionsData){
+        try{ await _fbDb.ref('suggestions/' + s._id).remove(); }catch(e){}
+      }
+    }
+    await _loadAdminReports();
+    alert(label + ' 전체 삭제 완료!');
+  } catch(e){ alert('삭제 실패: ' + e.message); }
+  finally{ btn.disabled = false; btn.textContent = '전부 비우기'; }
+}
+
+async function _clearHandledAdminData(){
+  const tab = _adminCurrentTab;
+  const label = tab === 'reports' ? '신고' : '건의';
+  if(!confirm('현재 탭의 처리된 ' + label + '만 삭제합니다.')) return;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '삭제 중...';
+  try {
+    if(tab === 'reports'){
+      const handled = _adminReportsData.filter(r => r.handled);
+      for(const r of handled){
+        try{ await _fbDb.ref(r._path + '/' + r._targetId + '/' + r._reportId).remove(); }catch(e){}
+      }
+    } else {
+      const handled = _adminSuggestionsData.filter(s => s.handled);
+      for(const s of handled){
+        try{ await _fbDb.ref('suggestions/' + s._id).remove(); }catch(e){}
+      }
+    }
+    await _loadAdminReports();
+    alert('처리된 ' + label + ' 삭제 완료!');
+  } catch(e){ alert('삭제 실패: ' + e.message); }
+  finally{ btn.disabled = false; btn.textContent = '처리됨 비우기'; }
+}
+
 let _adminCurrentTab = 'reports';
 let _adminReportsData = [];
 let _adminSuggestionsData = [];
