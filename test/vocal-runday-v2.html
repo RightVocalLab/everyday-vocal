@@ -7811,11 +7811,11 @@ if(isTransition && prevRootMidi!=null){
   /* polling 시스템에 예비음 등록 (sIdx -1로 구분) */
   _scheduledNotes.push({sT:t, m:prevRootMidi, si:0, dir:'up', sIdx:-1, total:1, isPreview:true});
   /* 둘째 박: 새 키 5도화음 + 건반 표시 (2박 후 — 홀드 1박 추가) */
-  const t2=t+tspb*1.8; /* 홀드 0.8박 */
+  const t2=t+tspb*1.5; /* 홀드 0.5박 */
   setTimeout(function(){
     if(!playing)return;
     [0,4,7,12,16].forEach(function(off){ playPiano(rootMidi+off, dur, 0.24); });
-  }, tspb*1800);
+  }, tspb*1500);
   _scheduledNotes.push({sT:t2, m:rootMidi, si:0, dir:'up', sIdx:-2, total:1, isPreview:true});
 } else {
   /* 처음 시작 예비음: 4박 서스테인 + 건반 표시 */
@@ -8373,7 +8373,7 @@ if(playing)playPreviewChord(newR,curMod.previewType,curBpm,true,prevR);
 },dl);
 })(previewNr, previewPrevR, sch.nx);
 /* 예비음 2박 후 다음 스케일 시작 */
-sch.nx+=tspb_wait*2.8; /* 예비음 전체 2.8박 (첫박1+홀드0.8+둘째박1) */
+sch.nx+=tspb_wait*2.5; /* 예비음 전체 2.5박 (첫박1+홀드0.5+둘째박1) */
 } else {
 sch.nx+=spb*0.15;
 }
@@ -8402,7 +8402,7 @@ const _need=(_item && _item.repeat) || 1;
 const _cur=Math.min(_getHwProgress()[_ridx]||0, _need);
 const _ttl=_need>1?`훈련 완료! (${_cur}/${_need})`:'훈련 완료!';
 showDone('✅',_ttl,'수고했습니다!',[
-{label:'숙제로 돌아가기',fn:()=>{closeDone();_returnToHomework();}},
+{label:'완료',fn:()=>{closeDone();_returnToHomework();}},
 {label:'↺ 다시',fn:()=>{closeDone();doRestart();}},
 ]); return;
 }
@@ -8443,16 +8443,18 @@ if(!scrStack.includes('scr-step'))scrStack.push('scr-step');
 stepIdx++;
 renderStep();
 }}
-: {label: curStudent?'숙제로 돌아가기':'← 목록으로', fn:()=>{
+: {label:'완료', fn:()=>{
 closeDone();exitTrain();
-if(curStudent){
-  /* 숙제 완료 — 숙제 화면 복원 */
+const _fromHw=scrStack.includes('scr-homework');
+if(_fromHw){
+  /* 숙제에서 진입 — 숙제 화면 복원 */
   setTimeout(()=>{
     const hwScr=document.getElementById('scr-homework');
     if(hwScr){hwScr.classList.remove('hidden','behind');}
     if(!scrStack.includes('scr-homework'))scrStack.push('scr-homework');
   },100);
 } else {
+  /* 자유연습 — 코스 목록으로 복원 */
   setTimeout(()=>{
     const _cname=document.getElementById('ds-title')?.textContent||'';
     const _cobj=(DB.courses||[]).find(c=>c.name===_cname);
