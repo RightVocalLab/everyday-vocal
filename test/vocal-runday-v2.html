@@ -7277,6 +7277,10 @@ const _PARA_GAP_MS = 800;     /* 단락(\n\n) 사이 텀 (조정 가능: 600/800
 function _speakChunked(txt, onEnd, _isCoachFlag){
   if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
   
+  /* [쉬기N] 마커를 별도 문단으로 강제 분리 (cache_tts.py와 동일 → 캐시 해시 일치)
+     텍스트에 붙어있는 [쉬기3]도 앞뒤 \n\n으로 감싸 별도 청크가 되게 함 */
+  txt = txt.replace(/(\[쉬기\d+\])/g, '\n\n$1\n\n');
+  
   /* 문단(\n\n) 단위로 1차 분할 */
   let chunks = txt.split(/\n\n+/).map(s => s.trim()).filter(s => s);
   
