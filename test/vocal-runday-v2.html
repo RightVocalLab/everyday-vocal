@@ -11241,6 +11241,23 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
   const vids=cardMedia.vids||[];
   const imgs=cardMedia.imgs||[];
 
+  /* 문장 끝(. ! ?) 뒤 공백 → 줄바꿈 (화면에서 문장마다 줄 바뀜)
+     예외: 숫자 사이 마침표(1.5), 이미 줄바꿈 있는 곳은 건드리지 않음
+     원본 텍스트는 그대로 — 화면 렌더링용 전처리만 */
+  function _breakSentences(s){
+    /* 마침표/느낌표/물음표 뒤 공백(들) + 다음 글자가 있으면 부호 뒤에서 줄바꿈.
+       단, 마침표 바로 앞뒤가 숫자인 소수점(예: 1.5)은 제외 */
+    return s.replace(/([.!?])([ \t]+)(?=\S)/g, function(m, punc, sp, off, full){
+      /* 소수점 보호: 마침표이고 앞이 숫자, 공백 뒤 첫 글자가 숫자면 그대로 둠 */
+      if(punc==='.'){
+        var prev = off>0 ? full.charAt(off-1) : '';
+        var nextCh = full.charAt(off + m.length);
+        if(/[0-9]/.test(prev) && /[0-9]/.test(nextCh)) return m;
+      }
+      return punc + '\n';
+    });
+  }
+
   /* 미디어 HTML 생성기 */
   function _vidHtml(ytId){
     if(ytId){
@@ -11273,7 +11290,7 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
   while((mm=markerRe.exec(txt))!==null){
     /* 마커 앞 텍스트 조각 → _md2html */
     var seg=txt.slice(lastIdx,mm.index);
-    if(seg.trim()) html+=_md2html(seg);
+    if(seg.trim()) html+=_md2html(_breakSentences(seg));
     /* 마커 내부를 콤마로 분리해 영상/사진 순서대로 처리 */
     var inner=mm[0].replace(/[()]/g,'');
     var parts=inner.indexOf(',')>=0?inner.split(','):[inner];
@@ -11286,7 +11303,7 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
   }
   /* 마지막 마커 뒤 남은 텍스트 */
   var tail=txt.slice(lastIdx);
-  if(tail.trim()) html+=_md2html(tail);
+  if(tail.trim()) html+=_md2html(_breakSentences(tail));
 
   return html;
 }
