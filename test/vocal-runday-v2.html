@@ -1169,19 +1169,26 @@ input,select,button,textarea{font-family:inherit;}
       <!-- 섹션 게이지바 (유튜브 챕터 스타일) -->
       <div id="step-seg-bar" style="display:flex;gap:3px;height:5px;padding:10px 12px 0"></div>
       <!-- 헤더: 섹션 번호 + 상태 + 다시듣기 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 4px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:11px;font-weight:800;color:#166534">🎙 훈련 안내</span>
-          <span id="step-card-num" style="font-size:10px;color:#4ade80;font-weight:700">1 / 1</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px">
+        <div style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px 0 8px;background:#fff;border:1.5px solid #bbf7d0;border-radius:99px;box-shadow:0 1px 3px rgba(21,128,61,.1)">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#dcfce7;flex:0 0 auto">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" fill="#15803d"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3M9 20h6" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span style="display:inline-flex;align-items:center;font-size:14px;font-weight:800;color:#166534;line-height:1">훈련 안내</span>
+          <span id="step-card-num" style="display:inline-flex;align-items:center;font-size:11px;font-weight:600;color:#16a34a;line-height:1">1/1</span>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span id="step-tts-status" style="font-size:10px;color:#4ade80;font-weight:700"></span>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span id="step-tts-status" style="font-size:10px;color:#16a34a;font-weight:700"></span>
           <button id="step-playpause-btn" onclick="_toggleStepPlayPause()" aria-label="일시정지"
-            style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;box-shadow:0 2px 6px rgba(21,128,61,.35);cursor:pointer;padding:0;transition:transform .15s ease,box-shadow .15s ease" 
-            onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
+            style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;box-shadow:0 2px 7px rgba(21,128,61,.38);cursor:pointer;padding:0;transition:transform .15s ease,box-shadow .15s ease" 
+            onmousedown="this.style.transform='scale(.9)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
             <span class="ppb-icon" style="display:inline-flex"></span>
           </button>
-          <button onclick="replayStepGuide()" style="padding:3px 9px;background:#dcfce7;border:1px solid #86efac;border-radius:99px;font-size:10px;font-weight:700;color:#15803d;cursor:pointer">↺ 다시듣기</button>
+          <button onclick="replayStepGuide()" aria-label="다시듣기" title="처음부터 다시듣기"
+            style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #86efac;border-radius:50%;background:#fff;color:#15803d;box-shadow:0 1px 4px rgba(21,128,61,.15);cursor:pointer;padding:0;transition:transform .15s ease"
+            onmousedown="this.style.transform='scale(.9) rotate(-180deg)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none"><path d="M3 12a9 9 0 1 0 2.6-6.3M3 4.5V9h4.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </div>
       </div>
       <!-- 카드 슬라이더 컨테이너 -->
@@ -11463,7 +11470,7 @@ function _showGuideCard(idx,animate){
 
   /* 카드 번호 */
   var numEl=document.getElementById('step-card-num');
-  if(numEl) numEl.textContent=(idx+1)+' / '+N;
+  if(numEl) numEl.textContent=(idx+1)+'/'+N;
 
   /* TTS */
   clearInterval(_stepGaugeTimer);
@@ -18068,7 +18075,15 @@ function _showPrivacy(){
 /* 백그라운드 전환 감지 */
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
-    cancelTTS();stopEL();_stopMetronome();
+    /* 코스 카드뉴스 청크 재생 중이면 cancelTTS 하지 않음
+       (_chunkState 보존 → 복귀 시 멈춘 청크부터 자동 재개). 일시정지는 9065 핸들러가 처리 */
+    var _inCardPlayback = (typeof _chunkState!=='undefined' && _chunkState.active
+                           && scrStack[scrStack.length-1]==='scr-step');
+    if(!_inCardPlayback){
+      cancelTTS();stopEL();_stopMetronome();
+    } else {
+      _stopMetronome(); /* 메트로놈만 정지, TTS 청크 상태는 보존 */
+    }
     if(actx && actx.state === 'running'){actx.suspend();}
     if(playing){window._savedSch={s:sch.s,p:sch.p};window._wasPlaying=true;stopEngine();}
   } else {
