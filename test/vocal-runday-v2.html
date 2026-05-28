@@ -10998,61 +10998,62 @@ function _detectMedia(txt){
   return {hasVid,hasImg,clean,markers,mediaSeq};
 }
 
-/* ─ 카드 HTML 렌더링 (실제 미디어 또는 플레이스홀더) ─
+/* ─ 카드 HTML 렌더링 (마커가 있던 위치 그대로에 미디어 삽입) ─
    cardIdx: 카드 인덱스, cardMedia: {vids:[ytId,...], imgs:[url,...]} */
 function _renderCardHtml(txt,cardIdx,cardMedia){
   /* [멘트만]이 단독으로 오면 무시 (앞 카드에 병합됨) */
   if(txt.trim().startsWith('[멘트만]')) return '';
-  const {hasVid,hasImg,clean,markers,mediaSeq}=_detectMedia(txt);
-  let html=_md2html(clean);
   cardMedia=cardMedia||{vids:[],imgs:[]};
   const vids=cardMedia.vids||[];
   const imgs=cardMedia.imgs||[];
-  if(markers && markers.length){
-    /* mediaSeq 순서대로 vids/imgs를 차례로 꺼내 매칭 */
-    var vi=0, ii=0;
-    mediaSeq.forEach(function(type){
-      if(type==='vid'){
-        var ytId=vids[vi]; vi++;
-        if(ytId){
-          /* 실제 영상: 썸네일 + ▶재생 버튼 (와이파이 체크는 재생 시) */
-          var thumb='https://img.youtube.com/vi/'+ytId+'/hqdefault.jpg';
-          html+='<div class="card-media-real" id="card-vid-holder-'+cardIdx+'-'+ytId+'" style="margin:12px 0">'
-              +'<div style="position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;cursor:pointer" '
-              +'onclick="_cardYtPlay('+cardIdx+',\''+ytId+'\')">'
-              +'<img src="'+thumb+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
-              +'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)">'
-              +'<div style="background:rgba(0,0,0,.6);color:#fff;padding:10px 18px;border-radius:99px;font-size:15px;font-weight:600">▶ 재생</div>'
-              +'</div>'
-              +'</div>'
-              +'</div>';
-        } else {
-          /* URL 미입력 → 기존 플레이스홀더 (역호환) */
-          html+='<div class="card-media-ph card-vid-ph">'
-              +'<div class="card-ph-icon">▶</div>'
-              +'<div class="card-ph-label">참조 영상 (준비 중)</div>'
-              +'</div>';
-        }
-      } else if(type==='img'){
-        var imgUrl=imgs[ii]; ii++;
-        if(imgUrl){
-          /* 실제 사진: 카드 안 직접 표시 (탭하면 확대) */
-          var safeUrl=String(imgUrl).replace(/'/g,"\\'");
-          html+='<div class="card-media-real" style="margin:12px 0">'
-              +'<img src="'+imgUrl+'" onclick="_openImgFull(\''+safeUrl+'\')" '
-              +'style="width:100%;border-radius:10px;cursor:pointer;border:1px solid #d1fae5" '
-              +'onerror="this.parentNode.style.display=\'none\'">'
-              +'</div>';
-        } else {
-          /* URL 미입력 → 기존 플레이스홀더 (역호환) */
-          html+='<div class="card-media-ph card-img-ph">'
-              +'<div class="card-ph-icon">📷</div>'
-              +'<div class="card-ph-label">참조 사진 (준비 중)</div>'
-              +'</div>';
-        }
-      }
-    });
+
+  /* 미디어 HTML 생성기 */
+  function _vidHtml(ytId){
+    if(ytId){
+      var thumb='https://img.youtube.com/vi/'+ytId+'/hqdefault.jpg';
+      return '<div class="card-media-real" id="card-vid-holder-'+cardIdx+'-'+ytId+'" style="margin:12px 0">'
+          +'<div style="position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;cursor:pointer" '
+          +'onclick="_cardYtPlay('+cardIdx+',\''+ytId+'\')">'
+          +'<img src="'+thumb+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
+          +'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)">'
+          +'<div style="background:rgba(0,0,0,.6);color:#fff;padding:10px 18px;border-radius:99px;font-size:15px;font-weight:600">▶ 재생</div>'
+          +'</div></div></div>';
+    }
+    return '<div class="card-media-ph card-vid-ph"><div class="card-ph-icon">▶</div><div class="card-ph-label">참조 영상 (준비 중)</div></div>';
   }
+  function _imgHtml(imgUrl){
+    if(imgUrl){
+      var safeUrl=String(imgUrl).replace(/'/g,"\\'");
+      return '<div class="card-media-real" style="margin:12px 0">'
+          +'<img src="'+imgUrl+'" onclick="_openImgFull(\''+safeUrl+'\')" '
+          +'style="width:100%;border-radius:10px;cursor:pointer;border:1px solid #d1fae5" '
+          +'onerror="this.parentNode.style.display=\'none\'"></div>';
+    }
+    return '<div class="card-media-ph card-img-ph"><div class="card-ph-icon">📷</div><div class="card-ph-label">참조 사진 (준비 중)</div></div>';
+  }
+
+  /* 미디어 마커 정규식 (영상/사진 합쳐진 괄호도 매칭) */
+  var markerRe=/\(참조[^)]*\)|\(동영상[^)]*\)/gi;
+  var html='';
+  var lastIdx=0, vi=0, ii=0, mm;
+  while((mm=markerRe.exec(txt))!==null){
+    /* 마커 앞 텍스트 조각 → _md2html */
+    var seg=txt.slice(lastIdx,mm.index);
+    if(seg.trim()) html+=_md2html(seg);
+    /* 마커 내부를 콤마로 분리해 영상/사진 순서대로 처리 */
+    var inner=mm[0].replace(/[()]/g,'');
+    var parts=inner.indexOf(',')>=0?inner.split(','):[inner];
+    parts.forEach(function(p){
+      var t=p.trim();
+      if(/영상/.test(t)){ html+=_vidHtml(vids[vi]); vi++; }
+      else if(/사진|이미지/.test(t)){ html+=_imgHtml(imgs[ii]); ii++; }
+    });
+    lastIdx=markerRe.lastIndex;
+  }
+  /* 마지막 마커 뒤 남은 텍스트 */
+  var tail=txt.slice(lastIdx);
+  if(tail.trim()) html+=_md2html(tail);
+
   return html;
 }
 
