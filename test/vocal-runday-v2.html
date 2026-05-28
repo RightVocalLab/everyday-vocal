@@ -1158,10 +1158,17 @@ input,select,button,textarea{font-family:inherit;}
   <div class="body"><div class="inner" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px">
 
     <!-- 훈련 이름 -->
-    <div style="text-align:center;padding:18px 0 10px">
-      <div style="font-size:11px;color:var(--mu);font-weight:700;margin-bottom:6px">현재 훈련</div>
-      <div style="font-size:20px;font-weight:900;color:var(--or-d)" id="step-ex-name">—</div>
-      <div style="font-size:12px;color:var(--mu);margin-top:4px" id="step-scale-name">—</div>
+    <div style="padding:14px 0 6px">
+      <div style="background:#fff;border:1.5px solid #bbf7d0;border-radius:16px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(21,128,61,.06)">
+        <div style="font-size:10px;font-weight:700;color:#16a34a;letter-spacing:1px;margin-bottom:6px">CURRENT TRAINING</div>
+        <div style="font-size:23px;font-weight:800;color:#14532d;letter-spacing:-0.5px" id="step-ex-name">—</div>
+        <div id="step-scale-wrap" style="display:none;margin-top:8px">
+          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#15803d;background:#f0fdf4;border-radius:99px;padding:3px 10px">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" style="flex:0 0 auto"><circle cx="12" cy="12" r="9" stroke="#15803d" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#15803d" stroke-width="2" stroke-linecap="round"/></svg>
+            <span id="step-scale-name">—</span>
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- 카드뉴스 안내 섹션 -->
@@ -11103,6 +11110,9 @@ const sc=(DB.scales||[]).find(s=>s.id===_sid);
 if(sc)scaleInfo=`${sc.name} (${sc.range}) · BPM ${sc.bpm||60}`+(_rep>1?` · ${_rep}회 반복`:'');
 }
 document.getElementById('step-scale-name').textContent=scaleInfo;
+/* 스케일 정보가 있을 때만 알약 표시 (호흡 코스 등 스케일 없으면 숨김) */
+var _scWrap=document.getElementById('step-scale-wrap');
+if(_scWrap) _scWrap.style.display=(scaleInfo&&scaleInfo!=='—'&&scaleInfo.trim())?'block':'none';
 
 const guide=item.guide||'안내 멘트가 없습니다.';
 const _sgEl=document.getElementById('step-guide');_sgEl.innerHTML=_md2html(guide);_sgEl.dataset.raw=guide;
