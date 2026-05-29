@@ -11277,7 +11277,7 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
       var safeUrl=String(imgUrl).replace(/'/g,"\\'");
       return '<div class="card-media-real" style="margin:12px 0">'
           +'<img src="'+imgUrl+'" onclick="_openImgFull(\''+safeUrl+'\')" '
-          +'style="width:100%;border-radius:10px;cursor:pointer;border:1px solid #d1fae5" '
+          +'style="width:100%;border-radius:10px;cursor:pointer" '
           +'onerror="this.parentNode.style.display=\'none\'"></div>';
     }
     return '<div class="card-media-ph card-img-ph"><div class="card-ph-icon">📷</div><div class="card-ph-label">참조 사진 (준비 중)</div></div>';
@@ -11548,12 +11548,17 @@ function _showGuideCard(idx,animate){
     if(!voiceAfterText||!voiceAfterText.trim()){onDone();return;}
     var va=voiceAfterText.trim();
     var vStatus=document.getElementById('step-tts-status');
-    if(vStatus) vStatus.textContent='🎙 안내 중...';
-    _speakChunked(va,function(){
-      if(myToken!==_guideCardToken)return;
-      if(vStatus) vStatus.textContent='';
-      onDone();
-    });
+    if(vStatus) vStatus.textContent=''; /* 본문 끝 → 잠시 비움 */
+    /* 본문 끝나고 5초 텀 후 [멘트만] 재생 (호흡 한 번 돌릴 시간) */
+    var _vaTimer=setTimeout(function(){
+      if(myToken!==_guideCardToken)return; /* 그 사이 카드 넘어갔으면 취소 */
+      if(vStatus) vStatus.textContent='🎙 안내 중...';
+      _speakChunked(va,function(){
+        if(myToken!==_guideCardToken)return;
+        if(vStatus) vStatus.textContent='';
+        onDone();
+      });
+    }, 5000);
   }
 
   /* 긴 카드 텍스트는 _speakChunked로 청크 분할 재생 (한자환각 방지)
