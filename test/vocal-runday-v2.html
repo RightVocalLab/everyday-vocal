@@ -10523,7 +10523,9 @@ if(el) el.style.display = show ? '' : 'none';
 });
 (DB.courses||[]).forEach(c=>{
 const ckey='course_'+c.id;
-const show = vis[ckey] !== false;
+/* 관리자는 메뉴 vis 무시하고 모든 코스 항상 봄 (작업/테스트용) */
+const _isAdm = (typeof _isAppAdmin === 'function') && _isAppAdmin();
+const show = _isAdm ? true : (vis[ckey] !== false);
 const el=document.getElementById('course-item-'+c.id);
 if(el) el.style.display = show ? '' : 'none';
 });
