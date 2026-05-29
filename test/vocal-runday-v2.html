@@ -13959,8 +13959,11 @@ function _hwUploadParseExcel(file){
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
         
-        /* "학생 목록" 시트에서 비밀번호 매핑 가져오기 (우선) */
-        const pwMap = {};
+        /* "학생 목록" 시트에서 학생 명단 + 비밀번호 매핑 가져오기
+           ★ 이 시트가 단일 진실 소스: 여기 등록된 학생만 Firebase로 올라감
+              (학생_xxx 시트는 자료 보관용 - 목록에서 빠지면 그 학생은 제거 처리됨) */
+        const pwMap = {};       /* name -> pw */
+        const enrolledOrder = []; /* "학생 목록" 등록 순서 보존 */
         if(wb.SheetNames.indexOf('학생 목록') >= 0){
           const listSheet = wb.Sheets['학생 목록'];
           const listJson = XLSX.utils.sheet_to_json(listSheet, { header: 1, defval: '' });
@@ -13972,54 +13975,56 @@ function _hwUploadParseExcel(file){
             if(!name || !pw) continue;
             if(name.indexOf('이름') >= 0 || pw.indexOf('비밀번호') >= 0) continue;
             if(name.indexOf('*') >= 0 || pw.indexOf('*') >= 0) continue;
+            if(pwMap[name]) continue; /* 중복 행 방지 */
             pwMap[name] = pw;
+            enrolledOrder.push(name);
           }
+        } else {
+          /* "학생 목록" 시트가 없으면 안전상 중단 - 의도치 않은 일괄 제거 방지 */
+          reject(new Error('"학생 목록" 시트가 없습니다. 시트를 추가하고 다시 시도해주세요.'));
+          return;
         }
         
-        /* 학생 시트 파싱 */
+        /* 학생 시트(학생_xxx)는 숙제 데이터 소스로만 활용 (학생 명단의 출처 아님)
+           "학생 목록"에 등록된 학생만 순회하며, 시트 있으면 숙제 채우고 없으면 빈 숙제 */
         const students = [];
-        wb.SheetNames.forEach(function(sn){
-          if(!sn.startsWith('학생_')) return;
-          const name = sn.substring(3).trim();
-          if(!name) return;
-          const sheet = wb.Sheets[sn];
-          const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-          
-          /* 행 1에서 비밀번호 보조 추출: "학생: 박주은  |  비밀번호: jueun24" */
-          let pw = pwMap[name] || '';
-          if(!pw && json[0] && json[0][0]){
-            const m = String(json[0][0]).match(/비밀번호\s*[:|]\s*([^\s|]+)/);
-            if(m) pw = m[1].trim();
-          }
-          
-          /* 4행부터 데이터 (0-indexed 3), "📝 메모 영역" 만나면 중단 */
+        enrolledOrder.forEach(function(name){
+          const pw = pwMap[name];
           const homework = [];
-          for(let i = 3; i < json.length; i++){
-            const row = json[i] || [];
-            const col1 = String(row[0] || '').trim();
-            if(col1.indexOf('📝') >= 0 || col1.indexOf('메모 영역') >= 0) break;
-            const exName = String(row[1] || '').trim();
-            if(!exName) continue; /* 빈 행 스킵 */
-            const scaleId = String(row[2] || '').trim();
-            const repeat = parseInt(row[3], 10) || 1;
-            const comment = String(row[4] || '').trim();
-            /* F=활성 컬럼: 'N'이면 active=false, 그 외(Y/빈)는 active=true */
-            const activeRaw = String(row[5] || '').trim().toUpperCase();
-            const active = (activeRaw === 'N') ? false : true;
-            /* G=메모 컬럼은 선생님 본인용 (Firebase 업로드 X) — 파서에서 무시 */
-            homework.push({
-              exId: exName,
-              exName: exName,
-              displayLabel: exName,
-              scaleId: scaleId,
-              repeat: repeat,
-              comment: comment,
-              active: active,
-              num: homework.length,
-              name: exName,
-            });
+          const sheetName = '학생_' + name;
+          const sheet = wb.Sheets[sheetName];
+          if(sheet){
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            /* 4행부터 데이터 (0-indexed 3), "📝 메모 영역" 만나면 중단 */
+            for(let i = 3; i < json.length; i++){
+              const row = json[i] || [];
+              const col1 = String(row[0] || '').trim();
+              if(col1.indexOf('📝') >= 0 || col1.indexOf('메모 영역') >= 0) break;
+              const exName = String(row[1] || '').trim();
+              if(!exName) continue; /* 빈 행 스킵 */
+              const scaleId = String(row[2] || '').trim();
+              const repeat = parseInt(row[3], 10) || 1;
+              const comment = String(row[4] || '').trim();
+              /* F=활성 컬럼: 'N'이면 active=false, 그 외(Y/빈)는 active=true */
+              const activeRaw = String(row[5] || '').trim().toUpperCase();
+              const active = (activeRaw === 'N') ? false : true;
+              /* G=메모 컬럼은 선생님 본인용 (Firebase 업로드 X) — 파서에서 무시 */
+              homework.push({
+                exId: exName,
+                exName: exName,
+                displayLabel: exName,
+                scaleId: scaleId,
+                repeat: repeat,
+                comment: comment,
+                active: active,
+                num: homework.length,
+                name: exName,
+              });
+            }
+          } else {
+            /* 시트 없으면 빈 숙제로 추가 (학생은 등록되지만 숙제는 비어있음 - 추후 시트 추가 시 채워짐) */
+            console.warn('[hwUpload] "'+sheetName+'" 시트가 없어 숙제 빈 채로 추가됩니다');
           }
-          
           students.push({ name: name, pw: pw, homework: homework });
         });
         
