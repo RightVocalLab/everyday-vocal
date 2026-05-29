@@ -7099,9 +7099,6 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       }
     }
     
-    /* 토큰이 이미 무효화됐으면 재생 안 함 */
-    if (callToken !== undefined && !_tokenValid(callToken)) return false;
-    
     /* 이전 캐시 audio 정지 */
     if (_ttsCacheAudio) {
       try { _ttsCacheAudio.pause(); } catch(e){}
@@ -7122,7 +7119,6 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     audio._isCoach = !!isCoach;
     audio.onended = function(){
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
-      if (callToken !== undefined && !_tokenValid(callToken)) return;
       if (onEnd) onEnd();
     };
     /* 재생 실패 시 onEnd 호출하여 시퀀스 진행 보장 */
@@ -7132,7 +7128,6 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       errored = true;
       console.warn('캐시 mp3 재생 실패:', e);
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
-      if (callToken !== undefined && !_tokenValid(callToken)) return;
       if (onEnd) onEnd(); /* 시퀀스 멈추지 않게 onEnd 호출 */
     };
     
