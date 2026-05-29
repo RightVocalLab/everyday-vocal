@@ -7137,11 +7137,19 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     };
     
     try {
+      /* play 직전 토큰 체크: 이미 다음 카드로 넘어갔으면 재생 시작 안 함 */
+      if (callToken !== undefined && !_tokenValid(callToken)) {
+        if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
+        return true; /* 넘어간 상태이므로 폴백 불필요 */
+      }
       await audio.play();
     } catch(playErr) {
-      console.warn('audio.play() 실패:', playErr);
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
-      return false; /* 외부에서 ElevenLabs 폴백 */
+      /* AbortError = 사용자가 카드를 넘겨 pause()된 정상 상황 → 조용히 무시 */
+      if (playErr && playErr.name === 'AbortError') return true;
+      /* 그 외 실패는 외부에서 ElevenLabs 폴백 */
+      console.warn('audio.play() 실패:', playErr);
+      return false;
     }
     return true;
   } catch (e) {
@@ -7503,6 +7511,11 @@ async function _elSpeak(txt,key,vid,onEnd,_stab,_spd,_callToken,_isCoachFlag){
 /* 음량 0 차단 제거: 슬라이더 0이어도 호출 진행 (gainNode.value=0으로 무음 효과) */
 const cleanTxt=_prepTxt(txt);
 
+/* 빈 텍스트 가드: _prepTxt 후 빈 문자열이면 ttsProxy 400 유발 → 호출 스킵하고 onEnd만 */
+if(!cleanTxt||!cleanTxt.trim()){if(onEnd)setTimeout(onEnd,0);return;}
+/* 토큰 무효(사용자가 이미 다음 카드로 넘김) → 죽은 요청 보내지 않음 */
+if(_callToken!==undefined&&typeof _tokenValid==='function'&&!_tokenValid(_callToken))return;
+
 /* 화이팅 멘트(isCoach=true)는 별도 보이스 ID 사용 (선생님 본인 목소리) */
 const useVid = _isCoachFlag ? EL_VOICE_CHEER : (window._courseVoiceId || vid || EL.voiceId);
 
@@ -7526,6 +7539,9 @@ if (!idToken) {
   } else if(onEnd) setTimeout(onEnd, 50);
   return;
 }
+
+/* await 동안 사용자가 카드를 넘겼으면 죽은 요청 보내지 않음 */
+if(_callToken!==undefined&&typeof _tokenValid==='function'&&!_tokenValid(_callToken))return;
 
 const arrayBuf = await new Promise((resolve, reject)=>{
 const xhr = new XMLHttpRequest();
