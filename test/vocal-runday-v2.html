@@ -10695,12 +10695,15 @@ const courseEmpty = document.getElementById('course-empty');
 const vis = (typeof _getMenuVis === 'function') ? _getMenuVis() : {};
 if(courseEl){
   courseEl.innerHTML='';
-  /* 출시 차단 코스 목록 — 콘텐츠 완성 전 학생 화면에서 숨김
-     관리자(_isAppAdmin)는 작업/테스트용으로 그대로 봄 */
+  /* 출시 차단 코스 목록 — 콘텐츠 완성 전 일반 사용자 화면에서 숨김
+     관리자(_isAppAdmin)는 작업/테스트용으로 모든 코스 다 봄 (메뉴 vis도 무시) */
   const _RELEASE_BLOCKED = ['c_2','c_3'];
   const _isAdminView = (typeof _isAppAdmin === 'function') && _isAppAdmin();
   const visibleCourses = (DB.courses||[]).filter(c=>{
-    if(!_isAdminView && _RELEASE_BLOCKED.indexOf(c.id) >= 0) return false;
+    /* 관리자는 차단 목록도 메뉴 설정도 무시하고 항상 모든 코스 봄 */
+    if(_isAdminView) return true;
+    /* 일반 사용자: 출시 차단 코스 제외 + 메뉴 visibility 체크 */
+    if(_RELEASE_BLOCKED.indexOf(c.id) >= 0) return false;
     const ckey = 'course_' + c.id;
     return vis[ckey] !== false;
   });
