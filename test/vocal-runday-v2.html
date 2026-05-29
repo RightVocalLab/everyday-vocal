@@ -11385,9 +11385,17 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
      예외: 숫자 사이 마침표(1.5), 이미 줄바꿈 있는 곳은 건드리지 않음
      원본 텍스트는 그대로 — 화면 렌더링용 전처리만 */
   function _breakSentences(s){
+    /* 볼드(**...**) 구간은 통째로 보호: 내부 마침표에 줄바꿈이 들어가면
+       _md2html이 줄 단위로 _inlineMd을 적용할 때 ** 짝이 갈라져 렌더링 실패함.
+       → 볼드 구간을 placeholder로 빼두고, 문장 줄바꿈 후 복원 */
+    var _bolds = [];
+    s = s.replace(/\*\*[\s\S]+?\*\*/g, function(m){
+      _bolds.push(m);
+      return '\u0001BOLD' + (_bolds.length - 1) + '\u0001';
+    });
     /* 마침표/느낌표/물음표 뒤 공백(들) + 다음 글자가 있으면 부호 뒤에서 줄바꿈.
        단, 마침표 바로 앞뒤가 숫자인 소수점(예: 1.5)은 제외 */
-    return s.replace(/([.!?])([ \t]+)(?=\S)/g, function(m, punc, sp, off, full){
+    s = s.replace(/([.!?])([ \t]+)(?=\S)/g, function(m, punc, sp, off, full){
       /* 소수점 보호: 마침표이고 앞이 숫자, 공백 뒤 첫 글자가 숫자면 그대로 둠 */
       if(punc==='.'){
         var prev = off>0 ? full.charAt(off-1) : '';
@@ -11396,6 +11404,9 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
       }
       return punc + '\n';
     });
+    /* 볼드 구간 복원 */
+    s = s.replace(/\u0001BOLD(\d+)\u0001/g, function(_, n){ return _bolds[parseInt(n)]; });
+    return s;
   }
 
   /* 미디어 HTML 생성기 */
