@@ -7073,6 +7073,15 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     const fileBase = hash;
     let entry = TTS_MANIFEST[hash];
     
+    /* 🔧 매니페스트 url 형식 보정: 옛 매니페스트는 'storage.googleapis.com/.../tts-cache/xxx.mp3'
+       형식인데 이건 CORS로 new Audio() 로드 실패(NotSupportedError) → 항상 정상
+       'firebasestorage.googleapis.com/v0/b/.../o/tts-cache%2Fxxx.mp3?alt=media' 형식으로 강제. */
+    if (entry && entry.url && entry.url.indexOf('alt=media') < 0) {
+      /* 옛 형식 url → 정상 형식으로 교체 (매니페스트도 갱신) */
+      entry = Object.assign({}, entry, {url: TTS_CACHE_ALT_URL + fileBase + '.mp3?alt=media'});
+      TTS_MANIFEST[hash] = entry;
+    }
+    
     /* 매니페스트 미스 → HEAD 요청으로 Storage 직접 확인 (일반 멘트만 도달, 화이팅은 위에서 이미 처리) */
     if (!entry || !entry.url) {
       /* 같은 해시 HEAD 요청 결과 세션 내 재사용 */
