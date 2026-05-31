@@ -11230,8 +11230,14 @@ function _fbSaveCourseDay(studentName, courseName, day){
   try{ _fbDb.ref(path).set(true); }catch(e){ console.warn('Firebase 코스진행 저장 실패:', e); }
 }
 /* 로그인 시 호출: Firebase의 모든 코스 일차 완료 기록을 localStorage로 복원 */
-function _fbLoadCourseProgress(studentName, callback){
-  if(!_fbReady || !studentName){ if(callback)callback(); return; }
+function _fbLoadCourseProgress(studentName, callback, _retry){
+  if(!studentName){ if(callback)callback(); return; }
+  /* Firebase가 아직 준비 안 됐으면 준비될 때까지 재시도 (최대 ~6초) */
+  if(!_fbReady){
+    const r = _retry || 0;
+    if(r < 30){ setTimeout(function(){ _fbLoadCourseProgress(studentName, callback, r+1); }, 200); return; }
+    if(callback) callback(); return;
+  }
   const path = 'courseProgress/' + studentName.replace(/\s/g,'_');
   try{
     _fbDb.ref(path).once('value').then(function(snap){
