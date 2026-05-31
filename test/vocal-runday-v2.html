@@ -11597,6 +11597,9 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
     });
     /* 볼드 구간 복원 */
     s = s.replace(/\u0001BOLD(\d+)\u0001/g, function(_, n){ return _bolds[parseInt(n)]; });
+    /* ✅/❌ 체크 이모지 뒤에 내용이 이어지면 줄바꿈 (예: "...합니다 ✅ 어렵다면" → 줄 바뀜)
+       단, 줄 끝(다음이 줄바꿈/끝)인 경우는 그대로 둠 */
+    s = s.replace(/([✅❌])([ \t]+)(?=\S)/gu, function(m, emo){ return emo + '\n'; });
     return s;
   }
 
