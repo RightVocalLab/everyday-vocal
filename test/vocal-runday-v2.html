@@ -12117,12 +12117,12 @@ const groups = [
   {label:'9도 스케일', prefix:'9D', icon:_freeScaleIcon('9D')},
   {label:'9도 쉬고 내려오기', prefix:'9H', icon:_freeScaleIcon('9H')},
   {label:'5도 하향', prefix:'5DN', icon:_freeScaleIcon('5DN')},
-  {label:'5도 하향~상향~하향', prefix:'5DUD', icon:_freeScaleIcon('5DN')},
-  {label:'5도 홀드 하향', prefix:'5DNH', icon:_freeScaleIcon('5DN')},
+  {label:'5도 하향~상향~하향', prefix:'5DUD', icon:_freeScaleIcon('5DUD')},
+  {label:'5도 홀드 하향', prefix:'5DNH', icon:_freeScaleIcon('5DNH')},
   {label:'9도 하향', prefix:'9DN', icon:_freeScaleIcon('9DN')},
-  {label:'9도 홀드 하향', prefix:'9DNH', icon:_freeScaleIcon('9DN')},
-  {label:'9도 홀드 하향 (하향만)', prefix:'9DNHO', icon:_freeScaleIcon('9DN')},
-  {label:'Press 후우', prefix:'PRH', icon:_freeScaleIcon('5D')},
+  {label:'9도 홀드 하향', prefix:'9DNH', icon:_freeScaleIcon('9DNH')},
+  {label:'9도 홀드 하향 (하향만)', prefix:'9DNHO', icon:_freeScaleIcon('9DNHO')},
+  {label:'Press 후우', prefix:'PRH', icon:_freeScaleIcon('PRH')},
 ];
 
 /* 그룹별 카드 생성 */
@@ -12205,6 +12205,11 @@ function _freeScaleIcon(prefix){
     '9H': '<svg viewBox="0 0 40 40" fill="none"><polyline points="4,32 14,22 22,10 30,22" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="4" cy="32" r="2" fill="#fb923c"/><circle cx="14" cy="22" r="2" fill="#f97316"/><circle cx="22" cy="10" r="2.5" fill="#dc2626"/><line x1="22" y1="10" x2="28" y2="10" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="22" r="2" fill="#f97316"/></svg>',
     '5DN': '<svg viewBox="0 0 40 40" fill="none"><circle cx="6" cy="12" r="2.5" fill="#dc2626"/><circle cx="14" cy="18" r="2.5" fill="#ea580c"/><circle cx="20" cy="28" r="2.5" fill="#f97316"/><circle cx="26" cy="18" r="2.5" fill="#ea580c"/><circle cx="34" cy="12" r="2.5" fill="#dc2626"/><polyline points="6,12 14,18 20,28 26,18 34,12" stroke="#c2410c" stroke-width="1.5" fill="none"/></svg>',
     '9DN': '<svg viewBox="0 0 40 40" fill="none"><polyline points="4,8 9,14 14,20 19,26 24,32 29,26 34,20" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="4" cy="8" r="2.5" fill="#dc2626"/><circle cx="14" cy="20" r="2" fill="#f97316"/><circle cx="24" cy="32" r="2" fill="#fb923c"/><circle cx="34" cy="20" r="2" fill="#f97316"/></svg>',
+    '5DUD': '<svg viewBox="0 0 40 40" fill="none"><polyline points="5,12 11,12 16,22 21,30 26,22 31,12 36,22" stroke="#c2410c" stroke-width="1.5" fill="none"/><line x1="5" y1="12" x2="11" y2="12" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><circle cx="5" cy="12" r="2.3" fill="#dc2626"/><circle cx="16" cy="22" r="2.3" fill="#ea580c"/><circle cx="21" cy="30" r="2.3" fill="#f97316"/><circle cx="26" cy="22" r="2.3" fill="#ea580c"/><circle cx="31" cy="12" r="2.3" fill="#dc2626"/></svg>',
+    '5DNH': '<svg viewBox="0 0 40 40" fill="none"><line x1="6" y1="12" x2="13" y2="12" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><polyline points="13,12 18,18 24,24 30,30" stroke="#c2410c" stroke-width="1.5" fill="none"/><circle cx="6" cy="12" r="2.5" fill="#dc2626"/><circle cx="18" cy="18" r="2.3" fill="#ea580c"/><circle cx="24" cy="24" r="2.3" fill="#f97316"/><circle cx="30" cy="30" r="2.3" fill="#fb923c"/></svg>',
+    '9DNH': '<svg viewBox="0 0 40 40" fill="none"><line x1="4" y1="8" x2="11" y2="8" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><polyline points="11,8 16,14 21,20 26,26 31,32" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="4" cy="8" r="2.5" fill="#dc2626"/><circle cx="16" cy="14" r="2" fill="#ea580c"/><circle cx="21" cy="20" r="2" fill="#f97316"/><circle cx="26" cy="26" r="2" fill="#fb923c"/><circle cx="31" cy="32" r="2" fill="#fdba74"/></svg>',
+    '9DNHO': '<svg viewBox="0 0 40 40" fill="none"><line x1="5" y1="7" x2="12" y2="7" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/><polyline points="12,7 17,13 22,19 27,25 33,33" stroke="#c2410c" stroke-width="1.8" fill="none"/><circle cx="5" cy="7" r="2.5" fill="#dc2626"/><circle cx="17" cy="13" r="2" fill="#ea580c"/><circle cx="22" cy="19" r="2" fill="#f97316"/><circle cx="27" cy="25" r="2" fill="#fb923c"/><circle cx="33" cy="33" r="2" fill="#fdba74"/><path d="M30,30 L33,33 L30,35" stroke="#c2410c" stroke-width="1.3" fill="none"/></svg>',
+    'PRH': '<svg viewBox="0 0 40 40" fill="none"><line x1="4" y1="32" x2="9" y2="32" stroke="#fb923c" stroke-width="2" stroke-linecap="round"/><line x1="11" y1="26" x2="16" y2="26" stroke="#f97316" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="20" x2="23" y2="20" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/><line x1="25" y1="14" x2="30" y2="14" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/><polyline points="6.5,32 13.5,26 20.5,20 27.5,14" stroke="#c2410c" stroke-width="1.3" fill="none" stroke-dasharray="2 2"/></svg>',
   };
   return icons[prefix] || icons['3D'];
 }
