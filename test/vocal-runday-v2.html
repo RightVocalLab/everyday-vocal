@@ -17527,6 +17527,10 @@ async function _onEmailAuthSuccess(user, provider){
       if(typeof closeStudentLogin === 'function') closeStudentLogin();
       if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
       if(typeof buildHome === 'function') buildHome();
+      /* 코스 일차 완료 기록 Firebase 복원 (기기 간 동기화) → 완료 후 홈 재렌더 */
+      if(typeof _fbLoadCourseProgress === 'function'){
+        _fbLoadCourseProgress(_kdh.name, function(){ try{ if(typeof buildHome === 'function') buildHome(); }catch(e){} });
+      }
       if(typeof _updateUserBtn === 'function') _updateUserBtn();
       /* 숙제 화면이 아닌 홈 화면으로 진입 */
       document.querySelectorAll('.scr').forEach(el => el.classList.add('hidden'));
