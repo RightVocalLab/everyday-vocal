@@ -1856,6 +1856,11 @@ input,select,button,textarea{font-family:inherit;}
 
     <!-- 측정 중/완료 화면 -->
     <div id="pt-active-screen" style="display:none">
+      <!-- 디버그 (관리자 전용, 가성 판정 수치 확인용) - 화면 최상단 -->
+      <div id="pt-debug-wrap" style="display:none;margin-bottom:10px">
+        <button onclick="_ptToggleDebug()" id="pt-debug-toggle" style="font-size:10px;color:#94a3b8;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;cursor:pointer">🔧 디버그 보기</button>
+        <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
+      </div>
       <!-- 상단: 현재 음정 (큰 표시) -->
       <div class="v2-pt-card v2-pt-pitch-card">
         <div class="v2-pt-label">현재 음정</div>
@@ -1958,11 +1963,6 @@ input,select,button,textarea{font-family:inherit;}
         ⚠️ 본 측정은 <strong>참고용</strong>이며, 이비인후과 정밀검사를 대체하지 않습니다.
       </div>
 
-      <!-- 디버그 (가성 판정 수치 확인용) -->
-      <div style="margin-top:10px">
-        <button onclick="_ptToggleDebug()" id="pt-debug-toggle" style="font-size:10px;color:#94a3b8;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;cursor:pointer">🔧 디버그 보기</button>
-        <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
-      </div>
     </div>
   </div></div>
 </div>
@@ -19012,6 +19012,20 @@ async function _startPitchTest(){
       const tx = notice.querySelector('.v2-pt-notice-text');
       if(tx) tx.innerHTML = '<strong>측정 중...</strong><br>마이크에 대고 천천히 낮은 음 → 높은 음으로 발성해보세요.';
     }
+    
+    /* 디버그: 관리자 전용 표시 (화면 최상단). 관리자면 자동으로 켜서 소리크기와 함께 바로 보이게 */
+    try {
+      var _dbgWrap = document.getElementById('pt-debug-wrap');
+      var _isAdm = (typeof _isAppAdmin === 'function') && _isAppAdmin();
+      if(_dbgWrap) _dbgWrap.style.display = _isAdm ? 'block' : 'none';
+      if(_isAdm){
+        window._ptDebug = true;
+        var _dbgBox = document.getElementById('pt-debug-box');
+        if(_dbgBox) _dbgBox.style.display = 'block';
+        var _dbgBtn = document.getElementById('pt-debug-toggle');
+        if(_dbgBtn) _dbgBtn.textContent = '🔧 디버그 끄기';
+      }
+    } catch(_e){}
     
     /* 분석 루프 시작 */
     _ptAnalyzeLoop();
