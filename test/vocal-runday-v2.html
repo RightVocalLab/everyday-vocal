@@ -19368,11 +19368,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   
   /* === 점수 합산 (높을수록 가성, 낮을수록 진성) === */
   let score = 0;
-  
-  /* H1-H2 점수 (가성의 핵심 신호 - 가중치 증가) */
-  if(h1h2 > 8) score += 4;       /* 매우 강한 가성 신호 */
-  else if(h1h2 > 5) score += 3;
-  else if(h1h2 > 2) score += 2;
+
+  /* H1-H2 점수 (페이지3 안정 버전 - 최대 +3) */
+  if(h1h2 > 7) score += 3;
+  else if(h1h2 > 3) score += 2;
   else if(h1h2 > -1) score += 1;
   else if(h1h2 < -5) score -= 3;
   else if(h1h2 < -2) score -= 2;
@@ -19389,13 +19388,14 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   else if(h1h4 < 8) score -= 2;
   else if(h1h4 < 12) score -= 1;
   
-  /* 고주파 에너지 점수 (가장 신뢰할 수 있는 지표) */
+  /* 고주파 에너지 점수 (가장 신뢰할 수 있는 지표)
+     주의: highRatio가 -40 이하로 극단적이면 '진짜 가성'이 아니라
+  /* 고주파 에너지 점수 (페이지3 안정 버전 - 가장 신뢰할 수 있는 지표) */
   if(highRatio > -12) score -= 4;
   else if(highRatio > -18) score -= 3;
   else if(highRatio > -25) score -= 1;
-  else if(highRatio < -35) score += 3;  /* -38 → -35 (가성 감지 임계값 완화) */
-  else if(highRatio < -28) score += 2;  /* -32 → -28 */
-  else if(highRatio < -25) score += 1;  /* 추가: 약간 약한 고주파도 가성 신호로 */
+  else if(highRatio < -38) score += 3;
+  else if(highRatio < -32) score += 2;
   
   /* F0 보정 (성별별로 다르게)
      남자: G3 이하 진성, E5 이상 가성 가능성 ↑
@@ -19425,16 +19425,15 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     }
   }
   
-  /* === 작은 소리 + 강한 H1-H2 = 가성 강력 신호 ===
-     여성 D4~G4 가성은 작은 소리이고 H1-H2가 매우 강한 특성이 있음.
-     이 조합은 흉성/믹스로는 거의 나타나지 않으므로 가성 보너스 부여 */
+  /* === 작은 소리 + 강한 H1-H2 = 가성 강력 신호 (페이지5) ===
+     여성 D4~G4 가성은 작은 소리이고 H1-H2가 매우 강한 특성이 있음. */
   const isLowVolume = _dB < 75;
   const isStrongH1H2 = h1h2 > 6;
   if(isLowVolume && isStrongH1H2){
-    score += 2;  /* 작은소리 + 강한 H1-H2 = 가성 강력 신호 */
+    score += 2;
   }
   if(_dB < 70 && h1h2 > 8){
-    score += 1;  /* 매우 작은 소리 + 매우 강한 H1-H2 = 추가 보너스 */
+    score += 1;
   }
   
   if(isFemale){
