@@ -19116,12 +19116,12 @@ async function _startPitchTest(){
     /* pitchy 로드 */
     const PitchDetector = await _loadPitchy();
     
-    /* 마이크 권한 + 스트림 받기 (AGC 끔 - 음량/음색 측정 정확도 유지) */
+    /* 마이크 권한 + 스트림 받기 (AGC 켬 - 입력 정상화) */
     _ptStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
-        autoGainControl: false
+        autoGainControl: true
       }
     });
     
