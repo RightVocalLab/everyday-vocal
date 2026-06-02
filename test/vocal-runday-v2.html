@@ -8856,6 +8856,7 @@ if(_fromHw){
 }
 function showDone(ico,head,txt,btns){
 const _icoEl=document.getElementById('done-ico');
+_icoEl.style.display='';
 if(typeof ico==='string'&&ico.trim().indexOf('<svg')===0){_icoEl.innerHTML=ico;_icoEl.style.fontSize='0';}else{_icoEl.textContent=ico;_icoEl.style.fontSize='46px';}
 document.getElementById('done-head').textContent=head;document.getElementById('done-txt').textContent=txt;
 const c=document.getElementById('done-btns');c.innerHTML='';
@@ -9267,8 +9268,11 @@ function _stepYtFullscreen(){
   document.getElementById('vid-modal').classList.add('open');
 }
 function _openImgFull(src){
-  showDone('🖼️','','',[{label:'닫기',fn:()=>closeDone()}]);
+  showDone('','','',[{label:'닫기',fn:()=>closeDone()}]);
   const box=document.getElementById('done-modal')?.querySelector('.modal-box');
+  /* 기본 아이콘(이모지) 영역 숨김 — 이미지 확대 팝업엔 불필요 */
+  const _ico=document.getElementById('done-ico');
+  if(_ico){_ico.style.display='none';_ico.textContent='';_ico.innerHTML='';}
   if(box){
     /* 이전에 끼워넣은 확대 이미지 모두 제거 (중복 쌓임 방지) */
     box.querySelectorAll('img[data-imgfull="1"]').forEach(function(el){el.remove();});
@@ -19034,7 +19038,7 @@ function _ptAnalyzeLoop(){
   /* dBFS 계산 */
   const dBFS = rms > 0 ? 20 * Math.log10(rms) : -100;
   /* dB SPL 추정: 일반 모바일 마이크 기준 보정값 (조정 가능) */
-  const dB = dBFS + 94; /* dBFS -50 → SPL 44, dBFS -10 → SPL 84 */
+  const dB = dBFS + 114; /* 2026-06: 입력 약 20dB 하락 보정 (+94→+114). dBFS -50 → SPL 64 */
   
   /* UI 업데이트 */
   /* 1. 음량 바 (40 dB SPL ~ 110 dB SPL → 0% ~ 100%) */
