@@ -19117,12 +19117,12 @@ async function _startPitchTest(){
     /* pitchy 로드 */
     const PitchDetector = await _loadPitchy();
     
-    /* 마이크 권한 + 스트림 받기 (AGC 켬 - 입력 정상화) */
+    /* 마이크 권한 + 스트림 받기 (5/10식 생 입력: AGC/증폭 없음) */
     _ptStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
-        autoGainControl: true
+        autoGainControl: false
       }
     });
     
@@ -19130,15 +19130,9 @@ async function _startPitchTest(){
     _ptCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = _ptCtx.createMediaStreamSource(_ptStream);
     
-    /* 입력 신호 증폭 (마이크 입력이 약하게 들어오는 문제 보정, AGC와 무관)
-       gain 배율은 _ptInputGain (기본 8배 ≈ +18dB) */
-    const gainNode = _ptCtx.createGain();
-    gainNode.gain.value = _ptInputGain;
-    source.connect(gainNode);
-    
     _ptAnalyser = _ptCtx.createAnalyser();
     _ptAnalyser.fftSize = 2048;
-    gainNode.connect(_ptAnalyser);
+    source.connect(_ptAnalyser);
     
     /* PitchDetector 생성 */
     _ptDetector = PitchDetector.forFloat32Array(_ptAnalyser.fftSize);
@@ -19226,7 +19220,7 @@ function _ptAnalyzeLoop(){
   if(volVal) volVal.textContent = dB > 30 ? Math.round(dB) + ' dB' : '- dB';
   
   /* 2. 음정 (clarity 0.9 이상이고 음량이 충분할 때만) */
-  if(clarity > 0.9 && dB > 45 && pitch > 50 && pitch < 2000){
+  if(clarity > 0.9 && dB > 40 && pitch > 50 && pitch < 2000){
     const noteInfo = _freqToNote(pitch);
     
     /* 음정 표시 */
