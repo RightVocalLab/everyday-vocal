@@ -19224,40 +19224,60 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   /* === 점수 합산 (높을수록 가성, 낮을수록 진성) === */
   let score = 0;
 
-  /* H1-H2 점수 (페이지3 안정 버전 - 최대 +3) */
-  if(h1h2 > 7) score += 3;
-  else if(h1h2 > 3) score += 2;
-  else if(h1h2 > -1) score += 1;
-  else if(h1h2 < -5) score -= 3;
-  else if(h1h2 < -2) score -= 2;
+  /* 성별 (남/여 임계값 분기에 사용) */
+  const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
+
+  /* === H1-H2 점수 (성별 분기) === */
+  if(isFemale){
+    /* 여성: 기존 임계값 유지 (여성 실측 데이터로 추후 재조정 예정) */
+    if(h1h2 > 7) score += 3;
+    else if(h1h2 > 3) score += 2;
+    else if(h1h2 > -1) score += 1;
+    else if(h1h2 < -5) score -= 3;
+    else if(h1h2 < -2) score -= 2;
+  } else {
+    /* 남성(실측 2026-06): H1H2 양수는 가성 지표가 아님 (믹스가 오히려 H1H2 더 높음 11~37 vs 가성 8~14).
+       → 양수 가점 제거. 흉성 방향(음수)만 유지 */
+    if(h1h2 < -5) score -= 3;
+    else if(h1h2 < -2) score -= 2;
+  }
   
-  /* H2-H4 점수 */
+  /* H2-H4 점수 (공통 - 스펙트럼 기울기, 흉성/가성 분리에 유효) */
   if(h2h4 > 18) score += 2;
   else if(h2h4 > 12) score += 1;
   else if(h2h4 < 4) score -= 2;
   else if(h2h4 < 8) score -= 1;
   
-  /* H1-H4 점수 */
+  /* H1-H4 점수 (공통) */
   if(h1h4 > 25) score += 2;
   else if(h1h4 > 18) score += 1;
   else if(h1h4 < 8) score -= 2;
   else if(h1h4 < 12) score -= 1;
   
-  /* 고주파 에너지 점수 (가장 신뢰할 수 있는 지표)
-     주의: highRatio가 -40 이하로 극단적이면 '진짜 가성'이 아니라
-  /* 고주파 에너지 점수 (페이지3 안정 버전 - 가장 신뢰할 수 있는 지표) */
-  if(highRatio > -12) score -= 4;
-  else if(highRatio > -18) score -= 3;
-  else if(highRatio > -25) score -= 1;
-  else if(highRatio < -38) score += 3;
-  else if(highRatio < -32) score += 2;
+  /* === 고주파 에너지 점수 (가장 신뢰할 수 있는 지표, 성별 분기) === */
+  if(isFemale){
+    /* 여성: 기존 임계값 유지 (여성 실측 데이터로 추후 재조정 예정) */
+    if(highRatio > -12) score -= 4;
+    else if(highRatio > -18) score -= 3;
+    else if(highRatio > -25) score -= 1;
+    else if(highRatio < -38) score += 3;
+    else if(highRatio < -32) score += 2;
+  } else {
+    /* 남성(실측 2026-06): 흉성≈-23, 믹스≈-36~-49, 가성≈-47~-58.
+       믹스/가성이 -47~-50에서 겹쳐서 highRatio 단독으론 못 가름.
+       → 깊은 가성(<-52)만 가점, 믹스 본체(-30~-52)는 0점, 경계는 H2H4/H1H4 기울기로 분리 */
+    if(highRatio > -20) score -= 3;       /* 강한 진성/흉성 */
+    else if(highRatio > -30) score -= 1;  /* 흉성 경계 (≈-23) */
+    else if(highRatio < -52) score += 2;  /* 깊은 가성만 가점 */
+    /* -30 ~ -52: 0점 */
+  }
   
   /* F0 보정 (성별별로 다르게)
      남자: G3 이하 진성, E5 이상 가성 가능성 ↑
      여자: 음역 자체가 높으니 더 보수적으로 - mix 영역 넓게 잡기
            D4~F5 사이(294~698Hz, 알토/메조 핵심 영역)는 mix/chest 우선
            G5 (784Hz) 이상부터 가성 보정 */
-  const isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
+  /* isFemale은 위 점수 분기에서 이미 선언됨 */
   
   /* 작은 소리(낮은 dB) 보정: 음량이 작을수록 진성보다 믹스/가성일 가능성 ↑
      성대 압축이 약한 작은 소리는 진성으로 내기 어려움
@@ -19357,7 +19377,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
-      var _line = 'f0='+Math.round(f0)+'Hz H1H2='+h1h2.toFixed(1)+' highRatio='+highRatio.toFixed(1)
+      var _line = 'f0='+Math.round(f0)+'Hz H1H2='+h1h2.toFixed(1)+' H2H4='+h2h4.toFixed(1)+' H1H4='+h1h4.toFixed(1)+' highRatio='+highRatio.toFixed(1)
         +' hnr='+hnr.toFixed(1)+' dB='+(typeof dB==='number'?dB.toFixed(0):'?')
         +' dBFS='+(typeof dB==='number'?(dB-94).toFixed(0):'?')
         +' score='+score.toFixed(1)+' → '+result;
