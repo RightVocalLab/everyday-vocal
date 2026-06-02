@@ -1875,11 +1875,12 @@ input,select,button,textarea{font-family:inherit;}
       <!-- 강도 + 음역 (작은 카드 가로) -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div class="v2-pt-card" style="padding:12px 14px;margin-bottom:0">
-          <div class="v2-pt-label" style="margin-bottom:6px">소리 크기</div>
+          <div class="v2-pt-label" style="margin-bottom:6px">소리 크기 <span style="font-size:9px;color:#94a3b8;font-weight:600">(참고용)</span></div>
           <div class="v2-pt-vol-bar-wrap" style="margin-bottom:6px">
             <div class="v2-pt-vol-bar" id="pt-vol-bar"></div>
           </div>
           <div class="v2-pt-vol-val" id="pt-vol-val" style="text-align:left">- dB</div>
+          <div style="font-size:9px;color:#94a3b8;line-height:1.4;margin-top:4px">※ dB 값은 기기·거리마다 다른 추정치예요. 음역 측정 참고용입니다.</div>
         </div>
         <div class="v2-pt-card" style="padding:12px 14px;margin-bottom:0">
           <div class="v2-pt-label" style="margin-bottom:6px">음역</div>
@@ -18825,10 +18826,12 @@ let _ptDataPoints = [];  /* {midi, dB, time} 점들 */
 let _ptCanvasEl = null;
 let _ptCanvasCtx = null;
 let _ptDrawNeeded = false;
-/* dB 보정 오프셋 (캘리브레이션으로 자동 산출, 없으면 기본값).
-   dB SPL 추정 = dBFS + _ptCalibOffset
-   [테스트] AGC 켜고 캘리브 비활성 중 — 저장값 무시하고 고정 94 사용 */
-let _ptCalibOffset = 94;
+/* dB 보정 오프셋 (캘리브레이션으로 자동 산출, 없으면 기본 114).
+   dB SPL 추정 = dBFS + _ptCalibOffset (기기별 추정치, 절대값 아님) */
+let _ptCalibOffset = (function(){
+  try{ var v=parseFloat(localStorage.getItem('pt_calib_offset')); if(!isNaN(v)&&v>50&&v<160) return v; }catch(e){}
+  return 114;
+})();
 let _ptCalibrating = false;  /* 캘리브레이션 진행 중 플래그 */
 const PT_CALIB_TARGET_DB = 62;  /* 평소 발성을 이 dB로 기준 잡음 */
 
@@ -18907,8 +18910,8 @@ function _selectGender(g){
   /* 다음 프레임에 Canvas 초기화 (DOM 업데이트 후) */
   setTimeout(function(){
     _ptCanvasInit();
-    /* [테스트] AGC 켜고 캘리브레이션 비활성화 — 바로 측정 */
-    _startPitchTest();
+    /* 사용자 환경(기기/거리/주변소음)이 매번 다르므로 캘리브레이션 항상 실행 */
+    _ptStartCalibrationFlow(function(){ _startPitchTest(); });
   }, 50);
 }
 
@@ -19110,12 +19113,12 @@ async function _startPitchTest(){
     /* pitchy 로드 */
     const PitchDetector = await _loadPitchy();
     
-    /* 마이크 권한 + 스트림 받기 (테스트: AGC 켬) */
+    /* 마이크 권한 + 스트림 받기 (AGC 끔 - 음량/음색 측정 정확도 유지) */
     _ptStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
-        autoGainControl: true
+        autoGainControl: false
       }
     });
     
@@ -19490,7 +19493,18 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
       result = 'mix';  /* 남성 C4~E4(262~329Hz)에서만 점수 4점 이상 요구 (F4 이상은 +3 임계값 그대로) */
     }
   }
-  
+
+  /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 */
+  if(typeof window!=='undefined' && window._ptDebug){
+    try{
+      console.log('[PVR]', 'f0='+Math.round(f0)+'Hz',
+        'H1H2='+h1h2.toFixed(1), 'H2H4='+h2h4.toFixed(1), 'H1H4='+h1h4.toFixed(1),
+        'highRatio='+highRatio.toFixed(1), 'hnr='+hnr.toFixed(1),
+        'dB='+(typeof dB==='number'?dB.toFixed(0):'?'),
+        'score='+score.toFixed(1), '→', result);
+    }catch(e){}
+  }
+
   return result;
 }
 
