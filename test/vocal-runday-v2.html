@@ -19259,10 +19259,9 @@ function _ptAnalyzeLoop(){
       if(highEl) highEl.textContent = noteInfo.note;
     }
     
-    /* H1-H2 측정 → 가성/믹스/진성 판정 (dB 정보 전달 - 작은 소리 보정)
-       register 판정 로직의 dB 기준은 옛 보정(+94) 스케일로 튜닝됨.
-       현재 표시 dB는 _ptCalibOffset 적용 → 판정엔 옛 스케일(+94)로 환산해 전달 */
-    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB - (_ptCalibOffset - 94));
+    /* H1-H2 측정 → 가성/믹스/진성 판정
+       register 판정에 화면 표시와 동일한 dB를 그대로 전달 (불일치 방지) */
+    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB);
     
     /* PVR Canvas에 점 찍기 (register 정보 포함) */
     _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB, register);
@@ -19412,8 +19411,8 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      성대 압축이 약한 작은 소리는 진성으로 내기 어려움
      dB는 컴퓨터 dB이므로 절대값보단 상대비교 (보통 80~95: 일반, 70~80: 작은소리, ~70: 매우 작은소리) */
   const _dB = (typeof dB === 'number') ? dB : 80;
-  if(_dB < 70) score += 1;       /* 매우 작은 소리는 믹스/가성 쪽으로 +1 */
-  else if(_dB < 78) score += 0.5; /* 작은 소리는 약하게 +0.5 */
+  if(_dB < 50) score += 1;       /* 매우 작은 소리 (현 스케일 일반발성 60대 기준) */
+  else if(_dB < 55) score += 0.5; /* 작은 소리 */
   
   /* === 쉰목소리/허스키 보이스 보정 (HNR 기반) ===
      HNR이 낮으면 노이즈가 많은 발성 (쉰목, 허스키, 성대결절 등)
@@ -19431,12 +19430,12 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   
   /* === 작은 소리 + 강한 H1-H2 = 가성 강력 신호 (페이지5) ===
      여성 D4~G4 가성은 작은 소리이고 H1-H2가 매우 강한 특성이 있음. */
-  const isLowVolume = _dB < 75;
+  const isLowVolume = _dB < 52;
   const isStrongH1H2 = h1h2 > 6;
   if(isLowVolume && isStrongH1H2){
     score += 2;
   }
-  if(_dB < 70 && h1h2 > 8){
+  if(_dB < 50 && h1h2 > 8){
     score += 1;
   }
   
