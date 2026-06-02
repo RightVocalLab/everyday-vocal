@@ -1827,6 +1827,12 @@ input,select,button,textarea{font-family:inherit;}
         <span>내 진단 이력 / 보컬 진단실</span>
         <span id="vclinic-student-badge" style="display:none;position:absolute;top:8px;right:12px;width:8px;height:8px;background:#dc2626;border-radius:50%;border:1.5px solid #fff"></span>
       </button>
+
+      <!-- 마이크 보정 버튼 -->
+      <button onclick="_ptStartCalibrationFlow(null)" style="width:100%;margin-top:8px;background:#f8fafc;color:#475569;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>
+        <span>🎙 마이크 보정 다시 하기</span>
+      </button>
       
       <!-- 측정 거리 안내 (가장 중요) -->
       <div style="margin-top:14px;padding:12px 14px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;font-size:12px;line-height:1.6;color:#1e3a8a">
@@ -18819,6 +18825,14 @@ let _ptDataPoints = [];  /* {midi, dB, time} 점들 */
 let _ptCanvasEl = null;
 let _ptCanvasCtx = null;
 let _ptDrawNeeded = false;
+/* dB 보정 오프셋 (캘리브레이션으로 자동 산출, 없으면 기본 114).
+   dB SPL 추정 = dBFS + _ptCalibOffset */
+let _ptCalibOffset = (function(){
+  try{ var v=parseFloat(localStorage.getItem('pt_calib_offset')); if(!isNaN(v)&&v>50&&v<160) return v; }catch(e){}
+  return 114;
+})();
+let _ptCalibrating = false;  /* 캘리브레이션 진행 중 플래그 */
+const PT_CALIB_TARGET_DB = 62;  /* 평소 발성을 이 dB로 기준 잡음 */
 
 /* 음역대 테스트 화면 열기 */
 function openPitchTest(){
@@ -18895,8 +18909,46 @@ function _selectGender(g){
   /* 다음 프레임에 Canvas 초기화 (DOM 업데이트 후) */
   setTimeout(function(){
     _ptCanvasInit();
-    _startPitchTest();
+    /* 최초 측정(저장된 보정값 없음)이면 캘리브레이션 먼저 (가 형태) */
+    var hasCalib=false;
+    try{ hasCalib = !!localStorage.getItem('pt_calib_offset'); }catch(e){}
+    if(!hasCalib){
+      _ptStartCalibrationFlow(function(){ _startPitchTest(); });
+    } else {
+      _startPitchTest();
+    }
   }, 50);
+}
+
+/* 캘리브레이션 흐름 (모달 안내 → 3초 측정 → 완료 후 onComplete) */
+function _ptStartCalibrationFlow(onComplete){
+  showDone('🎙','마이크 보정','측정 정확도를 위해 마이크를 보정합니다.\n\n[보정 시작]을 누른 뒤, 평소 노래하는 편한 크기로 "아~" 소리를 3초간 내주세요.',[
+    {label:'보정 시작',green:true,fn:function(){
+      const head=document.getElementById('done-head');
+      const txt=document.getElementById('done-txt');
+      const btns=document.getElementById('done-btns');
+      if(btns) btns.innerHTML='';
+      if(head) head.textContent='보정 중...';
+      _ptRunCalibration(
+        function(sec){ if(txt) txt.textContent='"아~" 소리를 계속 내주세요\n\n'+sec+'초 남음'; },
+        function(offset,avg){
+          if(head) head.textContent='보정 완료!';
+          if(txt) txt.textContent='마이크 보정이 완료되었습니다.';
+          if(btns){ btns.innerHTML=''; const b=document.createElement('button'); b.className='btn btn-or'; b.style.cssText='font-size:13px;font-weight:700;padding:11px 20px;border:none;border-radius:12px;background:#16a34a;color:#fff;cursor:pointer'; b.textContent='측정 시작'; b.onclick=function(){ closeDone(); if(onComplete)onComplete(); }; btns.appendChild(b); }
+        },
+        function(err){
+          if(head) head.textContent='보정 실패';
+          if(txt) txt.textContent=(err&&err.message)||'보정에 실패했습니다. 다시 시도해주세요.';
+          if(btns){ btns.innerHTML='';
+            const r=document.createElement('button'); r.className='btn btn-or'; r.style.cssText='font-size:12px;padding:8px 16px'; r.textContent='다시 시도'; r.onclick=function(){ closeDone(); _ptStartCalibrationFlow(onComplete); };
+            const s=document.createElement('button'); s.className='btn btn-ol'; s.style.cssText='font-size:12px;padding:8px 16px'; s.textContent='건너뛰기'; s.onclick=function(){ closeDone(); if(onComplete)onComplete(); };
+            btns.appendChild(r); btns.appendChild(s);
+          }
+        }
+      );
+    }},
+    {label:'건너뛰기',fn:function(){ closeDone(); if(onComplete)onComplete(); }}
+  ]);
 }
 
 /* 데이터 리셋 */
@@ -18936,6 +18988,73 @@ async function _loadPitchy(){
     }, {once: true});
     setTimeout(() => reject(new Error('pitchy 로드 타임아웃')), 5000);
   });
+}
+
+/* ─ 마이크 캘리브레이션: "평소 톤 아~" 3초 측정 → 보정 오프셋 산출 ─
+   평소 발성을 PT_CALIB_TARGET_DB(62dB)로 기준 삼아 offset 자동 계산.
+   onProgress(남은초), onDone(offset), onFail(err) 콜백 */
+async function _ptRunCalibration(onProgress, onDone, onFail){
+  if(_ptCalibrating || _ptRunning){ if(onFail)onFail(new Error('이미 측정 중')); return; }
+  _ptCalibrating = true;
+  let stream=null, ctx=null;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+    });
+    ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const source = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+    const buf = new Float32Array(analyser.fftSize);
+
+    const DURATION_MS = 3000;
+    const start = performance.now();
+    const dbfsList = [];
+
+    await new Promise((resolve)=>{
+      function tick(){
+        const elapsed = performance.now() - start;
+        if(elapsed >= DURATION_MS){ resolve(); return; }
+        analyser.getFloatTimeDomainData(buf);
+        let rms=0;
+        for(let i=0;i<buf.length;i++) rms += buf[i]*buf[i];
+        rms = Math.sqrt(rms/buf.length);
+        const dBFS = rms>0 ? 20*Math.log10(rms) : -100;
+        /* 발성 구간만 수집 (너무 작은 무음 -70 미만은 제외) */
+        if(dBFS > -70) dbfsList.push(dBFS);
+        if(onProgress) onProgress(Math.ceil((DURATION_MS - elapsed)/1000));
+        requestAnimationFrame(tick);
+      }
+      tick();
+    });
+
+    /* 정리 */
+    try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    try{ ctx.close(); }catch(e){}
+    _ptCalibrating = false;
+
+    if(dbfsList.length < 10){
+      if(onFail) onFail(new Error('소리가 충분히 감지되지 않았습니다. 다시 시도해주세요.'));
+      return;
+    }
+    /* 상위 60% 평균 (앞뒤 작은 소리 잘라 발성 핵심만) */
+    dbfsList.sort((a,b)=>b-a);
+    const top = dbfsList.slice(0, Math.max(5, Math.round(dbfsList.length*0.6)));
+    const avgDBFS = top.reduce((s,v)=>s+v,0)/top.length;
+    /* offset = 목표dB - 평균dBFS */
+    let offset = PT_CALIB_TARGET_DB - avgDBFS;
+    /* 안전 범위 클램프 (80~150) */
+    offset = Math.max(80, Math.min(150, offset));
+    _ptCalibOffset = offset;
+    try{ localStorage.setItem('pt_calib_offset', String(offset)); }catch(e){}
+    if(onDone) onDone(offset, avgDBFS);
+  }catch(e){
+    try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+    try{ if(ctx) ctx.close(); }catch(_){}
+    _ptCalibrating = false;
+    if(onFail) onFail(e);
+  }
 }
 
 /* 측정 시작 */
@@ -19038,7 +19157,7 @@ function _ptAnalyzeLoop(){
   /* dBFS 계산 */
   const dBFS = rms > 0 ? 20 * Math.log10(rms) : -100;
   /* dB SPL 추정: 일반 모바일 마이크 기준 보정값 (조정 가능) */
-  const dB = dBFS + 114; /* 2026-06: 입력 약 20dB 하락 보정 (+94→+114). dBFS -50 → SPL 64 */
+  const dB = dBFS + _ptCalibOffset; /* 캘리브레이션 오프셋 적용 (기본 114) */
   
   /* UI 업데이트 */
   /* 1. 음량 바 (40 dB SPL ~ 110 dB SPL → 0% ~ 100%) */
@@ -19049,7 +19168,7 @@ function _ptAnalyzeLoop(){
   if(volVal) volVal.textContent = dB > 30 ? Math.round(dB) + ' dB' : '- dB';
   
   /* 2. 음정 (clarity 0.9 이상이고 음량이 충분할 때만) */
-  if(clarity > 0.9 && dB > 40 && pitch > 50 && pitch < 2000){
+  if(clarity > 0.9 && dB > 35 && pitch > 50 && pitch < 2000){
     const noteInfo = _freqToNote(pitch);
     
     /* 음정 표시 */
@@ -19084,15 +19203,15 @@ function _ptAnalyzeLoop(){
     
     /* H1-H2 측정 → 가성/믹스/진성 판정 (dB 정보 전달 - 작은 소리 보정)
        register 판정 로직의 dB 기준은 옛 보정(+94) 스케일로 튜닝됨.
-       표시/그래프 dB는 +114로 올렸으므로, 판정에는 -20 환산해 옛 스케일로 전달 */
-    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB - 20);
+       현재 표시 dB는 _ptCalibOffset 적용 → 판정엔 옛 스케일(+94)로 환산해 전달 */
+    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB - (_ptCalibOffset - 94));
     
     /* PVR Canvas에 점 찍기 (register 정보 포함) */
     _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB, register);
   } else {
     /* 음량 너무 작거나 명확하지 않을 때 */
     const noteEl = document.getElementById('pt-note');
-    if(noteEl && noteEl.textContent !== '—' && dB < 40) noteEl.textContent = '—';
+    if(noteEl && noteEl.textContent !== '—' && dB < 35) noteEl.textContent = '—';
   }
   
   /* 매 프레임마다 현재 톤이 끊겼는지 체크 (소리 안 들어와도) */
@@ -19843,7 +19962,7 @@ const PT_MIN_DURATION_MS = 200; /* 0.2초 미만은 잡음/부정확한 측정�
 const PT_MIN_FRAME_COUNT = 5;   /* 최소 프레임 수 (잡음 추가 차단) (2026-05-12: 6→5)
                                    60fps 기준 5프레임 = 약 83ms, 30fps 기준 약 167ms
                                    200ms 임계 안에서 충분히 검출되어야 함 */
-const PT_MIN_AVG_DB = 50;       /* 평균 dB이 50 미만이면 잡음 (이미 적용 중) */
+const PT_MIN_AVG_DB = 40;       /* 평균 dB이 40 미만이면 잡음 (2026-06: 50→40, 작은 발성 허용) */
 const PT_MAX_DB_VARIANCE = 20;  /* dB 표준편차가 20 이상이면 잡음/불안정 (2026-05-12: 25→20)
                                    시간 임계가 짧아진 만큼 안정성 검증 강화 */
 
