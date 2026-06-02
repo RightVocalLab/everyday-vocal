@@ -19501,6 +19501,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     try{
       var _line = 'f0='+Math.round(f0)+'Hz H1H2='+h1h2.toFixed(1)+' highRatio='+highRatio.toFixed(1)
         +' hnr='+hnr.toFixed(1)+' dB='+(typeof dB==='number'?dB.toFixed(0):'?')
+        +' dBFS='+(typeof dB==='number'?(dB-94).toFixed(0):'?')
         +' score='+score.toFixed(1)+' → '+result;
       console.log('[PVR]', _line);
       var _box=document.getElementById('pt-debug-box');
