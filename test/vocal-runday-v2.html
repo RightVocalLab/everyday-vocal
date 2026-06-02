@@ -9270,8 +9270,11 @@ function _openImgFull(src){
   showDone('🖼️','','',[{label:'닫기',fn:()=>closeDone()}]);
   const box=document.getElementById('done-modal')?.querySelector('.modal-box');
   if(box){
+    /* 이전에 끼워넣은 확대 이미지 모두 제거 (중복 쌓임 방지) */
+    box.querySelectorAll('img[data-imgfull="1"]').forEach(function(el){el.remove();});
     const img=document.createElement('img');
     img.src=src;
+    img.setAttribute('data-imgfull','1');
     img.style.cssText='width:100%;max-width:100%;border-radius:8px;margin-bottom:10px';
     box.insertBefore(img,box.firstChild);
   }
