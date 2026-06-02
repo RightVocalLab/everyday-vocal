@@ -19082,8 +19082,10 @@ function _ptAnalyzeLoop(){
       if(highEl) highEl.textContent = noteInfo.note;
     }
     
-    /* H1-H2 측정 → 가성/믹스/진성 판정 (dB 정보 전달 - 작은 소리 보정) */
-    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB);
+    /* H1-H2 측정 → 가성/믹스/진성 판정 (dB 정보 전달 - 작은 소리 보정)
+       register 판정 로직의 dB 기준은 옛 보정(+94) 스케일로 튜닝됨.
+       표시/그래프 dB는 +114로 올렸으므로, 판정에는 -20 환산해 옛 스케일로 전달 */
+    const register = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB - 20);
     
     /* PVR Canvas에 점 찍기 (register 정보 포함) */
     _ptAddPoint(noteInfo.midi + (noteInfo.cents/100), dB, register);
