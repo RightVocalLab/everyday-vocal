@@ -18825,12 +18825,10 @@ let _ptDataPoints = [];  /* {midi, dB, time} 점들 */
 let _ptCanvasEl = null;
 let _ptCanvasCtx = null;
 let _ptDrawNeeded = false;
-/* dB 보정 오프셋 (캘리브레이션으로 자동 산출, 없으면 기본 114).
-   dB SPL 추정 = dBFS + _ptCalibOffset */
-let _ptCalibOffset = (function(){
-  try{ var v=parseFloat(localStorage.getItem('pt_calib_offset')); if(!isNaN(v)&&v>50&&v<160) return v; }catch(e){}
-  return 114;
-})();
+/* dB 보정 오프셋 (캘리브레이션으로 자동 산출, 없으면 기본값).
+   dB SPL 추정 = dBFS + _ptCalibOffset
+   [테스트] AGC 켜고 캘리브 비활성 중 — 저장값 무시하고 고정 94 사용 */
+let _ptCalibOffset = 94;
 let _ptCalibrating = false;  /* 캘리브레이션 진행 중 플래그 */
 const PT_CALIB_TARGET_DB = 62;  /* 평소 발성을 이 dB로 기준 잡음 */
 
@@ -18909,8 +18907,8 @@ function _selectGender(g){
   /* 다음 프레임에 Canvas 초기화 (DOM 업데이트 후) */
   setTimeout(function(){
     _ptCanvasInit();
-    /* 사용자 환경(기기/거리/주변소음)이 매번 다르므로 캘리브레이션 항상 필수 */
-    _ptStartCalibrationFlow(function(){ _startPitchTest(); });
+    /* [테스트] AGC 켜고 캘리브레이션 비활성화 — 바로 측정 */
+    _startPitchTest();
   }, 50);
 }
 
@@ -19112,12 +19110,12 @@ async function _startPitchTest(){
     /* pitchy 로드 */
     const PitchDetector = await _loadPitchy();
     
-    /* 마이크 권한 + 스트림 받기 */
+    /* 마이크 권한 + 스트림 받기 (테스트: AGC 켬) */
     _ptStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
-        autoGainControl: false
+        autoGainControl: true
       }
     });
     
