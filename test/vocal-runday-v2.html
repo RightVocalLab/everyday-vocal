@@ -1963,6 +1963,12 @@ input,select,button,textarea{font-family:inherit;}
         📏 마이크와 입 거리는 <strong style="color:#1d4ed8">20~30cm</strong>로 일정하게 유지하세요.<br>
         ⚠️ 본 측정은 <strong>참고용</strong>이며, 이비인후과 정밀검사를 대체하지 않습니다.
       </div>
+
+      <!-- 디버그 (가성 판정 수치 확인용) -->
+      <div style="margin-top:10px">
+        <button onclick="_ptToggleDebug()" id="pt-debug-toggle" style="font-size:10px;color:#94a3b8;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;cursor:pointer">🔧 디버그 보기</button>
+        <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
+      </div>
     </div>
   </div></div>
 </div>
@@ -19494,14 +19500,23 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     }
   }
 
-  /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 */
+  /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
-      console.log('[PVR]', 'f0='+Math.round(f0)+'Hz',
-        'H1H2='+h1h2.toFixed(1), 'H2H4='+h2h4.toFixed(1), 'H1H4='+h1h4.toFixed(1),
-        'highRatio='+highRatio.toFixed(1), 'hnr='+hnr.toFixed(1),
-        'dB='+(typeof dB==='number'?dB.toFixed(0):'?'),
-        'score='+score.toFixed(1), '→', result);
+      var _line = 'f0='+Math.round(f0)+'Hz H1H2='+h1h2.toFixed(1)+' highRatio='+highRatio.toFixed(1)
+        +' hnr='+hnr.toFixed(1)+' dB='+(typeof dB==='number'?dB.toFixed(0):'?')
+        +' score='+score.toFixed(1)+' → '+result;
+      console.log('[PVR]', _line);
+      var _box=document.getElementById('pt-debug-box');
+      if(_box){
+        var _color = result==='falsetto'?'#f472b6':(result==='chest'?'#60a5fa':'#a3e635');
+        var _div=document.createElement('div');
+        _div.style.color=_color;
+        _div.textContent=_line;
+        _box.insertBefore(_div,_box.firstChild);
+        /* 최근 12줄만 유지 */
+        while(_box.children.length>12) _box.removeChild(_box.lastChild);
+      }
     }catch(e){}
   }
 
@@ -20215,6 +20230,14 @@ function _stopPitchTest(){
 }
 
 /* 다시 측정 - 결과 초기화 후 컨트롤 원위치 */
+function _ptToggleDebug(){
+  window._ptDebug = !window._ptDebug;
+  var box=document.getElementById('pt-debug-box');
+  var btn=document.getElementById('pt-debug-toggle');
+  if(box) box.style.display = window._ptDebug ? 'block' : 'none';
+  if(btn) btn.textContent = window._ptDebug ? '🔧 디버그 끄기' : '🔧 디버그 보기';
+}
+
 function _restartPtMeasure(){
   _resetPitchTest();
   const ctrlRunning = document.getElementById('pt-controls-running');
