@@ -1828,8 +1828,8 @@ input,select,button,textarea{font-family:inherit;}
         <span id="vclinic-student-badge" style="display:none;position:absolute;top:8px;right:12px;width:8px;height:8px;background:#dc2626;border-radius:50%;border:1.5px solid #fff"></span>
       </button>
 
-      <!-- 마이크 보정 버튼 -->
-      <button onclick="_ptStartCalibrationFlow(null)" style="width:100%;margin-top:8px;background:#f8fafc;color:#475569;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <!-- 마이크 보정 버튼 (페이지5 상태 - 비활성화) -->
+      <button onclick="_ptStartCalibrationFlow(null)" style="display:none;width:100%;margin-top:8px;background:#f8fafc;color:#475569;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:6px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>
         <span>🎙 마이크 보정 다시 하기</span>
       </button>
@@ -18832,14 +18832,11 @@ let _ptDataPoints = [];  /* {midi, dB, time} 점들 */
 let _ptCanvasEl = null;
 let _ptCanvasCtx = null;
 let _ptDrawNeeded = false;
-/* dB 보정 오프셋 (캘리브레이션으로 자동 산출, 없으면 기본 114).
-   dB SPL 추정 = dBFS + _ptCalibOffset (기기별 추정치, 절대값 아님) */
-let _ptCalibOffset = (function(){
-  try{ var v=parseFloat(localStorage.getItem('pt_calib_offset')); if(!isNaN(v)&&v>50&&v<160) return v; }catch(e){}
-  return 114;
-})();
+/* dB 보정 오프셋 (페이지5 상태 - 캘리브 없이 고정 94).
+   dB SPL 추정 = dBFS + _ptCalibOffset */
+let _ptCalibOffset = 94;
 let _ptCalibrating = false;  /* 캘리브레이션 진행 중 플래그 */
-const PT_CALIB_TARGET_DB = 62;  /* 평소 발성을 이 dB로 기준 잡음 */
+const PT_CALIB_TARGET_DB = 62;
 
 /* 음역대 테스트 화면 열기 */
 function openPitchTest(){
@@ -18916,8 +18913,8 @@ function _selectGender(g){
   /* 다음 프레임에 Canvas 초기화 (DOM 업데이트 후) */
   setTimeout(function(){
     _ptCanvasInit();
-    /* 사용자 환경(기기/거리/주변소음)이 매번 다르므로 캘리브레이션 항상 실행 */
-    _ptStartCalibrationFlow(function(){ _startPitchTest(); });
+    /* 캘리브레이션 비활성화 (페이지5 상태 - 바로 측정) */
+    _startPitchTest();
   }, 50);
 }
 
