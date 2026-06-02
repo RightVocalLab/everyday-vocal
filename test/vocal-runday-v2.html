@@ -19088,15 +19088,14 @@ async function _ptRunCalibration(onNoise, onVoice, onDone, onFail){
       if(onFail) onFail(new Error('"아~" 소리가 충분히 감지되지 않았습니다. 다시 시도해주세요.'));
       return;
     }
-    /* 상위 60% 평균 (앞뒤 작은 소리 잘라 발성 핵심만) */
-    dbfsList.sort((a,b)=>b-a);
-    const top = dbfsList.slice(0, Math.max(5, Math.round(dbfsList.length*0.6)));
-    const avgDBFS = top.reduce((s,v)=>s+v,0)/top.length;
-    let offset = PT_CALIB_TARGET_DB - avgDBFS;
+    /* 발성 dBFS의 중앙값을 기준으로 (상위평균은 offset 과대→작은소리도 크게 측정됨) */
+    dbfsList.sort((a,b)=>a-b);
+    const medDBFS = dbfsList[Math.floor(dbfsList.length/2)];
+    let offset = PT_CALIB_TARGET_DB - medDBFS;
     offset = Math.max(80, Math.min(150, offset));
     _ptCalibOffset = offset;
     try{ localStorage.setItem('pt_calib_offset', String(offset)); }catch(e){}
-    if(onDone) onDone(offset, avgDBFS);
+    if(onDone) onDone(offset, medDBFS);
   }catch(e){
     try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch(_){}
     try{ if(ctx) ctx.close(); }catch(_){}
@@ -20210,6 +20209,10 @@ function _restartPtMeasure(){
   const ctrlFinished = document.getElementById('pt-controls-finished');
   if(ctrlRunning) ctrlRunning.style.display = 'flex';
   if(ctrlFinished) ctrlFinished.style.display = 'none';
+  /* 측정이 멈춰 있으면 다시 시작 (캘리브는 이미 됐으므로 기존 보정값으로 바로 측정) */
+  if(!_ptRunning){
+    _startPitchTest();
+  }
 }
 
 /* 측정 결과 초기화 */
