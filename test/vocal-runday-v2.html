@@ -11669,6 +11669,8 @@ function _detectMedia(txt){
 function _renderCardHtml(txt,cardIdx,cardMedia){
   /* [멘트만]이 단독으로 오면 무시 (앞 카드에 병합됨) */
   if(txt.trim().startsWith('[멘트만]')) return '';
+  /* [쉬기N] 마커는 음성 텀 신호 — 화면에는 표시하지 않음 (앞뒤 빈 줄까지 정리) */
+  txt = txt.replace(/\n*\s*\[쉬기[\d.]+\]\s*\n*/g, '\n\n');
   cardMedia=cardMedia||{vids:[],imgs:[]};
   const vids=cardMedia.vids||[];
   const imgs=cardMedia.imgs||[];
