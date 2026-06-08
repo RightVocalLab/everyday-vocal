@@ -6695,7 +6695,8 @@ push('scr-course-diff');
 }
 
 function _courseDayKey(courseName, day){
-return 'ev_done_'+courseName.replace(/\s/g,'_')+'_d'+day;
+var who = (typeof curStudent!=='undefined' && curStudent && curStudent.name) ? curStudent.name.replace(/\s/g,'_') : 'guest';
+return 'ev_done_'+who+'_'+courseName.replace(/\s/g,'_')+'_d'+day;
 }
 function _isDayDone(courseName, day){
 try{ return localStorage.getItem(_courseDayKey(courseName,day))==='1'; }catch(e){return false;}
@@ -6732,7 +6733,7 @@ function _fbLoadCourseProgress(studentName, callback, _retry){
         Object.keys(days).forEach(function(dKey){
           if(days[dKey]===true){
             /* dKey = 'd3' → day=3. cKey는 공백이 _로 치환된 상태이므로 localStorage 키와 동일 형식 */
-            try{ localStorage.setItem('ev_done_'+cKey+'_'+dKey, '1'); }catch(e){}
+            try{ localStorage.setItem('ev_done_'+studentName.replace(/\s/g,'_')+'_'+cKey+'_'+dKey, '1'); }catch(e){}
           }
         });
       });
