@@ -7577,7 +7577,7 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
       continue;
     }
     /* 문장 단위로 쪼개기 (마침표/줄바꿈 기준) */
-    const sentences = c.split(/(?<=[.!?。])\s+|\n/).filter(s => s.trim());
+    const sentences = c.replace(/([.!?。])\s+/g,'$1\u0001').split(/[\u0001\n]/).filter(s => s.trim());
     let buf = '';
     let firstOfPara = true; /* 이 문단에서 첫 청크에만 텀 */
     for(const s of sentences){
