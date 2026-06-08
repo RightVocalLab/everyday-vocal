@@ -89,8 +89,8 @@ input,select,button,textarea{font-family:inherit;}
 .cc:hover{border-color:var(--or);transform:translateY(-1px);}
 
 /* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
+.day-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+
 .day-cell{
   aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -1129,8 +1129,8 @@ input,select,button,textarea{font-family:inherit;}
 .cc:hover{border-color:var(--or);transform:translateY(-1px);}
 
 /* ── 일차 그리드 (크게, 직관적) ── */
-.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:6px;}
-@media(max-width:380px){.day-grid{grid-template-columns:repeat(4,1fr);}}
+.day-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+
 .day-cell{
   aspect-ratio:1;border-radius:14px;border:2px solid var(--bd2);background:#fff;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -4334,7 +4334,7 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
       continue;
     }
     /* 문장 단위로 쪼개기 (마침표/줄바꿈 기준) */
-    const sentences = c.split(/(?<=[.!?。])\s+|\n/).filter(s => s.trim());
+    const sentences = c.replace(/([.!?。])\s+/g,'$1\u0001').split(/[\u0001\n]/).filter(s => s.trim());
     let buf = '';
     let firstOfPara = true; /* 이 문단에서 첫 청크에만 텀 */
     for(const s of sentences){
