@@ -7215,7 +7215,7 @@ async function _uploadToCacheAsync(originalText, arrayBuf, isCoach){
 
 const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.firebasestorage.app/tts-cache/';
 const TTS_CACHE_ALT_URL = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/tts-cache%2F'; /* alt=media URL prefix */
-const TTS_CACHE_BUST = '3'; /* mp3 캐시버스팅: 음성을 같은 해시로 재생성했을 때 이 값을 올리면 앱이 새로 받아옴 (firebasestorage는 추가 파라미터 무시) */
+const TTS_CACHE_BUST = '4'; /* mp3 캐시버스팅: 음성을 같은 해시로 재생성했을 때 이 값을 올리면 앱이 새로 받아옴 (firebasestorage는 추가 파라미터 무시) */
 const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
 
 /* 화이팅 멘트 변형 개수 (cache_tts.py의 CHEER_VARIATION_COUNT와 일치 필수) */
@@ -7744,7 +7744,8 @@ txt=txt.replace(/다시 깊~고/g, '다시, 깊~고');
 txt=txt.replace(/택한 것 이기에/g, '택한 것이기에');
 txt=txt.replace(/강하게 마시고 뱉기 10번/g, '강하게 마시고 뱉기, 10번');
 txt=txt.replace(/주먹말아 호흡을 허리를/g, '주먹말아 호흡을, 허리를');
-txt=txt.replace(/팽창되게 길~게/g, '팽창되게 길~ 게');
+txt=txt.replace(/팽창되게 길~게, 깊~게/g, '팽창되게 기일게, 기잎게');
+txt=txt.replace(/깊~고 길~게 마십니다/g, '깊~고 기일게 마십니다');
 txt=txt.replace(/호흡훈련 13일차/g, '호흡훈련 십 삼일차');
 txt=txt.replace(/바로 S로 호흡 뱉기 예요/g, '바로, 에스로호흡뱉기예요');
 txt=txt.replace(/S소리/g, '에스 소리');
