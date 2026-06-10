@@ -7215,7 +7215,7 @@ async function _uploadToCacheAsync(originalText, arrayBuf, isCoach){
 
 const TTS_CACHE_BASE_URL = 'https://storage.googleapis.com/everyday-vocal.firebasestorage.app/tts-cache/';
 const TTS_CACHE_ALT_URL = 'https://firebasestorage.googleapis.com/v0/b/everyday-vocal.firebasestorage.app/o/tts-cache%2F'; /* alt=media URL prefix */
-const TTS_CACHE_BUST = '2'; /* mp3 캐시버스팅: 음성을 같은 해시로 재생성했을 때 이 값을 올리면 앱이 새로 받아옴 (firebasestorage는 추가 파라미터 무시) */
+const TTS_CACHE_BUST = '3'; /* mp3 캐시버스팅: 음성을 같은 해시로 재생성했을 때 이 값을 올리면 앱이 새로 받아옴 (firebasestorage는 추가 파라미터 무시) */
 const _ttsHeadCheckCache = {}; /* HEAD 요청 결과 캐싱 (브라우저 세션 내) */
 
 /* 화이팅 멘트 변형 개수 (cache_tts.py의 CHEER_VARIATION_COUNT와 일치 필수) */
