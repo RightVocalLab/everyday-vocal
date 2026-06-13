@@ -12992,7 +12992,7 @@ const inProgressBadge = isInProgress ? '<span style="font-size:10px;background:#
 
 d.innerHTML = `
 <div class="v2-hw-num-badge ${isDone?'done':''}"${numBadgeStyle}>
-  ${isDone?'✓':String((item.num!==undefined?item.num:i)+1)}
+  ${isDone?'✓':String(i+1)}
 </div>
 <div class="v2-hw-slot-info">
   <div class="v2-hw-slot-title ${isDone?'done':''}"${titleStyle}>
