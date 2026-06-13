@@ -8112,7 +8112,7 @@ const numBorder=isDone?'#16a34a':(isInProgress?'#f59e0b':'var(--or-m)');
 
 d.innerHTML=`
 <div style="width:36px;height:36px;border-radius:10px;background:${numBg};border:1.5px solid ${numBorder};display:flex;align-items:center;justify-content:center;font-size:${isDone?'16px':'12px'};font-weight:800;color:${numFg};flex-shrink:0">
-  ${isDone?'✓':String((item.num!==undefined?item.num:i)+1)}
+  ${isDone?'✓':String(i+1)}
 </div>
 <div style="flex:1;min-width:0">
   <div style="font-size:13px;font-weight:800;${isDone?'text-decoration:line-through;color:#16a34a':''}">
