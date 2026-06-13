@@ -7599,8 +7599,9 @@ function _hwUploadParseExcel(file){
             const scaleId = String(row[2] || '').trim();
             const repeat = parseInt(row[3], 10) || 1;
             const comment = String(row[4] || '').trim();
+            /* F=활성 컬럼: 'Y'일 때만 active=true. 빈칸/N/기타는 active=false (숨김) */
             const activeRaw = String(row[5] || '').trim().toUpperCase();
-            const active = (activeRaw === 'N') ? false : true;
+            const active = (activeRaw === 'Y');
             homework.push({
               exId: exName,
               exName: exName,
