@@ -12315,9 +12315,9 @@ function _hwUploadParseExcel(file){
               const scaleId = String(row[2] || '').trim();
               const repeat = parseInt(row[3], 10) || 1;
               const comment = String(row[4] || '').trim();
-              /* F=활성 컬럼: 'N'이면 active=false, 그 외(Y/빈)는 active=true */
+              /* F=활성 컬럼: 'Y'일 때만 active=true. 빈칸/N/기타는 active=false (숨김) */
               const activeRaw = String(row[5] || '').trim().toUpperCase();
-              const active = (activeRaw === 'N') ? false : true;
+              const active = (activeRaw === 'Y');
               /* G=메모 컬럼은 선생님 본인용 (Firebase 업로드 X) — 파서에서 무시 */
               homework.push({
                 exId: exName,
