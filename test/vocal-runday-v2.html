@@ -17258,15 +17258,25 @@ function _ptAnalyzeLoop(){
   /* dBFS 계산 */
   const dBFS = rms > 0 ? 20 * Math.log10(rms) : -100;
   /* dB SPL 추정: 일반 모바일 마이크 기준 보정값 (조정 가능) */
-  const dB = dBFS + 94; /* dBFS -50 → SPL 44, dBFS -10 → SPL 84 */
+  const dB = dBFS + 94; /* dBFS -50 → SPL 44, dBFS -10 → SPL 84 — register 판정·그래프 점용(스케일 유지) */
+
+  /* 화면 표시용 dB: 캘리브됐으면 이 기기의 (소음~평범한 발성) 다이내믹을
+     40~75dB 범위로 선형 매핑해 작은/큰 소리가 실제로 다르게 보이게 한다.
+     +94 고정은 발성 구간이 72~80에 몰려 변별이 안 되므로 표시에만 캘리브 반영.
+     미보정(_ptCal 없음)이면 기존 +94 그대로. 판정·그래프 dB는 건드리지 않음. */
+  let dBDisp = dB;
+  if(_ptCal && (_ptNormalDb - _ptNoiseDb) > 0){
+    dBDisp = 40 + (dB - _ptNoiseDb) / (_ptNormalDb - _ptNoiseDb) * (75 - 40);
+    dBDisp = Math.max(0, Math.min(100, dBDisp));
+  }
   
   /* UI 업데이트 */
   /* 1. 음량 바 (40 dB SPL ~ 110 dB SPL → 0% ~ 100%) */
-  const volPct = Math.max(0, Math.min(100, dB));  /* 0~100dB 기준 막대 (100dB=100%) */
+  const volPct = Math.max(0, Math.min(100, dBDisp));  /* 0~100dB 기준 막대 (100dB=100%) */
   const volBar = document.getElementById('pt-vol-bar');
   if(volBar) volBar.style.right = (100 - volPct) + '%';
   const volVal = document.getElementById('pt-vol-val');
-  if(volVal) volVal.textContent = dB > 30 ? Math.round(dB) + ' dB' : '- dB';
+  if(volVal) volVal.textContent = dBDisp > 30 ? Math.round(dBDisp) + ' dB' : '- dB';
   
   /* 2. 음정 (clarity 0.9 이상이고 음량이 충분할 때만) */
   if(clarity > 0.9 && dB > _ptVoiceGateDb && pitch > 50 && pitch < 2000){
@@ -17584,6 +17594,17 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
         경계 -4는 가성 최저값과 1.4 마진 확보 → 진짜 가성은 차단 안 됨.
         (살살 낸 두성의 H1H2 양수 구간은 가성과 음향 동일이라 분리 불가) */
   if(isFemale && result === 'falsetto' && h1h2 < -4){
+    result = 'mix';
+  }
+
+  /* === 고음역 강한 믹스(진성 두성) 가드 — 여성 ===
+     고음역(D5·G5 등)에서 믹스를 안정적으로 강하게 내면 H1-H2가 음수~약양수,
+     H1-H4가 낮게(접촉 강함) 나온다. 반면 진짜 가성은 H1-H2가 음역따라 +8~+28,
+     H1-H4가 38 이상으로 확연히 높다. (실측 2026-06: G5 가성 H1H2 +20~28/H1H4 40~56,
+     G5 강한믹스 H1H2 -7~-12, D5 가성 H1H2 +8/H1H4 38~41)
+     → 고음역 falsetto 중 H1H2가 가성영역(10+) 미만이고 H1H4도 가성영역(36+) 미만이면
+       진성 두성이므로 mix로 강등. 진짜 가성(H1H2 10+ 또는 H1H4 36+)은 통과. */
+  if(isFemale && result === 'falsetto' && f0 >= 500 && h1h2 < 10 && h1h4 < 36){
     result = 'mix';
   }
 
