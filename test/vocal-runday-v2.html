@@ -17575,6 +17575,18 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     result = 'mix';
   }
 
+  /* === 강한 성대접촉(진성) 가드 — 고음역 falsetto 오판 차단 (여성) ===
+     H1-H2가 충분히 음수면 성대 접촉이 강한 진성 신호(H2 우세).
+     고음역(E5 등)에서는 H2H4/H1H4/highRatio가 진성 두성에서도 자연히 가성
+     방향으로 편향되어 score를 끌어올리지만, H1-H2 강음수는 진성 두성이므로
+     falsetto로 오판되어도 mix로 강등한다.
+     ※ 실측(2026-06 여성 E5): 가성 H1H2 ≥ -2.6, 진성두성 H1H2 ≤ -4 로 분리.
+        경계 -4는 가성 최저값과 1.4 마진 확보 → 진짜 가성은 차단 안 됨.
+        (살살 낸 두성의 H1H2 양수 구간은 가성과 음향 동일이라 분리 불가) */
+  if(isFemale && result === 'falsetto' && h1h2 < -4){
+    result = 'mix';
+  }
+
   /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
