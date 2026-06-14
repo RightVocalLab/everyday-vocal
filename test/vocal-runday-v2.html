@@ -17621,6 +17621,20 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     result = 'falsetto';
   }
 
+  /* === 남성 저음역(G#2~B2, 약 191~251Hz) 가성 검출 가드 ===
+     C3~D3 위 가드는 H2H4가 작은믹스↔가성 구분자였으나, 저음역에선 둘 다 H2H4 음수라
+     무력. 저음역은 highRatio가 결정적 구분자가 된다.
+     실측(2026-06, G#2/A2/A#2/B2 다수): 안정 진성류(흉성/믹스/작은믹스/성악톤)는
+     highRatio가 얕고(최저 -38.8), 약~완전 가성은 깊다(≤-41). → 경계 -41로 분리.
+     진성류 안정구간 최저 -38.8과 2.2 마진 확보 → 멀쩡한 거 0 오판(시뮬 검증).
+     단, dB74~75의 '강한 가성'은 highRatio가 -36~-38로 얕아져 작은믹스와 음향 동일 →
+     의도적 양보(작은믹스 보호 우선). 약/완전 가성은 ≤-41이라 잡힌다.
+     H2H4 조건 없음: 저음역 완전가성은 H2H4 양수(+0.7)도 나오므로 위 C3가드와 별도.
+     f0<252: B2(~254)까지 포함, C3(253~) 성악진성은 H1H2 음수라 h1h2>=2에서 자동 제외. */
+  if(!isFemale && result !== 'falsetto' && f0 < 252 && highRatio <= -41 && h1h2 >= 2){
+    result = 'falsetto';
+  }
+
   /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
