@@ -6961,7 +6961,7 @@ function openVidUrl(url){
 if(!url)return;
 const _doPlay=()=>{
   let vid=url.trim();
-  const m=vid.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);if(m)vid=m[1];
+  const m=vid.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);if(m)vid=m[1];
   document.getElementById('yt').src=`https://www.youtube.com/embed/${vid}?autoplay=1`;
   document.getElementById('vid-modal').classList.add('open');
 };
@@ -7174,7 +7174,7 @@ function _renderStepMedia(item){
   if(videoUrls.length>0){
     ytArea.style.display='block';
     videoUrls.forEach(url=>{
-      const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      const m=url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
       if(m)_stepCurrentYtIds.push(m[1]);
     });
     /* 썸네일만 먼저 표시 (재생 버튼 누를 때 로드) */
@@ -9524,7 +9524,7 @@ let _cardMediaMap={};
 /* 유튜브 URL → 11자리 영상 ID 추출 (_renderStepMedia와 동일 규칙) */
 function _ytIdFromUrl(url){
   if(!url) return '';
-  const m=String(url).match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  const m=String(url).match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
   return m?m[1]:'';
 }
 
