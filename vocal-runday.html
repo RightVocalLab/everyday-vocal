@@ -2228,18 +2228,12 @@ function _pauseChunked(){
 function _resumeChunked(){
   if(!_chunkState.active || !_chunkState.paused) return;
   _chunkState.paused = false;
-  /* 모바일 백그라운드 복귀 시 AudioContext가 suspended일 수 있음 → 명시적 resume */
-  try{ if(typeof actx!=='undefined' && actx && actx.state==='suspended') actx.resume(); }catch(e){}
   /* 현재 mp3가 살아있고 위치가 보존돼 있으면 그 자리에서 이어 재생 */
   if(_ttsCacheAudio && _chunkState.audioTime > 0){
     try{
       _ttsCacheAudio.currentTime = _chunkState.audioTime;
       var pr = _ttsCacheAudio.play();
-      if(pr && pr.catch) pr.catch(function(){
-        /* 자동재생 차단 등으로 실패 → 일시정지 상태로 되돌려 버튼이 정상 작동하게 */
-        _chunkState.paused = true;
-        _updatePlayPauseBtn();
-      });
+      if(pr && pr.catch) pr.catch(function(){ _restartCurrentChunk(); });
       if(window.speechSynthesis){ try{ speechSynthesis.resume(); }catch(e){} }
       return;
     }catch(e){}
