@@ -8582,7 +8582,15 @@ window.addEventListener('DOMContentLoaded',()=>{buildHome();_applyMenuVis();buil
 /* 백그라운드 전환 감지 */
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
-    cancelTTS();stopEL();_stopMetronome();
+    /* 코스 카드뉴스 청크 재생 중이면 cancelTTS 하지 않음
+       (_chunkState 보존 → 복귀 시 멈춘 청크부터 자동 재개). 일시정지는 카드TTS 핸들러가 처리 */
+    var _inCardPlayback = (typeof _chunkState!=='undefined' && _chunkState.active
+                           && scrStack[scrStack.length-1]==='scr-step');
+    if(!_inCardPlayback){
+      cancelTTS();stopEL();_stopMetronome();
+    } else {
+      _stopMetronome(); /* 메트로놈만 정지, TTS 청크 상태는 보존 */
+    }
     if(actx && actx.state === 'running'){actx.suspend();}
     if(playing){window._savedSch={s:sch.s,p:sch.p};window._wasPlaying=true;stopEngine();}
   } else {
