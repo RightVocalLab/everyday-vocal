@@ -5362,6 +5362,25 @@ function _bgmStop(){
     if(_bgmAudio){ _bgmAudio.pause(); _bgmAudio=null; }
   }catch(e){}
 }
+/* 2단계: 더킹 — TTS 재생 중 볼륨 down, 멘트 사이 up (부드럽게) */
+var _BGM_DUCK = 0.07;   /* 더킹 시 볼륨 */
+var _bgmRampTimer = null;
+function _bgmRamp(target, ms){
+  try{
+    if(!_bgmAudio) return;
+    if(_bgmRampTimer){ clearInterval(_bgmRampTimer); _bgmRampTimer=null; }
+    var a=_bgmAudio, start=a.volume, diff=target-start;
+    var steps=Math.max(1,Math.round(ms/40)), i=0;
+    _bgmRampTimer=setInterval(function(){
+      i++;
+      if(!_bgmAudio){ clearInterval(_bgmRampTimer); _bgmRampTimer=null; return; }
+      try{ _bgmAudio.volume=Math.max(0,Math.min(1,start+diff*(i/steps))); }catch(e){}
+      if(i>=steps){ clearInterval(_bgmRampTimer); _bgmRampTimer=null; }
+    },40);
+  }catch(e){}
+}
+function _bgmDuck(){ if(_bgmAudio) _bgmRamp(_BGM_DUCK, 300); }   /* 멘트 시작 → 작게 */
+function _bgmUnduck(){ if(_bgmAudio) _bgmRamp(_BGM_VOL, 550); }  /* 멘트 끝/사이 → 원래대로 */
 
 let _chunkState = {
   active: false,      /* 현재 청크 시퀀스 재생 중인지 */
@@ -5500,13 +5519,15 @@ function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag){
     /* [쉬기N] 마커: N초 대기 후 다음 청크 */
     const pauseMatch = chunk.match(/^\[쉬기([\d.]+)\]$/);
     if(pauseMatch){
+      _bgmUnduck(); /* 2단계: 대기 구간 → BGM 다시 커짐 */
       setTimeout(_next, parseFloat(pauseMatch[1]) * 1000);
       return;
     }
     _chunkState.audioTime = 0; /* 새 청크 시작 → 위치 리셋 */
     var _doSpeak = function(){
       if(_chunkSession !== mySession || _chunkState.paused) return;
-      speakEL(chunk, _next, undefined, undefined, _isCoachFlag);
+      _bgmDuck(); /* 2단계: 멘트 재생 시작 → BGM 작게 */
+      speakEL(chunk, function(){ _bgmUnduck(); _next(); }, undefined, undefined, _isCoachFlag); /* 멘트 끝 → BGM 커짐 */
     };
     if(needGap){
       setTimeout(_doSpeak, _PARA_GAP_MS); /* 단락 사이 텀 */
