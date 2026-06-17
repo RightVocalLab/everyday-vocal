@@ -5345,7 +5345,7 @@ let _chunkSession = 0; /* 청크 재생 세션 ID. 새 _speakChunked 호출 또�
 var _BGM_BASE = 'https://rightvocallab.github.io/everyday-vocal/';
 var _BGM_VOL  = 0.30;
 var _bgmAudio = null;
-var _BGM_INTRO_MS = 5000;       /* 일차 첫 카드: BGM 먼저 흐르는 시간 */
+var _BGM_INTRO_MS = 7000;       /* 일차 첫 카드: BGM 먼저 흐르는 시간 */
 var _bgmIntroPending = false;   /* 첫 카드 첫 멘트를 인트로만큼 지연할지 */
 function _bgmStart(track){
   try{
@@ -5365,6 +5365,15 @@ function _bgmStop(){
     if(_bgmUnduckTimer){ clearTimeout(_bgmUnduckTimer); _bgmUnduckTimer=null; }
     if(_bgmRampTimer){ clearInterval(_bgmRampTimer); _bgmRampTimer=null; }
     if(_bgmAudio){ _bgmAudio.pause(); _bgmAudio=null; }
+  }catch(e){}
+}
+/* 일시정지/재개 — 현재 위치 보존하고 멈췄다 이어재생 (정지와 달리 audio 객체 유지) */
+function _bgmPause(){
+  try{ if(_bgmAudio) _bgmAudio.pause(); }catch(e){}
+}
+function _bgmResume(){
+  try{
+    if(_bgmAudio){ var pr=_bgmAudio.play(); if(pr&&pr.catch)pr.catch(function(){}); }
   }catch(e){}
 }
 /* 2단계: 더킹 — TTS 재생 중 볼륨 down, 멘트 사이 up (부드럽게) */
@@ -7366,6 +7375,7 @@ document.addEventListener('visibilitychange', function(){
     if(_chunkState.active && !_chunkState.paused && !_userPausedManually){
       _hiddenAutoPaused = true;
       _pauseChunked();
+      _bgmPause(); /* 화면 벗어남 → BGM도 멈춤 */
       _updatePlayPauseBtn();
     }
   } else {
@@ -7375,6 +7385,7 @@ document.addEventListener('visibilitychange', function(){
       /* 약간의 지연 후 재개 (오디오 컨텍스트 복구 시간) */
       setTimeout(function(){
         if(!_userPausedManually && _chunkState.active){
+          _bgmResume(); /* 복귀 → BGM도 다시 */
           _resumeChunked();
           _updatePlayPauseBtn();
         }
@@ -7388,10 +7399,12 @@ function _toggleStepPlayPause(){
   if(!_chunkState.active) return;
   if(_chunkState.paused){
     _userPausedManually = false;
+    _bgmResume(); /* 재생 재개 → BGM도 다시 */
     _resumeChunked();
   } else {
     _userPausedManually = true;
     _pauseChunked();
+    _bgmPause(); /* 일시정지 → BGM도 멈춤 */
   }
   _updatePlayPauseBtn();
 }
