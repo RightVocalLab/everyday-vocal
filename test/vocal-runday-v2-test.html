@@ -5345,6 +5345,8 @@ let _chunkSession = 0; /* 청크 재생 세션 ID. 새 _speakChunked 호출 또�
 var _BGM_BASE = 'https://rightvocallab.github.io/everyday-vocal/';
 var _BGM_VOL  = 0.30;
 var _bgmAudio = null;
+var _BGM_INTRO_MS = 3000;       /* 일차 첫 카드: BGM 먼저 흐르는 시간 */
+var _bgmIntroPending = false;   /* 첫 카드 첫 멘트를 인트로만큼 지연할지 */
 function _bgmStart(track){
   try{
     if(!track) return;
@@ -5359,6 +5361,7 @@ function _bgmStart(track){
 }
 function _bgmStop(){
   try{
+    _bgmIntroPending = false; /* 화면 나가면 인트로 대기 해제 */
     if(_bgmAudio){ _bgmAudio.pause(); _bgmAudio=null; }
   }catch(e){}
 }
@@ -10018,7 +10021,7 @@ function _showGuideCard(idx,animate){
 
   /* 긴 카드 텍스트는 _speakChunked로 청크 분할 재생 (한자환각 방지)
      짧은 카드(120자 이하)는 _speakChunked가 1청크로 처리하므로 안전 */
-  _speakChunked(cardTtsText,function(){
+  var _cardSpeakDone = function(){
     if(myToken!==_guideCardToken)return;
     clearInterval(_stepGaugeTimer);
     var f2=document.getElementById('seg-fill-'+idx);
@@ -10038,7 +10041,18 @@ function _showGuideCard(idx,animate){
       }
       /* 나머지는 사용자가 › 버튼으로 직접 넘김 */
     });
-  });
+  };
+  /* BGM 인트로: 일차 첫 카드 진입 시 BGM이 먼저 흐른 뒤 첫 멘트 재생 */
+  if(_bgmIntroPending){
+    _bgmIntroPending = false;
+    var _introTok = myToken;
+    setTimeout(function(){
+      if(_introTok!==_guideCardToken) return; /* 그 사이 카드 넘기면 취소 */
+      _speakChunked(cardTtsText, _cardSpeakDone);
+    }, _BGM_INTRO_MS);
+  } else {
+    _speakChunked(cardTtsText, _cardSpeakDone);
+  }
 }
 
 /* ─ 초기화 ─ */
@@ -10097,8 +10111,9 @@ function _initGuideCards(guide,item){
     var track=document.getElementById('step-cards-track');
     if(track) track.style.width=(_guideCards.length*_guideCardWidth)+'px';
     document.querySelectorAll('.guide-card').forEach(function(c){c.style.width=_guideCardWidth+'px';});
+    _bgmIntroPending = true; /* 첫 카드 첫 멘트를 인트로(3초)만큼 지연 — _showGuideCard 전에 설정 */
+    _bgmStart(2); /* 카드 화면 진입 시 BGM(2번) 재생 (멘트보다 먼저 시작) */
     _showGuideCard(0,false);
-    _bgmStart(2); /* 1단계: 카드 화면 진입 시 BGM(2번) 재생 */
   });
 }
 
