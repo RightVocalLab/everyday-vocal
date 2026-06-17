@@ -5343,10 +5343,11 @@ let _chunkSession = 0; /* 청크 재생 세션 ID. 새 _speakChunked 호출 또�
    독립 함수. 기존 재생/렌더 로직 일절 건드리지 않음.
    ============================================================ */
 var _BGM_BASE = 'https://rightvocallab.github.io/everyday-vocal/';
-var _BGM_VOL  = 0.30;
+var _BGM_VOL  = 0.22;
 var _bgmAudio = null;
 var _BGM_INTRO_MS = 7000;       /* 일차 첫 카드: BGM 먼저 흐르는 시간 */
 var _bgmIntroPending = false;   /* 첫 카드 첫 멘트를 인트로만큼 지연할지 */
+var _bgmIntroTimer = null;      /* 인트로 대기 타이머 (일시정지 시 취소용) */
 function _bgmStart(track){
   try{
     if(!track) return;
@@ -5462,7 +5463,7 @@ let _chunkResumeText = '';   /* 현재 카드/멘트의 원본 텍스트 (복귀
 let _chunkParaBreak = [];     /* 각 청크가 새 문단 시작인지 (true면 앞에 텀 삽입) */
 const _PARA_GAP_MS = 800;     /* 단락(\n\n) 사이 텀 (조정 가능: 600/800/1000) */
 
-function _speakChunked(txt, onEnd, _isCoachFlag){
+function _speakChunked(txt, onEnd, _isCoachFlag, _introDelay){
   if(!txt || !txt.trim()){ if(onEnd) setTimeout(onEnd, 0); return; }
   
   /* [쉬기N] 마커를 별도 문단으로 강제 분리 (cache_tts.py와 동일 → 캐시 해시 일치)
@@ -5505,11 +5506,11 @@ function _speakChunked(txt, onEnd, _isCoachFlag){
   _chunkResumeText = txt;
   _chunkParaBreak = paraBreak; /* 단락 경계 텀 정보 */
   /* 인덱스 0부터 시퀀스 시작 */
-  _speakChunkedFrom(finalChunks, 0, onEnd, _isCoachFlag);
+  _speakChunkedFrom(finalChunks, 0, onEnd, _isCoachFlag, _introDelay);
 }
 
 /* 청크 배열을 startIdx부터 순차 재생 (일시정지/복귀 재개의 재진입 지점) */
-function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag){
+function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag, _introDelay){
   if(!finalChunks || !finalChunks.length){ if(onEnd) setTimeout(onEnd, 0); return; }
   /* 새 세션 시작: 이전 청크 재생 자동 무효화 */
   const mySession = ++_chunkSession;
@@ -5562,7 +5563,17 @@ function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag){
       _doSpeak();
     }
   }
-  _next();
+  /* 인트로 지연: 첫 청크를 _introDelay만큼 늦춰 시작 (BGM 먼저 흐름).
+     _chunkState.active는 이미 true → 대기 중에도 일시정지 버튼 정상 작동.
+     일시정지되면 _next 진입 시 paused 가드에 걸려 재생 안 됨. */
+  if(_introDelay && _introDelay>0){
+    setTimeout(function(){
+      if(_chunkSession!==mySession) return; /* 그 사이 다른 세션 시작되면 취소 */
+      _next();
+    }, _introDelay);
+  } else {
+    _next();
+  }
 }
 
 function _normTTS(txt){
@@ -10071,16 +10082,11 @@ function _showGuideCard(idx,animate){
     });
   };
   /* BGM 인트로: 일차 첫 카드 진입 시 BGM이 먼저 흐른 뒤 첫 멘트 재생 */
-  if(_bgmIntroPending){
-    _bgmIntroPending = false;
-    var _introTok = myToken;
-    setTimeout(function(){
-      if(_introTok!==_guideCardToken) return; /* 그 사이 카드 넘기면 취소 */
-      _speakChunked(cardTtsText, _cardSpeakDone);
-    }, _BGM_INTRO_MS);
-  } else {
-    _speakChunked(cardTtsText, _cardSpeakDone);
-  }
+  /* BGM 인트로: 일차 첫 카드는 첫 청크 전 7초 지연 (BGM 먼저 흐름).
+     _speakChunked에 introDelay를 넘겨 청크엔진 내부에서 처리 → active 즉시 true, 일시정지 정상 작동 */
+  var _introDelay = 0;
+  if(_bgmIntroPending){ _bgmIntroPending = false; _introDelay = _BGM_INTRO_MS; }
+  _speakChunked(cardTtsText, _cardSpeakDone, undefined, _introDelay);
 }
 
 /* ─ 초기화 ─ */
