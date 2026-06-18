@@ -10056,16 +10056,42 @@ function _introClearHL(){
 }
 function _introApplyHL(idx){
   if(!_introHLActive){ _introClearHL(); return; }
+  var targetId=_introHLMap?_introHLMap[idx]:null;
+  var el=targetId?document.getElementById(targetId):null;
   var ps=document.querySelectorAll('.intro-chunk');
   for(var i=0;i<ps.length;i++){
     var p=ps[i], ci=parseInt(p.getAttribute('data-chunk'),10);
-    if(ci===idx){ p.style.fontWeight='800'; p.style.color='#14532d'; try{p.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){} }
-    else { p.style.fontWeight='400'; p.style.color='#94a3b8'; }
+    if(ci===idx){
+      p.style.fontWeight='800'; p.style.color='#14532d';
+      /* 본문(읽는) 청크만 본문을 화면에 맞춤. UI 강조 청크는 아래에서 버튼을 맞춤 */
+      if(!el){ try{p.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){} }
+    } else { p.style.fontWeight='400'; p.style.color='#94a3b8'; }
   }
-  var targetId=_introHLMap?_introHLMap[idx]:null;
-  var el=targetId?document.getElementById(targetId):null;
-  if(el){ _introDrawSpotlight(el); } else { _introHideOverlay(); }
+  if(el){
+    var r0=el.getBoundingClientRect();
+    var inView=(r0.width>0 && r0.top>=0 && r0.bottom<=window.innerHeight);
+    if(!inView){
+      /* 가리키는 버튼이 화면 밖이면 보이도록 스크롤 → 스크롤 끝난 뒤 박스 재정렬 */
+      try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){}
+      setTimeout(function(){ if(_introHLActive){ var e2=document.getElementById(targetId); if(e2) _introDrawSpotlight(e2); } }, 420);
+    }
+    _introDrawSpotlight(el);
+  } else { _introHideOverlay(); }
 }
+var _introScrollRAF=null;
+function _introOnScroll(){
+  if(!_introHLActive || _introScrollRAF) return;
+  _introScrollRAF=requestAnimationFrame(function(){
+    _introScrollRAF=null;
+    if(_introHLActive && typeof _chunkState!=='undefined' && _chunkState.active){
+      var tid=_introHLMap?_introHLMap[_chunkState.idx]:null;
+      var el=tid?document.getElementById(tid):null;
+      if(el) _introDrawSpotlight(el);
+    }
+  });
+}
+/* 스크롤 추종: 카드 스크롤 시 박스를 타깃 버튼에 실시간 재정렬 (capture로 내부 스크롤도 포착) */
+document.addEventListener('scroll', _introOnScroll, true);
 window.addEventListener('resize',function(){
   if(_introHLActive && typeof _chunkState!=='undefined' && _chunkState.active){ try{ _introApplyHL(_chunkState.idx); }catch(e){} }
 });
