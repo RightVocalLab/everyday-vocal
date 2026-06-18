@@ -1160,7 +1160,7 @@ input,select,button,textarea{font-family:inherit;}
     </div>
     <div style="display:flex;align-items:center;gap:5px">
       <div id="step-tts-topbar-notice" style="display:none"></div>
-      <button class="ico" onclick="openSettings()" title="설정" aria-label="설정">
+      <button id="step-settings-btn" class="ico" onclick="openSettings()" title="설정" aria-label="설정">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
@@ -1199,14 +1199,14 @@ input,select,button,textarea{font-family:inherit;}
           <span style="display:inline-flex;align-items:center;font-size:14px;font-weight:800;color:#166534;line-height:1">훈련 안내</span>
           <span id="step-card-num" style="display:inline-flex;align-items:center;font-size:11px;font-weight:600;color:#16a34a;line-height:1">1/1</span>
         </div>
-        <div style="display:flex;align-items:center;gap:7px">
+        <div id="step-header-actions" style="display:flex;align-items:center;gap:7px">
           <span id="step-tts-status" style="font-size:10px;color:#16a34a;font-weight:700"></span>
           <button id="step-playpause-btn" onclick="_toggleStepPlayPause()" aria-label="일시정지"
             style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;box-shadow:0 2px 7px rgba(21,128,61,.38);cursor:pointer;padding:0;transition:transform .15s ease,box-shadow .15s ease" 
             onmousedown="this.style.transform='scale(.9)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
             <span class="ppb-icon" style="display:inline-flex"></span>
           </button>
-          <button onclick="replayStepGuide()" aria-label="다시듣기" title="처음부터 다시듣기"
+          <button id="step-replay-btn" onclick="replayStepGuide()" aria-label="다시듣기" title="처음부터 다시듣기"
             style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #86efac;border-radius:50%;background:#fff;color:#15803d;box-shadow:0 1px 4px rgba(21,128,61,.15);cursor:pointer;padding:0;transition:transform .15s ease"
             onmousedown="this.style.transform='scale(.9) rotate(-180deg)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none"><path d="M3 12a9 9 0 1 0 2.6-6.3M3 4.5V9h4.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -5613,6 +5613,7 @@ function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag, _introDel
     _chunkState.audioTime = 0; /* 새 청크 시작 → 위치 리셋 */
     var _doSpeak = function(){
       if(_chunkSession !== mySession || _chunkState.paused) return;
+      if(_introHLActive){ try{ _introApplyHL(_chunkState.idx); }catch(e){} }
       _bgmDuck(); /* 멘트 재생 시작 → BGM 작게 (예약된 unduck 취소) */
       speakEL(chunk, function(){ _bgmUnduckSoon(); _next(); }, undefined, undefined, _isCoachFlag); /* 멘트 끝 → 지연 unduck (짧은 텀엔 깜빡 안 함) */
     };
@@ -8772,6 +8773,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 
 function goHome(){
 cancelTTS();stopEngine();_bgmStop();
+_introHLActive=false; try{ _introClearHL(); }catch(e){}
 document.querySelectorAll('.scr').forEach(s=>{s.classList.add('hidden');s.classList.remove('behind');});
 document.getElementById('scr-home')?.classList.remove('hidden');
 scrStack=['scr-home'];
@@ -9774,12 +9776,24 @@ function _detectMedia(txt){
 function _renderCardHtml(txt,cardIdx,cardMedia){
   /* [멘트만]이 단독으로 오면 무시 (앞 카드에 병합됨) */
   if(txt.trim().startsWith('[멘트만]')) return '';
+  /* 인트로 카드([INTRO]) 여부 — 마커 제거 전에 감지 (튜토리얼 하이라이트용) */
+  var _isIntroCard = /\[INTRO\]/.test(txt);
   /* [쉬기N] 마커는 음성 텀 신호 — 화면에는 표시하지 않음 (앞뒤 빈 줄까지 정리) */
   txt = txt.replace(/\n*\s*\[쉬기[\d.]+\]\s*\n*/g, '\n\n');
   /* [BGM:N] 곡 전환 마커도 화면에 표시하지 않음 */
   txt = txt.replace(/\n*\s*\[BGM:\d+\]\s*\n*/g, '\n\n');
   /* [INTRO] 인트로 카드 식별 마커도 화면에 표시하지 않음 */
   txt = txt.replace(/\n*\s*\[INTRO\]\s*\n*/g, '\n\n');
+  /* 인트로 카드 전용 렌더: 단락(\n\n)=청크 단위로 .intro-chunk 래핑 → B-1 볼드/B-2 하이라이트 타깃.
+     (인트로엔 미디어 마커가 없으므로 미디어 루프 생략. data-chunk 인덱스 = TTS 청크 인덱스와 1:1) */
+  if(_isIntroCard){
+    var _ip=txt.split(/\n{2,}/).map(function(s){return s.trim();}).filter(Boolean);
+    var _iout='';
+    _ip.forEach(function(_pp,_pi){
+      _iout+='<div class="intro-chunk" data-chunk="'+_pi+'" style="transition:color .2s ease,font-weight .2s ease">'+_md2html(_breakSentences(_pp))+'</div>';
+    });
+    return _iout;
+  }
   cardMedia=cardMedia||{vids:[],imgs:[]};
   const vids=cardMedia.vids||[];
   const imgs=cardMedia.imgs||[];
@@ -9986,6 +10000,76 @@ function _updateCardHeight(idx){
 }
 
 /* ─ 카드 표시 + TTS 재생 ─ */
+/* ─ 인트로 튜토리얼 하이라이트 (B-1 청크 볼드 + B-2 UI 박스 + 검정 오버레이) ─
+   인트로 카드([INTRO]) 전용. UI를 가리키는 청크에서만 검정 오버레이 + 주황 박스.
+   오버레이는 화면 전체를 덮되 타깃 요소 영역만 '구멍'(홀펀치)으로 비워 주황 박스가 또렷이 보임.
+   글씨(본문)는 따로 스포트라이트하지 않음 — 오버레이 아래로 어둡게 둠(의도). */
+var _introHLActive=false, _introHLMap=null;
+function _buildIntroMap(ttsText){
+  /* 청크(단락) 텍스트의 키워드로 UI 타깃 매핑 — 텍스트 순서가 바뀌어도 자동 추종 */
+  var paras=ttsText.split(/\n\n+/).map(function(s){return s.trim();}).filter(Boolean);
+  var map={};
+  paras.forEach(function(p,i){
+    if(/'다시듣기'/.test(p)) map[i]='step-replay-btn';
+    else if(/일시정지\/재생 버튼/.test(p)) map[i]='step-playpause-btn';
+    else if(/가장 상단 우측|재생 상태와 함께/.test(p)) map[i]='step-header-actions';
+    else if(/설정 버튼/.test(p)) map[i]='step-settings-btn';
+    else if(/오른쪽 화살표 버튼/.test(p)) map[i]='fnav-next';
+    else if(/진행정도가 보이시나요|화살표와 현재 훈련/.test(p)) map[i]='step-fixed-nav';
+  });
+  return map;
+}
+function _introEnsureOverlay(){
+  if(document.getElementById('intro-ov-ring')) return;
+  ['intro-ov-t','intro-ov-b','intro-ov-l','intro-ov-r'].forEach(function(id){
+    var d=document.createElement('div'); d.id=id;
+    d.style.cssText='position:fixed;background:rgba(0,0,0,.55);z-index:9000;display:none;pointer-events:none';
+    document.body.appendChild(d);
+  });
+  var ring=document.createElement('div'); ring.id='intro-ov-ring';
+  ring.style.cssText='position:fixed;border:3px solid #f97316;border-radius:12px;z-index:9001;display:none;pointer-events:none;transition:all .2s ease';
+  document.body.appendChild(ring);
+}
+function _introHideOverlay(){
+  ['intro-ov-t','intro-ov-b','intro-ov-l','intro-ov-r','intro-ov-ring'].forEach(function(id){
+    var e=document.getElementById(id); if(e) e.style.display='none';
+  });
+}
+function _introDrawSpotlight(el){
+  _introEnsureOverlay();
+  var r=el.getBoundingClientRect();
+  if(r.width<1||r.height<1){ _introHideOverlay(); return; }
+  var p=8, W=window.innerWidth, H=window.innerHeight;
+  var top=Math.max(0,r.top-p), bot=Math.min(H,r.bottom+p);
+  var left=Math.max(0,r.left-p), right=Math.min(W,r.right+p);
+  var base='position:fixed;background:rgba(0,0,0,.55);z-index:9000;pointer-events:none;display:block;';
+  document.getElementById('intro-ov-t').style.cssText=base+'left:0;top:0;width:100%;height:'+top+'px';
+  document.getElementById('intro-ov-b').style.cssText=base+'left:0;top:'+bot+'px;width:100%;height:'+Math.max(0,H-bot)+'px';
+  document.getElementById('intro-ov-l').style.cssText=base+'left:0;top:'+top+'px;width:'+left+'px;height:'+(bot-top)+'px';
+  document.getElementById('intro-ov-r').style.cssText=base+'left:'+right+'px;top:'+top+'px;width:'+Math.max(0,W-right)+'px;height:'+(bot-top)+'px';
+  document.getElementById('intro-ov-ring').style.cssText='position:fixed;border:3px solid #f97316;border-radius:12px;z-index:9001;pointer-events:none;transition:all .2s ease;display:block;left:'+(r.left-4)+'px;top:'+(r.top-4)+'px;width:'+(r.width+8)+'px;height:'+(r.height+8)+'px';
+}
+function _introClearHL(){
+  _introHideOverlay();
+  var ps=document.querySelectorAll('.intro-chunk');
+  for(var i=0;i<ps.length;i++){ ps[i].style.fontWeight=''; ps[i].style.color=''; }
+}
+function _introApplyHL(idx){
+  if(!_introHLActive){ _introClearHL(); return; }
+  var ps=document.querySelectorAll('.intro-chunk');
+  for(var i=0;i<ps.length;i++){
+    var p=ps[i], ci=parseInt(p.getAttribute('data-chunk'),10);
+    if(ci===idx){ p.style.fontWeight='800'; p.style.color='#14532d'; try{p.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){} }
+    else { p.style.fontWeight='400'; p.style.color='#94a3b8'; }
+  }
+  var targetId=_introHLMap?_introHLMap[idx]:null;
+  var el=targetId?document.getElementById(targetId):null;
+  if(el){ _introDrawSpotlight(el); } else { _introHideOverlay(); }
+}
+window.addEventListener('resize',function(){
+  if(_introHLActive && typeof _chunkState!=='undefined' && _chunkState.active){ try{ _introApplyHL(_chunkState.idx); }catch(e){} }
+});
+
 function _showGuideCard(idx,animate){
   var N=_guideCards.length;
   if(idx<0||idx>=N)return;
@@ -10122,6 +10206,9 @@ function _showGuideCard(idx,animate){
   } else {
     cardTtsText=cardTtsText.replace(/\[INTRO\]/g,'').replace(/\([^)]*참조[^)]*\)/g, '').replace(/\[\[[\s\S]*?\]\]/g,'').replace(/\{\{([\s\S]*?)\}\}/g,'$1').replace(/\s+/g, ' ').trim();
   }
+  /* 인트로 카드면 튜토리얼 하이라이트 ON + 청크↔UI 맵 구성, 아니면 OFF(오버레이 해제) */
+  if(_cardIsIntro){ _introHLActive=true; _introHLMap=_buildIntroMap(cardTtsText); }
+  else { _introHLActive=false; try{ _introClearHL(); }catch(e){} }
   var voiceAfterText=typeof cardItem==='object'?cardItem._voiceAfter:'';
   if(voiceAfterText){
     voiceAfterText=voiceAfterText.replace(/\([^)]*참조[^)]*\)/g, '').replace(/\[\[[\s\S]*?\]\]/g,'').replace(/\{\{([\s\S]*?)\}\}/g,'$1').replace(/[^\S\n]+/g, ' ').trim();
@@ -10338,7 +10425,7 @@ const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
 if(!playing&&onTrainScreen)startEngine();
 });
 }
-function closeStep(){cancelTTS();pop();}
+function closeStep(){ _introHLActive=false; try{ _introClearHL(); }catch(e){} cancelTTS();pop();}
 function toggleStepTTS(){
 if((window.speechSynthesis&&speechSynthesis.speaking)||window._elSrc){stopEL();if(window.speechSynthesis)speechSynthesis.cancel();}
 else{
