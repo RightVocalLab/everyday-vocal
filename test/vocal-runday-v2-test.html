@@ -5348,9 +5348,22 @@ var _bgmAudio = null;
 var _BGM_INTRO_MS = 7000;       /* 일차 첫 카드: BGM 먼저 흐르는 시간 */
 var _bgmIntroPending = false;   /* 첫 카드 첫 멘트를 인트로만큼 지연할지 */
 var _bgmIntroTimer = null;      /* 인트로 대기 타이머 (일시정지 시 취소용) */
+/* 멘트 종료 후 BGM 페이드아웃 (페이지 멘트 끝 → 5초 더 흐르다 페이드아웃) */
+var _bgmFadeTimer = null;       /* 멘트 끝→페이드아웃까지 5초 대기 타이머 */
+var _bgmFadedOut = false;       /* 페이드아웃되어 멈춘 상태인지 (다음 카드 진입 시 복귀용) */
+var _BGM_END_HOLD_MS = 5000;    /* 멘트 끝난 뒤 BGM이 더 흐르는 시간 */
+var _BGM_FADEOUT_MS  = 2500;    /* 페이드아웃 길이 */
+/* 일차별 오프닝 BGM 트랙: 1일차=bgm2, 2일차 이후=bgm5 (다른 오프닝곡으로 다시 시작) */
+function _bgmOpeningTrack(item){
+  var d = (item && item.dayNum) ? item.dayNum
+        : (parseInt(String(typeof stepTitle!=='undefined'?stepTitle:'').replace(/[^0-9]/g,''),10) || 1);
+  return d >= 2 ? 5 : 2;
+}
 function _bgmStart(track){
   try{
     if(!track) return;
+    if(_bgmFadeTimer){ clearTimeout(_bgmFadeTimer); _bgmFadeTimer=null; }
+    _bgmFadedOut = false;
     if(_bgmAudio){ try{_bgmAudio.pause();}catch(e){} _bgmAudio=null; }
     var a = new Audio(_BGM_BASE+'bgm'+track+'.mp3');
     a.loop = true;
@@ -5363,6 +5376,8 @@ function _bgmStart(track){
 function _bgmStop(){
   try{
     _bgmIntroPending = false; /* 화면 나가면 인트로 대기 해제 */
+    if(_bgmFadeTimer){ clearTimeout(_bgmFadeTimer); _bgmFadeTimer=null; }
+    _bgmFadedOut = false;
     if(_bgmUnduckTimer){ clearTimeout(_bgmUnduckTimer); _bgmUnduckTimer=null; }
     if(_bgmRampTimer){ clearInterval(_bgmRampTimer); _bgmRampTimer=null; }
     if(_bgmAudio){ _bgmAudio.pause(); _bgmAudio=null; }
@@ -5446,6 +5461,28 @@ function _bgmUnduckSoon(){
     _bgmUnduckTimer=null;
     _bgmUnduck();
   }, _BGM_UNDUCK_DELAY_MS);
+}
+/* 페이지 멘트가 다 끝나면: 5초 더 흐르다가 페이드아웃 후 정지 */
+function _bgmScheduleFadeOut(){
+  if(_bgmFadeTimer){ clearTimeout(_bgmFadeTimer); }
+  _bgmFadeTimer = setTimeout(function(){
+    _bgmFadeTimer = null;
+    if(!_bgmAudio) return;
+    _bgmRamp(0, _BGM_FADEOUT_MS); /* 페이드아웃 */
+    setTimeout(function(){
+      if(_bgmAudio){ try{ _bgmAudio.pause(); }catch(e){} }
+      _bgmFadedOut = true;
+    }, _BGM_FADEOUT_MS + 80);
+  }, _BGM_END_HOLD_MS);
+}
+/* 카드 이동/재생 재개 시: 예약된 페이드아웃 취소 + 페이드아웃됐던 BGM 복귀 */
+function _bgmCancelFadeOut(){
+  if(_bgmFadeTimer){ clearTimeout(_bgmFadeTimer); _bgmFadeTimer=null; }
+  if(_bgmFadedOut && _bgmAudio){
+    _bgmFadedOut = false;
+    try{ var pr=_bgmAudio.play(); if(pr&&pr.catch)pr.catch(function(){}); }catch(e){}
+    _bgmRamp(_BGM_VOL, 600); /* 다시 페이드인 (이후 멘트 시작하면 자동 더킹) */
+  }
 }
 
 let _chunkState = {
@@ -10112,6 +10149,7 @@ function _showGuideCard(idx,animate){
   if(idx<0||idx>=N)return;
   _guideCardIdx=idx;
   var myToken=++_guideCardToken;
+  try{ _bgmCancelFadeOut(); }catch(e){} /* 카드 진입 → 예약된 페이드아웃 취소, 멈췄던 BGM 복귀 */
 
   /* 다른 카드(또는 같은 카드 재진입)의 재생중 영상 iframe 정리 → 썸네일 복원 */
   try{
@@ -10281,6 +10319,7 @@ function _showGuideCard(idx,animate){
     _playVoiceAfter(function(){
       if(myToken!==_guideCardToken)return;
       if(status) status.textContent='';
+      try{ _bgmScheduleFadeOut(); }catch(e){} /* 멘트 다 끝남 → 5초 더 흐르다 페이드아웃 */
       /* 마지막 카드면 다음 훈련 버튼만 표시 */
       if(idx===N-1){
         if(status) status.textContent='완료 ✅';
@@ -10366,7 +10405,7 @@ function _initGuideCards(guide,item){
     if(track) track.style.width=(_guideCards.length*_guideCardWidth)+'px';
     document.querySelectorAll('.guide-card').forEach(function(c){c.style.width=_guideCardWidth+'px';});
     _bgmIntroPending = true; /* 인트로 카드(첫 카드)에서 BGM 시작 후 7초 뒤 멘트 — _showGuideCard 전에 설정 */
-    _bgmStart(2); /* 인트로 카드 진입 시 BGM(2번) 재생 (멘트보다 먼저 시작, 본문까지 이어짐) */
+    _bgmStart(_bgmOpeningTrack(item)); /* 일차별 오프닝 BGM (1일차=bgm2, 2일차 이후=bgm5) */
     _showGuideCard(0,false);
   });
 }
