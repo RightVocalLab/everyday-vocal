@@ -5357,6 +5357,8 @@ var _BGM_FADEOUT_MS  = 2500;    /* 페이드아웃 길이 */
 var _BGM_OPENING_DAY1 = 2;   /* 1일차 오프닝 (bgm2 = 오프닝 느낌) */
 var _BGM_OPENING_DAY2 = 3;   /* 2일차 이후 오프닝 (bgm3 = 오프닝 느낌, bgm2와 다른 곡) */
 var _BGM_BODY = 3;           /* 인트로 다음(본문) 전환 트랙 (bgm3 = 오프닝 느낌) */
+var _BGM_AFTER_TRAINING = 6; /* 훈련([BGM:N]) 카드 다음 페이지 곡 (bgm6 = 훈련, 엔딩/마무리 아님) */
+var _BGM_ENDING = 7;         /* 모든 일차 마지막 카드 곡 (bgm7 = 마무리 느낌) */
 var _bgmCurrentTrack = 0;    /* 현재 재생 중인 트랙 번호 (전환 판단용) */
 var _BGM_LOOP_TRACKS = [4,5,6]; /* 훈련 계열 곡 = 멘트 끝나도 페이드아웃 없이 무한반복 */
 function _bgmOpeningTrack(item){
@@ -5652,7 +5654,7 @@ function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag, _introDel
         setTimeout(function(){
           if(_chunkSession !== mySession || _chunkState.paused) return;
           _next();
-        }, 8000); /* 새 곡 시작 후 8초 뒤 다음 멘트 */
+        }, 15000); /* 새 곡(훈련음악) 시작 후 15초 뒤 다음 멘트 */
       });
       return;
     }
@@ -10301,14 +10303,7 @@ function _showGuideCard(idx,animate){
   }
   /* 인트로 카드면 튜토리얼 하이라이트 ON + 청크↔UI 맵 구성, 아니면 OFF(오버레이 해제) */
   if(_cardIsIntro){ _introHLActive=true; _introHLMap=_buildIntroMap(cardTtsText); }
-  else {
-    _introHLActive=false; try{ _introClearHL(); }catch(e){}
-    /* 인트로(bgm2) 다음 본문 카드로 넘어오면 → bgm3로 전환 (같은 방식: 크로스페이드).
-       현재 트랙이 1일차 오프닝(bgm2)일 때만 1회 동작 (이후 트랙엔 영향 없음) */
-    if(_bgmCurrentTrack===_BGM_OPENING_DAY1 && _BGM_BODY!==_BGM_OPENING_DAY1){
-      try{ _bgmSwitch(_BGM_BODY); }catch(e){}
-    }
-  }
+  else { _introHLActive=false; try{ _introClearHL(); }catch(e){} }
   var voiceAfterText=typeof cardItem==='object'?cardItem._voiceAfter:'';
   if(voiceAfterText){
     voiceAfterText=voiceAfterText.replace(/\([^)]*참조[^)]*\)/g, '').replace(/\[\[[\s\S]*?\]\]/g,'').replace(/\{\{([\s\S]*?)\}\}/g,'$1').replace(/[^\S\n]+/g, ' ').trim();
@@ -10355,11 +10350,30 @@ function _showGuideCard(idx,animate){
       /* 나머지는 사용자가 › 버튼으로 직접 넘김 */
     });
   };
-  /* BGM 인트로: 일차 첫 카드 진입 시 BGM이 먼저 흐른 뒤 첫 멘트 재생 */
-  /* BGM 인트로: 일차 첫 카드는 첫 청크 전 7초 지연 (BGM 먼저 흐름).
-     _speakChunked에 introDelay를 넘겨 청크엔진 내부에서 처리 → active 즉시 true, 일시정지 정상 작동 */
+  /* ── 카드별 BGM 오케스트레이션 ──
+     트랙 느낌: 1엔딩 2오프닝 3오프닝 4훈련 5호흡훈련 6훈련 7마무리
+     - 인트로 카드: 오프닝 BGM + 7초 후 TTS (day-open에서 시작)
+     - 인트로 다음 첫 본문: 정지 후 bgm3 처음부터 + 5초 후 TTS
+     - 훈련([BGM:N]) 카드 다음 페이지: 다른 곡으로 전환 + BGM·TTS 동시(0초)
+     - 마지막 카드: 마무리 BGM(bgm7) + 3초 후 TTS
+     - 그 외: 현재 BGM 유지 + TTS 즉시 */
+  function _gcText(c){ return typeof c==='string'?c:(c&&c.text||''); }
+  var _hasIntro = N>0 && /\[INTRO\]/.test(_gcText(_guideCards[0]));
+  var _firstBodyIdx = _hasIntro ? 1 : 0;
+  var _isLastCard = (idx === N-1);
+  var _prevHadBgm = (idx>0) && /\[BGM:\d+\]/.test(_gcText(_guideCards[idx-1]));
   var _introDelay = 0;
-  if(_bgmIntroPending){ _bgmIntroPending = false; _introDelay = _BGM_INTRO_MS; }
+  if(_cardIsIntro){
+    if(_bgmIntroPending){ _bgmIntroPending=false; _introDelay=_BGM_INTRO_MS; } /* 인트로: 7초 */
+  } else if(_bgmIntroPending){
+    _bgmIntroPending=false; _introDelay=_BGM_INTRO_MS; /* 인트로 없는 일차 첫 카드: day-open BGM + 7초 */
+  } else if(_isLastCard){
+    _bgmStart(_BGM_ENDING); _introDelay=3000;       /* 마지막 카드: 마무리곡 + 3초 */
+  } else if(_prevHadBgm){
+    _bgmSwitch(_BGM_AFTER_TRAINING); _introDelay=0;  /* 훈련 다음 페이지: 다른 곡 + 동시 */
+  } else if(_hasIntro && idx===_firstBodyIdx){
+    _bgmStart(_BGM_BODY); _introDelay=5000;          /* 인트로 다음 첫 본문: bgm3 처음부터 + 5초 */
+  }
   _speakChunked(cardTtsText, _cardSpeakDone, undefined, _introDelay);
 }
 
