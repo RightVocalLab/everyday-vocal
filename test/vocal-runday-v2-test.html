@@ -5354,8 +5354,11 @@ var _bgmFadedOut = false;       /* 페이드아웃되어 멈춘 상태인지 (�
 var _BGM_END_HOLD_MS = 5000;    /* 멘트 끝난 뒤 BGM이 더 흐르는 시간 */
 var _BGM_FADEOUT_MS  = 2500;    /* 페이드아웃 길이 */
 /* 일차별 오프닝 BGM 트랙 (서버 rightvocallab.github.io/everyday-vocal/ 에 bgm{N}.mp3 있어야 함) */
-var _BGM_OPENING_DAY1 = 2;   /* 1일차 오프닝 (bgm2 — 확인됨) */
+var _BGM_OPENING_DAY1 = 2;   /* 1일차 오프닝 (bgm2 = 오프닝 느낌) */
 var _BGM_OPENING_DAY2 = 3;   /* 2일차 이후 오프닝 (bgm3 = 오프닝 느낌, bgm2와 다른 곡) */
+var _BGM_BODY = 3;           /* 인트로 다음(본문) 전환 트랙 (bgm3 = 오프닝 느낌) */
+var _bgmCurrentTrack = 0;    /* 현재 재생 중인 트랙 번호 (전환 판단용) */
+var _BGM_LOOP_TRACKS = [4,5,6]; /* 훈련 계열 곡 = 멘트 끝나도 페이드아웃 없이 무한반복 */
 function _bgmOpeningTrack(item){
   var d = (item && item.dayNum) ? item.dayNum
         : (parseInt(String(typeof stepTitle!=='undefined'?stepTitle:'').replace(/[^0-9]/g,''),10) || 1);
@@ -5371,6 +5374,7 @@ function _bgmStart(track){
     a.loop = true;
     a.volume = _BGM_VOL;
     _bgmAudio = a;
+    _bgmCurrentTrack = track;
     var pr = a.play();
     if(pr && pr.catch) pr.catch(function(){});
   }catch(e){}
@@ -5409,6 +5413,7 @@ function _bgmSwitch(track, onDone){
         var a=new Audio(_BGM_BASE+'bgm'+track+'.mp3');
         a.loop=true; a.volume=0;
         _bgmAudio=a;
+        _bgmCurrentTrack = track;
         var pr=a.play(); if(pr&&pr.catch)pr.catch(function(){});
         _bgmRamp(_BGM_VOL, _BGM_SWITCH_IN_MS); /* 새 곡 페이드인 */
       }catch(e){}
@@ -5464,8 +5469,10 @@ function _bgmUnduckSoon(){
     _bgmUnduck();
   }, _BGM_UNDUCK_DELAY_MS);
 }
-/* 페이지 멘트가 다 끝나면: 5초 더 흐르다가 페이드아웃 후 정지 */
+/* 페이지 멘트가 다 끝나면: 5초 더 흐르다가 페이드아웃 후 정지
+   단, 훈련 계열 곡(4·5·6)은 멘트가 끝나도 페이드아웃 없이 계속 반복재생 */
 function _bgmScheduleFadeOut(){
+  if(_BGM_LOOP_TRACKS.indexOf(_bgmCurrentTrack) >= 0) return; /* 훈련음악 → 무한반복 (페이드아웃 X) */
   if(_bgmFadeTimer){ clearTimeout(_bgmFadeTimer); }
   _bgmFadeTimer = setTimeout(function(){
     _bgmFadeTimer = null;
@@ -10294,7 +10301,14 @@ function _showGuideCard(idx,animate){
   }
   /* 인트로 카드면 튜토리얼 하이라이트 ON + 청크↔UI 맵 구성, 아니면 OFF(오버레이 해제) */
   if(_cardIsIntro){ _introHLActive=true; _introHLMap=_buildIntroMap(cardTtsText); }
-  else { _introHLActive=false; try{ _introClearHL(); }catch(e){} }
+  else {
+    _introHLActive=false; try{ _introClearHL(); }catch(e){}
+    /* 인트로(bgm2) 다음 본문 카드로 넘어오면 → bgm3로 전환 (같은 방식: 크로스페이드).
+       현재 트랙이 1일차 오프닝(bgm2)일 때만 1회 동작 (이후 트랙엔 영향 없음) */
+    if(_bgmCurrentTrack===_BGM_OPENING_DAY1 && _BGM_BODY!==_BGM_OPENING_DAY1){
+      try{ _bgmSwitch(_BGM_BODY); }catch(e){}
+    }
+  }
   var voiceAfterText=typeof cardItem==='object'?cardItem._voiceAfter:'';
   if(voiceAfterText){
     voiceAfterText=voiceAfterText.replace(/\([^)]*참조[^)]*\)/g, '').replace(/\[\[[\s\S]*?\]\]/g,'').replace(/\{\{([\s\S]*?)\}\}/g,'$1').replace(/[^\S\n]+/g, ' ').trim();
