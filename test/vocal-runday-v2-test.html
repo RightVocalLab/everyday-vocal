@@ -10370,7 +10370,7 @@ function _showGuideCard(idx,animate){
   } else if(_isLastCard){
     _bgmStart(_BGM_ENDING); _introDelay=3000;       /* 마지막 카드: 마무리곡 + 3초 */
   } else if(_prevHadBgm){
-    _bgmSwitch(_BGM_AFTER_TRAINING); _introDelay=0;  /* 훈련 다음 페이지: 다른 곡 + 동시 */
+    _bgmStart(_BGM_AFTER_TRAINING); _introDelay=0;  /* 훈련 다음 페이지: 다른 곡 즉시 교체(_bgmStart) + 멘트 동시. _bgmSwitch는 더킹과 충돌해 전환 안 됨 */
   } else if(_hasIntro && idx===_firstBodyIdx){
     _bgmStart(_BGM_BODY); _introDelay=5000;          /* 인트로 다음 첫 본문: bgm3 처음부터 + 5초 */
   }
