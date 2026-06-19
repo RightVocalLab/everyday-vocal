@@ -5353,11 +5353,13 @@ var _bgmFadeTimer = null;       /* 멘트 끝→페이드아웃까지 5초 대�
 var _bgmFadedOut = false;       /* 페이드아웃되어 멈춘 상태인지 (다음 카드 진입 시 복귀용) */
 var _BGM_END_HOLD_MS = 5000;    /* 멘트 끝난 뒤 BGM이 더 흐르는 시간 */
 var _BGM_FADEOUT_MS  = 2500;    /* 페이드아웃 길이 */
-/* 일차별 오프닝 BGM 트랙: 1일차=bgm2, 2일차 이후=bgm5 (다른 오프닝곡으로 다시 시작) */
+/* 일차별 오프닝 BGM 트랙 (서버 rightvocallab.github.io/everyday-vocal/ 에 bgm{N}.mp3 있어야 함) */
+var _BGM_OPENING_DAY1 = 2;   /* 1일차 오프닝 (bgm2 — 확인됨) */
+var _BGM_OPENING_DAY2 = 3;   /* 2일차 이후 오프닝 (bgm3 = 오프닝 느낌, bgm2와 다른 곡) */
 function _bgmOpeningTrack(item){
   var d = (item && item.dayNum) ? item.dayNum
         : (parseInt(String(typeof stepTitle!=='undefined'?stepTitle:'').replace(/[^0-9]/g,''),10) || 1);
-  return d >= 2 ? 5 : 2;
+  return d >= 2 ? _BGM_OPENING_DAY2 : _BGM_OPENING_DAY1;
 }
 function _bgmStart(track){
   try{
@@ -10072,10 +10074,19 @@ function _introHideOverlay(){
     var e=document.getElementById(id); if(e) e.style.display='none';
   });
 }
+/* 강조 대상이 화면 밖(상단바 뒤 등)일 때: 구멍/박스 없이 화면 전체만 어둡게 유지
+   (스크롤해도 어두운 화면이 풀리지 않게) */
+function _introFullDark(){
+  _introEnsureOverlay();
+  document.getElementById('intro-ov-t').style.cssText='position:fixed;background:rgba(0,0,0,.55);z-index:9000;pointer-events:none;display:block;left:0;top:0;width:100%;height:100%';
+  ['intro-ov-b','intro-ov-l','intro-ov-r','intro-ov-ring'].forEach(function(id){
+    var e=document.getElementById(id); if(e) e.style.display='none';
+  });
+}
 function _introDrawSpotlight(el){
   _introEnsureOverlay();
   var r=el.getBoundingClientRect();
-  if(r.width<1||r.height<1){ _introHideOverlay(); return; }
+  if(r.width<1||r.height<1){ _introFullDark(); return; }
   var p=8, W=window.innerWidth, H=window.innerHeight;
   /* 박스/오버레이 구멍이 상단 제목줄(상단바) 위로 올라가지 않도록 클램프.
      설정 버튼은 상단바 안에 있으므로 예외. */
@@ -10084,8 +10095,8 @@ function _introDrawSpotlight(el){
     var tb=document.querySelector('#scr-step .topbar');
     if(tb){ var tbr=tb.getBoundingClientRect(); if(tbr.height>0) minTop=tbr.bottom; }
   }
-  /* 타깃이 상단바 뒤로 거의 다 가려지면 박스를 그리지 않음(제목 위로 안 뜨게) */
-  if(el.id!=='step-settings-btn' && r.bottom<=minTop+6){ _introHideOverlay(); return; }
+  /* 타깃이 상단바 뒤로 가려졌거나 화면 아래로 벗어나면 → 박스 없이 화면만 계속 어둡게 (오버레이 유지) */
+  if(el.id!=='step-settings-btn' && (r.bottom<=minTop+6 || r.top>=H)){ _introFullDark(); return; }
   var top=Math.max(minTop, r.top-p), bot=Math.min(H, r.bottom+p);
   var left=Math.max(0, r.left-p), right=Math.min(W, r.right+p);
   var base='position:fixed;background:rgba(0,0,0,.55);z-index:9000;pointer-events:none;display:block;';
