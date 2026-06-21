@@ -2418,11 +2418,17 @@ input,select,button,textarea{font-family:inherit;}
     <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-left:4px">
         <div style="font-size:12px;font-weight:800;color:#374151">📈 PVR 그래프 (음정 × 강도)</div>
-        <!-- 관리자 전용: 점 편집 모드 -->
+        <!-- 관리자 전용: 점 편집 / 디버그 CSV -->
+        <span style="display:inline-flex;gap:6px;align-items:center">
         <button id="pt-edit-toggle-btn" onclick="_ptToggleEditMode()" 
                 style="display:none;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;cursor:pointer">
           🛠 점 편집
         </button>
+        <button id="pt-dbg-csv-btn" onclick="_ptExportDbgCSV()" 
+                style="display:none;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;cursor:pointer">
+          🔬 디버그 CSV
+        </button>
+        </span>
       </div>
       <!-- 편집 모드 안내 (관리자 + 편집모드 ON 시 표시) -->
       <div id="pt-edit-hint" style="display:none;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10.5px;color:#92400e;line-height:1.5">
@@ -17244,6 +17250,7 @@ let _ptRafId = null;
 let _ptLowFreq = null;   /* 최저 주파수 */
 let _ptHighFreq = null;  /* 최고 주파수 */
 let _ptDataPoints = [];  /* {midi, dB, time} 점들 */
+let _ptLastDbg = null;  /* 직전 프레임 판정 디버그 (점별 누적용) */
 let _ptCanvasEl = null;
 let _ptCanvasCtx = null;
 let _ptDrawNeeded = false;
@@ -17971,6 +17978,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   if(score >= falsettoThreshold) result = 'falsetto';
   else if(score <= -3) result = 'chest';
   else result = 'mix';
+  var _rawResult = result; /* 가드 강등 전 점수기반 원판정 (디버그 진단용) */
   
   /* === 생리학적 검증 ===
      가성(falsetto)은 성대 가장자리만 진동하는 발성으로,
@@ -18019,7 +18027,8 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      ※ 실측(2026-06 여성 E5): 가성 H1H2 ≥ -2.6, 진성두성 H1H2 ≤ -4 로 분리.
         경계 -4는 가성 최저값과 1.4 마진 확보 → 진짜 가성은 차단 안 됨.
         (살살 낸 두성의 H1H2 양수 구간은 가성과 음향 동일이라 분리 불가) */
-  if(isFemale && result === 'falsetto' && h1h2 < -4){
+  /* [완만 조정 2026-06, 데이터 수집 전 임시] -4 → -6 : 강하게 낸 가성(h1h2 약음수) 살림. 더 살리려면 더 내리고, 믹스 오판 생기면 -4로 복귀 */
+  if(isFemale && result === 'falsetto' && h1h2 < -6){
     result = 'mix';
   }
 
@@ -18030,7 +18039,8 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      G5 강한믹스 H1H2 -7~-12, D5 가성 H1H2 +8/H1H4 38~41)
      → 고음역 falsetto 중 H1H2가 가성영역(10+) 미만이고 H1H4도 가성영역(36+) 미만이면
        진성 두성이므로 mix로 강등. 진짜 가성(H1H2 10+ 또는 H1H4 36+)은 통과. */
-  if(isFemale && result === 'falsetto' && f0 >= 500 && h1h2 < 10 && h1h4 < 36){
+  /* [완만 조정 2026-06, 데이터 수집 전 임시] h1h2 10→8, h1h4 36→33 : 강한 가성(고배음↑로 h1h2·h1h4 낮아짐) 강등을 완화. 아직 믹스로 나오면 더 내리고(예 6/30), 강한믹스가 가성으로 새면 다시 올릴 것 */
+  if(isFemale && result === 'falsetto' && f0 >= 500 && h1h2 < 8 && h1h4 < 33){
     result = 'mix';
   }
 
@@ -18064,10 +18074,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
-      var _line = 'f0='+Math.round(f0)+'Hz H1H2='+h1h2.toFixed(1)+' H2H4='+h2h4.toFixed(1)+' H1H4='+h1h4.toFixed(1)+' highRatio='+highRatio.toFixed(1)
+      var _line = (isFemale?'[F] ':'[M] ')+'f0='+Math.round(f0)+'Hz H1H2='+h1h2.toFixed(1)+' H2H4='+h2h4.toFixed(1)+' H1H4='+h1h4.toFixed(1)+' highRatio='+highRatio.toFixed(1)
         +' hnr='+hnr.toFixed(1)+' dB='+(typeof dB==='number'?dB.toFixed(0):'?')
         +' dBFS='+(typeof dB==='number'?(dB-94).toFixed(0):'?')
-        +' score='+score.toFixed(1)+' → '+result;
+        +' score='+score.toFixed(1)+' '+(_rawResult!==result?(_rawResult+'→'):'')+result;
       console.log('[PVR]', _line);
       var _box=document.getElementById('pt-debug-box');
       if(_box){
@@ -18082,6 +18092,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     }catch(e){}
   }
 
+  try{ _ptLastDbg = {h1h2:h1h2, h2h4:h2h4, h1h4:h1h4, highRatio:highRatio, hnr:hnr, score:score, raw:_rawResult, result:result}; }catch(_e){ _ptLastDbg = null; }
   return result;
 }
 
@@ -18602,6 +18613,12 @@ const PT_MIN_AVG_DB = 45;       /* 평균 dB이 45 미만이면 잡음 (2026-06:
 const PT_MAX_DB_VARIANCE = 20;  /* dB 표준편차가 20 이상이면 잡음/불안정 (2026-05-12: 25→20)
                                    시간 임계가 짧아진 만큼 안정성 검증 강화 */
 
+function _ptAccumDbg(tone, d){
+  if(!tone._dbg) tone._dbg = {h1h2:0,h2h4:0,h1h4:0,highRatio:0,hnr:0,score:0,n:0};
+  var g=tone._dbg;
+  g.h1h2+=d.h1h2; g.h2h4+=d.h2h4; g.h1h4+=d.h1h4; g.highRatio+=d.highRatio; g.hnr+=d.hnr; g.score+=d.score; g.n+=1;
+}
+
 function _ptAddPoint(midi, dB, register){
   const now = Date.now();
   
@@ -18619,6 +18636,7 @@ function _ptAddPoint(midi, dB, register){
     if(register){
       _ptCurrentTone.regCount[register] = (_ptCurrentTone.regCount[register] || 0) + 1;
     }
+    if(_ptLastDbg){ try{ _ptAccumDbg(_ptCurrentTone, _ptLastDbg); }catch(_e){} }
     
     /* 진행 중인 톤이 최소 기준 이상이면 라이브 표시용으로 갱신 */
     const dur = now - _ptCurrentTone.startTime;
@@ -18636,8 +18654,10 @@ function _ptAddPoint(midi, dB, register){
       count: 1,
       startTime: now,
       lastTime: now,
-      regCount: register ? {[register]: 1} : {}
+      regCount: register ? {[register]: 1} : {},
+      _dbg: {h1h2:0,h2h4:0,h1h4:0,highRatio:0,hnr:0,score:0,n:0}
     };
+    if(_ptLastDbg){ try{ _ptAccumDbg(_ptCurrentTone, _ptLastDbg); }catch(_e){} }
   }
 }
 
@@ -18689,12 +18709,15 @@ function _ptFinalizeCurrentTone(){
     return;
   }
   /* 조건 모두 통과 - 데이터 포인트로 추가 */
+  var _dbgAvg = null;
+  try{ var _g=_ptCurrentTone._dbg; if(_g && _g.n>0){ _dbgAvg={h1h2:Math.round(_g.h1h2/_g.n*10)/10,h2h4:Math.round(_g.h2h4/_g.n*10)/10,h1h4:Math.round(_g.h1h4/_g.n*10)/10,highRatio:Math.round(_g.highRatio/_g.n*10)/10,hnr:Math.round(_g.hnr/_g.n*10)/10,score:Math.round(_g.score/_g.n*10)/10,n:_g.n}; } }catch(_e){}
   _ptDataPoints.push({
     midi: _ptCurrentTone.midi,
     dB: avgDB,
     duration: dur,
     register: finalReg,  /* 'chest' | 'mix' | 'falsetto' */
-    time: _ptCurrentTone.lastTime
+    time: _ptCurrentTone.lastTime,
+    dbg: _dbgAvg
   });
   if(_ptDataPoints.length > 500) _ptDataPoints.shift();
   _ptDrawNeeded = true;
@@ -19216,11 +19239,11 @@ function _ptAnalyzeResult(){
     comment,    /* Phase2: 종합 코멘트 */
     measureCenterWeighted, /* Phase2: 자주 발성하는 영역 중심값 */
     /* 비교 그래프를 위한 raw 데이터 (간소화) */
-    dataPoints: _ptDataPoints.map(p => ({
-      midi: Math.round(p.midi * 10) / 10,
-      dB: Math.round(p.dB),
-      register: p.register
-    }))
+    dataPoints: _ptDataPoints.map(p => {
+      var _o = { midi: Math.round(p.midi * 10) / 10, dB: Math.round(p.dB), register: p.register };
+      try{ if(p.dbg && typeof _getUserType==='function' && _getUserType()==='student'){ _o.dbg = p.dbg; } }catch(_e){}
+      return _o;
+    })
   };
 }
 
@@ -19776,12 +19799,52 @@ function _ptInitEditModeUI(result, historyId){
   if(hint) hint.style.display = 'none';
   if(actions) actions.style.display = 'none';
   
+  /* 디버그 CSV 버튼 (관리자 + dbg 데이터 있는 결과에만) */
+  var csvBtn = document.getElementById('pt-dbg-csv-btn');
+  if(csvBtn){
+    var _hasDbg = result && Array.isArray(result.dataPoints) && result.dataPoints.some(function(p){return p && p.dbg;});
+    csvBtn.style.display = (isAdmin && _hasDbg) ? '' : 'none';
+  }
+  
   /* 캔버스 클릭 핸들러 등록 (한 번만) */
   const canvas = document.getElementById('pt-result-canvas');
   if(canvas && !canvas._ptEditClickBound){
     canvas.addEventListener('click', _ptHandleCanvasClick);
     canvas._ptEditClickBound = true;
   }
+}
+
+/* 관리자 전용: 표시중 결과의 점별 판정 디버그를 CSV로 복사 (강한가성/믹스 임계값 튜닝용) */
+function _ptExportDbgCSV(){
+  try{
+    var r = window._ptCurrentResult;
+    if(!r || !Array.isArray(r.dataPoints)){ alert('표시된 결과에 점 데이터가 없습니다.'); return; }
+    var rows = r.dataPoints.filter(function(p){return p && p.dbg;});
+    if(rows.length===0){ alert('이 측정에는 디버그 데이터가 없습니다.\n(디버그 로깅 적용 이후 학생 로그인 측정분만 기록됩니다)'); return; }
+    var gender = r.gender || (typeof _ptGender!=='undefined'? _ptGender : '?');
+    var head = '# user='+(r.userName||'?')+' gender='+gender+' ts='+(r.timestamp? new Date(r.timestamp).toISOString():'?')+' points='+rows.length;
+    var cols = 'midi,note,dB,register,h1h2,h2h4,h1h4,highRatio,hnr,score,n';
+    var lines = rows.map(function(p){
+      var d=p.dbg;
+      var note = (typeof _midiToNoteName==='function')? _midiToNoteName(Math.round(p.midi)) : '';
+      return [p.midi, note, p.dB, p.register, d.h1h2, d.h2h4, d.h1h4, d.highRatio, d.hnr, d.score, d.n].join(',');
+    });
+    var csv = head+'\n'+cols+'\n'+lines.join('\n');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(csv).then(function(){ alert('디버그 CSV 복사 완료 ('+rows.length+'개 점)\n채팅에 붙여넣어 전달하세요.'); }, function(){ _ptShowDbgCsvFallback(csv); });
+    } else { _ptShowDbgCsvFallback(csv); }
+  }catch(e){ alert('CSV 생성 실패: '+e.message); }
+}
+function _ptShowDbgCsvFallback(csv){
+  try{
+    var w = document.createElement('textarea');
+    w.value = csv;
+    w.style.cssText = 'position:fixed;left:5%;top:10%;width:90%;height:60%;z-index:99999;font-size:11px;font-family:monospace';
+    document.body.appendChild(w); w.focus(); w.select();
+    try{ document.execCommand('copy'); }catch(_e){}
+    alert('아래 텍스트를 길게 눌러 전체 복사하세요. (복사 후 박스 밖을 탭하면 닫힘)');
+    w.addEventListener('blur', function(){ try{ document.body.removeChild(w); }catch(_e){} });
+  }catch(e){ alert(csv.slice(0,1200)); }
 }
 
 /* 편집 모드 토글 */
