@@ -5366,11 +5366,27 @@ var _BGM_BODY = 3;           /* 인트로 다음(본문) 전환 트랙 (bgm3 = �
 var _BGM_AFTER_TRAINING = 3; /* 훈련([BGM:N]) 카드 다음 페이지 곡 (bgm3 = 오프닝 느낌, 훈련/엔딩/마무리 아님) */
 var _BGM_ENDING = 7;         /* 모든 일차 마지막 카드 곡 (bgm7 = 마무리 느낌) */
 var _bgmCurrentTrack = 0;    /* 현재 재생 중인 트랙 번호 (전환 판단용) */
-var _BGM_LOOP_TRACKS = [4,5,6]; /* 훈련 계열 곡 = 멘트 끝나도 페이드아웃 없이 무한반복 */
+var _BGM_LOOP_TRACKS = [4,5,6,11,13,14]; /* 훈련 계열 곡 = 멘트 끝나도 페이드아웃 없이 무한반복 (새 훈련곡 11·13·14 추가) */
+
+/* ── 4일 단위 블록별 BGM 로테이션 (1~15일차). 곡 바꾸려면 이 표의 숫자만 수정 ──
+   곡번호: 1엔딩 2·3오프닝 4·6훈련(잔잔) 5호흡훈련 7·8·10·12마무리 9·15·16인트로 11·13·14훈련음악 */
+var _BGM_BLOCKS = [
+  { opening:2,  body:3,  training:5,  ending:7  }, /* 블록0: 1~4일차 (현재값 유지) */
+  { opening:3,  body:2,  training:4,  ending:8  }, /* 블록1: 5~8일차 */
+  { opening:9,  body:16, training:11, ending:10 }, /* 블록2: 9~12일차 */
+  { opening:15, body:9,  training:13, ending:12 }  /* 블록3: 13~15일차 */
+];
+function _bgmDayNum(item){
+  return (item && item.dayNum) ? item.dayNum
+       : (parseInt(String(typeof stepTitle!=='undefined'?stepTitle:'').replace(/[^0-9]/g,''),10) || 1);
+}
+function _bgmBlock(dayNum){
+  var b = Math.floor((Math.max(1, dayNum||1) - 1) / 4);
+  return _BGM_BLOCKS[Math.min(b, _BGM_BLOCKS.length-1)] || _BGM_BLOCKS[0];
+}
+var _bgmDayTracks = _BGM_BLOCKS[0]; /* 현재 일차의 블록 트랙 세트 (일차 시작 시 _initGuideCards에서 갱신) */
 function _bgmOpeningTrack(item){
-  var d = (item && item.dayNum) ? item.dayNum
-        : (parseInt(String(typeof stepTitle!=='undefined'?stepTitle:'').replace(/[^0-9]/g,''),10) || 1);
-  return d >= 2 ? _BGM_OPENING_DAY2 : _BGM_OPENING_DAY1;
+  return _bgmBlock(_bgmDayNum(item)).opening;
 }
 function _bgmStart(track){
   try{
@@ -5655,6 +5671,8 @@ function _speakChunkedFrom(finalChunks, startIdx, onEnd, _isCoachFlag, _introDel
     const bgmMatch = chunk.match(/^\[BGM:(\d+)\]$/);
     if(bgmMatch){
       var _newTrack = parseInt(bgmMatch[1],10);
+      /* [BGM:5] = "이 일차 블록의 훈련곡"으로 자동 해석 (4일 단위 로테이션). 다른 번호는 그대로 */
+      if(_newTrack===5 && _bgmDayTracks && _bgmDayTracks.training){ _newTrack = _bgmDayTracks.training; }
       _bgmSwitch(_newTrack, function(){
         if(_chunkSession !== mySession) return;
         setTimeout(function(){
@@ -10382,11 +10400,11 @@ function _showGuideCard(idx,animate){
   } else if(_bgmIntroPending){
     _bgmIntroPending=false; _introDelay=_BGM_INTRO_MS; /* 인트로 없는 일차 첫 카드: day-open BGM + 7초 */
   } else if(_isLastCard){
-    _bgmStart(_BGM_ENDING); _introDelay=3000;       /* 마지막 카드: 마무리곡 + 3초 */
+    _bgmStart(_bgmDayTracks.ending); _introDelay=3000;       /* 마지막 카드: 블록 마무리곡 + 3초 */
   } else if(_prevHadBgm){
-    _bgmStart(_BGM_AFTER_TRAINING); _introDelay=0;  /* 훈련 다음 페이지: 다른 곡 즉시 교체(_bgmStart) + 멘트 동시. _bgmSwitch는 더킹과 충돌해 전환 안 됨 */
+    _bgmStart(_bgmDayTracks.body); _introDelay=0;  /* 훈련 다음 페이지: 블록 본문곡 즉시 교체(_bgmStart) + 멘트 동시. _bgmSwitch는 더킹과 충돌해 전환 안 됨 */
   } else if(_hasIntro && idx===_firstBodyIdx){
-    _bgmStart(_BGM_BODY); _introDelay=5000;          /* 인트로 다음 첫 본문: bgm3 처음부터 + 5초 */
+    _bgmStart(_bgmDayTracks.body); _introDelay=5000;          /* 인트로 다음 첫 본문: 블록 본문곡 처음부터 + 5초 */
   }
   _speakChunked(cardTtsText, _cardSpeakDone, undefined, _introDelay);
 }
@@ -10457,8 +10475,9 @@ function _initGuideCards(guide,item){
     var track=document.getElementById('step-cards-track');
     if(track) track.style.width=(_guideCards.length*_guideCardWidth)+'px';
     document.querySelectorAll('.guide-card').forEach(function(c){c.style.width=_guideCardWidth+'px';});
+    _bgmDayTracks = _bgmBlock(_bgmDayNum(item)); /* 이 일차가 속한 4일 블록의 트랙 세트 갱신 */
     _bgmIntroPending = true; /* 인트로 카드(첫 카드)에서 BGM 시작 후 7초 뒤 멘트 — _showGuideCard 전에 설정 */
-    _bgmStart(_bgmOpeningTrack(item)); /* 일차별 오프닝 BGM (1일차=bgm2, 2일차 이후=bgm5) */
+    _bgmStart(_bgmOpeningTrack(item)); /* 일차별(블록별) 오프닝 BGM */
     _showGuideCard(0,false);
   });
 }
