@@ -17434,6 +17434,16 @@ function _ptApplyCal(cal){
 function _ptSaveCal(c){ try{ localStorage.setItem(PT_CAL_KEY, JSON.stringify(c)); }catch(e){} }
 function _ptLoadCal(){ try{ var s = localStorage.getItem(PT_CAL_KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
 function _ptClearCal(){ try{ localStorage.removeItem(PT_CAL_KEY); }catch(e){} }
+/* 그래프 표시용 dB: 캘리브됐으면 raw dB를 (소음~평범) 다이내믹을 40~75로 선형 매핑.
+   미보정(_ptCal 없음)이면 raw 그대로. 점 그리기 위치에만 사용 — 저장·판정·이상점필터·축라벨은 raw dB 유지. */
+function _ptDbDisp(db){
+  if(typeof db !== 'number' || !isFinite(db)) return db;
+  if(_ptCal && (_ptNormalDb - _ptNoiseDb) > 0){
+    var d = 40 + (db - _ptNoiseDb) / (_ptNormalDb - _ptNoiseDb) * (75 - 40);
+    return Math.max(0, Math.min(100, d));
+  }
+  return db;
+}
 
 /* analyser로 durationMs 동안 dBFS를 모아 (튀는 값 20% 트리밍) 평균 반환 */
 function _ptMeasureDbfs(analyser, opts, onTick, isCancelled){
@@ -18290,7 +18300,7 @@ function _ptCanvasDraw(){
     /* 점들을 픽셀 좌표로 변환 + register 정보 유지 */
     const pts = _ptDataPoints.map(p => ({
       x: x2px(p.midi),
-      y: y2px(p.dB),
+      y: y2px(_ptDbDisp(p.dB)),
       midi: p.midi,
       dB: p.dB,
       duration: p.duration || 500,
@@ -18457,7 +18467,7 @@ function _ptCanvasDraw(){
     _ptCanvasCtx.fillStyle = 'rgba(59,130,246,0.7)';
     _ptDataPoints.forEach(p => {
       _ptCanvasCtx.beginPath();
-      _ptCanvasCtx.arc(x2px(p.midi), y2px(p.dB), 5, 0, Math.PI * 2);
+      _ptCanvasCtx.arc(x2px(p.midi), y2px(_ptDbDisp(p.dB)), 5, 0, Math.PI * 2);
       _ptCanvasCtx.fill();
     });
     /* 마지막 점 발광 */
@@ -19682,7 +19692,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     if(chestPts.length >= 4){
       const core = _filterOutliers(chestPts, 4, 2);
       if(core.length >= 3){
-        const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+        const points = core.map(p => ({x: x2px(p.midi), y: y2px(_ptDbDisp(p.dB))}));
         const hull = _expandHull(_hull(points), 6);
         _drawSmoothPath(hull, 'rgba(59,130,246,0.18)', 'rgba(29,78,216,0.85)', 2);
       }
@@ -19692,7 +19702,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     if(mixPts.length >= 4){
       const core = _filterOutliers(mixPts, 4, 2);
       if(core.length >= 3){
-        const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+        const points = core.map(p => ({x: x2px(p.midi), y: y2px(_ptDbDisp(p.dB))}));
         const hull = _expandHull(_hull(points), 6);
         _drawSmoothPath(hull, 'rgba(14,165,233,0.18)', 'rgba(2,132,199,0.85)', 2);
       }
@@ -19702,7 +19712,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     if(falsettoPts.length >= 4){
       const core = _filterOutliers(falsettoPts, 4, 2);
       if(core.length >= 3){
-        const points = core.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+        const points = core.map(p => ({x: x2px(p.midi), y: y2px(_ptDbDisp(p.dB))}));
         const hull = _expandHull(_hull(points), 6);
         _drawSmoothPath(hull, 'rgba(139,92,246,0.18)', 'rgba(124,58,237,0.85)', 2);
       }
@@ -19719,7 +19729,7 @@ function _drawSinglePtToCanvas(canvasId, result){
     /* 모든 점을 register 색상으로 그리되, 편집모드에서 제거 표시된 점은 X 표시 */
     result.dataPoints.forEach((p, idx) => {
       const px = x2px(p.midi);
-      const py = y2px(p.dB);
+      const py = y2px(_ptDbDisp(p.dB));
       window._ptPointPositions.push({idx, x: px, y: py, register: p.register, midi: p.midi, dB: p.dB});
       
       let color = '#0284c7';  /* 기본 mix */
@@ -21300,7 +21310,7 @@ function _drawPtCompare(results, colors){
     if(r.dataPoints && r.dataPoints.length >= 3){
       const realPts = r.dataPoints.filter(p => p.register !== 'falsetto');
       const ptsToUse = realPts.length >= 3 ? realPts : r.dataPoints;
-      const points = ptsToUse.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+      const points = ptsToUse.map(p => ({x: x2px(p.midi), y: y2px(_ptDbDisp(p.dB))}));
       const hull = _expandHull(_hull(points), 6);
       _drawSmoothPath(hull, c.fill, c.stroke, 2);
     } else {
@@ -22317,7 +22327,7 @@ function _bf_getRegisterContour(dataPoints, register, x2px, y2px){
   if(!dataPoints || !dataPoints.length) return '';
   const pts = dataPoints.filter(p => p.register === register);
   if(pts.length < 3) return '';
-  const xy = pts.map(p => ({x: x2px(p.midi), y: y2px(p.dB)}));
+  const xy = pts.map(p => ({x: x2px(p.midi), y: y2px(_ptDbDisp(p.dB))}));
   const hull = _bf_convexHull(xy);
   return _bf_hullToPath(hull);
 }
