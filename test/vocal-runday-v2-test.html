@@ -17304,8 +17304,9 @@ function _openPtGenderModal(){
   const nameInput = document.getElementById('pt-name-input');
   const nameErr = document.getElementById('pt-name-err');
   if(nameInput){
-    /* 학생 로그인 상태면 학생 이름 강제 적용 (수정 불가) */
-    if(typeof curStudent !== 'undefined' && curStudent && curStudent.name){
+    /* 관리자: 이름 직접 입력 가능(새 친구/테스트 측정용). 일반 학생: 본인 이름 고정 */
+    var _admin = (typeof _isAppAdmin === 'function' && _isAppAdmin());
+    if(!_admin && typeof curStudent !== 'undefined' && curStudent && curStudent.name){
       nameInput.value = curStudent.name;
       nameInput.readOnly = true;
       nameInput.style.background = '#f3f4f6';
@@ -18383,21 +18384,36 @@ function _ptCanvasDraw(){
     /* 외딴 점(outlier) 필터링 헬퍼 - 등고선 계산용 (실시간 그래프)
        음정/dB 기준으로 가까운 이웃이 부족한 점은 등고선에서 제외 */
     function _filterOutliersRT(pts, neighborRadius, minNeighbors){
-      if(pts.length < 4) return pts;
-      return pts.filter((p, i) => {
-        let neighbors = 0;
+      if(pts.length < 5) return pts;
+      /* 화면(픽셀) 공간 최근접 이웃 거리 기반 고립점 제외 (결과 그래프와 동일 로직) */
+      const _pd = (a, b) => {
+        const dx = x2px(a.midi) - x2px(b.midi);
+        const dy = y2px(a.dB) - y2px(b.dB);
+        return Math.sqrt(dx*dx + dy*dy);
+      };
+      const nn = pts.map((p, i) => {
+        let best = Infinity;
         for(let j = 0; j < pts.length; j++){
           if(i === j) continue;
-          const dx = (pts[j].midi - p.midi);
-          const dy = (pts[j].dB - p.dB) / 5;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if(dist < neighborRadius){
-            neighbors++;
-            if(neighbors >= minNeighbors) return true;
-          }
+          const d = _pd(p, pts[j]);
+          if(d < best) best = d;
         }
-        return false;
+        return best;
       });
+      const sortedNN = nn.slice().sort((a,b) => a-b);
+      const medNN = sortedNN[Math.floor(sortedNN.length / 2)] || 1;
+      const floorPx = 0.055 * Math.min(W, H);
+      let thresh = Math.max(medNN * 3.0, floorPx);
+      let passed = pts.filter((p, i) => nn[i] <= thresh);
+      if(passed.length < Math.max(3, Math.ceil(pts.length * 0.6))){
+        thresh = Math.max(medNN * 4.0, floorPx * 1.5);
+        passed = pts.filter((p, i) => nn[i] <= thresh);
+        if(passed.length < 3) return pts;
+      }
+      const sortedDBs = passed.map(p => p.dB).sort((a,b) => a-b);
+      const medianDB = sortedDBs[Math.floor(sortedDBs.length / 2)];
+      const filtered = passed.filter(p => (medianDB - p.dB) <= 12);
+      return filtered.length >= 3 ? filtered : passed;
     }
     
     /* 등고선 그리기: 진성(진한 파랑) → 믹스(중간) → 가성(연한 회색빛) 순서로 (밑에 진한 게 깔리도록) */
@@ -19660,29 +19676,39 @@ function _drawSinglePtToCanvas(canvasId, result){
     function _filterOutliers(pts, neighborRadius, minNeighbors){
       if(pts.length < 5) return pts;  /* 너무 적으면 모두 포함 */
       
-      /* 1차: 이웃 기반 필터 */
-      const passed = pts.filter((p, i) => {
-        let neighbors = 0;
+      /* 화면(픽셀) 공간에서 각 점의 최근접 이웃 거리 = 고립도.
+         x2px/y2px를 그대로 써서 "보이는 거리" 기준 판단(가로/세로 동일 가중).
+         삑사리/목소리 튐으로 멀리 찍힌 점은 이웃이 멀어 고립도가 큼 → 등고선에서 제외.
+         (점 자체는 그래프에 그대로 표시됨. 등고선 모양만 타이트해짐) */
+      const _pd = (a, b) => {
+        const dx = x2px(a.midi) - x2px(b.midi);
+        const dy = y2px(a.dB) - y2px(b.dB);
+        return Math.sqrt(dx*dx + dy*dy);
+      };
+      const nn = pts.map((p, i) => {
+        let best = Infinity;
         for(let j = 0; j < pts.length; j++){
           if(i === j) continue;
-          const dx = (pts[j].midi - p.midi);
-          const dy = (pts[j].dB - p.dB) / 5;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if(dist < neighborRadius){
-            neighbors++;
-            if(neighbors >= minNeighbors) return true;
-          }
+          const d = _pd(p, pts[j]);
+          if(d < best) best = d;
         }
-        return false;
+        return best;
       });
+      const sortedNN = nn.slice().sort((a,b) => a-b);
+      const medNN = sortedNN[Math.floor(sortedNN.length / 2)] || 1;
+      const floorPx = 0.055 * Math.min(W, H);  /* 작은 화면에서도 비례 */
+      let thresh = Math.max(medNN * 3.0, floorPx);
+      let passed = pts.filter((p, i) => nn[i] <= thresh);
+      /* 안전장치: 60% 미만만 남으면 느슨한 임계 재시도, 그래도 3개 미만이면 원본 유지 */
+      if(passed.length < Math.max(3, Math.ceil(pts.length * 0.6))){
+        thresh = Math.max(medNN * 4.0, floorPx * 1.5);
+        passed = pts.filter((p, i) => nn[i] <= thresh);
+        if(passed.length < 3) return pts;
+      }
       
-      if(passed.length < 3) return pts;  /* 너무 많이 잘리면 원본 사용 */
-      
-      /* 2차: dB 중앙값 대비 너무 낮은 점 추가 제외
-         (등고선이 아래로 늘어지는 현상 방지) */
+      /* 보조: dB 중앙값보다 12dB 이상 낮은 점 추가 제외 (아래로 늘어짐 방지) */
       const sortedDBs = passed.map(p => p.dB).sort((a,b) => a-b);
       const medianDB = sortedDBs[Math.floor(sortedDBs.length / 2)];
-      /* 중앙값보다 12dB 이상 낮으면 제외 */
       const filtered = passed.filter(p => (medianDB - p.dB) <= 12);
       
       return filtered.length >= 3 ? filtered : passed;
@@ -20109,9 +20135,18 @@ async function _ptUpdateFirebaseHistory(newResult){
   if(!newResult || !newResult.timestamp) return;
   if(typeof firebase === 'undefined' || !firebase.database) return;
   
-  /* 학생 이름 결정 */
+  /* 학생 이름 결정 (관리자: 입력 이름 / 일반 학생: 본인 / 비로그인: 명단 일치 시) */
   let studentName = null;
-  if(typeof curStudent !== 'undefined' && curStudent){
+  var _admin = (typeof _isAppAdmin === 'function' && _isAppAdmin());
+  if(_admin){
+    if(newResult.userName && newResult.userName !== '익명'){
+      studentName = newResult.userName;
+      if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
+        const m = STUDENTS_DB.find(s => s.name === newResult.userName || s.name.replace(/\s/g,'') === newResult.userName.replace(/\s/g,''));
+        if(m) studentName = m.name;
+      }
+    }
+  } else if(typeof curStudent !== 'undefined' && curStudent){
     studentName = curStudent.name || curStudent;
   } else if(newResult.userName && newResult.userName !== '익명'){
     if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
@@ -20832,21 +20867,27 @@ function _ptSaveResult(result){
      이렇게 하면 PC에서 측정한 데이터도 모바일에서 학생 로그인 시 가져올 수 있음 */
   if(typeof firebase !== 'undefined'){
     try {
-      /* 우선순위: 학생 로그인 이름 > 측정자가 입력한 userName */
+      /* 관리자: 입력 이름으로 저장(명단에 없어도 OK) > 일반 학생: 본인 이름 > 비로그인: 명단 일치 시만 */
       let studentName = null;
-      if(typeof curStudent !== 'undefined' && curStudent){
+      var _admin = (typeof _isAppAdmin === 'function' && _isAppAdmin());
+      if(_admin){
+        if(result.userName && result.userName !== '익명'){
+          studentName = result.userName;
+          if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
+            const m = STUDENTS_DB.find(s => s.name === result.userName || s.name.replace(/\s/g,'') === result.userName.replace(/\s/g,''));
+            if(m) studentName = m.name;  /* 명단에 있으면 표준 이름으로 정규화 */
+          }
+          console.log('✅ 관리자 측정 - 입력 이름으로 저장:', studentName);
+        }
+      } else if(typeof curStudent !== 'undefined' && curStudent){
         studentName = curStudent.name || curStudent;
       } else if(result.userName && result.userName !== '익명'){
-        /* 비로그인 측정 - 입력 이름이 학생 명단에 있는지 확인 */
         if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
           const matched = STUDENTS_DB.find(s => 
             s.name === result.userName || 
             s.name.replace(/\s/g, '') === result.userName.replace(/\s/g, '')
           );
-          if(matched){
-            studentName = matched.name;
-            console.log('✅ 학생 명단 일치:', studentName, '- Firebase 저장');
-          }
+          if(matched){ studentName = matched.name; console.log('✅ 학생 명단 일치:', studentName); }
         }
       }
       
@@ -20873,12 +20914,13 @@ async function _ptLoadHistory(){
   const currentStudentName = (typeof curStudent !== 'undefined' && curStudent) 
     ? (curStudent.name || curStudent) 
     : null;
+  const _ptAdminView = (typeof _isAppAdmin === 'function' && _isAppAdmin());  /* 관리자: 이 기기의 모든 측정(테스트 친구 포함) 표시 */
   
   /* 1. localStorage 이력 */
   try {
     const local = JSON.parse(localStorage.getItem('pt_history_local') || '[]');
-    /* 학생 로그인 상태면 해당 학생 이름으로 필터링 (한 기기에 여러 학생 측정 가능) */
-    if(currentStudentName){
+    /* 학생 로그인 상태면 해당 학생 이름으로 필터링. 단 관리자는 전부 표시(테스트 친구 확인용) */
+    if(currentStudentName && !_ptAdminView){
       const filtered = local.filter(r => {
         const rUser = r.userName || '';
         /* userName이 정확히 일치하거나, 비어있는 옛날 데이터는 포함 안 함 */
