@@ -4954,6 +4954,34 @@ let _ttsCacheAudio = null; /* 현재 재생 중인 audio element (중지용) */
    인트로 TTS는 7초 setTimeout 후 재생되어 제스처 컨텍스트를 벗어나 차단됨(BGM은 탭 직후 동기호출이라 OK).
    → 첫 사용자 제스처에서 무음 오디오를 한 번 play→pause 하여 오디오 출력을 언락해두면,
      이후 setTimeout 안의 new Audio().play()도 허용된다. AudioContext도 함께 resume. */
+/* ════════ [임시] 오디오 진단 배지 — 코드 동작 변경 없음, 상태 표시만 ════════ */
+var _AUDIO_DEBUG = true;
+var _audioDbgLast = '';
+function _audioDbg(msg){ try{ _audioDbgLast=String(msg); if(window.console&&console.warn) console.warn('[AUDIO]',msg);}catch(e){} }
+function _audioDbgState(){
+  try{
+    var s=(typeof actx!=='undefined'&&actx)?actx.state:'no-ctx';
+    var prm=(typeof _iosAudioPrimed!=='undefined'&&_iosAudioPrimed)?'Y':'N';
+    var bgm='-';
+    try{ if(typeof _bgmAudio!=='undefined'&&_bgmAudio){ bgm=(_bgmAudio._buf?'buf':'noBuf')+'/'+(_bgmAudio._playing?'play':'stop')+'/g'+(_bgmAudio._gain?Math.round((_bgmAudio._gain.gain.value||0)*100):'?'); } }catch(e){ bgm='e'; }
+    return 'ctx:'+s+' primed:'+prm+' bgm:'+bgm+(_audioDbgLast?(' | '+_audioDbgLast):'');
+  }catch(e){ return 'dbg-err:'+e; }
+}
+(function(){
+  if(!_AUDIO_DEBUG) return;
+  function tick(){
+    try{
+      var el=document.getElementById('audio-dbg-badge');
+      if(!el){ if(!document.body) return;
+        el=document.createElement('div'); el.id='audio-dbg-badge';
+        el.style.cssText='position:fixed;left:6px;bottom:6px;z-index:2147483647;background:rgba(0,0,0,.8);color:#0f0;font:11px/1.35 monospace;padding:5px 7px;border-radius:6px;max-width:94vw;white-space:pre-wrap;pointer-events:none';
+        document.body.appendChild(el);
+      }
+      el.textContent=_audioDbgState();
+    }catch(e){}
+  }
+  setInterval(tick,400);
+})();
 let _iosAudioPrimed = false;
 function _primeAudioForIOS(){
   /* 1) HTMLAudio 언락 — 무음 WAV 1회 재생(가드). new Audio() 경로(BGM 등)용 */
@@ -4980,9 +5008,10 @@ function _primeAudioForIOS(){
         var _us = _ac.createBufferSource();
         _us.buffer = _ub; _us.connect(_ac.destination);
         if(_us.start) _us.start(0); else if(_us.noteOn) _us.noteOn(0);
+        _audioDbg('prime '+_ac.state);
       }
     } else if(typeof actx !== 'undefined' && actx && actx.state === 'suspended'){ actx.resume(); }
-  }catch(e){}
+  }catch(e){ _audioDbg('prime err '+e); }
 }
 /* 첫 사용자 제스처에서 1회 언락 (capture 단계, once) */
 (function(){
@@ -5376,10 +5405,12 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     
     try {
       await audio.play();
+      _audioDbg('cache play '+_ctx.state);
     } catch(playErr) {
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
       /* 재생 시작 실패 → 외부에서 ElevenLabs 폴백 */
       console.warn('캐시 재생 시작 실패:', playErr);
+      _audioDbg('cache play err '+playErr);
       return false;
     }
     return true;
@@ -5597,8 +5628,8 @@ function _makeBgmAudio(url){
     }
     fetch(url).then(function(r){ if(!r.ok) throw new Error('BGM '+r.status); return r.arrayBuffer(); })
       .then(function(ab){ return ctx.decodeAudioData(ab.slice(0)); })
-      .then(function(buf){ _bgmBufCache[url]=buf; P._buf=buf; if(P._wantPlay){ P._startSrc(P._offset); } })
-      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); });
+      .then(function(buf){ _bgmBufCache[url]=buf; P._buf=buf; _audioDbg('BGM ok'); if(P._wantPlay){ P._startSrc(P._offset); } })
+      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); _audioDbg('BGM fail '+e); });
   })();
   return P;
 }
