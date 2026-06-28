@@ -4968,7 +4968,11 @@ function _primeAudioForIOS(){
   }catch(e){}
   try{
     /* 2) AudioContext가 있으면 resume (스케일/PVR 등 Web Audio 경로용) */
-    if(typeof actx !== 'undefined' && actx && actx.state === 'suspended'){ actx.resume(); }
+    /* AudioContext 생성+resume (Web Audio 경로: 캐시TTS/ElevenLabs/스케일/PVR).
+       iOS는 제스처 안에서 깨운 컨텍스트만 이후 setTimeout(인트로 7초 등) 재생을 허용 →
+       첫 제스처에 미리 컨텍스트를 만들어 깨워둠. gCtx()가 내부에서 suspended면 resume까지 처리. */
+    if(typeof gCtx === 'function'){ gCtx(); }
+    else if(typeof actx !== 'undefined' && actx && actx.state === 'suspended'){ actx.resume(); }
   }catch(e){}
 }
 /* 첫 사용자 제스처에서 1회 언락 (capture 단계, once) */
@@ -5136,6 +5140,75 @@ function _ptCheerCandidates(baseHash){
   return candidates;
 }
 
+/* iOS 볼륨/더킹 대응: 캐시 mp3를 Web Audio(BufferSource→GainNode→destination) 경로로 재생.
+   HTMLAudioElement.volume이 iOS Safari에서 무시되는 문제 해결(=슬라이더/더킹 무효 원인).
+   _ttsCacheAudio가 이 래퍼가 되어도 기존 코드(_pauseChunked/_resumeChunked/_stopCacheAudio/슬라이더)가
+   수정 없이 동작하도록 HTMLAudioElement와 동일 인터페이스 제공:
+   play()/pause()/currentTime(get·set)/volume(set)/_isCoach/onended/onerror */
+function _makeCacheAudio(ctx, audioBuf, isCoach){
+  var P = {
+    _src: null,
+    _gain: ctx.createGain(),
+    _isCoach: !!isCoach,
+    _startedAt: 0,   /* 현재 src 시작 시점의 ctx.currentTime */
+    _offset: 0,      /* 현재 재생 위치(초). pause/seek 시 보존 */
+    _playing: false,
+    _vol: 1,
+    onended: null,
+    onerror: null,
+    duration: audioBuf.duration
+  };
+  P._gain.connect(ctx.destination);
+  Object.defineProperty(P, 'currentTime', {
+    get: function(){
+      var t = P._playing ? (P._offset + (ctx.currentTime - P._startedAt)) : P._offset;
+      return t < 0 ? 0 : (t > audioBuf.duration ? audioBuf.duration : t);
+    },
+    set: function(v){ v = (+v)||0; P._offset = v < 0 ? 0 : (v > audioBuf.duration ? audioBuf.duration : v); }
+  });
+  Object.defineProperty(P, 'volume', {
+    get: function(){ return P._vol; },
+    set: function(v){ P._vol = v; try{ P._gain.gain.value = v; }catch(e){} }
+  });
+  P._stopSrc = function(){
+    if(P._src){ try{ P._src.onended = null; P._src.stop(); }catch(e){} P._src = null; }
+  };
+  /* HTMLAudioElement.play()처럼 Promise 반환 (resume 시 .catch 사용됨) */
+  P.play = function(){
+    return new Promise(function(resolve, reject){
+      try{
+        if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
+        P._stopSrc();
+        if(P._offset >= audioBuf.duration) P._offset = 0; /* 끝까지 간 뒤 재생 → 처음부터 */
+        var src = ctx.createBufferSource();
+        src.buffer = audioBuf;
+        src.connect(P._gain);
+        P._src = src;
+        P._startedAt = ctx.currentTime;
+        P._playing = true;
+        src.onended = function(){
+          if(P._src !== src) return;       /* 교체/정지된 소스의 늦은 콜백 무시 */
+          P._src = null;
+          P._playing = false;
+          P._offset = audioBuf.duration;    /* 자연 종료 → 끝 위치 */
+          if(P.onended) P.onended();
+        };
+        src.start(0, Math.min(P._offset, audioBuf.duration));
+        resolve();
+      }catch(e){ reject(e); }
+    });
+  };
+  P.pause = function(){
+    if(P._playing){
+      var pos = P._offset + (ctx.currentTime - P._startedAt);
+      P._offset = pos < 0 ? 0 : (pos > audioBuf.duration ? audioBuf.duration : pos);
+      P._playing = false;
+    }
+    P._stopSrc(); /* onended=null 후 stop → 콜백 안 옴 */
+  };
+  return P;
+}
+
 async function _playFromCache(text, onEnd, callToken, isCoach){
   if (!TTS_MANIFEST_LOADED) return false;
   
@@ -5239,11 +5312,41 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     }
     
     const _bustedUrl = entry.url + (entry.url.indexOf('?') >= 0 ? '&' : '?') + 'cb=' + TTS_CACHE_BUST;
-    const audio = new Audio(_bustedUrl);
-    /* 음량 적용 (코치=화이팅 멘트, 그 외=훈련안내) */
+    
+    /* iOS 볼륨/더킹 대응(접근2): new Audio().play() 직접재생(.volume이 iOS에서 무시됨) 대신
+       fetch → decodeAudioData → BufferSource → GainNode → destination (ElevenLabs 실시간과 동일 경로).
+       fetch/decode 실패 시 false 반환 → 기존처럼 ElevenLabs 폴백(캐시미스 동작 보존). */
+    let _arrBuf;
+    try {
+      const _resp = await fetch(_bustedUrl);
+      if (!_resp.ok) { console.warn('캐시 mp3 fetch 실패:', _resp.status); return false; }
+      _arrBuf = await _resp.arrayBuffer();
+    } catch(fe) {
+      console.warn('캐시 mp3 fetch 오류:', fe);
+      return false; /* 네트워크/CORS 실패 → EL 폴백 */
+    }
+    
+    /* fetch 도중 카드 전환/취소(토큰 무효)되었으면 재생 안 함 → 새 세션이 이어받음 (조용히 종료) */
+    if (callToken != null && !_tokenValid(callToken)) return true;
+    
+    const _ctx = gCtx();
+    let _audioBuf;
+    try {
+      /* decodeAudioData는 buffer를 detach 시키므로 복사본 사용 */
+      _audioBuf = await _ctx.decodeAudioData(_arrBuf.slice(0));
+    } catch(de) {
+      console.warn('캐시 mp3 디코드 실패:', de);
+      return false; /* 손상/미지원 → EL 폴백 */
+    }
+    
+    /* 디코드 도중 취소되었으면 중단 */
+    if (callToken != null && !_tokenValid(callToken)) return true;
+    
+    const audio = _makeCacheAudio(_ctx, _audioBuf, isCoach);
+    /* 음량 적용 (코치=화이팅 멘트, 그 외=훈련안내) — 계산식은 기존과 동일, GainNode로 적용되어 iOS에서도 먹음 */
     const targetVol = isCoach ? _volCoach : _volTTS;
     /* 코치 멘트는 살짝 부스트 (1.8배), 단 1.0 초과 불가
-       음량 0이어도 재생 진행 (audio.volume=0으로 무음 효과 - 시퀀스 보존) */
+       음량 0이어도 재생 진행 (gain=0으로 무음 효과 - 시퀀스 보존) */
     const volRatio = targetVol / 100;
     audio.volume = isCoach 
       ? Math.max(0, Math.min(1, volRatio * 1.8))
@@ -5256,10 +5359,7 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       if (onEnd) onEnd();
     };
     /* 재생 실패 시 onEnd 호출하여 시퀀스 진행 보장 */
-    let errored = false;
     audio.onerror = function(e){
-      if (errored) return;
-      errored = true;
       console.warn('캐시 mp3 재생 실패:', e);
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
       if (onEnd) onEnd(); /* 시퀀스 멈추지 않게 onEnd 호출 */
@@ -5269,10 +5369,8 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       await audio.play();
     } catch(playErr) {
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
-      /* AbortError = 사용자가 카드를 넘겨 pause()된 정상 상황 → 조용히 무시 */
-      if (playErr && playErr.name === 'AbortError') return true;
-      /* 그 외 실패는 외부에서 ElevenLabs 폴백 */
-      console.warn('audio.play() 실패:', playErr);
+      /* 재생 시작 실패 → 외부에서 ElevenLabs 폴백 */
+      console.warn('캐시 재생 시작 실패:', playErr);
       return false;
     }
     return true;
