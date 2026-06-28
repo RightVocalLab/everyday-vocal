@@ -4954,34 +4954,6 @@ let _ttsCacheAudio = null; /* 현재 재생 중인 audio element (중지용) */
    인트로 TTS는 7초 setTimeout 후 재생되어 제스처 컨텍스트를 벗어나 차단됨(BGM은 탭 직후 동기호출이라 OK).
    → 첫 사용자 제스처에서 무음 오디오를 한 번 play→pause 하여 오디오 출력을 언락해두면,
      이후 setTimeout 안의 new Audio().play()도 허용된다. AudioContext도 함께 resume. */
-/* ════════ [임시] 오디오 진단 배지 — 코드 동작 변경 없음, 상태 표시만 ════════ */
-var _AUDIO_DEBUG = true;
-var _audioDbgLast = '';
-function _audioDbg(msg){ try{ _audioDbgLast=String(msg); if(window.console&&console.warn) console.warn('[AUDIO]',msg);}catch(e){} }
-function _audioDbgState(){
-  try{
-    var s=(typeof actx!=='undefined'&&actx)?actx.state:'no-ctx';
-    var prm=(typeof _iosAudioPrimed!=='undefined'&&_iosAudioPrimed)?'Y':'N';
-    var bgm='-';
-    try{ if(typeof _bgmAudio!=='undefined'&&_bgmAudio){ bgm=(_bgmAudio._buf?'buf':'noBuf')+'/'+(_bgmAudio._playing?'play':'stop')+'/g'+(_bgmAudio._gain?Math.round((_bgmAudio._gain.gain.value||0)*100):'?'); } }catch(e){ bgm='e'; }
-    return 'ctx:'+s+' primed:'+prm+' bgm:'+bgm+(_audioDbgLast?(' | '+_audioDbgLast):'');
-  }catch(e){ return 'dbg-err:'+e; }
-}
-(function(){
-  if(!_AUDIO_DEBUG) return;
-  function tick(){
-    try{
-      var el=document.getElementById('audio-dbg-badge');
-      if(!el){ if(!document.body) return;
-        el=document.createElement('div'); el.id='audio-dbg-badge';
-        el.style.cssText='position:fixed;left:6px;bottom:6px;z-index:2147483647;background:rgba(0,0,0,.8);color:#0f0;font:11px/1.35 monospace;padding:5px 7px;border-radius:6px;max-width:94vw;white-space:pre-wrap;pointer-events:none';
-        document.body.appendChild(el);
-      }
-      el.textContent=_audioDbgState();
-    }catch(e){}
-  }
-  setInterval(tick,400);
-})();
 let _iosAudioPrimed = false;
 function _primeAudioForIOS(){
   /* 1) HTMLAudio 언락 — 무음 WAV 1회 재생(가드). new Audio() 경로(BGM 등)용 */
@@ -5008,10 +4980,9 @@ function _primeAudioForIOS(){
         var _us = _ac.createBufferSource();
         _us.buffer = _ub; _us.connect(_ac.destination);
         if(_us.start) _us.start(0); else if(_us.noteOn) _us.noteOn(0);
-        _audioDbg('prime '+_ac.state);
       }
     } else if(typeof actx !== 'undefined' && actx && actx.state === 'suspended'){ actx.resume(); }
-  }catch(e){ _audioDbg('prime err '+e); }
+  }catch(e){}
 }
 /* 첫 사용자 제스처에서 1회 언락 (capture 단계, once) */
 (function(){
@@ -5405,12 +5376,10 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     
     try {
       await audio.play();
-      _audioDbg('cache play '+_ctx.state);
     } catch(playErr) {
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
       /* 재생 시작 실패 → 외부에서 ElevenLabs 폴백 */
       console.warn('캐시 재생 시작 실패:', playErr);
-      _audioDbg('cache play err '+playErr);
       return false;
     }
     return true;
@@ -5628,8 +5597,8 @@ function _makeBgmAudio(url){
     }
     fetch(url).then(function(r){ if(!r.ok) throw new Error('BGM '+r.status); return r.arrayBuffer(); })
       .then(function(ab){ return ctx.decodeAudioData(ab.slice(0)); })
-      .then(function(buf){ _bgmBufCache[url]=buf; P._buf=buf; _audioDbg('BGM ok'); if(P._wantPlay){ P._startSrc(P._offset); } })
-      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); _audioDbg('BGM fail '+e); });
+      .then(function(buf){ _bgmBufCache[url]=buf; P._buf=buf; if(P._wantPlay){ P._startSrc(P._offset); } })
+      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); });
   })();
   return P;
 }
@@ -10702,7 +10671,14 @@ function _showGuideCard(idx,animate){
   var _prevHadBgm = (idx>0) && /\[BGM:\d+\]/.test(_gcText(_guideCards[idx-1]));
   var _introDelay = 0;
   if(_cardIsIntro){
-    if(_bgmIntroPending){ _bgmIntroPending=false; _introDelay=_BGM_INTRO_MS; } /* 인트로: 7초 */
+    if(_bgmIntroPending){
+      /* 일차 첫 진입: day-open에서 오프닝 BGM 이미 시작됨 → 그대로 두고 7초 후 멘트 */
+      _bgmIntroPending=false; _introDelay=_BGM_INTRO_MS;
+    } else {
+      /* 인트로로 되돌아옴(2/9→1/9 등): 오프닝 BGM 처음부터 다시 시작 + 7초 후 멘트
+         (이전엔 introPending이 이미 false라 BGM 전환 없이 직전 곡이 유지되는 버그) */
+      _bgmStart(_bgmDayTracks.opening); _introDelay=_BGM_INTRO_MS;
+    }
   } else if(_bgmIntroPending){
     _bgmIntroPending=false; _introDelay=_BGM_INTRO_MS; /* 인트로 없는 일차 첫 카드: day-open BGM + 7초 */
   } else if(_isLastCard){
@@ -10716,7 +10692,43 @@ function _showGuideCard(idx,animate){
 }
 
 /* ─ 초기화 ─ */
+/* ── iOS 무음 모드 안내 (Web Audio는 무음 모드에서 안 들림 → 코스 진입 시 1회 안내) ── */
+function _isIOSDeviceUA(){
+  try{
+    return /iP(hone|ad|od)/.test(navigator.userAgent) ||
+           (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  }catch(e){ return false; }
+}
+function _closeIosSilentNotice(){
+  try{ localStorage.setItem('ev_ios_silent_seen','1'); }catch(e){}
+  var el=document.getElementById('ios-silent-modal'); if(el) el.remove();
+}
+function _maybeShowIosSilentNotice(){
+  try{
+    if(!_isIOSDeviceUA()) return;
+    if(localStorage.getItem('ev_ios_silent_seen')==='1') return;
+  }catch(e){ return; }
+  if(document.getElementById('ios-silent-modal')) return;
+  if(!document.body) return;
+  var svg='<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
+  var bg=document.createElement('div');
+  bg.className='v2-ios-modal-bg active';
+  bg.id='ios-silent-modal';
+  bg.innerHTML=''
+    +'<div class="v2-ios-modal-card" style="max-width:360px">'
+    +  '<div style="margin-bottom:10px">'+svg+'</div>'
+    +  '<h3 style="text-align:center;font-size:17px;font-weight:800;margin:0 0 10px;color:#111">소리가 안 들리나요?</h3>'
+    +  '<p style="font-size:13.5px;line-height:1.7;color:#374151;margin:0 0 12px">아이폰 <b>무음 모드</b>에서는 훈련 배경음악과 안내 음성이 들리지 않아요. 무음 모드를 꺼주세요.</p>'
+    +  '<div style="background:#f9fafb;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7;color:#374151;margin-bottom:16px">'
+    +    '<div style="margin-bottom:9px"><b>최신 아이폰</b> (측면 위쪽 액션 버튼)<br>· 액션 버튼을 <b>길게 누르기</b><br>· 또는 제어센터에서 <b>벨 아이콘</b> 끄기</div>'
+    +    '<div><b>이전 아이폰</b><br>· 측면 <b>무음 스위치</b>를 올려 주황색이 안 보이게</div>'
+    +  '</div>'
+    +  '<button onclick="_closeIosSilentNotice()" style="width:100%;padding:13px;border:none;border-radius:12px;background:#16a34a;color:#fff;font-size:14px;font-weight:800;cursor:pointer">확인했어요</button>'
+    +'</div>';
+  document.body.appendChild(bg);
+}
 function _initGuideCards(guide,item){
+  try{ _maybeShowIosSilentNotice(); }catch(e){}
   _guideCards=_splitGuideIntoCards(guide);
   _guideCardIdx=0;
   _guideCardToken=0;
