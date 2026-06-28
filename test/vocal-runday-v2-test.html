@@ -4954,6 +4954,50 @@ let _ttsCacheAudio = null; /* 현재 재생 중인 audio element (중지용) */
    인트로 TTS는 7초 setTimeout 후 재생되어 제스처 컨텍스트를 벗어나 차단됨(BGM은 탭 직후 동기호출이라 OK).
    → 첫 사용자 제스처에서 무음 오디오를 한 번 play→pause 하여 오디오 출력을 언락해두면,
      이후 setTimeout 안의 new Audio().play()도 허용된다. AudioContext도 함께 resume. */
+/* ════════ 임시 오디오 디버그 배지 (iOS 무음 진단용. 끝나면 _AUDIO_DEBUG=false) ════════ */
+var _AUDIO_DEBUG = true;
+var _audioDbgLast = '';
+function _audioDbg(msg){
+  try{ _audioDbgLast = String(msg); if(window.console&&console.warn) console.warn('[AUDIO]', msg); }catch(e){}
+}
+function _audioDbgState(){
+  try{
+    var s = (typeof actx!=='undefined' && actx) ? actx.state : 'no-ctx';
+    var prm = (typeof _iosAudioPrimed!=='undefined' && _iosAudioPrimed) ? 'Y' : 'N';
+    return 'ctx:'+s+' primed:'+prm+(_audioDbgLast?(' | '+_audioDbgLast):'');
+  }catch(e){ return 'dbg-err'; }
+}
+(function(){
+  if(!_AUDIO_DEBUG) return;
+  function tick(){
+    try{
+      var el=document.getElementById('audio-dbg-badge');
+      if(!el){
+        if(!document.body) return;
+        el=document.createElement('div');
+        el.id='audio-dbg-badge';
+        el.style.cssText='position:fixed;left:6px;bottom:6px;z-index:2147483647;background:rgba(0,0,0,.78);color:#0f0;font:11px/1.3 monospace;padding:5px 7px;border-radius:6px;max-width:92vw;white-space:pre-wrap;pointer-events:none';
+        document.body.appendChild(el);
+      }
+      el.textContent = _audioDbgState();
+    }catch(e){}
+  }
+  setInterval(tick, 500);
+})();
+/* 추가 안전망: 모든 사용자 제스처에서 actx가 suspended면 resume (iOS 재suspend 대비, once 아님) */
+(function(){
+  function _resumeOnGesture(){
+    try{
+      if(typeof actx!=='undefined' && actx && actx.state==='suspended'){
+        var pr=actx.resume();
+        if(pr&&pr.then){ pr.then(function(){ _audioDbg('gesture resume ok'); }).catch(function(e){ _audioDbg('resume fail '+e); }); }
+      }
+    }catch(e){}
+  }
+  ['touchend','pointerup','click','keydown'].forEach(function(ev){
+    document.addEventListener(ev, _resumeOnGesture, { capture:true, passive:true });
+  });
+})();
 let _iosAudioPrimed = false;
 function _primeAudioForIOS(){
   /* 1) HTMLAudio 언락 — 무음 WAV 1회 재생(가드). new Audio() 경로(BGM 등)용 */
@@ -4980,9 +5024,10 @@ function _primeAudioForIOS(){
         var _us = _ac.createBufferSource();
         _us.buffer = _ub; _us.connect(_ac.destination);
         if(_us.start) _us.start(0); else if(_us.noteOn) _us.noteOn(0);
+        _audioDbg('prime ac='+_ac.state);
       }
     } else if(typeof actx !== 'undefined' && actx && actx.state === 'suspended'){ actx.resume(); }
-  }catch(e){}
+  }catch(e){ _audioDbg('prime err '+e); }
 }
 /* 첫 사용자 제스처에서 1회 언락 (capture 단계, once) */
 (function(){
@@ -5332,6 +5377,7 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       _arrBuf = await _resp.arrayBuffer();
     } catch(fe) {
       console.warn('캐시 mp3 fetch 오류:', fe);
+      _audioDbg('cache fetch err '+fe);
       return false; /* 네트워크/CORS 실패 → EL 폴백 */
     }
     
@@ -5345,6 +5391,7 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
       _audioBuf = await _ctx.decodeAudioData(_arrBuf.slice(0));
     } catch(de) {
       console.warn('캐시 mp3 디코드 실패:', de);
+      _audioDbg('cache decode err '+de);
       return false; /* 손상/미지원 → EL 폴백 */
     }
     
@@ -5376,10 +5423,12 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     
     try {
       await audio.play();
+      _audioDbg('cache play ac='+_ctx.state);
     } catch(playErr) {
       if (_ttsCacheAudio === audio) _ttsCacheAudio = null;
       /* 재생 시작 실패 → 외부에서 ElevenLabs 폴백 */
       console.warn('캐시 재생 시작 실패:', playErr);
+      _audioDbg('cache play err '+playErr);
       return false;
     }
     return true;
@@ -5598,7 +5647,7 @@ function _makeBgmAudio(url){
     fetch(url).then(function(r){ if(!r.ok) throw new Error('BGM '+r.status); return r.arrayBuffer(); })
       .then(function(ab){ return ctx.decodeAudioData(ab.slice(0)); })
       .then(function(buf){ _bgmBufCache[url]=buf; P._buf=buf; if(P._wantPlay){ P._startSrc(P._offset); } })
-      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); });
+      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); _audioDbg('BGM fail '+e); });
   })();
   return P;
 }
@@ -6502,7 +6551,30 @@ function _applyVolCoach(){
 }
 function openSettings(){var ss=document.getElementById('vol-scale-sl'),ts=document.getElementById('vol-tts-sl'),cs=document.getElementById('vol-coach-sl');if(ss){ss.value=_volScale;document.getElementById('vol-scale-val').textContent=_volScale;}if(ts){ts.value=_volTTS;document.getElementById('vol-tts-val').textContent=_volTTS;}if(cs){cs.value=_volCoach;document.getElementById('vol-coach-val').textContent=_volCoach;}var m=document.getElementById('settings-modal');if(m)m.style.display='flex';_applyWifiToggleUI();}
 function closeSettings(){var m=document.getElementById('settings-modal');if(m)m.style.display='none';}
-let actx=null,mGain=null,cmp=null,rv=null;
+let actx=null,mGain=null,cmp=null,rv=null,_reverbBuilt=false;
+/* reverb 임펄스(0.9초×2채널 난수)는 무거워서 제스처 핸들러에서 동기 생성하면 iOS가 언락을 못 잡음.
+   → gCtx에서는 빈 convolver만 연결하고, 임펄스 버퍼 생성은 제스처 종료 후(setTimeout 0)로 미룬다.
+   reverb는 스케일/피아노 전용 병렬 send라(드라이 경로는 mGain 직결) 지연돼도 스케일 소리엔 영향 없음. */
+function _buildReverbImpulse(){
+  if(_reverbBuilt || !actx || !rv) return;
+  _reverbBuilt=true;
+  try{
+    const sr=actx.sampleRate,len=Math.floor(sr*0.9);
+    const buf=actx.createBuffer(2,len,sr);
+    for(let c=0;c<2;c++){
+      const d=buf.getChannelData(c);
+      const ch=c===0?1.0:0.96;
+      for(let i=0;i<len;i++){
+        const earlyMs=sr*0.035;
+        const early=i<earlyMs ? Math.exp(-i/(earlyMs*0.4))*0.45 : 0;
+        const late=Math.pow(Math.max(0,1-i/len),1.3)*0.20;
+        const mod=1+0.003*Math.sin(i*0.0007*(c+1));
+        d[i]=(Math.random()*2-1)*(early+late)*ch*mod;
+      }
+    }
+    rv.buffer=buf;
+  }catch(e){ _audioDbg('reverb 생성 실패: '+e); }
+}
 function gCtx(){
 if(!actx){
 actx=new(window.AudioContext||window.webkitAudioContext)();
@@ -6510,24 +6582,9 @@ cmp=actx.createDynamicsCompressor();
 cmp.threshold.value=-6;cmp.knee.value=10;cmp.ratio.value=2;
 cmp.attack.value=0.002;cmp.release.value=0.15;cmp.connect(actx.destination);
 mGain=actx.createGain();mGain.gain.value=(_volScale/100)*2.5;mGain.connect(cmp);
-
-const sr=actx.sampleRate,len=Math.floor(sr*0.9);
-const buf=actx.createBuffer(2,len,sr);
-for(let c=0;c<2;c++){
-const d=buf.getChannelData(c);
-const ch=c===0?1.0:0.96;
-for(let i=0;i<len;i++){
-
-const earlyMs=sr*0.035;
-const early=i<earlyMs ? Math.exp(-i/(earlyMs*0.4))*0.45 : 0;
-const late=Math.pow(Math.max(0,1-i/len),1.3)*0.20;
-
-const mod=1+0.003*Math.sin(i*0.0007*(c+1));
-d[i]=(Math.random()*2-1)*(early+late)*ch*mod;
-}
-}
-rv=actx.createConvolver();rv.buffer=buf;
+rv=actx.createConvolver(); /* 임펄스는 지연 생성 */
 const rg=actx.createGain();rg.gain.value=0.12;rv.connect(rg);rg.connect(mGain);
+setTimeout(_buildReverbImpulse, 0); /* 무거운 임펄스 생성은 제스처 종료 후로 */
 }
 if(actx.state==='suspended')actx.resume();return actx;
 }
