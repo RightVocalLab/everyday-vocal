@@ -4949,6 +4949,36 @@ let TTS_MANIFEST = {};
 let TTS_MANIFEST_LOADED = false;
 let _ttsCacheAudio = null; /* 현재 재생 중인 audio element (중지용) */
 
+/* ───────── iOS 오디오 언락(프라이밍) ─────────
+   iOS Safari는 new Audio().play()를 "사용자 제스처 핸들러 동기 실행 중"에만 허용.
+   인트로 TTS는 7초 setTimeout 후 재생되어 제스처 컨텍스트를 벗어나 차단됨(BGM은 탭 직후 동기호출이라 OK).
+   → 첫 사용자 제스처에서 무음 오디오를 한 번 play→pause 하여 오디오 출력을 언락해두면,
+     이후 setTimeout 안의 new Audio().play()도 허용된다. AudioContext도 함께 resume. */
+let _iosAudioPrimed = false;
+function _primeAudioForIOS(){
+  if(_iosAudioPrimed) return;
+  _iosAudioPrimed = true;
+  try{
+    /* 1) 무음 오디오 언락 — 아주 짧은 무음 WAV(base64)를 재생 후 즉시 정지 */
+    var _silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+    _silent.volume = 0;
+    var _p = _silent.play();
+    if(_p && _p.then){ _p.then(function(){ try{ _silent.pause(); }catch(e){} }).catch(function(){}); }
+    else { try{ _silent.pause(); }catch(e){} }
+  }catch(e){}
+  try{
+    /* 2) AudioContext가 있으면 resume (스케일/PVR 등 Web Audio 경로용) */
+    if(typeof actx !== 'undefined' && actx && actx.state === 'suspended'){ actx.resume(); }
+  }catch(e){}
+}
+/* 첫 사용자 제스처에서 1회 언락 (capture 단계, once) */
+(function(){
+  function _onFirstGesture(){ _primeAudioForIOS(); }
+  ['pointerdown','touchend','click','keydown'].forEach(function(ev){
+    document.addEventListener(ev, _onFirstGesture, { capture:true, once:true, passive:true });
+  });
+})();
+
 /* 매니페스트 자동 로드 */
 async function _loadTTSManifest(){
   try {
@@ -9788,6 +9818,8 @@ if(_snt){
 const tnc=document.getElementById('step-tts-topbar-notice');
 if(tnc)tnc.style.display='none';
 
+/* iOS 오디오 언락 — 코스 진입(사용자 탭 흐름)에서 한 번 더 보장 (인트로 TTS 7초 지연 차단 방지) */
+try{ _primeAudioForIOS(); }catch(e){}
 /* 카드뉴스 슬라이더 초기화 (item: videoUrls/images 카드 내 표시용) */
 _initGuideCards(guide,item);
 }
