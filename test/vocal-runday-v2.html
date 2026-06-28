@@ -5536,13 +5536,79 @@ var _bgmDayTracks = _BGM_BLOCKS[0]; /* 현재 일차의 블록 트랙 세트 (�
 function _bgmOpeningTrack(item){
   return _bgmBlock(_bgmDayNum(item)).opening;
 }
+/* iOS BGM 볼륨/더킹 대응: BGM도 Web Audio(BufferSource(loop)→GainNode→destination) 경로로 재생.
+   HTMLAudioElement.volume이 iOS에서 무시되는 문제 해결(= BGM 100% 고정 + 더킹 무효 원인).
+   _bgmAudio가 이 래퍼가 되어도 BGM 엔진(_bgmStart/_bgmSwitch/_bgmRamp/더킹/페이드)이
+   수정 없이 동작하도록 동일 인터페이스 제공: play()(Promise)/pause()/volume(get·set)/loop.
+   디코드 결과는 트랙 URL별 캐시(_bgmBufCache)로 재사용. BufferSource loop는 갭리스. */
+var _bgmBufCache = {};
+function _makeBgmAudio(url){
+  var ctx = gCtx();
+  var P = {
+    _src:null, _gain:ctx.createGain(), _buf:null,
+    _startedAt:0, _offset:0, _playing:false, _vol:1, _wantPlay:false,
+    loop:true
+  };
+  P._gain.connect(ctx.destination);
+  Object.defineProperty(P,'volume',{
+    get:function(){ return P._vol; },
+    set:function(v){ P._vol=v; try{ P._gain.gain.value=v; }catch(e){} }
+  });
+  P._stopSrc=function(){
+    if(P._src){ try{ P._src.onended=null; P._src.stop(); }catch(e){} P._src=null; }
+  };
+  P._startSrc=function(offset){
+    if(!P._buf) return;
+    P._stopSrc();
+    var src=ctx.createBufferSource();
+    src.buffer=P._buf; src.loop=!!P.loop;
+    src.connect(P._gain);
+    P._src=src;
+    P._startedAt=ctx.currentTime;
+    P._offset=offset||0;
+    P._playing=true;
+    var d=P._buf.duration;
+    try{ src.start(0, d>0 ? (P._offset % d) : 0); }catch(e){}
+  };
+  P.play=function(){
+    return new Promise(function(resolve){
+      try{ if(ctx.state==='suspended') ctx.resume(); }catch(e){}
+      if(P._buf){ P._startSrc(P._offset); }
+      else { P._wantPlay=true; }   /* 버퍼 준비되면 자동 시작 */
+      resolve();
+    });
+  };
+  P.pause=function(){
+    if(P._playing && P._buf){
+      var d=P._buf.duration;
+      var pos=P._offset + (ctx.currentTime - P._startedAt);
+      P._offset = d>0 ? (pos % d) : 0;
+    }
+    P._playing=false;
+    P._wantPlay=false;   /* 폐기/일시정지 시 버퍼 늦게 와도 자동재생 안 함(고아 재생 방지) */
+    P._stopSrc();
+  };
+  /* fetch → decode (트랙 캐시). 같은 출처/ACAO:* 라 CORS OK */
+  (function(){
+    if(_bgmBufCache[url]){
+      P._buf=_bgmBufCache[url];
+      if(P._wantPlay){ P._startSrc(P._offset); }
+      return;
+    }
+    fetch(url).then(function(r){ if(!r.ok) throw new Error('BGM '+r.status); return r.arrayBuffer(); })
+      .then(function(ab){ return ctx.decodeAudioData(ab.slice(0)); })
+      .then(function(buf){ _bgmBufCache[url]=buf; P._buf=buf; if(P._wantPlay){ P._startSrc(P._offset); } })
+      .catch(function(e){ console.warn('BGM 로드 실패:', url, e); });
+  })();
+  return P;
+}
 function _bgmStart(track){
   try{
     if(!track) return;
     if(_bgmFadeTimer){ clearTimeout(_bgmFadeTimer); _bgmFadeTimer=null; }
     _bgmFadedOut = false;
     if(_bgmAudio){ try{_bgmAudio.pause();}catch(e){} _bgmAudio=null; }
-    var a = new Audio(_BGM_BASE+'bgm'+track+'.mp3');
+    var a = _makeBgmAudio(_BGM_BASE+'bgm'+track+'.mp3');
     a.loop = true;
     a.volume = _BGM_VOL;
     _bgmAudio = a;
@@ -5583,7 +5649,7 @@ function _bgmSwitch(track, onDone){
     var startNew=function(){
       try{
         if(_bgmAudio){ try{_bgmAudio.pause();}catch(e){} _bgmAudio=null; }
-        var a=new Audio(_BGM_BASE+'bgm'+track+'.mp3');
+        var a=_makeBgmAudio(_BGM_BASE+'bgm'+track+'.mp3');
         a.loop=true; a.volume=0;
         _bgmAudio=a;
         _bgmCurrentTrack = track;
@@ -10485,11 +10551,13 @@ function _showGuideCard(idx,animate){
   var numEl=document.getElementById('step-card-num');
   if(numEl) numEl.textContent=(idx+1)+'/'+N;
 
-  /* TTS */
+  /* TTS — 카드 진입 즉시 이전 재생 전부 중단(캐시 mp3·EL 실시간·청크 시퀀스·진행중 fetch).
+     이전엔 stopEL()만 호출 → 새 카드 첫 청크 speakEL이 도달(introDelay 지연/멘트없는 카드)할 때까지
+     이전 캐시 청크가 끝까지 재생되는 버그가 있었음. cancelTTS가 _stopCacheAudio+토큰/세션 무효화까지 처리.
+     (복귀 이어재생은 _resumeChunked 경로라 영향 없음) */
   clearInterval(_stepGaugeTimer);
   _stepGaugeElapsed=0;
-  stopEL();
-  if(window.speechSynthesis)speechSynthesis.cancel();
+  cancelTTS();
   /* 새 카드 진입: 수동/자동 일시정지 플래그 리셋, 버튼을 재생중(⏸) 상태로 */
   _userPausedManually=false;
   _hiddenAutoPaused=false;
