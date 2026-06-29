@@ -10174,6 +10174,13 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
       }
       return punc + '\n';
     });
+    /* 느낌표·물음표 바로 앞 단어가 짧은 감탄사(1~2글자, 예 "자!", "와!")면 줄바꿈 들어간 자리 복원 →
+       화면에서 "자! 그럼…"이 한 줄로 보이게. (화면 렌더링 전용, raw 텍스트·TTS 해시에는 영향 없음) */
+    s = s.replace(/([!?])\n(?=\S)/g, function(m, punc, off, full){
+      var _pw=full.slice(0,off).match(/(\S+)$/);
+      if(_pw && _pw[1].replace(/[\u0001]/g,'').length<=2) return punc+' ';
+      return m;
+    });
     /* 볼드 구간 복원 */
     s = s.replace(/\u0001BOLD(\d+)\u0001/g, function(_, n){ return _bolds[parseInt(n)]; });
     /* ✅/❌ 체크 이모지 뒤에 내용이 이어지면 줄바꿈 (예: "...합니다 ✅ 어렵다면" → 줄 바뀜)
@@ -10636,11 +10643,19 @@ function _showGuideCard(idx,animate){
     var va=voiceAfterText.trim();
     var vStatus=document.getElementById('step-tts-status');
     if(vStatus) vStatus.textContent=''; /* 본문 끝 → 잠시 비움 */
-    /* 본문이 [BGM:N]으로 끝나면 경로 A(_bgmSwitch)가 이미 15초 텀을 적용한 뒤 onEnd가 불리므로,
-       voiceAfter 추가 텀은 0초 → 훈련음악 전환 후 정확히 15초 뒤 [멘트만] 재생.
-       그 외 일반 voiceAfter는 기존대로 5초 텀(호흡 한 번 돌릴 시간) 유지. */
+    /* voiceAfter([멘트만]) 텀 규칙:
+       - 기본 5초(호흡 한 번 돌릴 시간) → 본문이 [BGM:5]로 끝난 운동카드는 경로 A 15초가 먼저 적용되어 총 20초.
+       - 예외: 호흡 코스(c_1) 9일차의 [BGM] 운동카드만 0초 → 훈련음악 전환 후 정확히 15초.
+       (그 외 전 일차는 20초로 통일. 앞으로 추가될 10~15일차도 자동으로 20초.) */
     var _vaBodyText=(typeof cardItem==='object'&&cardItem)?(cardItem.text||''):(cardItem||'');
-    var _vaDelay=/\[BGM:\d+\]\s*$/.test(_vaBodyText.trim())?0:5000;
+    var _vaEndsBgm=/\[BGM:\d+\]\s*$/.test(_vaBodyText.trim());
+    var _vaIsC1Day9=false;
+    try{
+      var _vaCname=document.getElementById('ds-title')?document.getElementById('ds-title').textContent:'';
+      var _vaDay=parseInt(String(typeof stepTitle!=='undefined'?stepTitle:'').replace(/[^0-9]/g,''),10);
+      _vaIsC1Day9=(_vaCname==='호흡 훈련하기' && _vaDay===9);
+    }catch(e){}
+    var _vaDelay=(_vaEndsBgm && _vaIsC1Day9)?0:5000;
     var _vaTimer=setTimeout(function(){
       if(myToken!==_guideCardToken)return; /* 그 사이 카드 넘어갔으면 취소 */
       if(vStatus) vStatus.textContent='🎙 안내 중...';
