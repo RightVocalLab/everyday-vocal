@@ -10636,7 +10636,11 @@ function _showGuideCard(idx,animate){
     var va=voiceAfterText.trim();
     var vStatus=document.getElementById('step-tts-status');
     if(vStatus) vStatus.textContent=''; /* 본문 끝 → 잠시 비움 */
-    /* 본문 끝나고 5초 텀 후 [멘트만] 재생 (호흡 한 번 돌릴 시간) */
+    /* 본문이 [BGM:N]으로 끝나면 경로 A(_bgmSwitch)가 이미 15초 텀을 적용한 뒤 onEnd가 불리므로,
+       voiceAfter 추가 텀은 0초 → 훈련음악 전환 후 정확히 15초 뒤 [멘트만] 재생.
+       그 외 일반 voiceAfter는 기존대로 5초 텀(호흡 한 번 돌릴 시간) 유지. */
+    var _vaBodyText=(typeof cardItem==='object'&&cardItem)?(cardItem.text||''):(cardItem||'');
+    var _vaDelay=/\[BGM:\d+\]\s*$/.test(_vaBodyText.trim())?0:5000;
     var _vaTimer=setTimeout(function(){
       if(myToken!==_guideCardToken)return; /* 그 사이 카드 넘어갔으면 취소 */
       if(vStatus) vStatus.textContent='🎙 안내 중...';
@@ -10645,7 +10649,7 @@ function _showGuideCard(idx,animate){
         if(vStatus) vStatus.textContent='';
         onDone();
       });
-    }, 5000);
+    }, _vaDelay);
   }
 
   /* 긴 카드 텍스트는 _speakChunked로 청크 분할 재생 (한자환각 방지)
