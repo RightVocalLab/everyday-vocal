@@ -15565,56 +15565,41 @@ function _openMyPage(){
   
   modal.style.display = 'flex';
   
-  /* Realtime DB에서 추가 정보 조회 (이메일, 가입일, 가입 방식)
-     카카오/네이버 사용자는 Firebase Auth에 이메일 없음 → DB에서 조회 */
+  /* 이메일/가입일 해석: 로그인 캐시(u) → Firebase Auth(currentUser) → DB(users/{uid}) 순으로 보강.
+     이메일 계정은 Auth에 email/생성시각이 항상 있어 자동로그인에서도 즉시 표시됨.
+     카카오는 Auth 이메일이 없어 u/DB로 폴백 (없으면 "-"). */
+  var _cu = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+  var _authEmail = _cu ? _cu.email : null;
+  var _authCreated = (_cu && _cu.metadata) ? _cu.metadata.creationTime : null;
+
+  function _mpSetEmail(val){
+    if(!emailEl) return;
+    if(val){ emailEl.textContent = val; emailEl.style.opacity = ''; }
+    else { emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
+  }
+  function _mpSetCreated(ts){
+    if(!createdEl) return;
+    if(ts){ var d = new Date(ts); if(!isNaN(d.getTime())){ createdEl.textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 가입'; return; } }
+    createdEl.textContent = '-';
+  }
+
+  /* 1차: 즉시 표시 (캐시 + Auth) — DB 조회를 기다리지 않음 */
+  _mpSetEmail(u.email || _authEmail || null);
+  _mpSetCreated(_authCreated || null);
+
+  /* 2차: DB(users/{uid})에서 보강 (있으면 우선/보완) */
   if(_fbDb && u.uid){
     _fbDb.ref('users/' + u.uid).once('value').then(function(snap){
-      const data = snap.val();
-      if(data){
-        /* 이메일: Firebase Auth에 없으면 DB에서 가져옴 */
-        if(emailEl){
-          var _authEmail = (typeof firebase!=='undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : null;
-          const dbEmail = data.email || u.email || _authEmail || null;
-          if(dbEmail){
-            emailEl.textContent = dbEmail;
-            emailEl.style.opacity = '';
-          } else {
-            /* 카카오 등 이메일 미수집 사용자 */
-            emailEl.textContent = '-';
-            emailEl.style.opacity = '0.5';
-          }
-          /* 캐시 갱신 */
-          if(dbEmail && !u.email){
-            window._generalUser.email = dbEmail;
-          }
-        }
-        /* 가입일: DB createdAt 우선, 없으면 Firebase Auth 계정 생성시각 폴백 */
-        var _authCreated = (typeof firebase!=='undefined' && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.metadata) ? firebase.auth().currentUser.metadata.creationTime : null;
-        var _createdTs = data.createdAt || _authCreated || null;
-        if(createdEl && _createdTs){
-          const d = new Date(_createdTs);
-          if(!isNaN(d.getTime())){
-            createdEl.textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 가입';
-          } else {
-            createdEl.textContent = '-';
-          }
-        } else if(createdEl){
-          createdEl.textContent = '-';
-        }
-      } else {
-        /* DB에 정보 없음 (이론상 발생 안 함) */
-        if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
-        if(createdEl) createdEl.textContent = '-';
-      }
+      var data = snap.val() || {};
+      var email = data.email || u.email || _authEmail || null;
+      _mpSetEmail(email);
+      if(email && !window._generalUser.email){ window._generalUser.email = email; }
+      _mpSetCreated(data.createdAt || _authCreated || null);
     }).catch(function(e){
-      console.warn('마이페이지 정보 조회 실패:', e);
-      if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
-      if(createdEl) createdEl.textContent = '-';
+      console.warn('마이페이지 정보 조회 실패(1차 값 유지):', e);
     });
-  } else {
-    if(emailEl && !u.email){ emailEl.textContent = '-'; emailEl.style.opacity = '0.5'; }
-    if(createdEl) createdEl.textContent = '-';
   }
+
   /* gunfree2@naver.com 이면 관리자 버튼 표시 */
   const adminRow = document.getElementById('mypage-admin-row');
   if(adminRow){
