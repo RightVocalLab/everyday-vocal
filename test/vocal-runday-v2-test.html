@@ -15572,9 +15572,11 @@ function _openMyPage(){
       if(data){
         /* 이메일: Firebase Auth에 없으면 DB에서 가져옴 */
         if(emailEl){
-          const dbEmail = data.email || null;
+          var _authEmail = (typeof firebase!=='undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : null;
+          const dbEmail = data.email || u.email || _authEmail || null;
           if(dbEmail){
             emailEl.textContent = dbEmail;
+            emailEl.style.opacity = '';
           } else {
             /* 카카오 등 이메일 미수집 사용자 */
             emailEl.textContent = '-';
@@ -15585,10 +15587,16 @@ function _openMyPage(){
             window._generalUser.email = dbEmail;
           }
         }
-        /* 가입일 */
-        if(createdEl && data.createdAt){
-          const d = new Date(data.createdAt);
-          createdEl.textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 가입';
+        /* 가입일: DB createdAt 우선, 없으면 Firebase Auth 계정 생성시각 폴백 */
+        var _authCreated = (typeof firebase!=='undefined' && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.metadata) ? firebase.auth().currentUser.metadata.creationTime : null;
+        var _createdTs = data.createdAt || _authCreated || null;
+        if(createdEl && _createdTs){
+          const d = new Date(_createdTs);
+          if(!isNaN(d.getTime())){
+            createdEl.textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 가입';
+          } else {
+            createdEl.textContent = '-';
+          }
         } else if(createdEl){
           createdEl.textContent = '-';
         }
