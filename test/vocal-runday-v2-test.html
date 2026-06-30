@@ -846,6 +846,52 @@ input,select,button,textarea{font-family:inherit;}
         확인
       </button>
     </div>
+    <!-- 계정 삭제 (앱스토어/구글플레이 필수) -->
+    <div style="padding:0 20px 16px;background:#fafafa;text-align:center">
+      <button onclick="_openDeleteAccount()"
+        style="background:none;border:none;cursor:pointer;font-size:12px;color:#94a3b8;text-decoration:underline;text-underline-offset:2px;padding:6px">
+        계정 삭제
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 계정 삭제 확인 모달 (일반 회원 전용) ========== -->
+<div id="delete-account-modal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(15,23,42,0.6);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;width:100%;max-width:380px;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <!-- 헤더 -->
+    <div style="padding:18px 22px;background:#fef2f2;border-bottom:1px solid #fee2e2">
+      <div style="font-size:16px;font-weight:800;color:#b91c1c">계정 삭제</div>
+      <div style="font-size:11px;color:#dc2626;opacity:0.85;margin-top:2px">이 작업은 되돌릴 수 없습니다</div>
+    </div>
+    <!-- 본문 -->
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:13px;color:#334155;line-height:1.7">
+        계정을 삭제하면 아래 정보가 <strong style="color:#b91c1c">영구적으로 삭제</strong>되며 복구할 수 없습니다.
+      </div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;color:#475569;line-height:1.9">
+        <li>회원 정보 (닉네임 · 이메일 · 가입 정보)</li>
+        <li>작성한 게시글 · 댓글 · 좋아요</li>
+        <li>보컬진단실에 올린 음성 파일</li>
+        <li>음역대 측정 기록</li>
+      </ul>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-top:4px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer">
+        <input type="checkbox" id="del-acc-confirm-cb" onchange="_toggleDelConfirm()" style="margin-top:2px;width:16px;height:16px;accent-color:#dc2626;flex-shrink:0">
+        <span style="font-size:12px;color:#475569;line-height:1.5">위 내용을 모두 확인했으며, 계정과 모든 데이터의 영구 삭제에 동의합니다.</span>
+      </label>
+      <div id="del-acc-status" style="display:none;font-size:11.5px;line-height:1.6;margin-top:2px"></div>
+    </div>
+    <!-- 하단 버튼 -->
+    <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fafafa;display:flex;gap:8px">
+      <button id="del-acc-cancel-btn" onclick="_closeDeleteAccount()"
+        style="flex:1;height:46px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;color:#475569">
+        취소
+      </button>
+      <button id="del-acc-go-btn" onclick="_confirmDeleteAccount()" disabled
+        style="flex:1;height:46px;background:#dc2626;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;color:#fff;opacity:0.5">
+        영구 삭제
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1773,6 +1819,21 @@ input,select,button,textarea{font-family:inherit;}
       <!-- 목록 -->
       <div id="admin-reports-list" style="max-height:400px;overflow-y:auto">
         <div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- 👥 회원 명단 + 제재 관리 -->
+    <div id="admin-members-section" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:800;color:#1f2937">👥 회원 명단 · 제재 관리</div>
+        <button onclick="_adminLoadMembers()" style="background:#1d4ed8;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer">불러오기 / 새로고침</button>
+      </div>
+      <div style="font-size:10.5px;color:#94a3b8;line-height:1.6;margin-bottom:10px">
+        가입한 일반 회원 목록입니다. 정지(1·3·6개월/영구)는 글·댓글 작성을 제한하며, 재가입 차단은 탈퇴 후 1년간 재가입을 막습니다.
+        <br>※ 재가입 차단의 실제 적용은 서버 함수(로그인/가입) 배포 후 작동합니다.
+      </div>
+      <div id="admin-members-list">
+        <div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">'불러오기'를 눌러 회원 명단을 조회하세요.</div>
       </div>
     </div>
 
@@ -8802,6 +8863,185 @@ let _adminCurrentTab = 'reports';
 let _adminReportsData = [];
 let _adminSuggestionsData = [];
 
+/* ===================== 관리자: 회원명단 + 제재(정지/재가입차단) =====================
+   index.js 없이 동작하는 부분: 명단 조회 / 제재 데이터 기록 / 클라이언트측 작성차단
+   서버(로그인·가입 함수) 차단은 index.js 연동 후 작동 (재가입 실제 차단) */
+const _SANCTION_DAYS = { '1m': 30, '3m': 90, '6m': 180 };
+const _REREG_BLOCK_DAYS = 365; /* 재가입 차단 + 식별값 보관 = 1년 */
+
+function _sancEsc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+function _sancCalcAge(bd){
+  try{
+    var b = new Date(bd);
+    if(isNaN(b.getTime())) return '-';
+    var t = new Date();
+    var a = t.getFullYear() - b.getFullYear();
+    var m = t.getMonth() - b.getMonth();
+    if(m < 0 || (m === 0 && t.getDate() < b.getDate())) a--;
+    return (a >= 0 && a < 130) ? (a + '세') : '-';
+  }catch(e){ return '-'; }
+}
+
+async function _sancSha256Hex(str){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+/* 회원 명단 불러오기 (관리자 전용) */
+async function _adminLoadMembers(){
+  var listEl = document.getElementById('admin-members-list');
+  if(!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">불러오는 중...</div>';
+  if(typeof firebase === 'undefined' || !firebase.database){
+    listEl.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:12px;padding:20px">Firebase 연결을 확인해주세요.</div>';
+    return;
+  }
+  try{
+    var db = firebase.database();
+    var res = await Promise.all([ db.ref('users').once('value'), db.ref('sanctions').once('value') ]);
+    var users = res[0].val() || {};
+    var sanctions = res[1].val() || {};
+    var uids = Object.keys(users);
+    if(uids.length === 0){
+      listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">가입한 일반 회원이 없습니다.</div>';
+      return;
+    }
+    uids.sort(function(a,b){ return (users[b].createdAt || 0) - (users[a].createdAt || 0); });
+    var now = Date.now();
+    var html = '<div style="font-size:11px;color:#64748b;margin-bottom:8px">총 ' + uids.length + '명 (가입 최신순)</div>';
+    uids.forEach(function(uid){
+      var u = users[uid] || {};
+      var provider = u.provider || '-';
+      var provLabel = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider === 'email' ? '이메일' : provider;
+      var nickname = u.nickname || '(닉네임 없음)';
+      var age = '-';
+      if(u.birthdate) age = _sancCalcAge(u.birthdate);
+      else if(u.birthyear){ var y = parseInt(u.birthyear, 10); if(y) age = (now ? (new Date().getFullYear() - y + 1) : 0) + '세'; }
+      var gender = '-';
+      if(u.gender){
+        var g = String(u.gender).toLowerCase();
+        gender = (g === 'm' || g === 'male' || g === '남' || g === '남성') ? '남'
+               : (g === 'f' || g === 'female' || g === '여' || g === '여성') ? '여' : u.gender;
+      }
+      var joined = '-';
+      if(u.createdAt){ var d = new Date(u.createdAt); joined = d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate(); }
+      var s = sanctions[uid];
+      var badge = '';
+      if(s){
+        if(s.type === 'ban' || s.level === 'perm'){
+          badge = '<span style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:4px">영구정지</span>';
+        } else if(s.until && s.until > now){
+          var left = Math.ceil((s.until - now) / 86400000);
+          badge = '<span style="background:#ffedd5;color:#c2410c;font-size:10px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:4px">정지중 ' + left + '일</span>';
+        }
+      }
+      var btn = function(label, fn, bg, col){
+        return '<button onclick="' + fn + '" style="background:' + bg + ';color:' + col + ';border:none;border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer">' + label + '</button>';
+      };
+      html += '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:6px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center">'
+        +   '<div style="font-size:13px;font-weight:700;color:#1f2937">' + _sancEsc(nickname) + badge + '</div>'
+        +   '<div style="font-size:10px;color:#94a3b8">' + joined + ' 가입</div>'
+        + '</div>'
+        + '<div style="font-size:11px;color:#64748b;margin-top:3px">' + provLabel + ' · ' + age + ' · ' + gender + '</div>'
+        + '<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">'
+        +   btn('1개월', "_adminSanction('" + uid + "','1m')", '#fff7ed', '#c2410c')
+        +   btn('3개월', "_adminSanction('" + uid + "','3m')", '#fff7ed', '#c2410c')
+        +   btn('6개월', "_adminSanction('" + uid + "','6m')", '#fff7ed', '#c2410c')
+        +   btn('영구정지', "_adminSanction('" + uid + "','perm')", '#fee2e2', '#b91c1c')
+        +   btn('재가입차단', "_adminRereg('" + uid + "')", '#1f2937', '#fff')
+        +   (s ? btn('해제', "_adminUnsanction('" + uid + "')", '#ecfdf5', '#047857') : '')
+        + '</div>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+  }catch(e){
+    listEl.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:12px;padding:20px">불러오기 실패: ' + _sancEsc(e && e.message) + '</div>';
+  }
+}
+
+/* 정지 처리 (1/3/6개월/영구) */
+async function _adminSanction(uid, level){
+  var names = { '1m':'1개월 정지', '3m':'3개월 정지', '6m':'6개월 정지', 'perm':'영구정지' };
+  if(!confirm('이 회원을 [' + names[level] + '] 처리할까요?\n정지 중에는 글·댓글 작성이 제한됩니다.')) return;
+  var reason = prompt('정지 사유 (회원에게 표시될 수 있음):', '커뮤니티 운영정책 위반');
+  if(reason === null) return;
+  try{
+    var db = firebase.database();
+    var now = Date.now();
+    var by = (window._generalUser && window._generalUser.uid) || 'admin';
+    var data = { reason: reason, at: now, by: by, level: level };
+    if(level === 'perm'){ data.type = 'ban'; data.until = 0; }
+    else { data.type = 'suspend'; data.until = now + _SANCTION_DAYS[level] * 86400000; }
+    await db.ref('sanctions/' + uid).set(data);
+    alert('처리되었습니다.');
+    _adminLoadMembers();
+  }catch(e){ alert('실패: ' + (e && e.message)); }
+}
+
+/* 정지 해제 */
+async function _adminUnsanction(uid){
+  if(!confirm('이 회원의 정지를 해제할까요?')) return;
+  try{
+    await firebase.database().ref('sanctions/' + uid).remove();
+    alert('해제되었습니다.');
+    _adminLoadMembers();
+  }catch(e){ alert('실패: ' + (e && e.message)); }
+}
+
+/* 재가입 차단 (탈퇴 후에도 1년간 재가입 제한) — 식별값 해시 기록.
+   ⚠️ 실제 재가입 차단의 '작동'은 로그인/가입 Cloud Function(index.js) 연동 후. */
+async function _adminRereg(uid){
+  if(!confirm('이 회원을 [재가입 차단] 목록에 등록할까요?\n탈퇴 후에도 1년간 재가입이 제한됩니다.\n(실제 차단은 서버 함수 배포 후 작동)')) return;
+  var reason = prompt('재가입 차단 사유:', '악성 이용자');
+  if(reason === null) return;
+  try{
+    var db = firebase.database();
+    var uSnap = await db.ref('users/' + uid).once('value');
+    var u = uSnap.val() || {};
+    var now = Date.now();
+    var until = now + _REREG_BLOCK_DAYS * 86400000;
+    /* 식별 키: 이메일 있으면 email, 없으면 provider:uid. 서버도 동일 규칙으로 매칭 */
+    var ident = u.email ? ('email:' + String(u.email).toLowerCase().trim())
+                        : ((u.provider || 'unknown') + ':' + uid);
+    var hash = await _sancSha256Hex(ident);
+    await db.ref('reRegBlock/' + hash).set({
+      until: until, reason: reason, at: now,
+      provider: u.provider || '', by: (window._generalUser && window._generalUser.uid) || 'admin'
+    });
+    /* 현재 계정도 영구정지 처리 (로그인 중이면 즉시 작성 차단 효과) */
+    await db.ref('sanctions/' + uid).set({ type: 'ban', level: 'perm', until: 0, reason: reason, at: now, reReg: true });
+    alert('재가입 차단 목록에 등록되었습니다.\n(서버 함수 배포 후 실제 재가입이 막힙니다)');
+    _adminLoadMembers();
+  }catch(e){ alert('실패: ' + (e && e.message)); }
+}
+
+/* 작성 정지 여부 검사 — 게시/댓글 작성 전에 호출 (클라이언트 보조 차단).
+   검사 실패 시 null 반환 → 막지 않음(오작동 방지). 본체 차단은 서버. */
+async function _checkPostingSuspended(){
+  try{
+    if(typeof _fbAuthUid === 'undefined' || !_fbAuthUid) return null;
+    if(typeof firebase === 'undefined' || !firebase.database) return null;
+    var snap = await firebase.database().ref('sanctions/' + _fbAuthUid).once('value');
+    var s = snap.val();
+    if(!s) return null;
+    var now = Date.now();
+    if(s.type === 'ban' || s.level === 'perm'){
+      return '영구 정지된 계정입니다. 글·댓글 작성이 제한됩니다.' + (s.reason ? '\n사유: ' + s.reason : '');
+    }
+    if(s.until && s.until > now){
+      var left = Math.ceil((s.until - now) / 86400000);
+      return '현재 작성이 정지된 상태입니다. (해제까지 약 ' + left + '일)' + (s.reason ? '\n사유: ' + s.reason : '');
+    }
+    return null;
+  }catch(e){ return null; }
+}
+
 function _switchAdminTab(tab){
   _adminCurrentTab = tab;
   const reportsTab = document.getElementById('admin-tab-reports');
@@ -15379,6 +15619,86 @@ function _closeMyPage(){
   if(modal) modal.style.display = 'none';
 }
 
+/* ===== 계정 삭제 (앱스토어/구글플레이 필수, 일반 회원 전용) ===== */
+const _DELETE_ACCOUNT_FN = 'https://asia-northeast3-everyday-vocal.cloudfunctions.net/deleteMyAccount';
+
+function _openDeleteAccount(){
+  if(!_isGeneralUser()){ alert('일반 회원만 이용 가능합니다.'); return; }
+  var cb = document.getElementById('del-acc-confirm-cb');
+  if(cb) cb.checked = false;
+  var btn = document.getElementById('del-acc-go-btn');
+  if(btn){ btn.disabled = true; btn.style.opacity = '0.5'; }
+  var st = document.getElementById('del-acc-status');
+  if(st){ st.style.display = 'none'; st.innerHTML = ''; }
+  var cancel = document.getElementById('del-acc-cancel-btn');
+  if(cancel){ cancel.disabled = false; }
+  var m = document.getElementById('delete-account-modal');
+  if(m) m.style.display = 'flex';
+}
+
+function _closeDeleteAccount(){
+  var m = document.getElementById('delete-account-modal');
+  if(m) m.style.display = 'none';
+}
+
+function _toggleDelConfirm(){
+  var cb = document.getElementById('del-acc-confirm-cb');
+  var btn = document.getElementById('del-acc-go-btn');
+  if(cb && btn){ btn.disabled = !cb.checked; btn.style.opacity = cb.checked ? '1' : '0.5'; }
+}
+
+async function _confirmDeleteAccount(){
+  var st = document.getElementById('del-acc-status');
+  var btn = document.getElementById('del-acc-go-btn');
+  var cancel = document.getElementById('del-acc-cancel-btn');
+  try{
+    if(typeof firebase === 'undefined' || !firebase.auth){
+      alert('네트워크 연결을 확인해주세요.');
+      return;
+    }
+    var cu = firebase.auth().currentUser;
+    if(!cu){ alert('로그인이 필요합니다.'); return; }
+
+    if(btn){ btn.disabled = true; btn.style.opacity = '0.5'; }
+    if(cancel){ cancel.disabled = true; }
+    if(st){ st.style.display = 'block'; st.innerHTML = '<span style="color:#0284c7">⏳ 계정과 데이터를 삭제하는 중입니다...</span>'; }
+
+    var idToken = await cu.getIdToken();
+    var resp = await fetch(_DELETE_ACCOUNT_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({}),
+    });
+    if(!resp.ok){
+      var ed = await resp.json().catch(function(){ return {}; });
+      throw new Error(ed.error || ('서버 오류 (' + resp.status + ')'));
+    }
+
+    /* 성공 → 로컬 세션 정리 + 로그아웃 (계정은 서버에서 이미 삭제됨) */
+    if(st){ st.innerHTML = '<span style="color:#059669">✅ 삭제가 완료되었습니다.</span>'; }
+    try{ localStorage.removeItem('general_user_provider'); }catch(e){}
+    try{ localStorage.removeItem('auto_student_name'); }catch(e){}
+    try{ window._generalUser = null; }catch(e){}
+    try{ await firebase.auth().signOut(); }catch(e){}
+
+    setTimeout(function(){
+      alert('계정이 삭제되었습니다.\n그동안 이용해 주셔서 감사합니다.');
+      _closeDeleteAccount();
+      _closeMyPage();
+      if(typeof _showLoginSelect === 'function'){ _showLoginSelect(); }
+      else if(typeof goHome === 'function'){ goHome(); }
+    }, 600);
+  }catch(err){
+    if(st){
+      st.style.display = 'block';
+      st.innerHTML = '<span style="color:#dc2626">⚠ 삭제에 실패했습니다: ' + ((err && err.message) || err) +
+        '<br>잠시 후 다시 시도하시거나, 로그아웃 후 다시 로그인하여 시도해 주세요.</span>';
+    }
+    if(btn){ btn.disabled = false; btn.style.opacity = '1'; }
+    if(cancel){ cancel.disabled = false; }
+  }
+}
+
 /* 토픽바 사용자 버튼 클릭 핸들러
    - 학생 로그인: 학생 정보 모달 (이름 + 로그아웃)
    - 일반 로그인: 마이페이지 모달
@@ -15518,9 +15838,10 @@ const LEGAL_CONTENT = {
 
 <p style="margin-top:14px"><strong>제16조 (회원 탈퇴 및 자격 상실)</strong></p>
 <ol style="padding-left:20px;margin:8px 0">
-  <li>회원은 언제든지 서비스 내 설정에서 직접 탈퇴할 수 있으며, 탈퇴 즉시 회사는 회원의 개인정보를 파기합니다(관련 법령에 따른 보존 기간 제외).</li>
-  <li>회사는 회원이 본 약관 또는 관련 법령을 위반한 경우, 사전 통지 후 회원 자격을 정지하거나 박탈할 수 있습니다.</li>
-  <li>중대한 위반의 경우 사전 통지 없이 즉시 자격을 박탈할 수 있습니다.</li>
+  <li>회원은 언제든지 서비스 내 마이페이지에서 직접 계정을 삭제(탈퇴)할 수 있으며, 탈퇴 시 회사는 회원의 개인정보 및 관련 데이터(게시글·댓글·업로드한 음성 파일·측정 기록 등)를 지체 없이 파기합니다(제4항 및 관련 법령에 따른 보존 항목 제외).</li>
+  <li>회사는 회원이 본 약관·관련 법령 또는 커뮤니티 운영정책을 위반한 경우, 위반의 경중에 따라 게시글·댓글 등 작성 기능을 1개월·3개월·6개월 또는 영구적으로 정지할 수 있습니다.</li>
+  <li>중대한 위반의 경우 사전 통지 없이 즉시 회원 자격을 정지하거나 박탈할 수 있습니다.</li>
+  <li>회사는 권리의 남용·악용 방지 및 권리침해·명예훼손 등 분쟁의 재발 방지를 위하여, 자격이 박탈되었거나 재가입이 제한된 회원에 대해 <strong>탈퇴 후에도 1년간 재가입을 제한</strong>할 수 있습니다. 이를 위해 회사는 재가입 식별에 필요한 최소한의 식별값(이메일 등을 일방향 암호화한 값)을 <strong>1년간 보관한 후 파기</strong>하며, 본 처리는 회원가입 시 동의를 받아 이루어집니다.</li>
 </ol>
 
 <p style="margin-top:14px"><strong>제17조 (분쟁 해결 및 관할 법원)</strong></p>
@@ -15567,6 +15888,7 @@ const LEGAL_CONTENT = {
   <li>소비자 불만 또는 분쟁처리 기록: 3년 (전자상거래법)</li>
   <li>웹사이트 접속 로그: 3개월 (통신비밀보호법)</li>
   <li>부정 이용 기록: 1년 (회사 내부 정책 - 재가입 방지)</li>
+  <li>제재(자격 박탈·재가입 제한) 회원의 재가입 식별값(이메일 등을 일방향 암호화한 해시값): 1년 (회사 내부 정책 - 악성 이용자 재가입 방지, 분쟁 재발 대비)</li>
 </ul>
 
 <p style="margin-top:14px"><strong>4. 제3자 제공</strong></p>
@@ -20909,6 +21231,7 @@ function _commSelectHistory(type, idx){
 
 /* 게시글 등록 */
 async function _submitCommunityPost(){
+  const _sm = await _checkPostingSuspended(); if(_sm){ alert('⚠️ ' + _sm); return; }
   const errEl = document.getElementById('comm-write-err');
   const setErr = (msg) => { if(errEl) errEl.textContent = msg; };
   
@@ -21569,6 +21892,7 @@ async function _loadComments(postId){
 }
 
 async function _submitComment(){
+  const _sm = await _checkPostingSuspended(); if(_sm){ alert('⚠️ ' + _sm); return; }
   if(!_currentViewingPost) return;
   /* Firebase 인증 live 체크 */
   const cu = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
@@ -22251,6 +22575,7 @@ function _vclinicFileSelected(event){
 }
 
 async function _submitVclinicPost(){
+  const _sm = await _checkPostingSuspended(); if(_sm){ alert('⚠️ ' + _sm); return; }
   const errEl=document.getElementById('vclinic-write-err');
   const progEl=document.getElementById('vclinic-upload-progress');
   const progBar=document.getElementById('vclinic-progress-bar');
@@ -22711,6 +23036,7 @@ async function _loadVclinicComments(postId){
 }
 
 async function _submitVclinicComment(){
+  const _sm = await _checkPostingSuspended(); if(_sm){ alert('⚠️ ' + _sm); return; }
   if(!_vclinicCurrentPost||!_fbDb) return;
   /* 로그인 이름 자동 사용 (익명 불가) - 헬퍼 (닉네임 변경 > 학생명 > 닉네임) */
   let nick = _resolvePostingName();
