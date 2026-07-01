@@ -13145,7 +13145,7 @@ function _checkAutoLogin(){
       const savedProv = localStorage.getItem('general_user_provider') || '';
       window._generalUser = {
         uid: generalUid,
-        email: '',
+        email: (function(){ try { return localStorage.getItem('general_user_email') || ''; } catch(e){ return ''; } })(),
         nickname: savedName,
         provider: savedProv,
       };
@@ -15019,6 +15019,7 @@ async function _onEmailAuthSuccess(user, provider){
     /* 2. 일반 사용자 세션도 저장 (게시판 등을 위해) */
     try {
       localStorage.setItem('general_user_uid', user.uid);
+      { var _se = (user && user.email) || (window._generalUser && window._generalUser.email) || ''; if(_se) localStorage.setItem('general_user_email', _se); }
       if(user.displayName){
         localStorage.setItem('general_user_name', user.displayName);
       }
@@ -15079,12 +15080,14 @@ async function _onEmailAuthSuccess(user, provider){
   if(_emailRemember){
     try {
       localStorage.setItem('general_user_uid', user.uid);
+      { var _se2 = (user && user.email) || (window._generalUser && window._generalUser.email) || ''; if(_se2) localStorage.setItem('general_user_email', _se2); }
       if(user.displayName){ localStorage.setItem('general_user_name', user.displayName); }
     } catch(e){}
   } else {
     /* 체크 안 했으면 기존 저장값 제거 */
     try {
       localStorage.removeItem('general_user_uid');
+      localStorage.removeItem('general_user_email');
       localStorage.removeItem('general_user_name');
       localStorage.removeItem('general_user_provider');
     } catch(e){}
@@ -15593,21 +15596,12 @@ function _openMyPage(){
   _mpSetEmail(u.email || _authEmail || null);
   _mpSetCreated(u.createdAt || _authCreated || null);
 
-  /* [임시 진단] 이메일이 안 뜨는 원인 확인용 — F12 콘솔에서 이 줄 확인 */
-  try {
-    console.log('[마이페이지 진단] u.email=', u.email, '| authEmail=', _authEmail,
-      '| currentUser?', !!_cu, '| provider=', u.provider, '| uid=', u.uid);
-  } catch(e){}
-
-  /* 2차: DB(users/{uid})에서 보강 (있으면 우선/보완) */
-  if(_fbDb && u.uid){
+  /* 2차: DB(users/{uid})에서 보강 — 단, 현재 Firebase 인증 uid가 이 계정일 때만 실행.
+     (자동로그인 시 세션이 익명이면 users/{uid} 읽기 권한이 없어 permission_denied → 스킵하고 1차 값 유지) */
+  if(_fbDb && u.uid && _cu && _cu.uid === u.uid){
     _fbDb.ref('users/' + u.uid).once('value').then(function(snap){
       var data = snap.val() || {};
       var email = data.email || u.email || _authEmail || null;
-      try {
-        console.log('[마이페이지 진단2] DB data.email=', data.email, '| DB createdAt=', data.createdAt,
-          '| DB provider=', data.provider, '| 최종 email=', email);
-      } catch(e){}
       _mpSetEmail(email);
       if(email && !window._generalUser.email){ window._generalUser.email = email; }
       _mpSetCreated(data.createdAt || _authCreated || null);
