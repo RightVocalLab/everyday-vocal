@@ -15593,11 +15593,21 @@ function _openMyPage(){
   _mpSetEmail(u.email || _authEmail || null);
   _mpSetCreated(u.createdAt || _authCreated || null);
 
+  /* [임시 진단] 이메일이 안 뜨는 원인 확인용 — F12 콘솔에서 이 줄 확인 */
+  try {
+    console.log('[마이페이지 진단] u.email=', u.email, '| authEmail=', _authEmail,
+      '| currentUser?', !!_cu, '| provider=', u.provider, '| uid=', u.uid);
+  } catch(e){}
+
   /* 2차: DB(users/{uid})에서 보강 (있으면 우선/보완) */
   if(_fbDb && u.uid){
     _fbDb.ref('users/' + u.uid).once('value').then(function(snap){
       var data = snap.val() || {};
       var email = data.email || u.email || _authEmail || null;
+      try {
+        console.log('[마이페이지 진단2] DB data.email=', data.email, '| DB createdAt=', data.createdAt,
+          '| DB provider=', data.provider, '| 최종 email=', email);
+      } catch(e){}
       _mpSetEmail(email);
       if(email && !window._generalUser.email){ window._generalUser.email = email; }
       _mpSetCreated(data.createdAt || _authCreated || null);
