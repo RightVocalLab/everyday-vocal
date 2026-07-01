@@ -876,6 +876,9 @@ input,select,button,textarea{font-family:inherit;}
         <li>보컬진단실에 올린 음성 파일</li>
         <li>음역대 측정 기록</li>
       </ul>
+      <div style="font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 11px;line-height:1.6">
+        탈퇴 후 <strong>90일간</strong> 동일 계정(같은 이메일 또는 같은 소셜 계정)으로는 재가입이 제한됩니다.
+      </div>
       <label style="display:flex;align-items:flex-start;gap:8px;margin-top:4px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer">
         <input type="checkbox" id="del-acc-confirm-cb" onchange="_toggleDelConfirm()" style="margin-top:2px;width:16px;height:16px;accent-color:#dc2626;flex-shrink:0">
         <span style="font-size:12px;color:#475569;line-height:1.5">위 내용을 모두 확인했으며, 계정과 모든 데이터의 영구 삭제에 동의합니다.</span>
@@ -15134,6 +15137,9 @@ async function _loadNicknameQuiet(){
   try {
     const snap = await _fbDb.ref('users/'+uid).once('value');
     const data = snap.val() || {};
+    /* 이메일/가입일도 캐시 (자동로그인 후 마이페이지 표시용 — Auth 이메일이 비어도 DB값으로 채움) */
+    if(data.email && window._generalUser && !window._generalUser.email){ window._generalUser.email = data.email; }
+    if(data.createdAt && window._generalUser && !window._generalUser.createdAt){ window._generalUser.createdAt = data.createdAt; }
     /* 닉네임이 있으면 캐시 */
     if(data.nickname && typeof data.nickname==='string' && data.nickname.length>=1){
       window._generalUser.nickname = data.nickname;
@@ -15585,7 +15591,7 @@ function _openMyPage(){
 
   /* 1차: 즉시 표시 (캐시 + Auth) — DB 조회를 기다리지 않음 */
   _mpSetEmail(u.email || _authEmail || null);
-  _mpSetCreated(_authCreated || null);
+  _mpSetCreated(u.createdAt || _authCreated || null);
 
   /* 2차: DB(users/{uid})에서 보강 (있으면 우선/보완) */
   if(_fbDb && u.uid){
@@ -15836,6 +15842,7 @@ const LEGAL_CONTENT = {
   <li>회사는 회원이 본 약관·관련 법령 또는 커뮤니티 운영정책을 위반한 경우, 위반의 경중에 따라 게시글·댓글 등 작성 기능을 1개월·3개월·6개월 또는 영구적으로 정지할 수 있습니다.</li>
   <li>중대한 위반의 경우 사전 통지 없이 즉시 회원 자격을 정지하거나 박탈할 수 있습니다.</li>
   <li>회사는 권리의 남용·악용 방지 및 권리침해·명예훼손 등 분쟁의 재발 방지를 위하여, 자격이 박탈되었거나 재가입이 제한된 회원에 대해 <strong>탈퇴 후에도 1년간 재가입을 제한</strong>할 수 있습니다. 이를 위해 회사는 재가입 식별에 필요한 최소한의 식별값(이메일 등을 일방향 암호화한 값)을 <strong>1년간 보관한 후 파기</strong>하며, 본 처리는 회원가입 시 동의를 받아 이루어집니다.</li>
+  <li>회원이 스스로 계정을 삭제(탈퇴)하는 경우에도, 게시물 작성 후 탈퇴·재가입을 통한 제재 회피 등 악용을 방지하기 위하여 <strong>탈퇴일로부터 90일간 동일 계정(동일 이메일 또는 동일 소셜 계정)으로의 재가입이 제한</strong>될 수 있습니다. 이를 위해 회사는 재가입 식별에 필요한 최소한의 식별값(이메일 등을 일방향 암호화한 값)을 <strong>90일간 보관한 후 파기</strong>하며, 본 처리는 회원가입 시 동의를 받아 이루어집니다.</li>
 </ol>
 
 <p style="margin-top:14px"><strong>제17조 (분쟁 해결 및 관할 법원)</strong></p>
@@ -15883,6 +15890,7 @@ const LEGAL_CONTENT = {
   <li>웹사이트 접속 로그: 3개월 (통신비밀보호법)</li>
   <li>부정 이용 기록: 1년 (회사 내부 정책 - 재가입 방지)</li>
   <li>제재(자격 박탈·재가입 제한) 회원의 재가입 식별값(이메일 등을 일방향 암호화한 해시값): 1년 (회사 내부 정책 - 악성 이용자 재가입 방지, 분쟁 재발 대비)</li>
+  <li>자진 탈퇴 회원의 재가입 식별값(이메일 등을 일방향 암호화한 해시값): 90일 (회사 내부 정책 - 탈퇴·재가입 반복을 통한 제재 회피 방지)</li>
 </ul>
 
 <p style="margin-top:14px"><strong>4. 제3자 제공</strong></p>
