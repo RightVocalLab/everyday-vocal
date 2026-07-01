@@ -1924,7 +1924,12 @@ input,select,button,textarea{font-family:inherit;}
       <!-- 디버그 (관리자 전용, 가성 판정 수치 확인용) - 화면 최상단 -->
       <div id="pt-debug-wrap" style="display:none;margin-bottom:10px">
         <button onclick="_ptToggleDebug()" id="pt-debug-toggle" style="font-size:10px;color:#94a3b8;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;cursor:pointer">🔧 디버그 보기</button>
+        <button onclick="_ptCopyDebug()" id="pt-debug-copy" style="font-size:10px;color:#0369a1;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">📋 전체복사</button>
+        <button onclick="_ptSendDebug()" id="pt-debug-send" style="font-size:10px;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">☁️ 전송</button>
+        <button onclick="_ptClearDebug()" id="pt-debug-clear" style="font-size:10px;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">🧹 지우기</button>
+        <div id="pt-debug-status" style="margin-top:5px;font-size:10px;color:#64748b">준비됨</div>
         <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
+        <div id="pt-debug-url" style="display:none;margin-top:6px;padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;font-size:9px;color:#334155;font-family:monospace;word-break:break-all"></div>
       </div>
       <!-- 상단: 현재 음정 (큰 표시) -->
       <div class="v2-pt-card v2-pt-pitch-card">
@@ -16888,6 +16893,8 @@ async function _startPitchTest(){
       if(_dbgWrap) _dbgWrap.style.display = _isAdm ? 'block' : 'none';
       if(_isAdm){
         window._ptDebug = true;
+        window._ptDbgLog = [];
+        try{ var _u=document.getElementById('pt-debug-url'); if(_u){_u.style.display='none';_u.textContent='';} var _st=document.getElementById('pt-debug-status'); if(_st) _st.textContent='측정 시작 — 소리 내면 여기에 쌓입니다'; }catch(_e){}
         var _dbgBox = document.getElementById('pt-debug-box');
         if(_dbgBox) _dbgBox.style.display = 'block';
         var _dbgBtn = document.getElementById('pt-debug-toggle');
@@ -17323,6 +17330,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
         +' dBFS='+(typeof dB==='number'?(dB-94).toFixed(0):'?')
         +' score='+score.toFixed(1)+' '+(_rawResult!==result?(_rawResult+'→'):'')+result;
       console.log('[PVR]', _line);
+      try{ if(!window._ptDbgLog) window._ptDbgLog=[]; if(window._ptDbgLog.length<5000) window._ptDbgLog.push(_line); }catch(_e){}
       var _box=document.getElementById('pt-debug-box');
       if(_box){
         var _color = result==='falsetto'?'#f472b6':(result==='chest'?'#60a5fa':'#a3e635');
@@ -18080,6 +18088,71 @@ function _ptToggleDebug(){
   var btn=document.getElementById('pt-debug-toggle');
   if(box) box.style.display = window._ptDebug ? 'block' : 'none';
   if(btn) btn.textContent = window._ptDebug ? '🔧 디버그 끄기' : '🔧 디버그 보기';
+}
+
+function _ptDbgStatus(msg){
+  var el=document.getElementById('pt-debug-status');
+  if(el) el.textContent = msg;
+}
+
+function _ptClearDebug(){
+  window._ptDbgLog = [];
+  var box=document.getElementById('pt-debug-box');
+  if(box) box.innerHTML='';
+  var u=document.getElementById('pt-debug-url');
+  if(u){ u.style.display='none'; u.textContent=''; }
+  _ptDbgStatus('버퍼 비움 (0줄)');
+}
+
+function _ptDbgHeader(n){
+  var g = window._ptLockedGender || (window._generalUser && window._generalUser.gender) || '?';
+  return '=== PVR DEBUG '+new Date().toISOString()+' | gender='+g+' | '+n+'줄 ===';
+}
+
+function _ptDbgFallbackCopy(text, done, fail){
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    var ok=document.execCommand('copy'); document.body.removeChild(ta);
+    if(ok){ done(); } else { fail('execCommand 실패'); }
+  }catch(e){ fail(e.message); }
+}
+
+function _ptCopyDebug(){
+  var log = window._ptDbgLog || [];
+  if(!log.length){ _ptDbgStatus('복사할 로그 없음 (측정하며 소리를 내세요)'); return; }
+  var text = _ptDbgHeader(log.length)+'\n'+log.join('\n');
+  var done=function(){ _ptDbgStatus('클립보드 복사됨 ('+log.length+'줄) → Claude 채팅에 붙여넣기'); };
+  var fail=function(m){ _ptDbgStatus('복사 실패: '+m+' → ☁️전송 사용'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function(){ _ptDbgFallbackCopy(text, done, fail); });
+  } else {
+    _ptDbgFallbackCopy(text, done, fail);
+  }
+}
+
+function _ptSendDebug(){
+  var log = window._ptDbgLog || [];
+  if(!log.length){ _ptDbgStatus('전송할 로그 없음 (측정하며 소리를 내세요)'); return; }
+  _ptDbgStatus('전송 중...');
+  try{
+    var g = window._ptLockedGender || (window._generalUser && window._generalUser.gender) || '?';
+    var ref = firebase.database().ref('pvrDebug').push();
+    ref.set({ ts: Date.now(), when: new Date().toISOString(), gender: g, count: log.length, lines: log.slice(0,5000) })
+      .then(function(){
+        var url = 'https://everyday-vocal-default-rtdb.asia-southeast1.firebasedatabase.app/pvrDebug/'+ref.key+'.json';
+        var u=document.getElementById('pt-debug-url');
+        if(u){ u.style.display='block'; u.textContent=url; }
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).catch(function(){}); }
+        _ptDbgStatus('전송 완료 ('+log.length+'줄). 아래 URL 복사됨 → Claude 채팅에 붙여넣기');
+      })
+      .catch(function(e){
+        _ptDbgStatus('전송 실패: '+(e&&e.message?e.message:e)+' → 📋전체복사 사용 (규칙 미설정?)');
+      });
+  }catch(e){
+    _ptDbgStatus('전송 오류: '+e.message+' → 📋전체복사 사용');
+  }
 }
 
 function _restartPtMeasure(){
