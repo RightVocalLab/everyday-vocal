@@ -2457,11 +2457,11 @@ input,select,button,textarea{font-family:inherit;}
     <!-- 성별 선택 -->
     <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">성별 <span style="color:#dc2626">*</span></label>
     <div class="v2-pt-gender-row">
-      <button class="v2-pt-gender-btn v2-pt-gender-male" onclick="_selectGender('male')">
+      <button id="pt-gender-btn-male" class="v2-pt-gender-btn v2-pt-gender-male" onclick="_selectGender('male')">
         <div class="v2-pt-gender-icon">👨</div>
         <div class="v2-pt-gender-label">남성</div>
       </button>
-      <button class="v2-pt-gender-btn v2-pt-gender-female" onclick="_selectGender('female')">
+      <button id="pt-gender-btn-female" class="v2-pt-gender-btn v2-pt-gender-female" onclick="_selectGender('female')">
         <div class="v2-pt-gender-icon">👩</div>
         <div class="v2-pt-gender-label">여성</div>
       </button>
@@ -15175,6 +15175,14 @@ async function _loadNicknameQuiet(){
     /* 이메일/가입일도 캐시 (자동로그인 후 마이페이지 표시용 — Auth 이메일이 비어도 DB값으로 채움) */
     if(data.email && window._generalUser && !window._generalUser.email){ window._generalUser.email = data.email; }
     if(data.createdAt && window._generalUser && !window._generalUser.createdAt){ window._generalUser.createdAt = data.createdAt; }
+    /* 성별 캐시 (네이버 등): PVR 측정 성별 잠금용. 관리자는 잠그지 않음 */
+    if(data.gender && window._generalUser){
+      window._generalUser.gender = data.gender;
+      try {
+        var _ng = _ptNormGender(data.gender);
+        if(_ng && !(typeof _isAppAdmin==='function' && _isAppAdmin())) localStorage.setItem('pt_user_gender', _ng);
+      } catch(e){}
+    }
     /* 닉네임이 있으면 캐시 */
     if(data.nickname && typeof data.nickname==='string' && data.nickname.length>=1){
       window._generalUser.nickname = data.nickname;
@@ -16449,26 +16457,43 @@ function _openPtGenderModal(){
   /* 이름 자동 입력: 학생 로그인 시 학생 이름, 아니면 마지막 사용 이름 */
   const nameInput = document.getElementById('pt-name-input');
   const nameErr = document.getElementById('pt-name-err');
+  var _admin = (typeof _isAppAdmin === 'function' && _isAppAdmin());
+  var _gu = window._generalUser;
   if(nameInput){
-    /* 관리자: 이름 직접 입력 가능(새 친구/테스트 측정용). 일반 학생: 본인 이름 고정 */
-    var _admin = (typeof _isAppAdmin === 'function' && _isAppAdmin());
-    if(!_admin && typeof curStudent !== 'undefined' && curStudent && curStudent.name){
+    if(_admin){
+      /* 관리자: 이름 직접 입력 가능(새 친구/테스트 측정용) */
+      nameInput.readOnly = false;
+      nameInput.style.background=''; nameInput.style.color=''; nameInput.style.cursor='';
+      nameInput.value = localStorage.getItem('pt_last_name') || '';
+    } else if(typeof curStudent !== 'undefined' && curStudent && curStudent.name){
+      /* 학생: 본인 이름 고정 */
       nameInput.value = curStudent.name;
       nameInput.readOnly = true;
-      nameInput.style.background = '#f3f4f6';
-      nameInput.style.color = '#6b7280';
-      nameInput.style.cursor = 'not-allowed';
+      nameInput.style.background='#f3f4f6'; nameInput.style.color='#6b7280'; nameInput.style.cursor='not-allowed';
+    } else if(_gu && _gu.nickname){
+      /* 일반 회원: 본인 닉네임 고정(수정 불가) */
+      nameInput.value = _gu.nickname;
+      nameInput.readOnly = true;
+      nameInput.style.background='#f3f4f6'; nameInput.style.color='#6b7280'; nameInput.style.cursor='not-allowed';
     } else {
       /* 비로그인 - 마지막 사용 이름 자동 입력 */
       nameInput.readOnly = false;
-      nameInput.style.background = '';
-      nameInput.style.color = '';
-      nameInput.style.cursor = '';
-      const lastName = localStorage.getItem('pt_last_name') || '';
-      nameInput.value = lastName;
+      nameInput.style.background=''; nameInput.style.color=''; nameInput.style.cursor='';
+      nameInput.value = localStorage.getItem('pt_last_name') || '';
     }
     if(nameErr) nameErr.textContent = '';
   }
+  /* 성별 잠금: 비관리자는 본인 성별로만. 아는 성별(네이버 가입정보/이전 측정)이면 반대 버튼 비활성 */
+  _ptLockedGender = '';
+  if(!_admin){
+    var _kg = _ptNormGender((_gu && _gu.gender) || (typeof curStudent!=='undefined' && curStudent && curStudent.gender) || localStorage.getItem('pt_user_gender') || '');
+    if(_kg) _ptLockedGender = _kg;
+  }
+  var _bm = document.getElementById('pt-gender-btn-male');
+  var _bf = document.getElementById('pt-gender-btn-female');
+  [_bm,_bf].forEach(function(b){ if(b){ b.style.opacity=''; b.style.pointerEvents=''; b.style.filter=''; b.disabled=false; } });
+  if(_ptLockedGender==='male' && _bf){ _bf.style.opacity='0.35'; _bf.style.pointerEvents='none'; _bf.style.filter='grayscale(1)'; _bf.disabled=true; }
+  if(_ptLockedGender==='female' && _bm){ _bm.style.opacity='0.35'; _bm.style.pointerEvents='none'; _bm.style.filter='grayscale(1)'; _bm.disabled=true; }
 }
 function _closePtGenderModal(){
   const _gm2 = document.getElementById('pt-gender-modal'); if(_gm2) _gm2.classList.remove('active');
@@ -16476,9 +16501,24 @@ function _closePtGenderModal(){
 
 /* 성별 선택 → 측정 시작 (이름 검증 포함) */
 let _ptGender = null;
+var _ptLockedGender = ''; /* 비관리자 본인 성별 잠금값('male'/'female'/'') */
+function _ptNormGender(g){
+  if(!g) return '';
+  var t = String(g).trim().toLowerCase();
+  if(t==='m'||t==='male'||t==='남'||t==='남성') return 'male';
+  if(t==='f'||t==='female'||t==='여'||t==='여성') return 'female';
+  return '';
+}
 let _ptHuskyMode = false; /* 쉰목소리/허스키 보이스 모드 - 노이즈 많은 발성 정확도 향상 */
 let _ptUserName = null;  /* 측정자 이름 (필수) */
 function _selectGender(g){
+  /* 성별 잠금: 비관리자는 등록된 본인 성별로만 (관리자는 자유) */
+  if(_ptLockedGender && g !== _ptLockedGender){
+    var _ne = document.getElementById('pt-name-err');
+    if(_ne) _ne.textContent = '⚠️ 등록된 본인 성별로만 측정할 수 있습니다.';
+    else alert('등록된 본인 성별로만 측정할 수 있습니다.');
+    return;
+  }
   /* 이름 검증 */
   const nameInput = document.getElementById('pt-name-input');
   const nameErr = document.getElementById('pt-name-err');
@@ -16497,6 +16537,15 @@ function _selectGender(g){
   /* 이름 저장 (다음 측정에 자동 입력용) */
   _ptUserName = name;
   try { localStorage.setItem('pt_last_name', name); } catch(e){}
+
+  /* 비관리자이고 성별이 아직 미확정이면, 이번 선택을 본인 성별로 고정(다음 측정부터 잠금) */
+  try {
+    var _adminSel = (typeof _isAppAdmin==='function' && _isAppAdmin());
+    if(!_adminSel && !_ptLockedGender){
+      localStorage.setItem('pt_user_gender', g);
+      if(window._generalUser) window._generalUser.gender = g;
+    }
+  } catch(e){}
   
   _ptGender = g;
   _closePtGenderModal();
