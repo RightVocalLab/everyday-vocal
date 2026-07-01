@@ -12790,6 +12790,12 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
                   nickname: null,  /* _loadNicknameQuiet이 채움 */
                   provider: _restoredProv,
                 };
+                /* 이메일을 localStorage에 캐시 — 새로고침 시 세션이 익명으로 빠져도 마이페이지에 이메일 표시 (remember 체크와 무관) */
+                try {
+                  if(user.email){ localStorage.setItem('general_user_email', user.email); }
+                  localStorage.setItem('general_user_uid', user.uid);
+                  if(_restoredProv){ localStorage.setItem('general_user_provider', _restoredProv); }
+                } catch(e){}
                 window._userType = 'general';
                 if(typeof _updateUserBtn === 'function') _updateUserBtn();
                 /* 닉네임 즉시 로드 (await로 글쓰기 전에 nickname 채워지도록) */
