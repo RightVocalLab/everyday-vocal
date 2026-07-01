@@ -2413,6 +2413,32 @@ input,select,button,textarea{font-family:inherit;}
 </div>
 
 <!-- 성별 선택 모달 -->
+<!-- ===== PVR 음성 수집·이용 동의 모달 (첫 사용 1회) ===== -->
+<div class="v2-pt-modal-bg" id="pt-consent-modal" onclick="if(event.target===this)_ptCloseVoiceConsent()">
+  <div class="v2-pt-modal-card">
+    <button class="v2-ios-modal-close" onclick="_ptCloseVoiceConsent()" aria-label="닫기">✕</button>
+    <div class="v2-pt-modal-title">음성 정보 수집·이용 동의</div>
+    <div class="v2-pt-modal-body" style="text-align:left">
+      음역대 측정을 위해 아래와 같이 음성 정보를 수집·이용합니다. 측정을 시작하려면 동의가 필요합니다.
+    </div>
+    <div style="text-align:left;font-size:12px;color:#374151;line-height:1.65;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin:12px 0">
+      <div style="margin-bottom:9px"><strong>· 수집·이용 목적</strong><br>음역대·음압(데시벨)·성구 측정 및 결과 제공</div>
+      <div style="margin-bottom:9px"><strong>· 수집·이용 항목</strong><br>마이크로 입력되는 음성(실시간 분석용), 측정 결과 수치(음역·데시벨·성구 등)</div>
+      <div style="margin-bottom:9px"><strong>· 처리 방식</strong><br>음성은 측정 중 <strong>기기에서 실시간 분석에만</strong> 사용되며, <strong>원본 음성(녹음 파일)은 저장·전송되지 않습니다.</strong> 측정 결과 수치만 기기(브라우저)와 서버에 저장됩니다.</div>
+      <div style="margin-bottom:9px"><strong>· 보유·이용 기간</strong><br>측정 이력은 이용자가 삭제하거나 회원 탈퇴 시까지 보관 후 파기</div>
+      <div><strong>· 동의 거부 권리</strong><br>동의를 거부할 수 있으며, 이 경우 음역대 측정 기능은 이용할 수 없습니다.</div>
+    </div>
+    <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12.5px;color:#374151;line-height:1.5;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;text-align:left">
+      <input type="checkbox" id="pt-consent-cb" onchange="_ptToggleConsentBtn()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;cursor:pointer">
+      <span>위 음성 정보 수집·이용에 동의합니다. <span style="color:#dc2626">(필수)</span></span>
+    </label>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="_ptCloseVoiceConsent()" style="flex:1;height:46px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;color:#475569">취소</button>
+      <button id="pt-consent-go" onclick="_ptAgreeVoiceConsent()" disabled style="flex:1.4;height:46px;background:#2563eb;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:800;color:#fff;opacity:0.5">동의하고 측정 시작</button>
+    </div>
+  </div>
+</div>
+
 <div class="v2-pt-modal-bg" id="pt-gender-modal" onclick="if(event.target===this)_closePtGenderModal()">
   <div class="v2-pt-modal-card">
     <button class="v2-ios-modal-close" onclick="_closePtGenderModal()" aria-label="닫기">✕</button>
@@ -16385,7 +16411,29 @@ let _ptCanvasCtx = null;
 let _ptDrawNeeded = false;
 
 /* 음역대 테스트 화면 열기 */
+/* ===== PVR 음성 수집 첫 사용 동의 (개인정보 보호법) ===== */
+var PT_VOICE_CONSENT_KEY = 'pt_voice_consent';
+function _ptHasVoiceConsent(){ try { return localStorage.getItem(PT_VOICE_CONSENT_KEY) === '1'; } catch(e){ return false; } }
+function _ptToggleConsentBtn(){
+  var cb = document.getElementById('pt-consent-cb'); var b = document.getElementById('pt-consent-go');
+  if(!b) return; var ok = !!(cb && cb.checked);
+  b.disabled = !ok; b.style.opacity = ok ? '1' : '0.5'; b.style.cursor = ok ? 'pointer' : 'not-allowed';
+}
+function _ptShowVoiceConsent(){
+  var cb = document.getElementById('pt-consent-cb'); if(cb) cb.checked = false;
+  _ptToggleConsentBtn();
+  var m = document.getElementById('pt-consent-modal'); if(m) m.classList.add('active');
+}
+function _ptCloseVoiceConsent(){ var m = document.getElementById('pt-consent-modal'); if(m) m.classList.remove('active'); }
+function _ptAgreeVoiceConsent(){
+  try { localStorage.setItem(PT_VOICE_CONSENT_KEY, '1'); localStorage.setItem('pt_voice_consent_at', String(Date.now())); } catch(e){}
+  _ptCloseVoiceConsent();
+  openPitchTest();
+}
+
 function openPitchTest(){
+  /* 첫 사용 시 음성 수집·이용 동의 (마이크 켜기 전에 1회) */
+  if(!_ptHasVoiceConsent()){ _ptShowVoiceConsent(); return; }
   push('scr-pitchtest');
   /* 초기 상태 - 시작 전 안내 표시 */
   const pre = document.getElementById('pt-pre-screen');
