@@ -17322,6 +17322,20 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     result = _mFalsetto ? 'falsetto' : 'mix';
   }
 
+  /* === 남성 중음역 흉성 오판 가드 (실측 2026-07-02 log2) ===
+     세게 낸 중성(log2 205프레임): C4~D4(266~299Hz) 122프레임이 chest로 오판.
+     원인: 세게 낸 중성이라 H1H4 낮음(0~11)·H1H2 음수 → 스펙트럼 기울기 점수로 chest(score<=-3).
+           그러나 highRatio는 -36~-51(믹스 본체)로, 고주파 에너지는 흉성(≈-23, highRatio>-30)이 전혀 아님.
+     비교: 부드러운 중성(log1)은 같은 음역서 H1H2>6 → 위 약접촉 가드가 chest→mix 구제 → 최종 chest 0.
+           세게 낸 중성(log2)은 H1H2 음수라 약접촉 가드에 안 걸려 chest로 남는 게 문제였음.
+     → 남성 chest인데 highRatio가 흉성영역(-30)이 아니고(<=-32) f0>=255Hz면 믹스로 강등.
+        검증: log2 chest 122/122 전부 mix 전환·비chest 0개 건드림·chest 생존 0.
+              log1 최종 chest 0개라 회귀 없음. 여성·저음역(f0<255)·진짜흉성(highRatio>-30)은 전부 불변.
+     ※ 위 L17313 남성 재판정 이후에 실행 → 강등된 mix가 falsetto로 재판정될 위험 없음. */
+  if(!isFemale && result === 'chest' && f0 >= 255 && highRatio <= -32){
+    result = 'mix';
+  }
+
   /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
