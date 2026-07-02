@@ -17291,7 +17291,13 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      → 고음역 falsetto 중 H1H2가 가성영역(10+) 미만이고 H1H4도 가성영역(36+) 미만이면
        진성 두성이므로 mix로 강등. 진짜 가성(H1H2 10+ 또는 H1H4 36+)은 통과. */
   /* [완만 조정 2026-06, 데이터 수집 전 임시] h1h2 10→8, h1h4 36→33 : 강한 가성(고배음↑로 h1h2·h1h4 낮아짐) 강등을 완화. 아직 믹스로 나오면 더 내리고(예 6/30), 강한믹스가 가성으로 새면 다시 올릴 것 */
-  if(isFemale && result === 'falsetto' && f0 >= 500 && h1h2 < 8 && h1h4 < 33){
+  /* [실측 2026-07-02 여성 log(황지원 198프레임) 근거] score<7 추가:
+     A#5~B5 고음에서 H1H2/H1H4가 살짝 낮아(5/24, 4.3/24) 두성으로 오인 강등되던 가성 2프레임 발견.
+     그 프레임 score는 9.4·9.5로, 다른 지표(H2H4+19, highRatio -45~-46, 초고음 f0)가 압도적 가성.
+     이 로그의 믹스 점수는 최대 4.4, 가성은 5.3~13 → 7은 그 사이 안전 구간(4.4↔9.4 갭).
+     즉 '가성 증거가 압도적(score>=7)이면 두성 휴리스틱을 무시'. 진짜 강한 두성/벨팅은 H1H2 음수라
+     점수가 눌려 7에 못 미치므로 오분류 위험 없음. 검증: 이 로그에서 딱 그 2프레임만 mix→falsetto. */
+  if(isFemale && result === 'falsetto' && f0 >= 500 && h1h2 < 8 && h1h4 < 33 && score < 7){
     result = 'mix';
   }
 
@@ -19406,13 +19412,17 @@ async function _ptApplyEdit(){
 function _ptUpdateHistoryItem(newResult){
   if(!newResult || !newResult.timestamp) return;
   try {
-    const KEY = 'pt_history';
+    /* [버그수정 2026-07-02] 원본 저장(_ptSaveResult)은 'pt_history_local'에 하는데
+       여기선 'pt_history'로 읽어서 매칭 실패 → 편집이 저장 안 되던 원인. 키 일치시킴. */
+    const KEY = 'pt_history_local';
     const arr = JSON.parse(localStorage.getItem(KEY) || '[]');
     const idx = arr.findIndex(x => x && x.timestamp === newResult.timestamp);
     if(idx >= 0){
       arr[idx] = newResult;
       localStorage.setItem(KEY, JSON.stringify(arr));
       console.log('[PVR] localStorage 이력 갱신 완료');
+    } else {
+      console.warn('[PVR] localStorage 이력에서 timestamp 매칭 실패 (갱신 스킵):', newResult.timestamp);
     }
   } catch(e){
     console.warn('localStorage 이력 갱신 실패:', e);
@@ -19447,10 +19457,43 @@ async function _ptUpdateFirebaseHistory(newResult){
     }
   }
   if(!studentName) return;  /* 학생 매칭 안 되면 Firebase 갱신 X */
-  
-  const ref = firebase.database().ref(`pt_history/${studentName}/${newResult.timestamp}`);
-  await ref.set(newResult);
-  console.log(`[PVR] Firebase 이력 갱신 완료: ${studentName} / ${newResult.timestamp}`);
+
+  /* [버그수정 2026-07-02] 원본 측정은 pt_history/{학생}/{push-id} 아래에 저장되고
+     timestamp는 레코드 내부 필드다. 기존 코드는 pt_history/{학생}/{timestamp}에 .set() 하여
+     원본(push-id 노드)은 그대로 두고 timestamp 키로 '고아 노드'만 새로 만들었음 → 재조회 시
+     Object.values 중복제거에서 push-id(옛 데이터)가 먼저 잡혀 편집 결과가 사라졌음.
+     → timestamp로 실제 push-id 키를 찾아 그 노드를 덮어쓰고, 예전 고아 노드는 정리한다. */
+  const baseRef = firebase.database().ref(`pt_history/${studentName}`);
+  const tsStr = String(newResult.timestamp);
+  let targetKey = null;
+  let hasOrphan = false;
+  try {
+    const snap = await baseRef.once('value');
+    const data = snap.val() || {};
+    for(const k in data){
+      if(data[k] && data[k].timestamp === newResult.timestamp){
+        if(k !== tsStr){ targetKey = k; break; }   /* push-id 우선 */
+        if(targetKey === null) targetKey = k;        /* 없으면 timestamp 키라도 */
+      }
+    }
+    hasOrphan = Object.prototype.hasOwnProperty.call(data, tsStr);
+  } catch(e){
+    console.warn('[PVR] Firebase 키 조회 실패:', e);
+  }
+
+  if(targetKey){
+    await baseRef.child(targetKey).set(newResult);
+    console.log(`[PVR] Firebase 이력 갱신(기존 노드 덮어쓰기): ${studentName} / ${targetKey}`);
+  } else {
+    const ref = baseRef.push();          /* 매칭 노드 없음 → 새로 저장(안전장치) */
+    await ref.set(newResult);
+    console.log(`[PVR] Firebase 이력 신규 저장(매칭 없음): ${studentName} / ${ref.key}`);
+  }
+  /* 예전 버그로 timestamp를 키로 저장된 고아 노드 정리 (targetKey가 그 노드 자신이면 제외) */
+  if(hasOrphan && targetKey !== tsStr){
+    try { await baseRef.child(tsStr).remove(); console.log('[PVR] Firebase 고아 노드 정리:', tsStr); }
+    catch(_e){ console.warn('[PVR] 고아 노드 정리 실패:', _e); }
+  }
 }
 
 /* 결과 상세를 다시 렌더링 — _ptLastResult 갈아끼우고 _showPtResult 재호출
