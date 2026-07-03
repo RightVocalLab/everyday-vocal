@@ -18473,6 +18473,46 @@ function _ptFilterOutliers(points){
   return {kept, removed};
 }
 
+/* 공간적 register 이상치 보정 (2026-07-03):
+   위치(음정·dB)는 정상인데 '색(register)만' 튄 점을 이웃 다수결로 바로잡는다.
+   저·중음역에서 가성↔중성이 프레임 단위로 깜빡여 mix 무리 속 가성 점(또는 그 반대)이
+   몇 개 찍히고, convex hull 등고선이 그 튄 점까지 뻗는 문제를 해결.
+   - 각 점의 (음정, dB) 최근접 이웃 K개를 보고, 자기 register 이웃이 1개 이하로 '고립'되고
+     다른 register가 이웃의 뚜렷한 다수(>=60%)면 그 다수 register로 재분류.
+   - 3개 이상 모인 군집·자연스러운 register 경계는 보존(이웃이 섞여 다수 60% 미달 → 유지).
+   - dB는 시각 종횡비에 맞춰 2.5dB≈반음으로 스케일. */
+function _ptDenoiseRegisters(points){
+  if(!points || points.length < 6) return points;
+  const K = 6;
+  const need = Math.ceil(K * 0.6);           /* 이웃 다수 최소 = 4 */
+  const newReg = points.map(p => p.register);
+  for(let i = 0; i < points.length; i++){
+    const mi = points[i].midi, di = points[i].dB;
+    const ds = [];
+    for(let j = 0; j < points.length; j++){
+      if(j === i) continue;
+      const dm = points[j].midi - mi;
+      const dd = (points[j].dB - di) / 2.5;   /* dB → 반음 스케일 */
+      ds.push({ r: points[j].register, dist: dm*dm + dd*dd });
+    }
+    ds.sort((a,b) => a.dist - b.dist);
+    const cnt = {};
+    let same = 0;
+    for(let k = 0; k < K; k++){
+      const r = ds[k].r;
+      cnt[r] = (cnt[r] || 0) + 1;
+      if(r === points[i].register) same++;
+    }
+    let best = null, bestc = 0;
+    for(const r in cnt){ if(cnt[r] > bestc){ bestc = cnt[r]; best = r; } }
+    if(best && best !== points[i].register && same <= 1 && bestc >= need){
+      newReg[i] = best;                       /* 고립 + 이웃 뚜렷한 다수 → 재분류 */
+    }
+  }
+  /* 원본 이웃 기준으로 일괄 계산했으니 마지막에 한 번에 적용(연쇄 재분류 방지) */
+  return points.map((p, i) => (newReg[i] === p.register ? p : Object.assign({}, p, { register: newReg[i] })));
+}
+
 function _ptAnalyzeResult(){
   if(!_ptDataPoints || _ptDataPoints.length < 3) return null;
   
@@ -18484,6 +18524,15 @@ function _ptAnalyzeResult(){
       removedOutliers.map(p => `MIDI ${p.midi.toFixed(1)} / ${p.dB.toFixed(1)}dB`).join(', '));
     /* 이상치 제거된 데이터로 _ptDataPoints 갱신 (등고선/저장에도 반영) */
     _ptDataPoints = filteredPoints;
+  }
+
+  /* === 0b. register 공간 이상치 보정 (튄 점·등고선 왜곡 방지) === */
+  const _dn = _ptDenoiseRegisters(_ptDataPoints);
+  let _dnChanged = 0;
+  for(let i = 0; i < _dn.length; i++){ if(_dn[i].register !== _ptDataPoints[i].register) _dnChanged++; }
+  if(_dnChanged > 0){
+    console.log(`[PVR] register 공간 이상치 ${_dnChanged}개 이웃 다수결로 보정`);
+    _ptDataPoints = _dn;
   }
   
   if(_ptDataPoints.length < 3) return null;
@@ -21716,8 +21765,18 @@ function _bf_hullToPath(hull){
 /* register별 등고선 SVG path 생성 */
 function _bf_getRegisterContour(dataPoints, register, x2px, y2px){
   if(!dataPoints || !dataPoints.length) return '';
-  const pts = dataPoints.filter(p => p.register === register);
-  if(pts.length < 3) return '';
+  let pts = dataPoints.filter(p => p.register === register);
+  if(pts.length < 4) return '';   /* 점 4개 미만이면 등고선 생략(튄 점 몇 개로 영역 안 생기게) */
+  /* 잔여 이상치 트림: (음정,dB) 중앙값에서 로버스트 거리(MAD)로 멀리 떨어진 점 제외 후 hull.
+     convex hull이 이상치 하나에 크게 늘어나는 걸 방지. */
+  const mid = arr => { const s=arr.slice().sort((a,b)=>a-b); const n=s.length; return n%2? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2; };
+  const mMid = mid(pts.map(p=>p.midi));
+  const dMid = mid(pts.map(p=>p.dB));
+  const dists = pts.map(p => Math.hypot(p.midi - mMid, (p.dB - dMid)/2.5));
+  const madBase = mid(dists);
+  const thr = Math.max(madBase * 3.0, 4.0);   /* 3×MAD 또는 최소 4(반음환산) */
+  const core = pts.filter((p, i) => dists[i] <= thr);
+  if(core.length >= 4) pts = core;             /* 코어가 충분하면 트림 적용, 아니면 원본 유지 */
   const xy = pts.map(p => ({x: x2px(p.midi), y: y2px(_ptDbDisp(p.dB))}));
   const hull = _bf_convexHull(xy);
   return _bf_hullToPath(hull);
