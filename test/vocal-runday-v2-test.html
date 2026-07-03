@@ -17318,12 +17318,17 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      ※ 여성 분기(위 두 가드)와 완전 분리. */
   if(!isFemale && f0 < 285 && result !== 'chest'){
     var _mFalsetto;
+    /* [실측 2026-07-03 전면 교정] 이전 가드는 H1H2/H2H4 부호가 정반대였음.
+       동현 실측 대조:
+         · 진짜 가성(저·중음역): H1H2 낮음(1.7~6.8) + H2H4 양수(+7~+24, 급기울기). H1H4는 10~29로 낮아 분리 못함.
+         · 작은/밝은 중성(믹스): H1H2 높음(≥11) (+ 작은건 H2H4 음수).
+       검증: (H1H2<=10 & H2H4>=6) → 실제 가성 20/21 정탐, 중성 65프레임 오탐 0.
+       ※ 이전의 'H2H4<=0 & H1H2>=15'(및 H1H4>=26 시도)는 가성↔중성을 서로 뒤바꿔 폐기.
+       ※ 흉성(chest)은 위에서 제외(result!=='chest') — 눌린 흉성은 H1H2 크게 음수라 여기 안 들어옴. */
     if(f0 < 130){
-      _mFalsetto = false;                          /* C3 미만: 가성 불가 */
-    } else if(f0 < 215){
-      _mFalsetto = (h2h4 <= -4 && h1h2 >= 18);     /* C3~A3: 강한 증거만 */
+      _mFalsetto = false;                              /* C3 미만: 남성 가성 물리적 불가(하드 플로어) */
     } else {
-      _mFalsetto = (h2h4 <= 0 && h1h2 >= 15);      /* A3~ : 일반 규칙 */
+      _mFalsetto = (h1h2 <= 10 && h2h4 >= 6);          /* 가성 = 약한 기본파(H1H2↓) + 급한 기울기(H2H4↑) */
     }
     result = _mFalsetto ? 'falsetto' : 'mix';
   }
