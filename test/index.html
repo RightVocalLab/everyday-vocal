@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>아빠 혈당 다이어리</title>
+
+<!-- Pretendard (한글 가독성) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+<style>
+  :root{
+    --bg:#F5F4F0; --card:#FFFFFF; --ink:#1B2430; --muted:#6B7684; --line:#E7E5DF;
+    --green:#12A186; --amber:#E0942F; --red:#D9534B; --blue:#3E74D8;
+    --shadow:0 1px 2px rgba(20,30,45,.05), 0 6px 20px rgba(20,30,45,.06);
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    font-family:"Pretendard",system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink);
+    line-height:1.45; padding-bottom:40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:16px 16px calc(16px + env(safe-area-inset-bottom));}
+  header.top{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 14px;}
+  header.top h1{font-size:19px; font-weight:800; margin:0; letter-spacing:-.3px}
+  .who{font-size:13px; color:var(--muted); background:#fff; border:1px solid var(--line);
+    padding:6px 12px; border-radius:999px; font-weight:600; cursor:pointer}
+  .who b{color:var(--ink)}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:18px; margin-bottom:14px}
+
+  /* Hero: latest reading */
+  .hero{padding:20px 18px 18px; text-align:center; position:relative; overflow:hidden}
+  .hero .label{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:6px}
+  .hero .big{font-size:64px; font-weight:800; line-height:1; letter-spacing:-2px; font-variant-numeric:tabular-nums}
+  .hero .unit{font-size:18px; font-weight:700; color:var(--muted); margin-left:4px}
+  .hero .status{display:inline-block; margin-top:10px; font-size:14px; font-weight:800;
+    padding:5px 14px; border-radius:999px}
+  .hero .meta{margin-top:10px; font-size:13px; color:var(--muted)}
+  .hero.empty .big{font-size:26px; color:var(--muted); font-weight:700; letter-spacing:-.5px}
+
+  /* stat row */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 8px; text-align:center; box-shadow:var(--shadow)}
+  .stat .n{font-size:22px; font-weight:800; font-variant-numeric:tabular-nums}
+  .stat .t{font-size:11.5px; color:var(--muted); font-weight:600; margin-top:2px}
+
+  h2.sec{font-size:14px; font-weight:800; color:var(--ink); margin:2px 2px 10px; letter-spacing:-.2px}
+
+  /* form */
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  label.fl{display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin-bottom:7px}
+  input[type=number], input[type=datetime-local], input[type=text]{
+    width:100%; font-family:inherit; font-size:16px; color:var(--ink);
+    padding:13px 14px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; outline:none}
+  input:focus{border-color:var(--green); background:#fff}
+  .valuebox input{font-size:30px; font-weight:800; text-align:center; letter-spacing:-1px; padding:14px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{flex:1 0 auto; min-width:0; text-align:center; font-size:13.5px; font-weight:700; color:var(--muted);
+    padding:11px 6px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; cursor:pointer; transition:.12s}
+  .chip.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+  .btn{width:100%; font-family:inherit; font-size:16px; font-weight:800; color:#fff; background:var(--green);
+    border:none; border-radius:14px; padding:15px; cursor:pointer; transition:.12s}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{opacity:.5; cursor:default}
+
+  /* chart */
+  .chartwrap{height:200px; position:relative}
+
+  /* list */
+  .rec{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--line)}
+  .rec:last-child{border-bottom:none}
+  .rec .dot{width:10px; height:10px; border-radius:50%; flex:none}
+  .rec .rv{font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; width:52px; text-align:right}
+  .rec .rmid{flex:1; min-width:0}
+  .rec .rctx{font-size:14px; font-weight:700}
+  .rec .rsub{font-size:12px; color:var(--muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .rec .del{border:none; background:none; color:#C4C0B8; font-size:20px; cursor:pointer; padding:4px 8px; line-height:1}
+  .rec .del:active{color:var(--red)}
+  .emptylist{text-align:center; color:var(--muted); font-size:14px; padding:24px 0}
+
+  .legend{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:6px; font-size:11.5px; color:var(--muted)}
+  .legend span{display:inline-flex; align-items:center; gap:5px}
+  .legend i{width:9px; height:9px; border-radius:50%}
+
+  .note{font-size:11.5px; color:var(--muted); text-align:center; line-height:1.5; margin-top:8px}
+  .synced{font-size:11.5px; color:var(--muted); text-align:center; margin-top:2px}
+  .synced b{color:var(--green)}
+
+  /* setup screen */
+  .setup{max-width:520px; margin:40px auto; padding:0 18px}
+  .setup .card{padding:22px}
+  .setup h1{font-size:20px; margin:0 0 6px}
+  .setup p{font-size:14px; color:var(--muted); margin:0 0 14px}
+  .setup ol{font-size:14px; padding-left:20px; line-height:1.7}
+  .setup code{background:#F0EEE9; padding:2px 6px; border-radius:6px; font-size:12.5px}
+  .hidden{display:none!important}
+
+  /* toast */
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; font-size:14px; font-weight:600; padding:12px 20px; border-radius:999px;
+    opacity:0; transition:.25s; pointer-events:none; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* who modal */
+  .modal{position:fixed; inset:0; background:rgba(20,30,45,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:24px}
+  .modal .box{background:#fff; border-radius:20px; padding:24px; width:100%; max-width:340px; text-align:center}
+  .modal h3{margin:0 0 6px; font-size:18px}
+  .modal p{margin:0 0 18px; font-size:13.5px; color:var(--muted)}
+  .modal .opts{display:flex; gap:10px}
+  .modal .opts button{flex:1; font-family:inherit; font-size:16px; font-weight:800; padding:14px; border-radius:14px;
+    border:1px solid var(--line); background:#FBFBFA; cursor:pointer}
+  .modal .opts button:active{background:var(--green); color:#fff; border-color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- ===================== 설정 안내 화면 (Firebase 미설정 시) ===================== -->
+<div id="setupScreen" class="setup hidden">
+  <div class="card">
+    <h1>⚙️ 1분 설정만 하면 시작</h1>
+    <p>이 앱은 두 사람이 같은 혈당 기록을 실시간으로 보기 위해 무료 Firebase 저장소를 씁니다. 아래 <code>firebaseConfig</code> 값만 채우면 끝이에요.</p>
+    <ol>
+      <li><b>console.firebase.google.com</b> 접속 → 프로젝트 만들기</li>
+      <li>왼쪽 <b>빌드 → Firestore Database</b> → 데이터베이스 만들기 → <b>테스트 모드</b>로 시작</li>
+      <li>프로젝트 설정(⚙️) → 하단 <b>내 앱</b> → 웹 <b>&lt;/&gt;</b> 앱 추가</li>
+      <li>나오는 <code>firebaseConfig</code>의 값 6줄을 이 HTML 파일 위쪽 <code>firebaseConfig</code>에 붙여넣기</li>
+      <li>깃허브에 다시 푸시 → 끝!</li>
+    </ol>
+    <p style="margin-top:14px">막히면 스크린샷 찍어서 물어보세요. 바로 잡아드릴게요.</p>
+  </div>
+</div>
+
+<!-- ===================== 메인 앱 ===================== -->
+<div id="app" class="wrap hidden">
+  <header class="top">
+    <h1>아빠 혈당 다이어리</h1>
+    <div class="who" id="whoBtn">기록자 <b id="whoName">-</b></div>
+  </header>
+
+  <!-- 최신 기록 -->
+  <div class="card hero empty" id="hero">
+    <div class="label">최근 혈당</div>
+    <div class="big" id="heroBig">아직 기록이 없어요</div>
+    <div class="meta" id="heroMeta"></div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stats">
+    <div class="stat"><div class="n" id="stAvg">-</div><div class="t">7일 평균</div></div>
+    <div class="stat"><div class="n" id="stHi">-</div><div class="t">최고</div></div>
+    <div class="stat"><div class="n" id="stLo">-</div><div class="t">최저</div></div>
+  </div>
+
+  <!-- 입력 -->
+  <div class="card">
+    <h2 class="sec">혈당 기록하기</h2>
+    <div class="field valuebox">
+      <label class="fl">혈당 수치 (mg/dL)</label>
+      <input type="number" id="inValue" inputmode="numeric" placeholder="예) 120" min="10" max="900">
+    </div>
+    <div class="field">
+      <label class="fl">측정 시점</label>
+      <div class="chips" id="ctxChips">
+        <div class="chip on" data-v="공복">공복</div>
+        <div class="chip" data-v="아침식후">아침식후</div>
+        <div class="chip" data-v="점심식후">점심식후</div>
+        <div class="chip" data-v="저녁식후">저녁식후</div>
+        <div class="chip" data-v="취침전">취침전</div>
+        <div class="chip" data-v="기타">기타</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="fl">측정 시간</label>
+      <input type="datetime-local" id="inWhen">
+    </div>
+    <div class="field">
+      <label class="fl">메모 (선택)</label>
+      <input type="text" id="inMemo" placeholder="예) 약 먹기 전, 컨디션 좋음">
+    </div>
+    <button class="btn" id="saveBtn">기록 저장</button>
+  </div>
+
+  <!-- 그래프 -->
+  <div class="card">
+    <h2 class="sec">추이 그래프 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+    <div class="chartwrap"><canvas id="chart"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>저혈당</span>
+      <span><i style="background:var(--green)"></i>정상</span>
+      <span><i style="background:var(--amber)"></i>주의</span>
+      <span><i style="background:var(--red)"></i>높음</span>
+    </div>
+  </div>
+
+  <!-- 기록 목록 -->
+  <div class="card">
+    <h2 class="sec">전체 기록</h2>
+    <div id="list"><div class="emptylist">첫 혈당을 기록해 보세요.</div></div>
+  </div>
+
+  <div class="synced" id="syncState">연결 중…</div>
+  <div class="note">이 화면의 정상/주의 표시는 일반 기준을 참고한 <b>참고용</b>이며 의료 진단이 아닙니다. 실제 판단과 약 조절은 담당 의료진과 상의하세요.</div>
+</div>
+
+<!-- 기록자 선택 모달 -->
+<div class="modal hidden" id="whoModal">
+  <div class="box">
+    <h3>이 폰의 사용자는?</h3>
+    <p>누가 기록했는지 함께 저장돼요. 나중에 바꿀 수 있어요.</p>
+    <div class="opts" id="whoOpts">
+      <button data-v="동현">동현</button>
+      <button data-v="형">형</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase (compat: 빌드 불필요, 단일 파일로 동작) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+/* ============================================================
+   ① 여기에 Firebase 설정값을 붙여넣으세요 (딱 이 부분만!)
+   Firebase 콘솔 → 프로젝트 설정 → 내 앱(웹)에서 복사한 값
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCHtrKuFml2-Pc1y4yx7qiSYCIESUPrX-Q",
+  authDomain: "abba-blood-sugar.firebaseapp.com",
+  projectId: "abba-blood-sugar",
+  storageBucket: "abba-blood-sugar.firebasestorage.app",
+  messagingSenderId: "312092975960",
+  appId: "1:312092975960:web:8b99c8c53c667712b9bb2d"
+};
+/* ============================================================ */
+
+(function(){
+  "use strict";
+
+  // ---- 설정 여부 확인: 안 채웠으면 안내 화면 ----
+  const isConfigured = firebaseConfig.projectId && !firebaseConfig.projectId.includes("여기에");
+  if (!isConfigured) {
+    document.getElementById("setupScreen").classList.remove("hidden");
+    return;
+  }
+  document.getElementById("app").classList.remove("hidden");
+
+  // ---- Firebase 초기화 ----
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const col = db.collection("readings");
+
+  // ---- 요소 ----
+  const $ = id => document.getElementById(id);
+  const toastEl = $("toast");
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(()=>toastEl.classList.remove("show"), 1800);
+  }
+
+  // ---- 기록자(사용자) ----
+  let who = localStorage.getItem("bg_user") || "";
+  function refreshWho(){ $("whoName").textContent = who || "선택"; }
+  function askWho(force){
+    if (who && !force) { refreshWho(); return; }
+    $("whoModal").classList.remove("hidden");
+  }
+  $("whoOpts").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    who = b.dataset.v; localStorage.setItem("bg_user", who);
+    $("whoModal").classList.add("hidden"); refreshWho();
+  });
+  $("whoBtn").addEventListener("click", ()=>askWho(true));
+
+  // ---- 측정 시점 칩 ----
+  let ctx = "공복";
+  $("ctxChips").addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#ctxChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); ctx = c.dataset.v;
+  });
+
+  // ---- 시간 기본값 = 지금 (로컬) ----
+  function nowLocalInput(){
+    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,16);
+  }
+  $("inWhen").value = nowLocalInput();
+
+  // ---- 혈당 분류 (참고용) ----
+  // 반환: {key, label, color}
+  function classify(v, context){
+    const C = {low:{key:"low",label:"저혈당",color:getCss("--blue")},
+               ok:{key:"ok",label:"정상",color:getCss("--green")},
+               warn:{key:"warn",label:"주의",color:getCss("--amber")},
+               high:{key:"high",label:"높음",color:getCss("--red")}};
+    if (v < 70) return C.low;
+    const isPost = /식후/.test(context);
+    if (context === "공복"){
+      if (v <= 99) return C.ok; if (v <= 125) return C.warn; return C.high;
+    }
+    if (isPost){
+      if (v < 140) return C.ok; if (v < 200) return C.warn; return C.high;
+    }
+    // 취침전/기타 등 일반 목표
+    if (v <= 130) return C.ok; if (v <= 180) return C.warn; return C.high;
+  }
+  function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // ---- 저장 ----
+  const saveBtn = $("saveBtn");
+  saveBtn.addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const raw = $("inValue").value.trim();
+    const v = parseInt(raw, 10);
+    if (!raw || isNaN(v)){ toast("혈당 수치를 입력하세요"); $("inValue").focus(); return; }
+    if (v < 10 || v > 900){ toast("혈당 수치를 확인하세요 (10~900)"); return; }
+    const whenStr = $("inWhen").value || nowLocalInput();
+    const at = new Date(whenStr).getTime();
+
+    saveBtn.disabled = true; saveBtn.textContent = "저장 중…";
+    try{
+      await col.add({
+        value: v,
+        context: ctx,
+        at: at,
+        atText: whenStr.replace("T"," "),
+        memo: $("inMemo").value.trim(),
+        by: who,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      $("inValue").value = ""; $("inMemo").value = ""; $("inWhen").value = nowLocalInput();
+      toast("저장했어요 ✓");
+    }catch(err){
+      console.error(err);
+      toast("저장 실패: " + (err.code || err.message));
+    }finally{
+      saveBtn.disabled = false; saveBtn.textContent = "기록 저장";
+    }
+  });
+
+  // ---- 삭제 ----
+  async function del(id){
+    if (!confirm("이 기록을 삭제할까요?")) return;
+    try{ await col.doc(id).delete(); toast("삭제했어요"); }
+    catch(err){ toast("삭제 실패: " + (err.code||err.message)); }
+  }
+
+  // ---- 실시간 구독 ----
+  let chart = null;
+  col.orderBy("at","desc").onSnapshot(snap=>{
+    $("syncState").innerHTML = '<b>● 실시간 연결됨</b> · 동현·형이 함께 봅니다';
+    const rows = [];
+    snap.forEach(d => rows.push(Object.assign({id:d.id}, d.data())));
+    render(rows);
+  }, err=>{
+    console.error(err);
+    if (err.code === "permission-denied"){
+      $("syncState").innerHTML = '⚠️ Firestore 규칙이 막혀 있어요. 콘솔에서 <b>테스트 모드</b> 규칙으로 바꿔주세요.';
+    } else {
+      $("syncState").textContent = "연결 오류: " + (err.code || err.message);
+    }
+  });
+
+  function fmtWhen(atText, at){
+    if (atText) {
+      const [d,t] = atText.split(" ");
+      const md = d ? d.slice(5).replace("-","/") : "";
+      return md + (t ? " " + t : "");
+    }
+    return new Date(at).toLocaleString("ko-KR");
+  }
+
+  // ---- 렌더 ----
+  function render(rows){
+    // 최신(hero)
+    const hero = $("hero");
+    if (rows.length){
+      const r = rows[0]; const cl = classify(r.value, r.context);
+      hero.className = "card hero";
+      $("heroBig").innerHTML = r.value + '<span class="unit">mg/dL</span>';
+      let statusEl = hero.querySelector(".status");
+      if (!statusEl){ statusEl = document.createElement("div"); statusEl.className="status"; $("heroBig").after(statusEl); }
+      statusEl.textContent = cl.label;
+      statusEl.style.background = hexA(cl.color, .14);
+      statusEl.style.color = cl.color;
+      $("heroMeta").textContent = `${r.context} · ${fmtWhen(r.atText, r.at)} · ${r.by} 기록`;
+    } else {
+      hero.className = "card hero empty";
+      $("heroBig").textContent = "아직 기록이 없어요";
+      const s = hero.querySelector(".status"); if(s) s.remove();
+      $("heroMeta").textContent = "";
+    }
+
+    // 통계 (최근 7일)
+    const weekAgo = Date.now() - 7*24*3600*1000;
+    const wk = rows.filter(r => r.at >= weekAgo).map(r=>r.value);
+    $("stAvg").textContent = wk.length ? Math.round(wk.reduce((a,b)=>a+b,0)/wk.length) : "-";
+    const all = rows.map(r=>r.value);
+    $("stHi").textContent = all.length ? Math.max(...all) : "-";
+    $("stLo").textContent = all.length ? Math.min(...all) : "-";
+
+    // 목록
+    const list = $("list");
+    if (!rows.length){
+      list.innerHTML = '<div class="emptylist">첫 혈당을 기록해 보세요.</div>';
+    } else {
+      list.innerHTML = "";
+      rows.forEach(r=>{
+        const cl = classify(r.value, r.context);
+        const el = document.createElement("div");
+        el.className = "rec";
+        el.innerHTML =
+          `<span class="dot" style="background:${cl.color}"></span>`+
+          `<span class="rv" style="color:${cl.color}">${r.value}</span>`+
+          `<div class="rmid"><div class="rctx">${escape(r.context)} <span style="color:var(--muted);font-weight:600;font-size:12px">${cl.label}</span></div>`+
+          `<div class="rsub">${fmtWhen(r.atText,r.at)} · ${escape(r.by)}${r.memo?" · "+escape(r.memo):""}</div></div>`+
+          `<button class="del" title="삭제">✕</button>`;
+        el.querySelector(".del").addEventListener("click", ()=>del(r.id));
+        list.appendChild(el);
+      });
+    }
+
+    // 그래프 (오래된→최신, 최근 30)
+    const chartRows = rows.slice(0,30).reverse();
+    drawChart(chartRows);
+  }
+
+  function drawChart(rows){
+    const ctxEl = $("chart").getContext("2d");
+    const labels = rows.map(r => fmtWhen(r.atText, r.at));
+    const data = rows.map(r => r.value);
+    const colors = rows.map(r => classify(r.value, r.context).color);
+    if (chart){ chart.destroy(); }
+    chart = new Chart(ctxEl, {
+      type:"line",
+      data:{ labels, datasets:[{
+        data, borderColor:"#B9B6AE", borderWidth:2, tension:.3,
+        pointBackgroundColor:colors, pointBorderColor:colors, pointRadius:4, pointHoverRadius:6,
+        fill:false
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{
+          callbacks:{ label:c=> c.parsed.y + " mg/dL" } } },
+        scales:{
+          y:{ beginAtZero:false, suggestedMin:60, grid:{color:"#EFEDE7"}, ticks:{color:"#9AA0A6",font:{size:11}} },
+          x:{ grid:{display:false}, ticks:{color:"#9AA0A6",font:{size:10}, maxRotation:0, autoSkip:true, maxTicksLimit:5} }
+        }
+      }
+    });
+  }
+
+  // ---- 유틸 ----
+  function escape(s){ return String(s==null?"":s).replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+  function hexA(hex, a){
+    hex = hex.replace("#",""); if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
+    const n=parseInt(hex,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+  }
+
+  // ---- 시작 ----
+  refreshWho();
+  if (!who) askWho(false);
+})();
+</script>
+</body>
+</html>
