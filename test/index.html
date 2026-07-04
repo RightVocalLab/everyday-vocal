@@ -21,14 +21,14 @@
   body{
     font-family:"Pretendard",system-ui,-apple-system,sans-serif;
     background:var(--bg); color:var(--ink);
-    line-height:1.45; padding-bottom:40px;
+    line-height:1.5; padding-bottom:40px; font-size:17px;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px; margin:0 auto; padding:16px 16px calc(16px + env(safe-area-inset-bottom));}
-  header.top{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 14px;}
-  header.top h1{font-size:19px; font-weight:800; margin:0; letter-spacing:-.3px}
-  .who{font-size:13px; color:var(--muted); background:#fff; border:1px solid var(--line);
-    padding:6px 12px; border-radius:999px; font-weight:600; cursor:pointer}
+  .wrap{max-width:540px; margin:0 auto; padding:16px 16px calc(16px + env(safe-area-inset-bottom));}
+  header.top{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 16px;}
+  header.top h1{font-size:22px; font-weight:800; margin:0; letter-spacing:-.3px}
+  .who{font-size:15px; color:var(--muted); background:#fff; border:1px solid var(--line);
+    padding:9px 15px; border-radius:999px; font-weight:700; cursor:pointer}
   .who b{color:var(--ink)}
 
   .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
@@ -39,36 +39,66 @@
   .hero .label{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:6px}
   .hero .big{font-size:64px; font-weight:800; line-height:1; letter-spacing:-2px; font-variant-numeric:tabular-nums}
   .hero .unit{font-size:18px; font-weight:700; color:var(--muted); margin-left:4px}
-  .hero .status{display:inline-block; margin-top:10px; font-size:14px; font-weight:800;
-    padding:5px 14px; border-radius:999px}
-  .hero .meta{margin-top:10px; font-size:13px; color:var(--muted)}
+  .hero .status{display:inline-block; margin-top:10px; font-size:16px; font-weight:800;
+    padding:6px 16px; border-radius:999px}
+  .hero .meta{margin-top:11px; font-size:15px; color:var(--muted)}
   .hero.empty .big{font-size:26px; color:var(--muted); font-weight:700; letter-spacing:-.5px}
 
   /* stat row */
   .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px}
-  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 8px; text-align:center; box-shadow:var(--shadow)}
-  .stat .n{font-size:22px; font-weight:800; font-variant-numeric:tabular-nums}
-  .stat .t{font-size:11.5px; color:var(--muted); font-weight:600; margin-top:2px}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 8px; text-align:center; box-shadow:var(--shadow)}
+  .stat .n{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums}
+  .stat .t{font-size:13px; color:var(--muted); font-weight:600; margin-top:3px}
 
-  h2.sec{font-size:14px; font-weight:800; color:var(--ink); margin:2px 2px 10px; letter-spacing:-.2px}
+  h2.sec{font-size:17px; font-weight:800; color:var(--ink); margin:2px 2px 12px; letter-spacing:-.2px}
 
   /* form */
-  .field{margin-bottom:14px}
+  .field{margin-bottom:16px}
   .field:last-child{margin-bottom:0}
-  label.fl{display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin-bottom:7px}
+  label.fl{display:block; font-size:14px; font-weight:700; color:var(--muted); margin-bottom:8px}
   input[type=number], input[type=datetime-local], input[type=text]{
-    width:100%; font-family:inherit; font-size:16px; color:var(--ink);
-    padding:13px 14px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; outline:none}
+    width:100%; font-family:inherit; font-size:17px; color:var(--ink);
+    padding:14px 15px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; outline:none}
   input:focus{border-color:var(--green); background:#fff}
-  .valuebox input{font-size:30px; font-weight:800; text-align:center; letter-spacing:-1px; padding:14px}
+  .valuebox input{font-size:34px; font-weight:800; text-align:center; letter-spacing:-1px; padding:16px}
   .chips{display:flex; flex-wrap:wrap; gap:8px}
-  .chip{flex:1 0 auto; min-width:0; text-align:center; font-size:13.5px; font-weight:700; color:var(--muted);
-    padding:11px 6px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; cursor:pointer; transition:.12s}
+  .chip{flex:1 0 auto; min-width:0; text-align:center; font-size:15px; font-weight:700; color:var(--muted);
+    padding:13px 6px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; cursor:pointer; transition:.12s}
   .chip.on{background:var(--ink); color:#fff; border-color:var(--ink)}
-  .btn{width:100%; font-family:inherit; font-size:16px; font-weight:800; color:#fff; background:var(--green);
-    border:none; border-radius:14px; padding:15px; cursor:pointer; transition:.12s}
+  .btn{width:100%; font-family:inherit; font-size:18px; font-weight:800; color:#fff; background:var(--green);
+    border:none; border-radius:14px; padding:17px; cursor:pointer; transition:.12s}
   .btn:active{transform:scale(.99)}
   .btn:disabled{opacity:.5; cursor:default}
+
+  /* ===== 인슐린 (오늘 3회 체크) ===== */
+  .insulin{padding:20px 18px}
+  .insulin .ihead{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px}
+  .insulin .ititle{font-size:19px; font-weight:800}
+  .insulin .idate{font-size:14px; color:var(--muted); font-weight:600}
+  .insulin .icount{font-size:14px; color:var(--muted); font-weight:600; margin-bottom:14px}
+  .insulin .icount b{color:var(--green); font-size:16px}
+  .slot{display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:#FBFBFA; border:2px solid var(--line); border-radius:16px; padding:16px 16px;
+    margin-bottom:10px; cursor:pointer; transition:.15s; font-family:inherit}
+  .slot:last-child{margin-bottom:0}
+  .slot .box{width:34px; height:34px; border-radius:10px; border:2.5px solid #C7C4BC; flex:none;
+    display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; transition:.15s}
+  .slot .sname{font-size:21px; font-weight:800; flex:none}
+  .slot .swho{flex:1; text-align:right; font-size:14px; color:var(--muted); font-weight:600}
+  .slot.done{background:rgba(18,161,134,.10); border-color:var(--green)}
+  .slot.done .box{background:var(--green); border-color:var(--green)}
+  .slot.done .sname{color:var(--green)}
+  .slot:active{transform:scale(.99)}
+
+  /* 인슐린 최근 요약 */
+  .ilog{display:flex; align-items:center; justify-content:space-between; padding:11px 4px; border-bottom:1px solid var(--line); font-size:15px}
+  .ilog:last-child{border-bottom:none}
+  .ilog .id{font-weight:700}
+  .ilog .idot{display:inline-flex; gap:7px; align-items:center}
+  .ilog .idot i{width:15px; height:15px; border-radius:50%; display:inline-block}
+  .ilog .idot i.on{background:var(--green)}
+  .ilog .idot i.off{background:#E2DFD8}
+  .ilog .idot small{font-size:12px; color:var(--muted); margin-right:2px}
 
   /* chart */
   .chartwrap{height:200px; position:relative}
@@ -77,13 +107,13 @@
   .rec{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--line)}
   .rec:last-child{border-bottom:none}
   .rec .dot{width:10px; height:10px; border-radius:50%; flex:none}
-  .rec .rv{font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; width:52px; text-align:right}
+  .rec .rv{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; width:56px; text-align:right}
   .rec .rmid{flex:1; min-width:0}
-  .rec .rctx{font-size:14px; font-weight:700}
-  .rec .rsub{font-size:12px; color:var(--muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .rec .del{border:none; background:none; color:#C4C0B8; font-size:20px; cursor:pointer; padding:4px 8px; line-height:1}
+  .rec .rctx{font-size:16px; font-weight:700}
+  .rec .rsub{font-size:13px; color:var(--muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .rec .del{border:none; background:none; color:#C4C0B8; font-size:22px; cursor:pointer; padding:6px 10px; line-height:1}
   .rec .del:active{color:var(--red)}
-  .emptylist{text-align:center; color:var(--muted); font-size:14px; padding:24px 0}
+  .emptylist{text-align:center; color:var(--muted); font-size:15px; padding:24px 0}
 
   .legend{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:6px; font-size:11.5px; color:var(--muted)}
   .legend span{display:inline-flex; align-items:center; gap:5px}
@@ -101,6 +131,7 @@
   .setup ol{font-size:14px; padding-left:20px; line-height:1.7}
   .setup code{background:#F0EEE9; padding:2px 6px; border-radius:6px; font-size:12.5px}
   .hidden{display:none!important}
+  body.dad #inputCard{display:none}   /* 아빠는 인슐린 체크만 — 입력폼 숨김 */
 
   /* toast */
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
@@ -110,12 +141,12 @@
 
   /* who modal */
   .modal{position:fixed; inset:0; background:rgba(20,30,45,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:24px}
-  .modal .box{background:#fff; border-radius:20px; padding:24px; width:100%; max-width:340px; text-align:center}
-  .modal h3{margin:0 0 6px; font-size:18px}
-  .modal p{margin:0 0 18px; font-size:13.5px; color:var(--muted)}
-  .modal .opts{display:flex; gap:10px}
-  .modal .opts button{flex:1; font-family:inherit; font-size:16px; font-weight:800; padding:14px; border-radius:14px;
-    border:1px solid var(--line); background:#FBFBFA; cursor:pointer}
+  .modal .box{background:#fff; border-radius:20px; padding:26px; width:100%; max-width:360px; text-align:center}
+  .modal h3{margin:0 0 8px; font-size:22px; font-weight:800}
+  .modal p{margin:0 0 20px; font-size:15px; color:var(--muted)}
+  .modal .opts{display:flex; flex-direction:column; gap:12px}
+  .modal .opts button{width:100%; font-family:inherit; font-size:20px; font-weight:800; padding:18px; border-radius:16px;
+    border:2px solid var(--line); background:#FBFBFA; cursor:pointer}
   .modal .opts button:active{background:var(--green); color:#fff; border-color:var(--green)}
 </style>
 </head>
@@ -141,8 +172,26 @@
 <div id="app" class="wrap hidden">
   <header class="top">
     <h1>아빠 혈당 다이어리</h1>
-    <div class="who" id="whoBtn">기록자 <b id="whoName">-</b></div>
+    <div class="who" id="whoBtn"><b id="whoName">-</b></div>
   </header>
+
+  <!-- 오늘 인슐린 (3회 체크) -->
+  <div class="card insulin">
+    <div class="ihead">
+      <div class="ititle">💉 오늘 인슐린</div>
+      <div class="idate" id="insDate"></div>
+    </div>
+    <div class="icount" id="insCount">오늘 <b>0</b> / 3회 완료</div>
+    <button class="slot" data-slot="아침">
+      <span class="box">✓</span><span class="sname">아침</span><span class="swho"></span>
+    </button>
+    <button class="slot" data-slot="점심">
+      <span class="box">✓</span><span class="sname">점심</span><span class="swho"></span>
+    </button>
+    <button class="slot" data-slot="저녁">
+      <span class="box">✓</span><span class="sname">저녁</span><span class="swho"></span>
+    </button>
+  </div>
 
   <!-- 최신 기록 -->
   <div class="card hero empty" id="hero">
@@ -159,7 +208,7 @@
   </div>
 
   <!-- 입력 -->
-  <div class="card">
+  <div class="card" id="inputCard">
     <h2 class="sec">혈당 기록하기</h2>
     <div class="field valuebox">
       <label class="fl">혈당 수치 (mg/dL)</label>
@@ -199,9 +248,15 @@
     </div>
   </div>
 
+  <!-- 인슐린 최근 현황 -->
+  <div class="card">
+    <h2 class="sec">인슐린 최근 7일</h2>
+    <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
+  </div>
+
   <!-- 기록 목록 -->
   <div class="card">
-    <h2 class="sec">전체 기록</h2>
+    <h2 class="sec">혈당 전체 기록</h2>
     <div id="list"><div class="emptylist">첫 혈당을 기록해 보세요.</div></div>
   </div>
 
@@ -212,11 +267,12 @@
 <!-- 기록자 선택 모달 -->
 <div class="modal hidden" id="whoModal">
   <div class="box">
-    <h3>이 폰의 사용자는?</h3>
-    <p>누가 기록했는지 함께 저장돼요. 나중에 바꿀 수 있어요.</p>
+    <h3>누구세요?</h3>
+    <p>한 번만 선택하면 다음부터 자동으로 로그인돼요.</p>
     <div class="opts" id="whoOpts">
+      <button data-v="아빠">아빠</button>
       <button data-v="동현">동현</button>
-      <button data-v="형">형</button>
+      <button data-v="동진">동진</button>
     </div>
   </div>
 </div>
@@ -259,6 +315,7 @@ const firebaseConfig = {
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const col = db.collection("readings");
+  const insCol = db.collection("insulin");
 
   // ---- 요소 ----
   const $ = id => document.getElementById(id);
@@ -270,7 +327,10 @@ const firebaseConfig = {
 
   // ---- 기록자(사용자) ----
   let who = localStorage.getItem("bg_user") || "";
-  function refreshWho(){ $("whoName").textContent = who || "선택"; }
+  function refreshWho(){
+    $("whoName").textContent = "👤 " + (who || "로그인");
+    document.body.classList.toggle("dad", who === "아빠");
+  }
   function askWho(force){
     if (who && !force) { refreshWho(); return; }
     $("whoModal").classList.remove("hidden");
@@ -281,6 +341,91 @@ const firebaseConfig = {
     $("whoModal").classList.add("hidden"); refreshWho();
   });
   $("whoBtn").addEventListener("click", ()=>askWho(true));
+
+  // ================= 인슐린 (오늘 3회 체크) =================
+  const SLOTS = ["아침","점심","저녁"];
+  let todaySlots = {};   // {아침:{done,by,at}, ...}
+
+  function dayKey(d){
+    d = d || new Date();
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), da=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+  function hhmm(ms){
+    const d=new Date(ms); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  }
+  $("insDate").textContent = (()=>{ const d=new Date();
+    return `${d.getMonth()+1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})`; })();
+
+  // 슬롯 탭 → 토글
+  document.querySelectorAll(".slot").forEach(btn=>{
+    btn.addEventListener("click", ()=>toggleInsulin(btn.dataset.slot));
+  });
+  async function toggleInsulin(slot){
+    if (!who){ askWho(true); return; }
+    const key = dayKey();
+    const cur = todaySlots[slot];
+    const done = !(cur && cur.done);
+    try{
+      await insCol.doc(key).set({
+        date: key,
+        slots: { [slot]: { done: done, by: who, at: Date.now() } }
+      }, { merge: true });
+      toast(done ? `${slot} 인슐린 체크 ✓` : `${slot} 체크 해제`);
+    }catch(err){
+      console.error(err); toast("저장 실패: " + (err.code||err.message));
+    }
+  }
+
+  // 오늘 인슐린 실시간 구독
+  insCol.doc(dayKey()).onSnapshot(doc=>{
+    todaySlots = (doc.exists && doc.data().slots) ? doc.data().slots : {};
+    renderTodayInsulin();
+  }, err=>console.error(err));
+
+  function renderTodayInsulin(){
+    let done = 0;
+    SLOTS.forEach(slot=>{
+      const el = document.querySelector(`.slot[data-slot="${slot}"]`);
+      const s = todaySlots[slot];
+      const on = !!(s && s.done);
+      el.classList.toggle("done", on);
+      el.querySelector(".swho").textContent = on ? `${s.by} · ${hhmm(s.at)} 완료` : "탭하면 체크";
+      if (on) done++;
+    });
+    $("insCount").innerHTML = `오늘 <b>${done}</b> / 3회 완료`;
+  }
+
+  // 최근 7일 인슐린 요약 실시간 구독
+  insCol.orderBy("date","desc").limit(8).onSnapshot(snap=>{
+    const rows = []; snap.forEach(d=>rows.push(d.data()));
+    renderInsLog(rows);
+  }, err=>console.error(err));
+
+  function renderInsLog(rows){
+    const box = $("insLog");
+    const today = dayKey();
+    const past = rows.filter(r => r.date !== today);
+    if (!past.length){ box.innerHTML = '<div class="emptylist">지난 기록이 아직 없어요.</div>'; return; }
+    box.innerHTML = "";
+    past.forEach(r=>{
+      const s = r.slots || {};
+      const dots = SLOTS.map(k=>{
+        const on = !!(s[k] && s[k].done);
+        return `<i class="${on?'on':'off'}" title="${k}"></i>`;
+      }).join("");
+      const cnt = SLOTS.filter(k=>s[k]&&s[k].done).length;
+      const md = r.date.slice(5).replace("-","/");
+      const el = document.createElement("div");
+      el.className = "ilog";
+      el.innerHTML = `<span class="id">${md}</span>`+
+        `<span class="idot"><small>아침</small><i class="${s['아침']&&s['아침'].done?'on':'off'}"></i>`+
+        `<small>점심</small><i class="${s['점심']&&s['점심'].done?'on':'off'}"></i>`+
+        `<small>저녁</small><i class="${s['저녁']&&s['저녁'].done?'on':'off'}"></i>`+
+        `<span style="margin-left:8px;font-weight:700;color:${cnt===3?'var(--green)':'var(--muted)'}">${cnt}/3</span></span>`;
+      box.appendChild(el);
+    });
+  }
 
   // ---- 측정 시점 칩 ----
   let ctx = "공복";
