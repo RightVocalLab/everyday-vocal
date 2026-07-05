@@ -8862,14 +8862,19 @@ async function _clearAllAdminData(btn){
         'community/reports/posts','community/reports/comments',
         'vocalClinic/reports/posts','vocalClinic/reports/feedback','vocalClinic/reports/comments'
       ];
-      for(const p of paths){ try{ await _fbDb.ref(p).remove(); }catch(e){} }
+      let _failed = 0, _lastErr = '';
+      for(const p of paths){ try{ await _fbDb.ref(p).remove(); }catch(e){ _failed++; _lastErr = e && e.message ? e.message : String(e); console.error('[신고삭제] 실패:', p, e); } }
+      await _loadAdminReports();
+      if(_failed > 0){ alert('삭제 실패: ' + _failed + '개 경로가 거부됨 (' + _lastErr + ').\nFirebase 규칙에서 신고 경로 쓰기 권한을 확인하세요.'); return; }
     } else {
       /* 건의 전체 삭제 */
+      let _failed = 0, _lastErr = '';
       for(const s of _adminSuggestionsData){
-        try{ await _fbDb.ref('suggestions/' + s._id).remove(); }catch(e){}
+        try{ await _fbDb.ref('suggestions/' + s._id).remove(); }catch(e){ _failed++; _lastErr = e && e.message ? e.message : String(e); console.error('[건의삭제] 실패:', s._id, e); }
       }
+      await _loadAdminReports();
+      if(_failed > 0){ alert('삭제 실패: ' + _failed + '개 거부됨 (' + _lastErr + ').\nFirebase 규칙을 확인하세요.'); return; }
     }
-    await _loadAdminReports();
     alert(label + ' 전체 삭제 완료!');
   } catch(e){ alert('삭제 실패: ' + e.message); }
   finally{ if(btn){ btn.disabled = false; btn.textContent = '전부 비우기'; } }
@@ -8883,16 +8888,21 @@ async function _clearHandledAdminData(btn){
   try {
     if(tab === 'reports'){
       const handled = _adminReportsData.filter(r => r.handled);
+      let _failed = 0, _lastErr = '';
       for(const r of handled){
-        try{ await _fbDb.ref(r._path + '/' + r._targetId + '/' + r._reportId).remove(); }catch(e){}
+        try{ await _fbDb.ref(r._path + '/' + r._targetId + '/' + r._reportId).remove(); }catch(e){ _failed++; _lastErr = e && e.message ? e.message : String(e); console.error('[처리됨삭제] 실패:', r._path, e); }
       }
+      await _loadAdminReports();
+      if(_failed > 0){ alert('삭제 실패: ' + _failed + '개 거부됨 (' + _lastErr + ').\nFirebase 규칙을 확인하세요.'); return; }
     } else {
       const handled = _adminSuggestionsData.filter(s => s.handled);
+      let _failed = 0, _lastErr = '';
       for(const s of handled){
-        try{ await _fbDb.ref('suggestions/' + s._id).remove(); }catch(e){}
+        try{ await _fbDb.ref('suggestions/' + s._id).remove(); }catch(e){ _failed++; _lastErr = e && e.message ? e.message : String(e); console.error('[처리됨삭제] 실패:', s._id, e); }
       }
+      await _loadAdminReports();
+      if(_failed > 0){ alert('삭제 실패: ' + _failed + '개 거부됨 (' + _lastErr + ').\nFirebase 규칙을 확인하세요.'); return; }
     }
-    await _loadAdminReports();
     alert('처리된 ' + label + ' 삭제 완료!');
   } catch(e){ alert('삭제 실패: ' + e.message); }
   finally{ if(btn){ btn.disabled = false; btn.textContent = '처리됨 비우기'; } }
@@ -9100,6 +9110,21 @@ async function _loadAdminReports(){
   const listEl = document.getElementById('admin-reports-list');
   if(!listEl) return;
   if(!_fbDb){ listEl.innerHTML = '<div style="text-align:center;color:#dc2626;padding:20px">Firebase 연결 안 됨</div>'; return; }
+  /* [수정 2026-07-05] 신고/건의 규칙은 gunfree2@naver.com 이메일 인증 필요.
+     '개발자 자동 로그인(김동현)'은 익명 토큰이라 읽기/쓰기 거부됨 → 인증 버튼 안내.
+     이미 gunfree2로 로그인돼 있으면 그냥 통과(즉시 로드). */
+  var _cu = null;
+  try { _cu = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null; } catch(e){}
+  var _isGunfree = _cu && _cu.email && _cu.email.toLowerCase() === 'gunfree2@naver.com';
+  if(!_isGunfree){
+    listEl.innerHTML = '<div style="text-align:center;padding:26px 16px">'
+      + '<div style="font-size:14px;color:#dc2626;font-weight:800;margin-bottom:6px">🔒 관리자 인증 필요</div>'
+      + '<div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:14px">신고/건의 관리는 관리자(gunfree2) 계정만 접근할 수 있어요.<br>지금은 익명/학생 로그인 상태입니다.</div>'
+      + '<button onclick="if(typeof _ensureAdminAuth===\'function\'){_ensureAdminAuth().then(function(ok){ if(ok) _loadAdminReports(); });}" '
+      + 'style="padding:10px 22px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:10px;font-weight:800;color:#fff;font-size:13px;cursor:pointer">관리자 인증하기</button>'
+      + '</div>';
+    return;
+  }
   listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">로딩 중...</div>';
   try {
     /* 4개 경로 신고 모두 로드 */
