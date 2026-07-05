@@ -17351,6 +17351,17 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     result = 'mix';
   }
 
+  /* === 여성 저·중음역 흉성 오판 가드 (실측 2026-07-05, 여성친구 5000프레임) ===
+     사용자 원칙: "저음이라고 흉성이 아니다. 성대가 잘 붙은 힘있는 소리일 때만 흉성, 아니면 믹스."
+     실측 대조(C4~G#4): 진짜 흉성 = H1H2 음수(성대 붙음, med -11)+highRatio 높음(눌림, med -27)+큰 소리.
+                        약한 저음(힘X) = H1H2 덜 음수(med -5)+highRatio 낮음(med -38)+작은 소리인데 흉성 오판.
+     → 흉성인데 '안 눌리고(highRatio<=-35) 성대도 덜 붙은(H1H2>-10)' 프레임은 힘없는 소리 → 믹스로 강등.
+       (강한 흉성: 잘 붙은(H1H2<=-10) 또는 눌린(highRatio>-35)은 그대로 흉성 유지.)
+     검증: 흉성 15% 강등(약한 것만) — D4 이하 28%, D4+ 8%(힘있는 흉성 보존). 저음이 자동으로 흉성 안됨. */
+  if(isFemale && result === 'chest' && highRatio <= -35 && h1h2 > -10){
+    result = 'mix';
+  }
+
   /* 디버그: window._ptDebug=true 일 때만 판정 수치 출력 (콘솔 + 화면 박스) */
   if(typeof window!=='undefined' && window._ptDebug){
     try{
@@ -17359,7 +17370,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
         +' dBFS='+(typeof dB==='number'?(dB-94).toFixed(0):'?')
         +' score='+score.toFixed(1)+' '+(_rawResult!==result?(_rawResult+'→'):'')+result;
       console.log('[PVR]', _line);
-      try{ if(!window._ptDbgLog) window._ptDbgLog=[]; if(window._ptDbgLog.length<5000) window._ptDbgLog.push(_line); }catch(_e){}
+      try{ if(!window._ptDbgLog) window._ptDbgLog=[]; if(window._ptDbgLog.length<100000) window._ptDbgLog.push(_line); }catch(_e){}
       var _box=document.getElementById('pt-debug-box');
       if(_box){
         var _color = result==='falsetto'?'#f472b6':(result==='chest'?'#60a5fa':'#a3e635');
@@ -17443,7 +17454,7 @@ function _ptCanvasDraw(){
     midiMin = 33; midiMax = 96;  /* A1 ~ C7 (성별 미선택 시) */
   }
   /* dB SPL 범위: 50 ~ 90 (실제 측정 영역으로 좁혀서 그래프가 위아래로 크게) */
-  const dbMin = 45, dbMax = 95;
+  const dbMin = 45, dbMax = 105;
   
   /* 좌표 변환 헬퍼 */
   const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
@@ -18168,7 +18179,7 @@ function _ptSendDebug(){
   try{
     var g = window._ptLockedGender || (window._generalUser && window._generalUser.gender) || '?';
     var ref = firebase.database().ref('pvrDebug').push();
-    ref.set({ ts: Date.now(), when: new Date().toISOString(), gender: g, count: log.length, lines: log.slice(0,5000) })
+    ref.set({ ts: Date.now(), when: new Date().toISOString(), gender: g, count: log.length, lines: log.slice(0,100000) })
       .then(function(){
         var url = 'https://everyday-vocal-default-rtdb.asia-southeast1.firebasedatabase.app/pvrDebug/'+ref.key+'.json';
         var u=document.getElementById('pt-debug-url');
@@ -18888,7 +18899,7 @@ function _drawSinglePtToCanvas(canvasId, result){
   const isFemale = result.gender === 'female';
   const midiMin = isFemale ? 43 : 36;
   const midiMax = isFemale ? 96 : 84;
-  const dbMin = 45, dbMax = 95;
+  const dbMin = 45, dbMax = 105;
   const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
   const y2px = (db) => ((dbMax - db) / (dbMax - dbMin)) * H;
   
@@ -20641,7 +20652,7 @@ function _drawPtCompare(results, colors){
   } else {
     midiMin = 36; midiMax = 84;
   }
-  const dbMin = 45, dbMax = 95;
+  const dbMin = 45, dbMax = 105;
   
   const x2px = (midi) => ((midi - midiMin) / (midiMax - midiMin)) * W;
   const y2px = (db) => ((dbMax - db) / (dbMax - dbMin)) * H;
@@ -21799,7 +21810,7 @@ function _renderBeforeAfterGraph(containerId, before, after){
   /* MIDI 범위 (성별별) */
   const midiMin = isFemale ? 50 : 36;  /* D3 / C2 */
   const midiMax = isFemale ? 88 : 76;  /* E6 / E5 */
-  const dbMin = 45, dbMax = 95;
+  const dbMin = 45, dbMax = 105;
   
   /* SVG 크기 (모바일 친화) */
   const W = 360, H = 280;
@@ -21825,7 +21836,7 @@ function _renderBeforeAfterGraph(containerId, before, after){
     gridLines += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+plotH}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="2,2"/>`;
     gridLines += `<text x="${x}" y="${H-PAD_B+12}" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="600">C${Math.floor(m/12-1)}</text>`;
   }
-  for(let db = 45; db <= 95; db += 10){
+  for(let db = 45; db <= 105; db += 10){
     const y = y2px(db);
     gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L+plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="2,2"/>`;
     gridLines += `<text x="${PAD_L-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#9ca3af">${db}</text>`;
