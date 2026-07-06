@@ -18499,12 +18499,17 @@ function _ptFilterOutliers(points){
   for(const p of points){
     const midiDist = Math.abs(p.midi - meanMidi) / stdMidi;
     const dBLowGap = meanDB - p.dB;  /* 양수 = 평균보다 낮음 */
-    
+    /* HNR (pitch 신뢰도) — 점의 debug 평균값. 없으면 null */
+    const _hnr = (p.dbg && typeof p.dbg.hnr === 'number') ? p.dbg.hnr : null;
+
     /* 이상치 판정 조건:
-       (1) 음정이 평균에서 2.5σ 이상 멀고
-       (2) dB가 평균보다 12dB 이상 낮음 (잘못 측정된 약한 신호 가능성)
-       두 조건 모두 만족할 때만 제거 (보수적 판단) */
-    if(midiDist > 2.5 && dBLowGap > 12){
+       (1) 음정이 평균에서 2.5σ 이상 멀고 dB가 평균보다 12dB 이상 낮음 (약한 오측정)
+       (2) [추가 2026-07-06] 메인 군집보다 한참 위(평균+1.5σ 초과)인데 HNR이 낮음(<12)
+           → 소리 튀면서 pitch가 옥타브/노이즈로 잘못 잡힌 고음 스파이크.
+           실측(여자테스트): 진짜 고음 가성은 HNR 15~18, 튄 F6~G6은 6.6~11.5로 명확히 갈림.
+           HNR 조건이 있어 소프라노의 진짜 고음(HNR 높음)은 보존됨. */
+    const _isHighSpike = (_hnr !== null) && (p.midi > meanMidi + 1.5 * stdMidi) && (_hnr < 12);
+    if( (midiDist > 2.5 && dBLowGap > 12) || _isHighSpike ){
       removed.push(p);
     } else {
       kept.push(p);
