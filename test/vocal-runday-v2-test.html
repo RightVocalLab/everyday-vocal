@@ -1750,9 +1750,9 @@ input,select,button,textarea{font-family:inherit;}
 
         <!-- 현황 -->
         <div style="background:#fafaf9;border:1.5px solid #e7e5e4;border-radius:10px;padding:10px 12px">
-          <div style="font-size:11px;font-weight:700;color:#57534e;margin-bottom:8px">📊 이 기기 localStorage 측정 이력</div>
+          <div style="font-size:11px;font-weight:700;color:#57534e;margin-bottom:8px">📊 동기화된 전체 측정 이력</div>
           <button onclick="_adminCheckLocalPtHistory()" style="width:100%;background:#fff;color:#57534e;border:1.5px solid #d6d3d1;border-radius:8px;padding:8px;font-size:11px;font-weight:700;cursor:pointer">
-            🔍 현황 확인
+            🔍 전체 목록 보기
           </button>
           <div id="admin-pt-status" style="margin-top:8px;font-size:10px;color:#57534e;line-height:1.7"></div>
         </div>
@@ -17291,7 +17291,11 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      진짜 눌러낸 흉성은 H1-H2가 낮음/음수 → 이 가드에 안 걸림.
      ※ 임계값은 실측 튜닝: 흉성 오판되는 소리의 디버그 H1H2 값 기준으로 맞춘다. */
   var _weakContactH1H2 = isFemale ? 5 : 6;
-  if(result === 'chest' && h1h2 > _weakContactH1H2){
+  /* [수정 2026-07-06] 눌러낸 흉성인데 H1H2가 살짝 높은 경우(예: 남성 C#3, H1H2~8)까지
+     mix로 강등되던 문제. 진짜 숨섞인(breathy) 약접촉은 고배음이 약해 highRatio가 어두움(매우 음수).
+     반면 눌린 흉성은 highRatio가 밝음(≈-14). → highRatio<=-25(어두움)일 때만 강등.
+     실측(남자 흉성만): 이 조건으로 눌린 흉성 466개(C#3 포함) 흉성 유지, 숨섞인 193개만 mix. */
+  if(result === 'chest' && h1h2 > _weakContactH1H2 && highRatio <= -25){
     result = 'mix';
   }
 
@@ -17326,6 +17330,17 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     result = 'mix';
   }
 
+  /* === 여성 고음역 두성(중성) 가드 (실측 2026-07-06, 여자테스트2 콜로라투라) ===
+     사용자: "고음 올라가거나 두성이 연해지면 중성인데 가성으로 찍힌다."
+     실측 대조(G5+): 진짜 가성 = H1H2 높음(~22)·H2H4 낮음(~12) → H1H2-H2H4 양수(+8).
+                    두성(중성)   = H1H2 낮음(~-1)·H2H4 높음(~22, 배음 우세) → H1H2-H2H4 크게 음수(-25).
+     → 고음역(F5+)에서 배음이 기본파보다 훨씬 우세(H1H2-H2H4 < -12)면 두성=믹스로 강등.
+       (진짜 가성은 숨섞여 H1H2가 우세 → 이 조건 미충족, 보존. 음-단위 다수결이 잔여 오탐 정리.)
+     검증: 두성 74% mix 적중, 가성 오판 18%(음 단위론 82% falsetto 유지). */
+  if(isFemale && result === 'falsetto' && f0 >= 700 && (h1h2 - h2h4) < -12){
+    result = 'mix';
+  }
+
   /* ============================================================
      === 남성 저·중음역 register 재판정 (실측 2026-07-02 전면 개편) ===
      동현 실측: 믹스 1113프레임 + 가성 330프레임 (겹침구간 f0 217~281Hz) 비교 결론:
@@ -17343,21 +17358,20 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      ※ 여성 분기(위 두 가드)와 완전 분리. */
   if(!isFemale && result !== 'chest'){
     var _mFalsetto;
-    /* [실측 2026-07-03 재정립 — 순수 가성(doc2)·순수 중성(doc3)·믹스3종(doc1) 대조]
-       핵심 발견: 동현 목소리는 레지스터가 음향적으로 겹치고 세션마다 신호가 달라져
-       (예: 가성 H1H2가 어떤 녹음은 1.7~6.8, 어떤 녹음은 9~21). 프레임 단일 규칙의 한계.
-       특히 '작은 믹스'와 '약한 가성'은 스펙트럼상 거의 동일 → 완전 분리는 불가능.
-       사용자 방침대로 '애매하면 믹스, 확실할 때만 가성'(믹스 편향)으로 잡음:
-         · 확실한 가성 = 급한 스펙트럼 기울기(H1H4 큼) + 기본파도 어느정도 존재(H1H2 높음) + H2H4 음수 아님.
-         · 작은 믹스(H1H2 낮음)·순수 중성(H1H4 낮음)·작은 중성(H2H4 음수)은 전부 배제.
-       실측 검증: 가성 recall 70%(음 단위 다수결로 falsetto), 순수중성 오탐 9%, 작은믹스 오탐 2%.
-       프레임 오탐은 음 단위 다수결 + 공간 denoise가 정리. 남성 전 음역에 적용(고음 작은믹스도 교정).
-       ※ 트레이드오프: H1H2 낮은 약한 가성은 믹스로 나올 수 있음(작은믹스와 구분 불가라 의도적 선택).
+    /* [실측 2026-07-06 재정립 — 클린 3종(가성만/중성만/흉성만) 대조로 확정]
+       세 레지스터 중앙값 프로필:
+         · 가성: highRatio -45(어두움), H1H4 34(급기울기), H2H4 35.  H1H2는 -0.1
+         · 중성: highRatio -21(밝음),  H1H4 14,           H2H4 20.  H1H2는 -5.7
+         · 흉성: highRatio -19(밝음),  H1H4 4(평평),       H2H4 0.   H1H2는 0.5
+       핵심: H1H2는 셋 다 비슷해 무용(예전 H1H2>=8 규칙이 이 가성을 놓쳤음).
+             가성만의 확실한 표식 = '어두운 음색(highRatio 매우 음수) + 급한 기울기(H1H4 큼)'.
+       검증: (highRatio<=-35 & H1H4>=15) → 가성 recall 96%, 순수중성 오탐 1%, 순수중성(밝음)·doc3(H1H4↓) 보존.
+       ※ 트레이드오프: 어둡고 급기울기인 '작은 믹스/약한 두성'은 가성으로 잡힐 수 있음(음향상 가성과 동일).
        ※ 흉성(chest)은 위에서 제외. */
     if(f0 < 130){
       _mFalsetto = false;                                          /* C3 미만: 남성 가성 물리적 불가 */
     } else {
-      _mFalsetto = (h1h4 >= 11 && h1h2 >= 8 && h2h4 >= 0);         /* 확실한 가성만(믹스 편향) */
+      _mFalsetto = (highRatio <= -35 && h1h4 >= 15);               /* 가성 = 어두운 음색 + 급기울기 */
     }
     result = _mFalsetto ? 'falsetto' : 'mix';
   }
@@ -21173,42 +21187,41 @@ async function _importLocalPtHistory(){
 /* ========== 관리자 전용: 음역대 측정 데이터 관리 ========== */
 
 /* 이 기기 localStorage 측정 이력 현황 확인 (관리자) */
-function _adminCheckLocalPtHistory(){
+async function _adminCheckLocalPtHistory(){
   const statusEl = document.getElementById('admin-pt-status');
   if(!statusEl) return;
-  
-  const allList = _loadAllLocalPtHistory();
-  if(allList.length === 0){
-    statusEl.innerHTML = '<div style="color:#a8a29e">이 기기에 측정 이력이 없습니다.</div>';
-    return;
-  }
-  
-  /* 이름별로 그룹화 */
-  const byName = {};
-  allList.forEach(r => {
-    const name = r.userName || '(이름 없음)';
-    byName[name] = (byName[name] || 0) + 1;
-  });
-  
-  /* 학생 명단과 비교 */
-  let html = `<div style="margin-bottom:6px"><b>총 ${allList.length}건</b></div>`;
-  html += '<div style="display:flex;flex-direction:column;gap:3px">';
-  
-  for(const [name, count] of Object.entries(byName).sort((a,b) => b[1] - a[1])){
-    let inDB = false;
-    if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
-      inDB = STUDENTS_DB.some(s => 
-        s.name === name || s.name.replace(/\s/g, '') === name.replace(/\s/g, '')
-      );
+  statusEl.innerHTML = '<div style="color:#a8a29e">동기화된 전체 이력 불러오는 중...</div>';
+  if(!_fbDb){ statusEl.innerHTML = '<div style="color:#dc2626">Firebase 연결 안 됨</div>'; return; }
+  /* [변경 2026-07-06] 이 기기 localStorage가 아니라, Firebase pt_history에 동기화된
+     전체 목록(모든 학생)을 보여준다. 관리자만 접근하고, 본인 폰 측정분만 올리므로 전체=동기화분. */
+  try {
+    const snap = await _fbDb.ref('pt_history').once('value');
+    const data = snap.val() || {};
+    const names = Object.keys(data);
+    if(names.length === 0){ statusEl.innerHTML = '<div style="color:#a8a29e">동기화된 측정 이력이 없습니다.</div>'; return; }
+    let total = 0;
+    const rowsByName = names.map(name => {
+      const cnt = (data[name] && typeof data[name] === 'object') ? Object.keys(data[name]).length : 0;
+      total += cnt;
+      return { name, cnt };
+    }).sort((a, b) => b.cnt - a.cnt);
+    let html = `<div style="margin-bottom:6px"><b>동기화된 전체 ${total}건 · ${names.length}명</b></div>`;
+    html += '<div style="display:flex;flex-direction:column;gap:3px;max-height:240px;overflow-y:auto">';
+    for(const { name, cnt } of rowsByName){
+      let inDB = false;
+      if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
+        inDB = STUDENTS_DB.some(s => s.name === name || s.name.replace(/\s/g, '') === name.replace(/\s/g, ''));
+      }
+      const badge = inDB
+        ? '<span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">학생</span>'
+        : '<span style="background:#fef2f2;color:#991b1b;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">미일치</span>';
+      html += `<div>• ${name}: ${cnt}건 ${badge}</div>`;
     }
-    const badge = inDB 
-      ? '<span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">학생</span>'
-      : '<span style="background:#fef2f2;color:#991b1b;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">미일치</span>';
-    html += `<div>• ${name}: ${count}건 ${badge}</div>`;
+    html += '</div>';
+    statusEl.innerHTML = html;
+  } catch(e){
+    statusEl.innerHTML = '<div style="color:#dc2626">불러오기 실패: ' + (e && e.message ? e.message : e) + '<br><span style="font-size:9px;color:#a8a29e">관리자(gunfree2) 로그인 상태인지 확인하세요.</span></div>';
   }
-  html += '</div>';
-  
-  statusEl.innerHTML = html;
 }
 
 /* 전체 학생 동기화 (관리자) - 학생 명단과 일치하는 모든 이력을 Firebase에 업로드 */
