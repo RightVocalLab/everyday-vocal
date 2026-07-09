@@ -147,6 +147,75 @@
   .modal .opts button{width:100%; font-family:inherit; font-size:20px; font-weight:800; padding:18px; border-radius:16px;
     border:2px solid var(--line); background:#FBFBFA; cursor:pointer}
   .modal .opts button:active{background:var(--green); color:#fff; border-color:var(--green)}
+
+  /* ===== 리포트 열기 버튼 ===== */
+  .btn.report{background:#2B3A4B}
+  .btn.report:active{background:#1f2b38}
+
+  /* 범위 선택 모달의 날짜 입력 */
+  .rangePick{display:none; margin-top:6px; text-align:left}
+  .rangePick.on{display:block}
+  .rangePick label{display:block; font-size:13px; font-weight:700; color:var(--muted); margin:10px 0 6px}
+
+  /* ===== 리포트 오버레이 ===== */
+  .report{position:fixed; inset:0; background:#fff; z-index:80; overflow-y:auto; display:none}
+  .report.on{display:block}
+  .reportBar{position:sticky; top:0; background:#fff; border-bottom:1px solid var(--line);
+    display:flex; gap:8px; padding:12px 16px; align-items:center; z-index:2}
+  .reportBar .sp{flex:1}
+  .reportBar button{font-family:inherit; font-weight:800; font-size:15px; padding:11px 16px; border-radius:12px; border:none; cursor:pointer}
+  .reportBar .print{background:var(--green); color:#fff}
+  .reportBar .mark{background:#2B3A4B; color:#fff}
+  .reportBar .close{background:#EFEDE7; color:var(--ink)}
+  .doc{max-width:760px; margin:0 auto; padding:24px 28px 60px}
+  .doc h1{font-size:26px; font-weight:800; margin:0 0 4px}
+  .doc .sub{font-size:14px; color:var(--muted); margin-bottom:2px}
+  .doc .rule{height:2px; background:var(--ink); margin:14px 0 18px}
+  .sumGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px}
+  .sumBox{border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center}
+  .sumBox .n{font-size:24px; font-weight:800; font-variant-numeric:tabular-nums}
+  .sumBox .t{font-size:12px; color:var(--muted); font-weight:600; margin-top:2px}
+  .ctxAvg{font-size:13px; color:var(--muted); margin-bottom:18px; line-height:1.7}
+  .ctxAvg b{color:var(--ink)}
+  .docChart{height:230px; margin-bottom:20px}
+  table.rt{width:100%; border-collapse:collapse; font-size:13px}
+  table.rt th{background:#F5F4F0; text-align:left; padding:8px 8px; font-weight:700; border-bottom:2px solid var(--line); white-space:nowrap}
+  table.rt td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+  table.rt td.v{font-weight:800; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+  table.rt td.badge span{font-weight:700; font-size:12px}
+  .docNote{font-size:12px; color:var(--muted); margin-top:18px; line-height:1.6}
+  .docEmpty{text-align:center; color:var(--muted); padding:50px 0; font-size:15px}
+
+  /* ===== 체중 ===== */
+  .wnow{display:flex; align-items:baseline; gap:6px; margin-top:2px}
+  .wbig{font-size:44px; font-weight:800; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; line-height:1}
+  .wunit{font-size:18px; font-weight:700; color:var(--muted)}
+  .wchg{font-size:16px; font-weight:800; margin-left:8px}
+  .wchg.up{color:var(--red)}
+  .wchg.down{color:var(--blue)}
+  .wchg.same{color:var(--muted)}
+  .wmeta{font-size:14px; color:var(--muted); margin-top:6px}
+  .wrec{display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line)}
+  .wrec:last-child{border-bottom:none}
+  .wrec .wv{font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; width:78px}
+  .wrec .wsub{flex:1; font-size:13px; color:var(--muted)}
+  .wrec .del{border:none; background:none; color:#C4C0B8; font-size:22px; cursor:pointer; padding:6px 10px; line-height:1}
+  .wrec .del:active{color:var(--red)}
+
+  /* ===== 인쇄 ===== */
+  @media print{
+    body{background:#fff}
+    .reportBar{display:none!important}
+    body.report-open #app,
+    body.report-open #setupScreen,
+    body.report-open #loadError,
+    body.report-open .modal,
+    body.report-open .toast{display:none!important}
+    body.report-open .report{position:static!important; display:block!important; overflow:visible!important}
+    .doc{max-width:none; padding:0}
+    table.rt{font-size:11px}
+    *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  }
 </style>
 </head>
 <body>
@@ -270,6 +339,43 @@
     <div id="list"><div class="emptylist">첫 혈당을 기록해 보세요.</div></div>
   </div>
 
+  <!-- ===== 체중 ===== -->
+  <div class="card">
+    <h2 class="sec">⚖️ 체중 기록</h2>
+    <div class="wnow" id="wNow">
+      <span class="wbig" id="wBig">–</span>
+      <span class="wunit">kg</span>
+      <span class="wchg" id="wChg"></span>
+    </div>
+    <div class="wmeta" id="wMeta">아직 체중 기록이 없어요.</div>
+    <div class="field valuebox" style="margin-top:16px">
+      <label class="fl">체중 (kg)</label>
+      <input type="number" id="wValue" inputmode="decimal" step="0.1" placeholder="예) 68.5" min="10" max="400">
+    </div>
+    <div class="field">
+      <label class="fl">측정 시간</label>
+      <input type="datetime-local" id="wWhen">
+    </div>
+    <div class="field">
+      <label class="fl">메모 (선택)</label>
+      <input type="text" id="wMemo" placeholder="예) 아침 공복">
+    </div>
+    <button class="btn" id="wSaveBtn" style="background:#3E74D8">체중 저장</button>
+  </div>
+
+  <div class="card">
+    <h2 class="sec">체중 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+    <div class="chartwrap"><canvas id="wChart"></canvas></div>
+    <div id="wList" style="margin-top:8px"><div class="emptylist">체중을 기록하면 여기에 쌓여요.</div></div>
+  </div>
+
+  <!-- 병원용 출력 -->
+  <div class="card">
+    <h2 class="sec">🏥 병원용 기록 출력</h2>
+    <p style="font-size:14px;color:var(--muted);margin:0 0 14px;line-height:1.6">그래프와 표가 들어간 혈당 기록지를 만들어 바로 인쇄하거나 PDF로 저장할 수 있어요.</p>
+    <button class="btn report" id="openReport">기록지 만들기</button>
+  </div>
+
   <div class="synced" id="syncState">연결 중…</div>
   <div class="note">이 화면의 정상/주의 표시는 일반 기준을 참고한 <b>참고용</b>이며 의료 진단이 아닙니다. 실제 판단과 약 조절은 담당 의료진과 상의하세요.</div>
 </div>
@@ -290,6 +396,38 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 출력 범위 선택 모달 -->
+<div class="modal hidden" id="rangeModal">
+  <div class="box">
+    <h3>어느 기간을 출력할까요?</h3>
+    <p id="lastPrintInfo" style="margin-bottom:16px">마지막 출력 기록을 확인 중…</p>
+    <div class="opts">
+      <button data-mode="incremental">지난 출력 이후 ~ 지금</button>
+      <button data-mode="all">처음 ~ 지금 (전체)</button>
+      <button data-mode="custom" id="customBtn">기간 직접 지정</button>
+    </div>
+    <div class="rangePick" id="rangePick">
+      <label>시작일 (비우면 맨 처음부터)</label>
+      <input type="date" id="rangeStart">
+      <label>종료일</label>
+      <input type="date" id="rangeEnd">
+      <button class="btn" id="makeCustom" style="margin-top:16px">이 기간으로 만들기</button>
+    </div>
+    <button class="btn" id="rangeCancel" style="background:#EFEDE7;color:var(--ink);margin-top:14px">취소</button>
+  </div>
+</div>
+
+<!-- 리포트(기록지) 화면 -->
+<div class="report" id="reportOverlay">
+  <div class="reportBar">
+    <button class="close" id="reportClose">← 닫기</button>
+    <div class="sp"></div>
+    <button class="mark hidden" id="reportMark">출력완료로 표시</button>
+    <button class="print" id="reportPrint">🖨 인쇄 / PDF</button>
+  </div>
+  <div class="doc" id="reportDoc"></div>
+</div>
 
 <!-- Firebase (compat: 빌드 불필요, 단일 파일로 동작) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -561,6 +699,273 @@ const firebaseConfig = {
     catch(err){ toast("삭제 실패: " + (err.code||err.message)); }
   }
 
+  // ================= 체중 =================
+  const wCol = db.collection("weights");
+  let wChart = null;
+  $("wWhen").value = nowLocalInput();
+
+  const wSaveBtn = $("wSaveBtn");
+  wSaveBtn.addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const raw = $("wValue").value.trim();
+    const v = Math.round(parseFloat(raw) * 10) / 10;   // 소수 1자리
+    if (!raw || isNaN(v)){ toast("체중을 입력하세요"); $("wValue").focus(); return; }
+    if (v < 10 || v > 400){ toast("체중을 확인하세요 (10~400kg)"); return; }
+    const whenStr = $("wWhen").value || nowLocalInput();
+    const at = new Date(whenStr).getTime();
+    wSaveBtn.disabled = true; wSaveBtn.textContent = "저장 중…";
+    try{
+      await wCol.add({ value:v, at:at, atText:whenStr.replace("T"," "),
+        memo:$("wMemo").value.trim(), by:who, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      $("wValue").value=""; $("wMemo").value=""; $("wWhen").value=nowLocalInput();
+      toast("체중 저장 ✓");
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+    finally{ wSaveBtn.disabled=false; wSaveBtn.textContent="체중 저장"; }
+  });
+
+  async function delWeight(id){
+    if (!confirm("이 체중 기록을 삭제할까요?")) return;
+    try{ await wCol.doc(id).delete(); toast("삭제했어요"); }
+    catch(err){ toast("삭제 실패: "+(err.code||err.message)); }
+  }
+
+  wCol.orderBy("at","desc").onSnapshot(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(Object.assign({id:d.id}, d.data())));
+    renderWeights(rows);
+  }, err=>console.error(err));
+
+  function renderWeights(rows){
+    if (rows.length){
+      const r = rows[0];
+      $("wBig").textContent = r.value;
+      // 지난 기록 대비 증감
+      const chg = $("wChg");
+      if (rows[1]){
+        const diff = Math.round((r.value - rows[1].value)*10)/10;
+        if (diff > 0){ chg.className="wchg up"; chg.textContent=`▲ ${diff}kg`; }
+        else if (diff < 0){ chg.className="wchg down"; chg.textContent=`▼ ${Math.abs(diff)}kg`; }
+        else { chg.className="wchg same"; chg.textContent="변화 없음"; }
+      } else { chg.className="wchg"; chg.textContent=""; }
+      $("wMeta").textContent = `${fmtWhen(r.atText, r.at)} · ${r.by} 기록` + (r.memo?` · ${r.memo}`:"");
+    } else {
+      $("wBig").textContent="–"; $("wChg").textContent=""; $("wChg").className="wchg";
+      $("wMeta").textContent="아직 체중 기록이 없어요.";
+    }
+
+    // 목록
+    const list = $("wList");
+    if (!rows.length){ list.innerHTML='<div class="emptylist">체중을 기록하면 여기에 쌓여요.</div>'; }
+    else {
+      list.innerHTML="";
+      rows.forEach(r=>{
+        const el=document.createElement("div"); el.className="wrec";
+        el.innerHTML = `<span class="wv">${r.value} kg</span>`+
+          `<span class="wsub">${fmtWhen(r.atText,r.at)} · ${escape(r.by||"")}${r.memo?" · "+escape(r.memo):""}</span>`+
+          `<button class="del" title="삭제">✕</button>`;
+        el.querySelector(".del").addEventListener("click", ()=>delWeight(r.id));
+        list.appendChild(el);
+      });
+    }
+
+    // 그래프 (오래된→최신, 최근 30)
+    drawWeightChart(rows.slice(0,30).reverse());
+  }
+
+  function drawWeightChart(rows){
+    const wrap = document.querySelector("#wChart").closest(".chartwrap");
+    if (typeof Chart === "undefined"){ if(wrap) wrap.innerHTML='<div style="text-align:center;color:var(--muted);font-size:14px;padding:70px 10px">그래프를 불러오지 못했어요.</div>'; return; }
+    const el = document.getElementById("wChart"); if(!el) return;
+    const labels = rows.map(r=>fmtWhen(r.atText,r.at));
+    const data = rows.map(r=>r.value);
+    if (wChart){ wChart.destroy(); }
+    wChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[{ data, borderColor:"#3E74D8", borderWidth:2.5, tension:.3,
+        pointBackgroundColor:"#3E74D8", pointBorderColor:"#fff", pointBorderWidth:1.5, pointRadius:5, pointHoverRadius:7, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> c.parsed.y + " kg" } } },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{color:"#9AA0A6",font:{size:12}} },
+                 x:{ grid:{display:false}, ticks:{color:"#9AA0A6",font:{size:11}, maxRotation:0, autoSkip:true, maxTicksLimit:5} } } }
+    });
+  }
+
+  // ================= 병원용 기록지 (출력) =================
+  let allReadings = [];            // 최신순 전체 혈당 (render에서 채움)
+  let reportChart = null;
+  let reportEnd = 0;               // 이번 리포트의 종료 시각(증분 커서 후보)
+  let reportMode = "all";
+  const metaRef = db.collection("meta").doc("print");
+
+  function dateInputToStart(v){ return v ? new Date(v + "T00:00:00").getTime() : 0; }
+  function dateInputToEnd(v){ return v ? new Date(v + "T23:59:59.999").getTime() : Date.now(); }
+  function fmtDateTime(ms){
+    const d = new Date(ms);
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function fmtDate(ms){
+    const d = new Date(ms); const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  }
+
+  // 출력 버튼 → 범위 모달 열기
+  $("openReport").addEventListener("click", async ()=>{
+    $("rangePick").classList.remove("on");
+    $("rangeModal").classList.remove("hidden");
+    // 마지막 출력 시점 표시
+    $("lastPrintInfo").textContent = "마지막 출력 기록을 확인 중…";
+    let last = 0;
+    try{
+      const doc = await metaRef.get();
+      last = (doc.exists && doc.data().lastPrintedAt) ? doc.data().lastPrintedAt : 0;
+    }catch(e){ console.error(e); }
+    $("lastPrintInfo")._last = last;
+    $("lastPrintInfo").textContent = last
+      ? `마지막 출력: ${fmtDateTime(last)} 까지 완료됨`
+      : "아직 출력 기록이 없어요 (증분 = 처음부터 전체와 동일)";
+    // 종료일 기본값 = 오늘
+    $("rangeEnd").value = fmtDate(Date.now());
+    $("rangeStart").value = "";
+  });
+
+  $("rangeCancel").addEventListener("click", ()=> $("rangeModal").classList.add("hidden"));
+
+  // 모드 버튼
+  $("rangeModal").querySelector(".opts").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    const mode = b.dataset.mode;
+    if (mode === "custom"){ $("rangePick").classList.toggle("on"); return; }
+    const last = $("lastPrintInfo")._last || 0;
+    if (mode === "incremental") buildReport(last, Date.now(), "incremental");
+    else buildReport(0, Date.now(), "all");
+  });
+
+  $("makeCustom").addEventListener("click", ()=>{
+    const s = dateInputToStart($("rangeStart").value);
+    const e = dateInputToEnd($("rangeEnd").value);
+    if (!$("rangeEnd").value){ toast("종료일을 선택하세요"); return; }
+    if (s > e){ toast("시작일이 종료일보다 늦어요"); return; }
+    buildReport(s, e, "custom");
+  });
+
+  // 리포트 생성
+  function buildReport(start, end, mode){
+    reportMode = mode; reportEnd = end;
+    // 필터 (증분은 start 초과, 나머지는 start 이상)
+    const rows = allReadings
+      .filter(r => typeof r.at === "number" && (mode === "incremental" ? r.at > start : r.at >= start) && r.at <= end)
+      .slice().sort((a,b)=> a.at - b.at);   // 오래된→최신
+
+    const doc = $("reportDoc");
+    const periodText = (start ? fmtDate(start) : "맨 처음") + " ~ " + fmtDate(end);
+
+    if (!rows.length){
+      doc.innerHTML = `<h1>혈당 기록지</h1>
+        <div class="sub">대상: 아빠 · 출력일 ${fmtDate(Date.now())}</div>
+        <div class="sub">기간: ${escape(periodText)}</div>
+        <div class="rule"></div>
+        <div class="docEmpty">해당 기간에 혈당 기록이 없어요.<br>기간을 다시 선택해 주세요.</div>`;
+      $("rangeModal").classList.add("hidden");
+      $("reportMark").classList.add("hidden");
+      openReportOverlay();
+      return;
+    }
+
+    // 통계
+    const vals = rows.map(r=>r.value);
+    const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    const hi = Math.max(...vals), lo = Math.min(...vals);
+    const lowCnt = rows.filter(r=>r.value < 70).length;
+    const highCnt = rows.filter(r=> classify(r.value,r.context).key==="high").length;
+    // 시점별 평균
+    const groups = {};
+    rows.forEach(r=>{ (groups[r.context]=groups[r.context]||[]).push(r.value); });
+    const ctxAvgHtml = Object.keys(groups).map(k=>{
+      const g=groups[k]; const a=Math.round(g.reduce((x,y)=>x+y,0)/g.length);
+      return `<b>${escape(k)}</b> 평균 ${a} (${g.length}회)`;
+    }).join(" · ");
+
+    // 표 행
+    const rowsHtml = rows.map(r=>{
+      const cl = classify(r.value, r.context);
+      return `<tr>
+        <td>${escape(fmtDate(r.at))}</td>
+        <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+        <td>${escape(r.context)}</td>
+        <td class="v" style="color:${cl.color}">${r.value}</td>
+        <td class="badge"><span style="color:${cl.color}">${cl.label}</span></td>
+        <td>${escape(r.by||"")}</td>
+        <td>${escape(r.memo||"")}</td>
+      </tr>`;
+    }).join("");
+
+    doc.innerHTML = `
+      <h1>혈당 기록지</h1>
+      <div class="sub">대상: 아빠 · 출력일 ${fmtDate(Date.now())}</div>
+      <div class="sub">기간: ${escape(periodText)} · 총 ${rows.length}회 측정</div>
+      <div class="rule"></div>
+      <div class="sumGrid">
+        <div class="sumBox"><div class="n">${avg}</div><div class="t">평균 (mg/dL)</div></div>
+        <div class="sumBox"><div class="n">${hi}</div><div class="t">최고</div></div>
+        <div class="sumBox"><div class="n">${lo}</div><div class="t">최저</div></div>
+      </div>
+      <div class="ctxAvg">${ctxAvgHtml}<br>저혈당(70 미만) ${lowCnt}회 · 높음 ${highCnt}회</div>
+      <div class="docChart"><canvas id="reportCanvas"></canvas></div>
+      <table class="rt">
+        <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>혈당</th><th>판정</th><th>기록자</th><th>메모</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div class="docNote">
+        색상 기준(당뇨 관리 목표): 식전 80~130 · 식후 2시간 180 미만 · 70 미만 저혈당.
+        본 기록지는 자가측정 참고자료이며 의료 진단이 아닙니다.
+      </div>`;
+
+    // 증분 모드일 때만 '출력완료' 버튼 노출
+    $("reportMark").classList.toggle("hidden", mode !== "incremental");
+
+    $("rangeModal").classList.add("hidden");
+    openReportOverlay();
+    drawReportChart(rows);
+  }
+
+  function drawReportChart(rows){
+    if (typeof Chart === "undefined") return;
+    const el = document.getElementById("reportCanvas"); if(!el) return;
+    const labels = rows.map(r => fmtDate(r.at) + " " + ((r.atText||"").split(" ")[1]||""));
+    const data = rows.map(r => r.value);
+    const colors = rows.map(r => classify(r.value, r.context).color);
+    if (reportChart){ reportChart.destroy(); }
+    reportChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[{ data, borderColor:"#B9B6AE", borderWidth:2, tension:.3,
+        pointBackgroundColor:colors, pointBorderColor:colors, pointRadius:4, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false} },
+        scales:{ y:{ suggestedMin:60, grid:{color:"#EFEDE7"}, ticks:{font:{size:11}} },
+                 x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6} } } }
+    });
+  }
+
+  function openReportOverlay(){
+    $("reportOverlay").classList.add("on");
+    document.body.classList.add("report-open");
+    $("reportOverlay").scrollTop = 0;
+  }
+  function closeReportOverlay(){
+    $("reportOverlay").classList.remove("on");
+    document.body.classList.remove("report-open");
+    if (reportChart){ reportChart.destroy(); reportChart = null; }
+  }
+  $("reportClose").addEventListener("click", closeReportOverlay);
+  $("reportPrint").addEventListener("click", ()=> window.print());
+  $("reportMark").addEventListener("click", async ()=>{
+    try{
+      await metaRef.set({ lastPrintedAt: reportEnd, by: who || "", at: Date.now() }, { merge:true });
+      toast("출력완료로 표시했어요. 다음엔 이 이후부터 나와요.");
+      $("reportMark").classList.add("hidden");
+    }catch(err){ console.error(err); toast("표시 실패: " + (err.code||err.message)); }
+  });
+
   // ---- 실시간 구독 ----
   let chart = null;
   col.orderBy("at","desc").onSnapshot(snap=>{
@@ -588,6 +993,7 @@ const firebaseConfig = {
 
   // ---- 렌더 ----
   function render(rows){
+    allReadings = rows;   // 리포트에서 사용 (최신순)
     // 최신(hero)
     const hero = $("hero");
     if (rows.length){
