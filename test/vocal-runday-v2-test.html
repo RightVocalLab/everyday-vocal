@@ -1403,14 +1403,22 @@ input,select,button,textarea{font-family:inherit;}
       </div>
     </div>
     <!-- BPM 인라인 -->
-    <div class="bpm-row">
-      <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
-      <input type="range" id="bpm-sl" min="30" max="250" value="60" oninput="onBpmChg(this.value)">
-      <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
-      <button class="btn-ghost" onclick="setBpm(45)" style="padding:4px 7px;font-size:11px">45</button>
-      <button class="btn-ghost" onclick="setBpm(60)" style="padding:4px 7px;font-size:11px">60</button>
-      <button class="btn-ghost" onclick="setBpm(70)" style="padding:4px 7px;font-size:11px">70</button>
-      <button class="btn-ghost" onclick="setBpm(100)" style="padding:4px 7px;font-size:11px">100</button>
+    <div class="bpm-row" style="flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <span style="font-size:11px;color:var(--mu);font-weight:700;white-space:nowrap">BPM</span>
+        <input type="range" id="bpm-sl" min="30" max="250" value="60" oninput="onBpmChg(this.value)">
+        <span style="font-size:18px;font-weight:900;color:var(--or);min-width:34px;text-align:right" id="bpm-disp">60</span>
+      </div>
+      <!-- 빠른 설정 (슬라이더 아래) -->
+      <div id="bpm-presets" style="display:flex;gap:4px;width:100%;margin-top:8px;justify-content:space-between">
+        <button class="btn-ghost bpm-chip" data-bpm="40" onclick="setBpm(40)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">40</button>
+        <button class="btn-ghost bpm-chip" data-bpm="80" onclick="setBpm(80)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">80</button>
+        <button class="btn-ghost bpm-chip" data-bpm="100" onclick="setBpm(100)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">100</button>
+        <button class="btn-ghost bpm-chip" data-bpm="120" onclick="setBpm(120)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">120</button>
+        <button class="btn-ghost bpm-chip" data-bpm="160" onclick="setBpm(160)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">160</button>
+        <button class="btn-ghost bpm-chip" data-bpm="180" onclick="setBpm(180)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">180</button>
+        <button class="btn-ghost bpm-chip" data-bpm="200" onclick="setBpm(200)" style="flex:1;padding:4px 0;font-size:11px;min-width:0">200</button>
+      </div>
     </div>
     <!-- 훈련 설명 + 코칭 통합 카드 -->
     <div class="card">
@@ -6720,15 +6728,23 @@ done++;
 if(done>=total){
 _samplesReady=true;
 _samplesLoading=false;
-_pianoQueue.forEach(function(q){_playSample(q.midi,q.dur,q.vol);});
+_pianoQueue.forEach(function(q){_playSample(q.midi,q.dur,q.vol,q.when);});
 _pianoQueue=[];
 }
 });
 });
 }
 
-function _playSample(midi,dur,vol){
-const ctx=gCtx(),t=ctx.currentTime;
+/* [수정 2026-07-12] 모바일 하이라이트 어긋남 수정.
+   기존: 오디오를 setTimeout으로 재생 → 모바일에서 지연/흔들림 발생.
+         반면 건반 하이라이트(_displayLoop)는 AudioContext 시계(sT) 기준 → 두 시계가 어긋남.
+   변경: when(오디오 시계 절대시각)을 받아 Web Audio로 정확히 예약 → 소리와 빛이 같은 시계를 사용.
+   미리 예약된 음은 _schedSrcs로 추적해서 정지 시 취소한다. */
+let _schedSrcs=[];
+function _playSample(midi,dur,vol,when){
+const ctx=gCtx(),now=ctx.currentTime;
+/* when이 미래면 그 시각에 정확히 예약, 아니면 즉시 */
+const t=(typeof when==='number'&&when>now)?when:now;
 const nearest=_nearestSample(midi);
 const buf=_pianoSamples[nearest.midi];
 if(!buf)return;
@@ -6746,14 +6762,33 @@ gain.gain.setValueAtTime(vol*10,t+dur-0.04);
 gain.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.8);
 src.start(t);
 src.stop(t+dur+0.9);
+
+/* 미래 예약분만 추적 (정지 시 취소용). 오래된 항목은 정리 */
+if(t>now){
+  _schedSrcs.push({src:src,t:t});
+  if(_schedSrcs.length>120){
+    _schedSrcs=_schedSrcs.filter(function(o){return o.t>now;});
+  }
+}
 }
 
-function playPiano(midi,dur=0.5,vol=0.85){
+/* 예약된(아직 시작 전) 음 전부 취소 — 일시정지/정지 시 호출 */
+function _cancelScheduledNotes(){
+try{
+  const now=gCtx().currentTime;
+  _schedSrcs.forEach(function(o){
+    if(o.t>now){ try{ o.src.stop(now); }catch(e){} }
+  });
+}catch(e){}
+_schedSrcs=[];
+}
+
+function playPiano(midi,dur=0.5,vol=0.85,when){
 if(!_samplesReady&&!_samplesLoading)_loadPianoSamples();
 if(_samplesReady){
-_playSample(midi,dur,vol);
+_playSample(midi,dur,vol,when);
 }else{
-_pianoQueue.push({midi:midi,dur:dur,vol:vol});
+_pianoQueue.push({midi:midi,dur:dur,vol:vol,when:when});
 if(_pianoQueue.length>60)_pianoQueue.shift();
 }
 }
@@ -6952,8 +6987,16 @@ window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-t
 let curMod=null,playing=false,allSteps=[],sch={s:0,p:0,nx:0},loopT=null,curBpm=60,coachT=[];
 let seqList=[],seqIdx=0,isSeq=false;
 
-function onBpmChg(v){curBpm=parseInt(v);document.getElementById('bpm-disp').textContent=v;}
-function setBpm(v){curBpm=v;document.getElementById('bpm-sl').value=v;document.getElementById('bpm-disp').textContent=v;}
+/* 현재 BPM과 일치하는 빠른설정 버튼 강조 */
+function _syncBpmChips(){
+  const chips=document.querySelectorAll('#bpm-presets .bpm-chip');
+  chips.forEach(function(b){
+    if(parseInt(b.getAttribute('data-bpm'),10)===parseInt(curBpm,10)) b.classList.add('on');
+    else b.classList.remove('on');
+  });
+}
+function onBpmChg(v){curBpm=parseInt(v);document.getElementById('bpm-disp').textContent=v;_syncBpmChips();}
+function setBpm(v){curBpm=v;document.getElementById('bpm-sl').value=v;document.getElementById('bpm-disp').textContent=v;_syncBpmChips();}
 
 function buildSteps(mod){
 const ep=(pat)=>{
@@ -7071,7 +7114,10 @@ if(totalSec2 > 8){
 }
 }
 
-function prepTrain(mod){
+function prepTrain(mod, keepBpm){
+/* [추가 2026-07-12] keepBpm=true(다시하기)면 사용자가 바꾼 BPM 유지.
+   훈련 진입/다음 훈련으로 전환할 때는 항상 스케일 기본 BPM으로 리셋된다. */
+const _keepBpmVal = (keepBpm===true && typeof curBpm==='number' && curBpm>0) ? curBpm : null;
 stopEngine();curMod=mod;
 /* 설명 자동재생 토글 버튼 라벨 동기화 (훈련 화면 진입 시마다) */
 if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
@@ -7122,7 +7168,7 @@ if(mod.noScale){
   window._descPlaying=false;
   if(typeof _syncDescBtnLabel === 'function') _syncDescBtnLabel();
 allSteps=buildSteps(mod);sch={s:0,p:0,nx:0};
-curBpm=mod.bpm||60;
+curBpm=(_keepBpmVal!==null)?_keepBpmVal:(mod.bpm||60);
 const sn=m2n(mod.startNote),en=m2n(mod.endNote);
 document.getElementById('t-title').textContent=mod.label||mod.exId||'—';
 document.getElementById('t-sub').textContent=`${mod.rangeLabel||''} · ${sn.full}~${en.full}`;
@@ -7134,6 +7180,7 @@ document.getElementById('cur-n').textContent='—';document.getElementById('cur-
 _setPpIcon('play');
 setCoachTxt('재생 버튼을 누르면 시작합니다.');
 document.getElementById('bpm-sl').value=curBpm;document.getElementById('bpm-disp').textContent=curBpm;
+if(typeof _syncBpmChips==='function')_syncBpmChips();
 const _edEl=document.getElementById('ex-desc');
 
 const _stepGuide = window._pendingStepGuide || '';
@@ -7277,6 +7324,8 @@ setTimeout(()=>{if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs);
 function stopEngine(){
 playing=false;if(loopT)clearTimeout(loopT);clrCT();
 _stopMetronome();
+/* [추가 2026-07-12] 미리 예약된(아직 시작 전) 음 취소 — 정확 예약 방식이라 필수 */
+_cancelScheduledNotes();
 /* 빛 polling 정지 + 빛 정리 */
 if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
 _scheduledNotes=[];_lastDisplayedSIdx=-1;
@@ -7304,7 +7353,9 @@ const nM=root+pstep.semi;
 /* 다음 스텝이 hold이면 현재 음을 길게 서스테인 */
 const nextPstep=ps[sch.p+1];
 const noteDur=(nextPstep&&nextPstep.type==='hold') ? spb*2.5 : spb*0.90;
-(function(m,t,dur){const dl=Math.max(0,(t-ctx.currentTime)*1000);setTimeout(()=>{if(playing)playPiano(m,dur,0.52);},dl);})(nM,sT,noteDur);
+/* [수정 2026-07-12] setTimeout 대신 오디오 시계(sT)에 정확히 예약.
+   하이라이트(_displayLoop)도 sT 기준이라 소리·빛이 완전히 동기화된다. */
+playPiano(nM,noteDur,0.52,sT);
 _scheduledNotes.push({sT:sT, m:nM, si:step.semi, dir:step.dir, sIdx:sch.s, total:allSteps.length});
 }
 sch.nx+=spb;sch.p++;
@@ -7452,7 +7503,7 @@ document.getElementById('done-modal').classList.add('open');
 }
 function closeDone(){document.getElementById('done-modal').classList.remove('open');}
 function doRestart(){
-  window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod);startEngine();}}
+  window._savedSch=null;window._pausedSch=null;window._descPlaying=false;if(curMod){prepTrain(curMod,true);startEngine();}}
 function skipStep(){
   if(!playing)return;
   /* 자유훈련: 누구나 OK. 숙제: 김동현만 OK */
