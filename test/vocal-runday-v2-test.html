@@ -21201,6 +21201,29 @@ async function _adminCheckLocalPtHistory(){
   if(!_fbDb){ statusEl.innerHTML = '<div style="color:#dc2626">Firebase 연결 안 됨</div>'; return; }
   /* [변경 2026-07-06] 이 기기 localStorage가 아니라, Firebase pt_history에 동기화된
      전체 목록(모든 학생)을 보여준다. 관리자만 접근하고, 본인 폰 측정분만 올리므로 전체=동기화분. */
+  /* [버그수정 2026-07-12] pt_history 루트 읽기는 gunfree2@naver.com 이메일 토큰이 필요.
+     개발자 자동 로그인(김동현)은 익명 토큰이라 permission_denied 발생 → 신고/건의와 동일하게
+     _ensureAdminAuth()로 이메일 로그인부터 시킨다. */
+  var _cuPt = null;
+  try { _cuPt = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null; } catch(e){}
+  var _isGunfreePt = _cuPt && _cuPt.email && _cuPt.email.toLowerCase() === 'gunfree2@naver.com';
+  if(!_isGunfreePt){
+    if(typeof _ensureAdminAuth !== 'function'){
+      statusEl.innerHTML = '<div style="color:#dc2626">관리자 인증 기능을 찾을 수 없습니다.</div>';
+      return;
+    }
+    const _okPt = await _ensureAdminAuth();
+    if(!_okPt){
+      statusEl.innerHTML = '<div style="text-align:center;padding:18px 12px">'
+        + '<div style="font-size:13px;color:#dc2626;font-weight:800;margin-bottom:5px">🔒 관리자 인증 필요</div>'
+        + '<div style="font-size:11px;color:#64748b;line-height:1.5;margin-bottom:12px">전체 측정 이력은 관리자(gunfree2) 계정만 볼 수 있어요.<br>지금은 익명/학생 로그인 상태입니다.</div>'
+        + '<button onclick="_adminCheckLocalPtHistory()" style="padding:9px 20px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:10px;font-weight:800;color:#fff;font-size:12px;cursor:pointer">관리자 인증하기</button>'
+        + '</div>';
+      return;
+    }
+    _isGunfreePt = true;
+    statusEl.innerHTML = '<div style="color:#a8a29e">동기화된 전체 이력 불러오는 중...</div>';
+  }
   try {
     const snap = await _fbDb.ref('pt_history').once('value');
     const data = snap.val() || {};
@@ -21227,7 +21250,22 @@ async function _adminCheckLocalPtHistory(){
     html += '</div>';
     statusEl.innerHTML = html;
   } catch(e){
-    statusEl.innerHTML = '<div style="color:#dc2626">불러오기 실패: ' + (e && e.message ? e.message : e) + '<br><span style="font-size:9px;color:#a8a29e">관리자(gunfree2) 로그인 상태인지 확인하세요.</span></div>';
+    const _msg = (e && e.message) ? e.message : String(e);
+    const _denied = /permission_denied|PERMISSION_DENIED/i.test(_msg);
+    let _hint;
+    if(_denied && _isGunfreePt){
+      /* 관리자 이메일 토큰인데도 거부 = RTDB 규칙에 pt_history 루트 .read 가 없음 */
+      _hint = 'RTDB 규칙에 pt_history 루트 읽기 권한이 없습니다.<br>규칙에 "pt_history": { ".read": "auth.token.email === \'gunfree2@naver.com\'" } 추가 필요.';
+    } else if(_denied){
+      _hint = '관리자(gunfree2) 인증이 필요합니다. 아래 버튼으로 인증해주세요.';
+    } else {
+      _hint = '관리자(gunfree2) 로그인 상태인지 확인하세요.';
+    }
+    statusEl.innerHTML = '<div style="color:#dc2626;font-size:12px">불러오기 실패: ' + _msg + '</div>'
+      + '<div style="font-size:10px;color:#a8a29e;margin-top:4px;line-height:1.5">' + _hint + '</div>'
+      + (_denied && !_isGunfreePt
+          ? '<div style="text-align:center;margin-top:10px"><button onclick="_adminCheckLocalPtHistory()" style="padding:8px 18px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:10px;font-weight:800;color:#fff;font-size:12px;cursor:pointer">관리자 인증하기</button></div>'
+          : '');
   }
 }
 
