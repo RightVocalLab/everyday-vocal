@@ -17107,6 +17107,263 @@ function _ptAnalyzeLoop(){
    - 모호한 경우 mix로 (오판 방지가 더 중요)
    
    참고: Keating 2014, Sundberg, Childers&Lee, Lee 2021 등 음향학 표준 */
+/* ============================================================================
+   === 확장 음향 특징 엔진 (Phase X — 저음 가성/얇은중성 분리 연구용) ===
+   목적: G3~C4(196~262Hz)에서 가성 vs 얇은중성이 기존 6지표로 분리 불가(균형정확도 66%).
+         문헌이 지목하는 표준 지표들을 추가로 뽑아 분리력이 있는지 실측 검증한다.
+   ★ 판정 로직에는 일절 관여하지 않음. window._ptDebug === true 일 때만 계산(성능 안전).
+   구현 근거:
+     · Iseli & Alwan (2004/2007) — 포만트 보정 H1*, H2*, H4*, A1*, A2*, A3*
+       (현행 raw H1-H2는 저음에서 H2(392~524Hz)가 남성 F1(300~800Hz)과 겹쳐 포만트에 오염됨)
+     · Hawks & Miller (1995) — 포만트 대역폭 추정 공식
+     · Hillenbrand et al. (1994) — CPP (Cepstral Peak Prominence), breathiness 표준
+     · Hanson (1997) — H1*-A1*(성문 후방 간극), H1*-A3*(성대 폐쇄 급격도)
+     · de Krom (1993) — 대역별 HNR (0-500 / 0-1500 / 0-2500Hz)
+     · Chai et al. (LabPhon19) — 고주파 대역(H2K, H5K)에서 falsetto < modal/breathy/creaky
+   ============================================================================ */
+
+var _ptF0Hist = [];   /* jitter 계산용 f0 히스토리 */
+
+/* --- 반복형 radix-2 FFT (in-place) --- */
+function _ptFFT(re, im){
+  var n = re.length, i, j = 0, k, m, t, ur, ui, sr2, si2, tr, ti;
+  for(i = 0; i < n - 1; i++){
+    if(i < j){ t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    k = n >> 1;
+    while(k <= j){ j -= k; k >>= 1; }
+    j += k;
+  }
+  for(m = 1; m < n; m <<= 1){
+    var step = m << 1;
+    var ang = -Math.PI / m;
+    var wr = Math.cos(ang), wi = Math.sin(ang);
+    for(k = 0; k < m; k++){
+      ur = Math.cos(ang * k); ui = Math.sin(ang * k);
+      for(i = k; i < n; i += step){
+        j = i + m;
+        tr = ur * re[j] - ui * im[j];
+        ti = ur * im[j] + ui * re[j];
+        re[j] = re[i] - tr; im[j] = im[i] - ti;
+        re[i] += tr;        im[i] += ti;
+      }
+    }
+  }
+}
+
+/* --- Hamming 창 + FFT → 크기 스펙트럼(dB) --- */
+function _ptSpecDb(buf){
+  var N = 1; while(N * 2 <= buf.length) N *= 2;   /* 2의 거듭제곱 */
+  var re = new Float64Array(N), im = new Float64Array(N), i;
+  for(i = 0; i < N; i++){
+    var w = 0.54 - 0.46 * Math.cos(2 * Math.PI * i / (N - 1));
+    re[i] = buf[i] * w;
+  }
+  _ptFFT(re, im);
+  var half = N >> 1, mag = new Float64Array(half);
+  for(i = 0; i < half; i++){
+    mag[i] = Math.sqrt(re[i] * re[i] + im[i] * im[i]) + 1e-12;
+  }
+  return { mag: mag, N: N };
+}
+
+/* --- 자기상관 + Levinson-Durbin → LPC 계수 --- */
+function _ptLPC(x, order){
+  var n = x.length, i, k, r = new Float64Array(order + 1);
+  for(k = 0; k <= order; k++){
+    var s = 0;
+    for(i = k; i < n; i++) s += x[i] * x[i - k];
+    r[k] = s;
+  }
+  if(r[0] <= 1e-12) return null;
+  var a = new Float64Array(order + 1), tmp = new Float64Array(order + 1);
+  a[0] = 1; var e = r[0];
+  for(i = 1; i <= order; i++){
+    var acc = r[i];
+    for(k = 1; k < i; k++) acc -= a[k] * r[i - k];
+    var kc = acc / e;
+    for(k = 0; k <= order; k++) tmp[k] = a[k];
+    a[i] = kc;
+    for(k = 1; k < i; k++) a[k] = tmp[k] - kc * tmp[i - k];
+    e *= (1 - kc * kc);
+    if(e <= 1e-12) break;
+  }
+  return a;   /* A(z) = 1 - a1 z^-1 - ... */
+}
+
+/* --- LPC 스펙트럼 포락에서 F1/F2/F3 피크 검출 --- */
+function _ptFormants(buf, fs){
+  /* 1) 프리엠퍼시스 0.97 */
+  var n = buf.length, pe = new Float64Array(n), i;
+  pe[0] = buf[0];
+  for(i = 1; i < n; i++) pe[i] = buf[i] - 0.97 * buf[i - 1];
+  /* 2) 약 10kHz로 데시메이션 (포만트 F1~F3는 3.5kHz 이하) */
+  var fac = Math.max(1, Math.round(fs / 10000));
+  var m = Math.floor(n / fac), ds = new Float64Array(m), j;
+  for(i = 0; i < m; i++){
+    var s = 0, c = 0;
+    for(j = 0; j < fac; j++){ var idx = i * fac + j; if(idx < n){ s += pe[idx]; c++; } }
+    ds[i] = c ? s / c : 0;
+  }
+  var fs2 = fs / fac;
+  /* 3) LPC (order = 2*예상포만트수 + 4) */
+  var a = _ptLPC(ds, 12);
+  if(!a) return null;
+  /* 4) 포락 |1/A(e^jw)| 를 10Hz 간격으로 평가 → 로컬 피크 = 포만트 */
+  var maxF = Math.min(4500, fs2 / 2 - 100), step = 10;
+  var pts = Math.floor(maxF / step), env = new Float64Array(pts + 1);
+  for(i = 0; i <= pts; i++){
+    var w = 2 * Math.PI * (i * step) / fs2, ar = 1, ai = 0;
+    for(j = 1; j <= 12; j++){ ar -= a[j] * Math.cos(w * j); ai += a[j] * Math.sin(w * j); }
+    env[i] = 1 / (Math.sqrt(ar * ar + ai * ai) + 1e-12);
+  }
+  var peaks = [];
+  for(i = 1; i < pts; i++){
+    if(env[i] > env[i - 1] && env[i] >= env[i + 1]){
+      var f = i * step;
+      if(f >= 150) peaks.push(f);
+    }
+  }
+  if(peaks.length < 3) return null;
+  return [peaks[0], peaks[1], peaks[2]];
+}
+
+/* --- Hawks & Miller (1995) 대역폭 추정 --- */
+function _ptBwHawksMiller(F, f0){
+  var S = 1 + 0.25 * (f0 - 132) / 88;
+  var C1 = [165.327516, -6.73636734e-1, 1.80874446e-3, -4.52201682e-6, 7.49514000e-9, -4.70219241e-12];
+  var C2 = [15.8146139, 8.10159009e-2, -9.79728215e-5, 5.28725064e-8, -1.07099364e-11, 7.91528509e-16];
+  var C = (F < 500) ? C1 : C2, s = 0, p = 1, i;
+  for(i = 0; i < 6; i++){ s += C[i] * p; p *= F; }
+  return Math.max(20, S * s);
+}
+
+/* --- Iseli & Alwan 보정량(dB). 진폭에서 '빼야' 함 --- */
+function _ptIseliCorr(f, F, B, fs){
+  var r = Math.exp(-Math.PI * B / fs);
+  var wi = 2 * Math.PI * F / fs, w = 2 * Math.PI * f / fs;
+  var num = r * r + 1 - 2 * r * Math.cos(wi);
+  var d1  = r * r + 1 - 2 * r * Math.cos(wi + w);
+  var d2  = r * r + 1 - 2 * r * Math.cos(wi - w);
+  if(num <= 0 || d1 <= 0 || d2 <= 0) return 0;
+  return 20 * Math.log10(num) - 10 * Math.log10(d1) - 10 * Math.log10(d2);
+}
+
+/* --- CPP (Hillenbrand 1994): 실수 켑스트럼 피크 − 회귀선 --- */
+function _ptCPP(buf, fs, f0){
+  var sp = _ptSpecDb(buf), N = sp.N, half = N >> 1, i;
+  /* log magnitude → 대칭 확장 → IFFT(= FFT of real even seq) */
+  var re = new Float64Array(N), im = new Float64Array(N);
+  for(i = 0; i < half; i++){
+    var lg = Math.log(sp.mag[i]);
+    re[i] = lg; re[N - 1 - i] = lg;
+  }
+  _ptFFT(re, im);
+  var q0 = Math.max(2, Math.floor(fs / 1000));        /* 1ms */
+  var qMax = Math.min(half - 2, Math.floor(fs / 60)); /* 60Hz 하한 */
+  var ceps = new Float64Array(qMax + 1);
+  for(i = 0; i <= qMax; i++) ceps[i] = 20 * Math.log10(Math.abs(re[i]) / N + 1e-12);
+  /* 회귀선 (q0 ~ qMax) */
+  var sx = 0, sy = 0, sxx = 0, sxy = 0, cnt = 0;
+  for(i = q0; i <= qMax; i++){ sx += i; sy += ceps[i]; sxx += i * i; sxy += i * ceps[i]; cnt++; }
+  var den = cnt * sxx - sx * sx;
+  if(den === 0) return null;
+  var slope = (cnt * sxy - sx * sy) / den, icpt = (sy - slope * sx) / cnt;
+  /* f0 quefrency 주변(±25%)에서 피크 탐색 */
+  var qC = fs / f0, lo = Math.max(q0, Math.floor(qC * 0.75)), hi = Math.min(qMax, Math.ceil(qC * 1.25));
+  var best = -Infinity, bq = lo;
+  for(i = lo; i <= hi; i++){ if(ceps[i] > best){ best = ceps[i]; bq = i; } }
+  if(!isFinite(best)) return null;
+  return best - (slope * bq + icpt);   /* dB */
+}
+
+/* --- 대역별 HNR (de Krom 취지): 배음창 에너지 vs 나머지(노이즈) --- */
+function _ptHnrBands(buf, fs, f0){
+  var sp = _ptSpecDb(buf), N = sp.N, half = N >> 1;
+  var binHz = fs / N, i, k;
+  var lim = [500, 1500, 2500], out = [];
+  var half_bw = Math.max(1, Math.round((f0 * 0.15) / binHz));   /* 배음 창 ±15% f0 */
+  var isHarm = new Uint8Array(half);
+  for(k = 1; k * f0 < fs / 2; k++){
+    var c = Math.round(k * f0 / binHz);
+    for(i = Math.max(0, c - half_bw); i <= Math.min(half - 1, c + half_bw); i++) isHarm[i] = 1;
+  }
+  for(var L = 0; L < lim.length; L++){
+    var top = Math.min(half - 1, Math.floor(lim[L] / binHz));
+    var hE = 0, nE = 0;
+    for(i = 1; i <= top; i++){
+      var p = sp.mag[i] * sp.mag[i];
+      if(isHarm[i]) hE += p; else nE += p;
+    }
+    out.push((nE > 1e-12 && hE > 1e-12) ? 10 * Math.log10(hE / nE) : 40);
+  }
+  return out;   /* [HNR05, HNR15, HNR25] */
+}
+
+/* --- 확장 특징 일괄 계산 (디버그 전용) --- */
+function _ptExtraFeatures(timeBuf, f0, fs, h1db, h2db, h4db){
+  try{
+    var F = _ptFormants(timeBuf, fs);
+    var res = { f1: null, f2: null, f3: null, cH1H2: null, cH2H4: null,
+                cH1A1: null, cH1A2: null, cH1A3: null, cpp: null,
+                hnr05: null, hnr15: null, hnr25: null, jit: null, h4h2k: null, h2k5k: null, alpha: null };
+    var sp = _ptSpecDb(timeBuf), N = sp.N, binHz = fs / N, half = N >> 1;
+    function magDbAt(freq){
+      var c = Math.round(freq / binHz);
+      if(c < 1 || c >= half) return null;
+      var lo = Math.max(1, c - 2), hi = Math.min(half - 1, c + 2), mx = 0;
+      for(var i = lo; i <= hi; i++) if(sp.mag[i] > mx) mx = sp.mag[i];
+      return 20 * Math.log10(mx + 1e-12);
+    }
+    /* 2kHz·5kHz 최근접 배음 */
+    var k2k = Math.max(1, Math.round(2000 / f0)), k5k = Math.max(1, Math.round(5000 / f0));
+    var H2K = magDbAt(k2k * f0), H5K = magDbAt(k5k * f0);
+    var H1 = magDbAt(f0), H2 = magDbAt(f0 * 2), H4 = magDbAt(f0 * 4);
+
+    if(F){
+      res.f1 = F[0]; res.f2 = F[1]; res.f3 = F[2];
+      var B = [_ptBwHawksMiller(F[0], f0), _ptBwHawksMiller(F[1], f0), _ptBwHawksMiller(F[2], f0)];
+      /* A1/A2/A3 = 각 포만트 최근접 배음의 진폭 */
+      var kA1 = Math.max(1, Math.round(F[0] / f0)), kA2 = Math.max(1, Math.round(F[1] / f0)), kA3 = Math.max(1, Math.round(F[2] / f0));
+      var A1 = magDbAt(kA1 * f0), A2 = magDbAt(kA2 * f0), A3 = magDbAt(kA3 * f0);
+      /* Iseli 보정: H1*,H2*,H4*,A1*,A2* 는 F1·F2 사용 / A3* 는 F1~F3 */
+      function corr2(f){ return _ptIseliCorr(f, F[0], B[0], fs) + _ptIseliCorr(f, F[1], B[1], fs); }
+      function corr3(f){ return corr2(f) + _ptIseliCorr(f, F[2], B[2], fs); }
+      if(H1 !== null && H2 !== null){
+        var cH1 = H1 - corr2(f0), cH2 = H2 - corr2(f0 * 2);
+        res.cH1H2 = cH1 - cH2;
+        if(H4 !== null){ var cH4 = H4 - corr2(f0 * 4); res.cH2H4 = cH2 - cH4; }
+        if(A1 !== null) res.cH1A1 = cH1 - (A1 - corr2(kA1 * f0));
+        if(A2 !== null) res.cH1A2 = cH1 - (A2 - corr2(kA2 * f0));
+        if(A3 !== null) res.cH1A3 = cH1 - (A3 - corr3(kA3 * f0));
+      }
+    }
+    if(H4 !== null && H2K !== null) res.h4h2k = H4 - H2K;
+    if(H2K !== null && H5K !== null) res.h2k5k = H2K - H5K;
+    /* alpha ratio: (1~5kHz 에너지) / (50~1kHz 에너지) */
+    var lo1 = Math.max(1, Math.round(50 / binHz)), mid = Math.round(1000 / binHz), top = Math.min(half - 1, Math.round(5000 / binHz));
+    var eLo = 0, eHi = 0, i;
+    for(i = lo1; i <= mid; i++) eLo += sp.mag[i] * sp.mag[i];
+    for(i = mid + 1; i <= top; i++) eHi += sp.mag[i] * sp.mag[i];
+    if(eLo > 1e-12 && eHi > 1e-12) res.alpha = 10 * Math.log10(eHi / eLo);
+
+    res.cpp = _ptCPP(timeBuf, fs, f0);
+    var hb = _ptHnrBands(timeBuf, fs, f0);
+    res.hnr05 = hb[0]; res.hnr15 = hb[1]; res.hnr25 = hb[2];
+
+    /* jitter (local, %) — 최근 6프레임 f0 시계열 */
+    _ptF0Hist.push(f0);
+    if(_ptF0Hist.length > 6) _ptF0Hist.shift();
+    if(_ptF0Hist.length >= 3){
+      var sd = 0, sm = 0;
+      for(i = 1; i < _ptF0Hist.length; i++) sd += Math.abs(_ptF0Hist[i] - _ptF0Hist[i - 1]);
+      for(i = 0; i < _ptF0Hist.length; i++) sm += _ptF0Hist[i];
+      var meanF = sm / _ptF0Hist.length;
+      if(meanF > 1) res.jit = 100 * (sd / (_ptF0Hist.length - 1)) / meanF;
+    }
+    return res;
+  }catch(e){ return null; }
+}
+
 function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   const N = timeBuf.length;
   
@@ -17489,6 +17746,18 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
         +' hnr='+hnr.toFixed(1)+' dB='+(typeof dB==='number'?dB.toFixed(0):'?')
         +' dBFS='+(typeof dB==='number'?(dB-94).toFixed(0):'?')
         +' score='+score.toFixed(1)+' '+(_rawResult!==result?(_rawResult+'→'):'')+result;
+      /* [Phase X] 확장 특징 — 디버그 모드에서만 계산, 판정에는 미사용 */
+      try{
+        var _xf = _ptExtraFeatures(timeBuf, f0, sampleRate);
+        if(_xf){
+          function _n(v){ return (v===null || !isFinite(v)) ? 'NA' : v.toFixed(1); }
+          _line += ' | cH1H2='+_n(_xf.cH1H2)+' cH2H4='+_n(_xf.cH2H4)+' cH1A1='+_n(_xf.cH1A1)
+                +' cH1A2='+_n(_xf.cH1A2)+' cH1A3='+_n(_xf.cH1A3)+' CPP='+_n(_xf.cpp)
+                +' HNR05='+_n(_xf.hnr05)+' HNR15='+_n(_xf.hnr15)+' HNR25='+_n(_xf.hnr25)
+                +' F1='+_n(_xf.f1)+' F2='+_n(_xf.f2)+' F3='+_n(_xf.f3)
+                +' H4H2K='+_n(_xf.h4h2k)+' H2K5K='+_n(_xf.h2k5k)+' ALPHA='+_n(_xf.alpha)+' JIT='+_n(_xf.jit);
+        }
+      }catch(_xe){}
       console.log('[PVR]', _line);
       try{ if(!window._ptDbgLog) window._ptDbgLog=[]; if(window._ptDbgLog.length<100000) window._ptDbgLog.push(_line); }catch(_e){}
       var _box=document.getElementById('pt-debug-box');
