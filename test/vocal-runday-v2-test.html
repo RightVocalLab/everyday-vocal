@@ -21230,13 +21230,16 @@ async function _adminCheckLocalPtHistory(){
     if(names.length === 0){ statusEl.innerHTML = '<div style="color:#a8a29e">동기화된 측정 이력이 없습니다.</div>'; return; }
     let total = 0;
     const rowsByName = names.map(name => {
-      const cnt = (data[name] && typeof data[name] === 'object') ? Object.keys(data[name]).length : 0;
-      total += cnt;
-      return { name, cnt };
+      const recs = (data[name] && typeof data[name] === 'object') ? Object.values(data[name]) : [];
+      total += recs.length;
+      /* 최근 측정 시각 */
+      const lastTs = recs.reduce((mx, r) => Math.max(mx, (r && r.timestamp) || 0), 0);
+      return { name, cnt: recs.length, lastTs };
     }).sort((a, b) => b.cnt - a.cnt);
-    let html = `<div style="margin-bottom:6px"><b>동기화된 전체 ${total}건 · ${names.length}명</b></div>`;
-    html += '<div style="display:flex;flex-direction:column;gap:3px;max-height:240px;overflow-y:auto">';
-    for(const { name, cnt } of rowsByName){
+    let html = `<div style="margin-bottom:8px;font-size:12px"><b>동기화된 전체 ${total}건 · ${names.length}명</b>`
+      + '<span style="color:#a8a29e;font-size:10px;margin-left:6px">이름을 누르면 측정 이력 → 결과지를 볼 수 있어요</span></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto">';
+    for(const { name, cnt, lastTs } of rowsByName){
       let inDB = false;
       if(typeof STUDENTS_DB !== 'undefined' && Array.isArray(STUDENTS_DB)){
         inDB = STUDENTS_DB.some(s => s.name === name || s.name.replace(/\s/g, '') === name.replace(/\s/g, ''));
@@ -21244,7 +21247,20 @@ async function _adminCheckLocalPtHistory(){
       const badge = inDB
         ? '<span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">학생</span>'
         : '<span style="background:#fef2f2;color:#991b1b;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">미일치</span>';
-      html += `<div>• ${name}: ${cnt}건 ${badge}</div>`;
+      let lastStr = '';
+      if(lastTs > 0){
+        const d = new Date(lastTs);
+        lastStr = `최근 ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      }
+      /* 이름에 따옴표 등이 있어도 깨지지 않게 escape */
+      const safeName = String(name).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      html += `<div onclick="_showAdminPtHistory('${safeName}')" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;transition:border-color .15s" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='#e5e7eb'">`
+        + `<div style="min-width:0"><span style="font-weight:700;font-size:13px;color:#1e3a8a">${name}</span>${badge}`
+        + (lastStr ? `<div style="font-size:10px;color:#9ca3af;margin-top:2px">${lastStr}</div>` : '')
+        + `</div>`
+        + `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span style="font-size:11px;color:#6b7280">${cnt}건</span>`
+        + `<span style="font-size:13px;color:#93c5fd">›</span></div>`
+        + `</div>`;
     }
     html += '</div>';
     statusEl.innerHTML = html;
