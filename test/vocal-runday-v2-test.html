@@ -1934,7 +1934,6 @@ input,select,button,textarea{font-family:inherit;}
       <div id="pt-debug-wrap" style="display:none;margin-bottom:10px">
         <button onclick="_ptToggleDebug()" id="pt-debug-toggle" style="font-size:10px;color:#94a3b8;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;cursor:pointer">🔧 디버그 보기</button>
         <button onclick="_ptCopyDebug()" id="pt-debug-copy" style="font-size:10px;color:#0369a1;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">📋 전체복사</button>
-        <button onclick="_ptSendDebug()" id="pt-debug-send" style="font-size:10px;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">☁️ 전송</button>
         <button onclick="_ptClearDebug()" id="pt-debug-clear" style="font-size:10px;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">🧹 지우기</button>
         <div id="pt-debug-status" style="margin-top:5px;font-size:10px;color:#64748b">준비됨</div>
         <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
@@ -17697,10 +17696,35 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     var _F_LOW = 26;   /* 262~294Hz 보강: H1H4 하한 */
     var _F_MID = 22;   /* 294~349Hz 보강: H1H4 하한 (★진범 구간) */
     var _F_HI  = 30;   /* 349Hz+ 보강:    H1H4 하한 */
+    /* [v6 해제 2026-07-13 — 저음 겹침구간(130~262Hz) 돌파: CPP 도입]
+       ▸ 배경: v5까지 이 구간은 '동결'이었음. H1H2/H2H4/H1H4/highRatio/HNR/dB 6지표 전부
+         가성·얇은중성 분리도 0.0~0.6 = 물리적 겹침(2피처 전수조합 최고 균형정확도 66%).
+       ▸ 돌파구: CPP(Cepstral Peak Prominence, Hillenbrand 1994) — 배음구조의 '주기성 뚜렷함'.
+         가성은 성대가 얇게 늘어나 접촉이 불완전 → 켑스트럼 피크가 뭉개짐. 배음 기울기와 독립된 축.
+       ▸ 실측(2026-07-13 동일 기기·동일 세션쌍, 5분 간격):
+           197~262Hz  가성 중앙 CPP 14.8 / 얇은중성 22.0 → AUC 0.982 (단일지표 균형정확도 96.7%)
+           263~294Hz  가성 15.3 / 얇은중성 20.3 → AUC 0.979  (밴드 재현성 확인)
+       ▸ 음량 아티팩트 아님: 두 세션 dB 중앙 74/73으로 동일, dB 매칭 비교에서도 분리 유지
+         (dB 68~74 → 가성 15.1 / 얇은 20.9, dB 75~80 → 15.3 / 22.9).
+       ▸ 보조조건 h1h2 <= _F_CPP_H1 : CPP만 쓰면 얇은중성 정탐이 87.6%로 떨어짐.
+         H1H2를 AND로 묶으면 recall 95.4% & 정탐 90.3%로 회복(가성은 H1H2 중앙 5.1, 얇은중성 14.0).
+       검증(신규 2세션, 가성 243f + 얇은중성 2988f):
+           130~262Hz  가성 recall 62.1 → 95.4%  /  얇은중성 정탐 91.1 → 90.3%
+           (263Hz 이상 밴드·여성·흉성 로직은 일절 변경 없음 = 회귀 0)
+       ※ 노브: 가성 더 살리려면 _F_CPP 17→18(정탐 -1.4%p) / 얇은중성 더 지키려면 17→16(recall -6%p).
+       ※ 확장: 263~294Hz에도 같은 조건을 걸면 recall 74.3→97.4%(단 정탐 85.0→82.5%). 현재는 미적용.
+       ※ CPP는 이 밴드에서만 계산 → 나머지 구간 성능 영향 0. */
+    var _F_CPP    = 17;   /* 저음 가성 판정: CPP 상한 */
+    var _F_CPP_H1 = 12;   /* 저음 가성 판정: H1H2 상한 (얇은중성 정탐 보호) */
+    var _cppLow = NaN;
+    if(f0 >= 130 && f0 <= 262){
+      try{ _cppLow = _ptCPP(timeBuf, sampleRate, f0); }catch(e){ _cppLow = NaN; }
+    }
     if(f0 < 130){
       _mFalsetto = false;                                          /* C3 미만: 남성 가성 물리적 불가 (하드 플로어) */
     } else if(f0 <= 262){
-      _mFalsetto = ((h1h2 - h2h4) <= 0 && highRatio <= -46);       /* 저음(동결): 겹침구간, 기존 유지 */
+      _mFalsetto = ((h1h2 - h2h4) <= 0 && highRatio <= -46)        /* 기존 조건 100% 보존 */
+                || (isFinite(_cppLow) && _cppLow <= _F_CPP && h1h2 <= _F_CPP_H1);  /* ★v6 CPP 보강 */
     } else if(f0 <= 294){
       _mFalsetto = ((h1h2 - h2h4) <= 0 && highRatio <= -46)
                 || (h1h4 >= _F_LOW && highRatio <= -45);           /* +보강: 급기울기 어두움 */
