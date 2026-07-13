@@ -16647,7 +16647,7 @@ function _selectGender(g){
   setTimeout(function(){
     _ptCanvasInit();
     /* 마이크 캘리브레이션(소음/작은아/평범한아) 후 측정 시작 */
-    _ptRunCalibration(function(){ _startPitchTest(); });
+    _ptRunCalibration(function(){ _ptChooseMode(); });
   }, 50);
 }
 
@@ -16775,6 +16775,382 @@ function _ptMeasureDbfs(analyser, opts, onTick, isCancelled){
     }
     requestAnimationFrame(loop);
   });
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   개인 판정 기준(성구 캘리브레이션) — 가이드 측정에서 산출  [2026-07-13]
+
+   근거: Roubeau, Henrich & Castellengo (2009) J Voice 23(4):425-438 (EGG, 남녀 42명)
+     · M1(진성 계열) ↔ M2(가성) 두 기제가 평균 1옥타브 겹치고, 그 구간에선 선택 가능.
+     · 남성 M1→M2 238Hz(B♭3) / M2→M1 195Hz(G3), 여성 312Hz(E♭4) / 279Hz(C#4).
+     · 강한진성 → 진성(믹스) 전환에는 EGG 변화도 주파수 도약도 없다 = 기제 변화가 아니라
+       "성대 접촉량"의 연속 변화. 가성만 기제가 다르다(M2).
+     · 개방률 Oq: M1 0.3~0.8 / M2 항상 0.5 초과 → 폐쇄율(접촉량)이 세 소리를 가르는 축.
+       EGG 없이 마이크만으로는 H1−H2(접촉 강도)와 CPP(배음 구조 또렷함)가 그 프록시다.
+
+   원리: CPP 절대값은 사람·기기마다 통째로 이동하지만, 한 사람 안에서
+         "가성 CPP < 진성 CPP" 관계는 무너지지 않는다(실측 AUC 0.98).
+   ═══════════════════════════════════════════════════════════════════ */
+var PT_REGCAL_KEY = 'pt_regcal';
+var _ptRegCal = null;
+function _ptLoadRegCal(){ try{ var s = localStorage.getItem(PT_REGCAL_KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+function _ptSaveRegCal(c){ try{ localStorage.setItem(PT_REGCAL_KEY, JSON.stringify(c)); }catch(e){} }
+function _ptClearRegCal(){ try{ localStorage.removeItem(PT_REGCAL_KEY); }catch(e){} _ptRegCal = null; }
+try{ _ptRegCal = _ptLoadRegCal(); }catch(e){ _ptRegCal = null; }
+
+function _ptMed(a){
+  if(!a || !a.length) return NaN;
+  var b = a.slice().sort(function(x,y){ return x-y; });
+  var m = b.length >> 1;
+  return b.length % 2 ? b[m] : (b[m-1] + b[m]) / 2;
+}
+function _ptPct(a, p){
+  if(!a || !a.length) return NaN;
+  var b = a.slice().sort(function(x,y){ return x-y; });
+  return b[Math.max(0, Math.min(b.length-1, Math.round((b.length-1)*p)))];
+}
+function _ptClamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+/* 3성구 수집 → 개인 임계값. 실패 시 ok:false + 사유 (전역 기본값 폴백) */
+/* 가이드 측정에서 모인 '라벨된 데이터' 요약. 판정에는 절대 쓰지 않는다.
+   용도: (a) 자가진단 리포트, (b) 여러 사람 데이터로 전역 임계값을 재조정할 때의 원자료. */
+function _ptRegCalReport(got){
+  var out = { ok:true, ts: Date.now(), gender: (typeof _ptGender !== 'undefined' ? _ptGender : ''), reg:{} };
+  ['falsetto','mix','chest'].forEach(function(k){
+    var A = (got && got[k]) || [];
+    if(!A.length){ out.reg[k] = null; return; }
+    var f0 = A.map(function(r){ return r.f0; });
+    out.reg[k] = {
+      n: A.length,
+      hit: A.filter(function(r){ return r.algo === k; }).length,
+      lo: Math.round(_ptPct(f0, 0.02)), hi: Math.round(_ptPct(f0, 0.98)),
+      cpp:  +(_ptMed(A.map(function(r){ return r.cpp;  }))).toFixed(1),
+      h1h2: +(_ptMed(A.map(function(r){ return r.h1h2; }))).toFixed(1)
+    };
+  });
+  return out;
+}
+
+function _ptRegCalCompute(F, M, C){
+  var out = { ok:false, ts: Date.now(), gender: (typeof _ptGender !== 'undefined' ? _ptGender : ''),
+              n: { falsetto: F.length, mix: M.length, chest: C.length } };
+  function inBand(r){ return r.f0 >= 175 && r.f0 <= 262; }   /* v6 가드가 실제 적용되는 겹침 구간 */
+  var fb = F.filter(inBand), mb = M.filter(inBand);
+  out.nBand = { falsetto: fb.length, mix: mb.length };
+  function rng(a){
+    if(!a.length) return null;
+    var f = a.map(function(r){ return r.f0; });
+    return { lo: Math.round(_ptPct(f, 0.02)), hi: Math.round(_ptPct(f, 0.98)) };
+  }
+  out.range = { falsetto: rng(F), mix: rng(M), chest: rng(C) };
+  if(fb.length < 25 || mb.length < 25){
+    out.reason = '겹침 구간(F3~C4 · 175~262Hz) 표본 부족 (가성 ' + fb.length + ' / 진성 ' + mb.length + '프레임, 각 25 이상 필요)';
+    return out;
+  }
+  var fc = _ptMed(fb.map(function(r){ return r.cpp; }));
+  var mc = _ptMed(mb.map(function(r){ return r.cpp; }));
+  out.cpp = { falsetto: +fc.toFixed(1), mix: +mc.toFixed(1), gap: +(mc-fc).toFixed(1) };
+  if(!isFinite(fc) || !isFinite(mc) || (mc - fc) < 2){
+    out.reason = '가성과 진성의 CPP 차이가 너무 작습니다 (' + out.cpp.gap + ', 2.0 이상 필요) — 두 소리가 실제로 구분되지 않았을 수 있어요';
+    return out;
+  }
+  var mh = _ptMed(mb.map(function(r){ return r.h1h2; }));
+  var fh = _ptMed(fb.map(function(r){ return r.h1h2; }));
+  out.h1h2 = { falsetto: +fh.toFixed(1), mix: +mh.toFixed(1) };
+  /* CPP는 '분리축'이라 두 분포의 중점이 최적.
+     H1H2는 분리축이 아니라 얇은진성 오탐을 막는 AND 가드 → 중점을 쓰면 문턱이 과하게 조여져
+     실측상 recall 95%→69%로 붕괴함(검증됨). 그래서 진성의 전형값(중앙값)을 그대로 상한으로 쓴다. */
+  out.cppThr = +_ptClamp((fc + mc) / 2, 12, 24).toFixed(1);
+  out.h1Thr  = +_ptClamp(isFinite(mh) ? mh : 12, 6, 20).toFixed(1);
+  if(C.length >= 25){
+    var cb = C.filter(inBand);
+    out.chestRef = { cpp: +(_ptMed((cb.length >= 20 ? cb : C).map(function(r){ return r.cpp; }))).toFixed(1) };
+  }
+  out.ok = true;
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   가이드 측정 — 3단계가 곧 측정이다 (별도 측정 회차 없음)  [2026-07-13]
+
+   용어(접촉 축):  가성(접촉 약) → 진성/믹스(접촉 중) → 강한 진성(접촉 강)
+   · 사용자가 성구를 선언하고 내므로 점의 색은 선언 라벨을 쓴다.
+     단 알고리즘이 축 2칸 반대로 판정한 프레임(가성 선언인데 강한진성 판정 등)은
+     '불일치'로 집계하고 등고선에서 제외 → 오라벨링 방지 + 자가진단 자료.
+   · 음역을 고정하지 않는다. 리드음은 반음씩 사다리로 따라 올라갈 뿐 범위를 정하지 않는다.
+     (훈련도에 따라 강한진성으로 가성역까지 내는 사람도, 믹스로 저음까지 내는 사람도 있다)
+   ═══════════════════════════════════════════════════════════════════ */
+var PT_G_5D = [0,2,4,5,7,5,4,2,0];                          /* 5도 스케일 (앱 DB 5D-A 동일) */
+var PT_G_9D = [0,2,4,5,7,9,11,12,14,12,11,9,7,5,4,2,0];     /* 9도 스케일 (앱 DB 9D-A 동일) */
+var PT_G_REGIDX = { chest:0, mix:1, falsetto:2 };           /* 접촉 축: 강 → 중 → 약 */
+
+function _ptRunGuided(onComplete){
+  var done = function(){ try{ onComplete && onComplete(); }catch(e){} };
+  var cancelled = false;
+  var isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
+  var got  = { falsetto: [], mix: [], chest: [] };
+  var miss = { falsetto: 0,  mix: 0,  chest: 0  };
+  var scaleMode = '5d';
+
+  /* 시작음 — 가성: 남 G3(55)·여 E4(64). 진성/강한진성: 최저음부터 훑어야 하므로 낮게 시작 + [반음↓] 제공 */
+  var STAGES = [
+    { key:'falsetto', name:'가성', emoji:'🫧', color:'#a855f7',
+      desc:'<b>가성</b>(성대 접촉이 <b>약한</b> 소리)으로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
+      start: isFemale ? 64 : 55 },
+    { key:'mix', name:'진성 (믹스)', emoji:'🌤️', color:'#84cc16',
+      desc:'<b>진성(믹스)</b> — 성대 접촉이 <b>적당한</b> 소리로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
+      start: isFemale ? 55 : 48 },
+    { key:'chest', name:'강한 진성', emoji:'🔥', color:'#3b82f6',
+      desc:'<b>강한 진성</b> — 성대 접촉이 <b>강한</b> 소리로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
+      start: isFemale ? 55 : 48 }
+  ];
+
+  var ov = document.getElementById('pt-g-overlay');
+  if(!ov){ ov = document.createElement('div'); ov.id = 'pt-g-overlay'; document.body.appendChild(ov); }
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:22px';
+  var CARD = 'position:relative;background:#fff;border-radius:18px;max-width:340px;width:100%;padding:24px 20px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3)';
+  var BTN  = 'width:100%;padding:13px;border:none;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px';
+  var MINI = 'flex:1;padding:10px;border:none;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer';
+
+  function close(){ ov.style.display = 'none'; ov.innerHTML = ''; }
+  function abort(){ cancelled = true; close(); try{ _closePitchTest(); }catch(e){} }
+  function show(inner){
+    ov.style.display = 'flex';
+    ov.innerHTML = '<button id="pt-g-x" title="취소" style="position:fixed;top:18px;right:20px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;line-height:1;z-index:100000">✕</button>'
+      + '<div style="' + CARD + '">' + inner + '</div>';
+    var x = document.getElementById('pt-g-x'); if(x) x.onclick = abort;
+  }
+  function nn(m){ try{ return _freqToNote(440 * Math.pow(2, (m - 69) / 12)).note; }catch(e){ return String(m); } }
+  function pat(){ return scaleMode === '9d' ? PT_G_9D : PT_G_5D; }
+  function beatMs(){ return 60000 / (scaleMode === '9d' ? 140 : 120); }
+
+  intro();
+
+  /* ── 1. 리드음 방식 */
+  function intro(){
+    show('<div style="font-size:34px">🎯</div>'
+      + '<div style="font-weight:900;font-size:16px;margin:10px 0 6px">가이드 측정</div>'
+      + '<div style="font-size:12.5px;color:#475569;line-height:1.7;margin-bottom:12px">가성 · 진성(믹스) · 강한 진성을 순서대로 내면<br><b>그 자리에서 등고선이 그려집니다.</b><br><span style="color:#94a3b8">측정을 한 번 더 하지 않습니다</span></div>'
+      + '<div style="text-align:left;font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7">'
+      + '리드음을 <b>반음씩 올려가며</b> 들려드립니다. 음역은 정해두지 않습니다 — <b>낼 수 있는 데까지</b>.<br><b>리드음이 끝나고 1초 뒤 [시작]</b>을 누르면 녹음됩니다. 리드음은 녹음되지 않습니다.</div>'
+      + '<button id="pt-g-5d" style="' + BTN + ';background:#16a34a;color:#fff">5도 스케일 <span style="font-weight:700;opacity:.85">· BPM 120</span></button>'
+      + '<button id="pt-g-9d" style="' + BTN + ';background:#2563eb;color:#fff">9도 스케일 <span style="font-weight:700;opacity:.85">· BPM 140</span></button>'
+      + '<button id="pt-g-free" style="' + BTN + ';background:#fff;color:#64748b;border:1.5px solid #e2e8f0;font-size:12.5px">리드음 없이 자유 스윕</button>');
+    document.getElementById('pt-g-5d').onclick   = function(){ scaleMode = '5d';   runStage(0); };
+    document.getElementById('pt-g-9d').onclick   = function(){ scaleMode = '9d';   runStage(0); };
+    document.getElementById('pt-g-free').onclick = function(){ scaleMode = 'none'; runStage(0); };
+  }
+
+  /* ── 2. 성구 단계 */
+  function runStage(si){
+    if(cancelled) return;
+    if(si >= STAGES.length){ finishAll(); return; }
+    var st = STAGES[si];
+    show('<div style="font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:.5px">STEP ' + (si+1) + ' / 3</div>'
+      + '<div style="font-size:34px;margin-top:6px">' + st.emoji + '</div>'
+      + '<div style="font-weight:900;font-size:17px;margin:6px 0 8px;color:' + st.color + '">' + st.name + '</div>'
+      + '<div style="font-size:12.5px;color:#475569;line-height:1.75;margin-bottom:14px">' + st.desc + '</div>'
+      + (scaleMode === 'none'
+          ? '<div style="font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.6">낮은 음 → 높은 음으로 <b>천천히</b> 훑어 올려주세요.</div>'
+          : '<div style="font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.6">' + (scaleMode === '9d' ? '9도' : '5도') + ' 스케일을 <b>' + nn(st.start) + '</b>부터 반음씩 올려 들려드립니다.<br>더 낮게 시작하려면 [반음 ↓]를 누르세요.</div>')
+      + '<button id="pt-g-go" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>');
+    document.getElementById('pt-g-go').onclick = function(){
+      if(scaleMode === 'none') sweep(si, st);
+      else ladder(si, st, st.start, 0);
+    };
+  }
+
+  /* ── 3-a. 리드음 사다리 */
+  function ladder(si, st, cur, silent){
+    if(cancelled) return;
+    if(cur > 96 || cur < 36 || silent >= 2){ endStage(si, st); return; }   /* 2회 연속 무성 → 종료 */
+    var P = pat(), bm = beatMs();
+    show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
+      + '<div style="font-size:34px;margin-top:8px">🎹</div>'
+      + '<div style="font-weight:900;font-size:15px;margin:10px 0 6px;color:#334155">리드음 재생 중</div>'
+      + '<div id="pt-g-dots" style="margin-top:10px;font-size:16px;letter-spacing:2px;color:#cbd5e1">' + P.map(function(){ return '·'; }).join('') + '</div>'
+      + '<div style="font-size:11.5px;color:#94a3b8;margin-top:10px">이 소리는 녹음되지 않습니다</div>');
+    P.forEach(function(off, k){
+      setTimeout(function(){
+        if(cancelled) return;
+        try{ playPiano(cur + off, Math.min(0.9, bm / 1000 * 0.95), 0.85); }catch(e){}
+        var d = document.getElementById('pt-g-dots');
+        if(d) d.innerHTML = P.map(function(_, j){ return j <= k ? '<span style="color:' + st.color + '">●</span>' : '·'; }).join('');
+      }, k * bm);
+    });
+    setTimeout(function(){
+      if(cancelled) return;
+      show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
+        + '<div style="font-size:40px;margin-top:10px">🎤</div>'
+        + '<div style="font-weight:900;font-size:15.5px;margin:8px 0 12px;color:' + st.color + '">같은 스케일을 ‘아’로 내주세요</div>'
+        + '<button id="pt-g-rec" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>'
+        + '<div style="display:flex;gap:6px;margin-top:8px">'
+        + '<button id="pt-g-dn" style="' + MINI + ';background:#f1f5f9;color:#475569">반음 ↓</button>'
+        + '<button id="pt-g-sk" style="' + MINI + ';background:#f1f5f9;color:#475569">건너뛰기</button>'
+        + '<button id="pt-g-end" style="' + MINI + ';background:#fee2e2;color:#b91c1c">성구 종료</button>'
+        + '</div>');
+      document.getElementById('pt-g-rec').onclick = function(){
+        rec(si, st, cur, P.length * bm + 1600, function(n){ ladder(si, st, cur + 1, n > 0 ? 0 : silent + 1); });
+      };
+      document.getElementById('pt-g-dn').onclick  = function(){ ladder(si, st, cur - 1, 0); };
+      document.getElementById('pt-g-sk').onclick  = function(){ ladder(si, st, cur + 1, silent); };
+      document.getElementById('pt-g-end').onclick = function(){ endStage(si, st); };
+    }, P.length * bm + 1000);   /* ★ 리드음 끝난 뒤 1초 */
+  }
+
+  /* ── 3-b. 자유 스윕 */
+  function sweep(si, st){
+    show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + '</div>'
+      + '<div style="font-size:38px;margin-top:8px">🎤</div>'
+      + '<div style="font-weight:900;font-size:15px;margin:8px 0 12px;color:' + st.color + '">낮은 음부터 천천히 훑어 올려주세요</div>'
+      + '<button id="pt-g-rec" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>');
+    document.getElementById('pt-g-rec').onclick = function(){ rec(si, st, null, 60000, function(){ endStage(si, st); }); };
+  }
+
+  /* ── 4. 실시간 수집 → 등고선(_ptAddPoint)에 바로 반영 */
+  function rec(si, st, cur, maxMs, onEnd){
+    if(!_ptAnalyser || !_ptDetector || !_ptCtx){ onEnd(0); return; }
+    var buf = new Float32Array(_ptAnalyser.fftSize);
+    var t0 = performance.now(), running = true, nV = 0, nM = 0;
+    show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + (cur !== null ? ' · ' + nn(cur) : '') + '</div>'
+      + '<div style="font-size:28px;margin-top:8px;color:' + st.color + ';font-weight:900">● REC</div>'
+      + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin:12px 0">'
+      + '<div style="height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden"><div id="pt-g-vol" style="height:100%;width:0%;background:' + st.color + ';transition:width .06s"></div></div>'
+      + '<div style="display:flex;justify-content:space-between;margin-top:9px;font-size:12.5px;color:#334155;font-weight:800"><span id="pt-g-note">–</span><span id="pt-g-cnt" style="color:#94a3b8;font-weight:700">0</span></div>'
+      + '<div id="pt-g-mis" style="margin-top:4px;font-size:11px;color:#94a3b8">&nbsp;</div></div>'
+      + '<button id="pt-g-stop" style="' + BTN + ';background:#0f172a;color:#fff">완료</button>');
+    var eVol = document.getElementById('pt-g-vol'), eNote = document.getElementById('pt-g-note');
+    var eCnt = document.getElementById('pt-g-cnt'), eMis = document.getElementById('pt-g-mis');
+    function stop(){
+      if(!running) return;
+      running = false;
+      try{ _ptFinalizeCurrentTone(); }catch(e){}
+      miss[st.key] += nM;
+      onEnd(nV);
+    }
+    document.getElementById('pt-g-stop').onclick = stop;
+
+    function loop(){
+      if(cancelled || !running) return;
+      try{
+        _ptAnalyser.getFloatTimeDomainData(buf);
+        var pr = _ptDetector.findPitch(buf, _ptCtx.sampleRate);
+        var pitch = pr[0], clarity = pr[1];
+        var rms = 0, k;
+        for(k = 0; k < buf.length; k++) rms += buf[k] * buf[k];
+        rms = Math.sqrt(rms / buf.length);
+        var dBFS = rms > 0 ? 20 * Math.log10(rms) : -100;
+        var dB = dBFS + 94;
+        if(eVol) eVol.style.width = _ptClamp((dB - 40) / 45 * 100, 0, 100) + '%';
+        if(clarity > 0.9 && dB > _ptVoiceGateDb && pitch > 50 && pitch < 2000){
+          /* ★ 판정은 자유 모드와 '완전히 같은' 알고리즘(전역 객관 기준). 선언 라벨은 색을 바꾸지 않는다.
+             선언한 성구로 측정되지 않은 프레임은 → 등고선에 아예 그리지 않는다.
+             ('틀렸다는 지대'를 만들지 않는다. 가성 단계에서 가성이 아닌 소리가 나오면 그냥 안 그린다) */
+          var algo = 'mix';
+          try{ algo = _ptDetectRegister(buf, pitch, _ptCtx.sampleRate, dB); }catch(e){}
+          var ni = _freqToNote(pitch);
+          if(algo === st.key){
+            try{ _ptAddPoint(ni.midi + (ni.cents / 100), dB, algo); }catch(e){}   /* 측정 = 선언 → 기록 */
+            nV++;
+            if(eNote) eNote.textContent = ni.note;
+            if(eCnt) eCnt.textContent = nV;
+          } else {
+            nM++;                                            /* 선언과 다르게 측정됨 → 미기록(집계만) */
+            try{ _ptFinalizeCurrentTone(); }catch(e){}       /* 톤 누적이 섞이지 않게 끊는다 */
+            if(eMis) eMis.innerHTML = '<span style="color:#94a3b8">' + st.name + '으로 측정되지 않음 · ' + nM + '프레임 (기록 안 함)</span>';
+          }
+          var cpp = NaN, h1h2 = NaN;
+          try{ cpp = _ptCPP(buf, _ptCtx.sampleRate, pitch); }catch(e){}
+          try{ if(_ptLastDbg) h1h2 = _ptLastDbg.h1h2; }catch(e){}
+          if(isFinite(cpp) && isFinite(h1h2)) got[st.key].push({ f0: pitch, cpp: cpp, h1h2: h1h2, algo: algo });
+        }
+        if(performance.now() - t0 > maxMs){ stop(); return; }
+      }catch(e){}
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function endStage(si, st){
+    try{ _ptFinalizeCurrentTone(); }catch(e){}
+    runStage(si + 1);
+  }
+
+  /* ── 5. 자가진단 리포트 → 결과 화면
+     판정은 이미 알고리즘이 했다(자유 모드와 동일). 여기서는 '선언 vs 측정'만 비교해 보여준다. */
+  function finishAll(){
+    var rep = _ptRegCalReport(got);              /* 라벨 데이터 요약(전역 임계값 개선용) */
+    try{ _ptRegCal = rep; _ptSaveRegCal(rep); }catch(e){}   /* 판정에는 쓰지 않음 — 분석/추출용 보관 */
+    var rows = '', tot = 0, hit = 0;
+    ['falsetto','mix','chest'].forEach(function(k){
+      var nAll = got[k].length;
+      if(!nAll) return;
+      var nHit = got[k].filter(function(r){ return r.algo === k; }).length;
+      tot += nAll; hit += nHit;
+      var pc = Math.round(100 * nHit / nAll);
+      var label = (k === 'falsetto' ? '🫧 가성' : k === 'mix' ? '🌤️ 진성(믹스)' : '🔥 강한 진성');
+      var col = pc >= 80 ? '#16a34a' : pc >= 50 ? '#f59e0b' : '#dc2626';
+      rows += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px">'
+            + '<span style="color:#334155;font-weight:700">' + label + '</span>'
+            + '<span style="font-weight:800;color:' + col + '">' + pc + '% 일치</span></div>';
+    });
+    var overall = tot ? Math.round(100 * hit / tot) : 0;
+    show('<div style="font-size:36px">📊</div>'
+      + '<div style="font-weight:900;font-size:16px;margin:10px 0 4px">측정 완료</div>'
+      + '<div style="font-size:11.5px;color:#94a3b8;margin-bottom:12px">등고선은 자유 측정과 <b>같은 기준</b>으로 판정했습니다</div>'
+      + '<div style="text-align:left;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:10px">'
+      + '<div style="font-size:11px;font-weight:800;color:#64748b;margin-bottom:6px">낸다고 하신 소리 vs 실제 측정된 소리</div>'
+      + rows
+      + '<div style="border-top:1px solid #e2e8f0;margin-top:7px;padding-top:7px;display:flex;justify-content:space-between;font-size:12.5px">'
+      + '<span style="font-weight:800;color:#0f172a">전체</span><span style="font-weight:900;color:#0f172a">' + overall + '%</span></div></div>'
+      + (overall < 80
+          ? '<div style="font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:9px 11px;line-height:1.6;margin-bottom:12px">일치율이 낮은 성구는 <b>의도한 소리와 실제 소리가 다르다</b>는 뜻입니다. 결과지에서 어느 음역에서 갈라지는지 확인해 보세요.</div>'
+          : '')
+      + '<button id="pt-g-res" style="' + BTN + ';background:#16a34a;color:#fff">결과 보기</button>');
+    document.getElementById('pt-g-res').onclick = function(){
+      close();
+      try{ _ptPaused = false; }catch(e){}
+      try{ _stopPitchTest(); }catch(e){}
+      done();
+    };
+  }
+}
+
+/* ═══ PVR 측정 모드 선택 — 자유 측정 / 가이드 측정 ═══ */
+var _ptMeasureMode = 'free';
+function _ptChooseMode(){
+  var ov = document.getElementById('pt-mode-overlay');
+  if(!ov){ ov = document.createElement('div'); ov.id = 'pt-mode-overlay'; document.body.appendChild(ov); }
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px';
+  var CARD = 'position:relative;background:#fff;border-radius:18px;max-width:340px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3)';
+  var BTN = 'width:100%;padding:13px;border:none;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px';
+  ov.innerHTML = '<button id="pt-mo-x" title="취소" style="position:fixed;top:18px;right:20px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;line-height:1;z-index:100000">✕</button>'
+    + '<div style="' + CARD + '">'
+    + '<div style="font-size:34px">🎚️</div>'
+    + '<div style="font-weight:900;font-size:16px;margin:10px 0 12px">측정 방식을 골라주세요</div>'
+    + '<div style="text-align:left;font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;margin-bottom:14px;line-height:1.75">'
+    + '<b style="color:#334155">자유 측정</b> — 편하게 전 음역을 훑습니다. 기존 방식 그대로.<br>'
+    + '<b style="color:#334155">가이드 측정</b> — 가성 · 진성(믹스) · 강한 진성을 순서대로 내면 <b>그 자리에서 등고선이 그려집니다.</b> 리드음(5도/9도)을 반음씩 올려주고, <b>선언한 성구로 측정된 소리만</b> 기록합니다.'
+    + '<br><span style="color:#16a34a;font-weight:800">✓ 판정 기준은 두 모드가 완전히 동일합니다</span>'
+    + '</div>'
+    + '<button id="pt-mo-guide" style="' + BTN + ';background:#16a34a;color:#fff">🎯 가이드 측정 (권장)</button>'
+    + '<button id="pt-mo-free" style="' + BTN + ';background:#fff;color:#2563eb;border:1.5px solid #93c5fd">자유 측정</button>'
+    + '</div>';
+  function close(){ ov.style.display = 'none'; ov.innerHTML = ''; }
+  document.getElementById('pt-mo-x').onclick = function(){ close(); try{ _closePitchTest(); }catch(e){} };
+  document.getElementById('pt-mo-guide').onclick = function(){
+    _ptMeasureMode = 'guided'; close();
+    /* 마이크·캔버스·점 누적 파이프라인은 기존 측정과 동일하게 띄우되 자동 수집 루프만 멈춰두고,
+       가이드 오버레이가 프레임을 직접 읽어 _ptAddPoint로 등고선을 그린다 (측정 1회로 종료). */
+    Promise.resolve(_startPitchTest()).then(function(){
+      try{ _ptPaused = true; }catch(e){}
+      _ptRunGuided(function(){});
+    }).catch(function(){});
+  };
+  document.getElementById('pt-mo-free').onclick = function(){
+    _ptMeasureMode = 'free'; close(); _startPitchTest();
+  };
 }
 
 /* 캘리브레이션 전체 흐름 → 끝나면 onComplete() 호출. 어떤 실패든 기본값으로 폴백해 측정은 항상 진행 */
@@ -17650,6 +18026,14 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     result = 'mix';
   }
 
+  /* === [기제 하드 플로어 — 여성] Roubeau, Henrich & Castellengo (2009), J Voice 23(4) ===
+     EGG 42명 성역 프로파일: 여성 M2(가성/두성) 음역 하한 평균 G#3 = 208Hz.
+     글리산도 M2→M1 하강 전환점도 279Hz(C#4)로, 208Hz 아래에서 M2 유지는 관측되지 않음.
+     → 강등 전용(승격 없음) = 기존 mix/chest 판정 영향 0. */
+  if(isFemale && result === 'falsetto' && f0 < 208){
+    result = 'mix';
+  }
+
   /* ============================================================
      === 남성 저·중음역 register 재판정 (실측 2026-07-02 전면 개편) ===
      동현 실측: 믹스 1113프레임 + 가성 330프레임 (겹침구간 f0 217~281Hz) 비교 결론:
@@ -17714,14 +18098,22 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
        ※ 노브: 가성 더 살리려면 _F_CPP 17→18(정탐 -1.4%p) / 얇은중성 더 지키려면 17→16(recall -6%p).
        ※ 확장: 263~294Hz에도 같은 조건을 걸면 recall 74.3→97.4%(단 정탐 85.0→82.5%). 현재는 미적용.
        ※ CPP는 이 밴드에서만 계산 → 나머지 구간 성능 영향 0. */
+    /* ★ 임계값은 전역 상수다. 개인별로 바꾸지 않는다. [원칙 확정 2026-07-13]
+       PVR은 "이 데이터 패턴이면 가성"이라는 객관 기준을 재는 도구다. 사람마다 기준을 바꾸면
+       측정이 아니라 자기 확인이 되고, 사용자 간 결과 비교도 불가능해진다.
+       가이드 측정은 이 상수를 '개인화'하는 데 쓰지 않고, 라벨링된 데이터를 모아
+       이 상수 자체를 더 정확하게 만드는 데 쓴다. (현재 값은 실측 2세션 기반) */
     var _F_CPP    = 17;   /* 저음 가성 판정: CPP 상한 */
-    var _F_CPP_H1 = 12;   /* 저음 가성 판정: H1H2 상한 (얇은중성 정탐 보호) */
+    var _F_CPP_H1 = 12;   /* 저음 가성 판정: H1H2 상한 (얇은진성 정탐 보호) */
+    /* [기제 하드 플로어 — 남성] Roubeau et al. (2009): 남성 M2 음역 하한 평균 F3 = 175Hz.
+       M2→M1 하강 전환점도 195Hz(G3). 175Hz 미만 가성은 기제상 불가.
+       회귀 검증: 순수 가성 세션에 175Hz 미만 프레임 0개, 얇은진성 175Hz 미만 69f 중 가성 오판 0개. */
     var _cppLow = NaN;
-    if(f0 >= 130 && f0 <= 262){
+    if(f0 >= 175 && f0 <= 262){
       try{ _cppLow = _ptCPP(timeBuf, sampleRate, f0); }catch(e){ _cppLow = NaN; }
     }
-    if(f0 < 130){
-      _mFalsetto = false;                                          /* C3 미만: 남성 가성 물리적 불가 (하드 플로어) */
+    if(f0 < 175){
+      _mFalsetto = false;                                          /* F3 미만: 남성 가성 물리적 불가 (하드 플로어) */
     } else if(f0 <= 262){
       _mFalsetto = ((h1h2 - h2h4) <= 0 && highRatio <= -46)        /* 기존 조건 100% 보존 */
                 || (isFinite(_cppLow) && _cppLow <= _F_CPP && h1h2 <= _F_CPP_H1);  /* ★v6 CPP 보강 */
