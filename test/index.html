@@ -1083,6 +1083,7 @@ const firebaseConfig = {
   $("ddayCard").addEventListener("click", ()=>openAccByName("guide"));
 
 
+  let ctx = "공복";   // 혈당 측정 시점 (기본 칩과 일치). 선언 누락 시 저장에서 ReferenceError 발생했었음.
   $("ctxChips").addEventListener("click", e=>{
     const c = e.target.closest(".chip"); if(!c) return;
     document.querySelectorAll("#ctxChips .chip").forEach(x=>x.classList.remove("on"));
