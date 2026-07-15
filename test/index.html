@@ -343,6 +343,29 @@
   .ans.mini{opacity:.92}
   .ans.mini .atit{font-size:14px}
 
+  /* 진료 기록(날짜별) */
+  .recday{border:1px solid var(--line); border-radius:16px; margin-bottom:14px; overflow:hidden; background:#fff}
+  .recday-h{width:100%; text-align:left; border:none; background:#F7F5F0; font-family:inherit; cursor:pointer; padding:14px 16px; display:flex; align-items:center; gap:10px}
+  .recday-h .rd-date{font-size:16px; font-weight:800; flex:1}
+  .recday-h .rd-cnt{font-size:12px; font-weight:700; color:var(--muted)}
+  .recday-h .rd-chev{transition:transform .2s; color:var(--muted)}
+  .recday.open .rd-chev{transform:rotate(180deg)}
+  .recday-body{display:none; padding:6px 14px 14px}
+  .recday.open .recday-body{display:block}
+  .rectopic{border-top:1px solid var(--line); padding:12px 2px 4px}
+  .rectopic:first-child{border-top:none}
+  .rectopic-h{width:100%; text-align:left; border:none; background:none; font-family:inherit; cursor:pointer; display:flex; align-items:center; gap:8px; padding:6px 0}
+  .rectag{font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; flex:none}
+  .rectag.dept{background:rgba(43,122,107,.12); color:#2B7A6B}
+  .rectag.warn{background:rgba(224,122,60,.14); color:#C1611F}
+  .rectag.sum{background:rgba(90,110,140,.14); color:#4a5568}
+  .rectopic-h .rt-t{font-size:14.5px; font-weight:700; flex:1}
+  .rectopic-h .rt-chev{font-size:12px; color:var(--muted); transition:transform .2s}
+  .rectopic.open .rt-chev{transform:rotate(180deg)}
+  .rectopic-body{display:none; font-size:14px; line-height:1.65; color:#333a45; white-space:pre-wrap; padding:4px 2px 8px}
+  .rectopic.open .rectopic-body{display:block}
+  .rectopic-body b{color:var(--ink)}
+
 </style>
 </head>
 <body>
@@ -624,6 +647,21 @@
       <div class="block">
         <h2 class="sec">전체 가이드</h2>
         <div id="gList"><div class="emptylist">가이드를 불러오는 중…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 진료 기록 (날짜별) ===== -->
+  <div class="acc" data-acc="records">
+    <button class="acc-head" type="button">
+      <span class="acc-title">📋 진료 기록 (날짜별)</span>
+      <span class="acc-sum" id="accSumRec"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="note" style="margin-bottom:12px">진료·검사·교육 때 들은 내용을 날짜별로 정리했어요. 날짜를 누르면 그날 기록이 열립니다.</div>
+        <div id="recList"></div>
       </div>
     </div>
   </div>
@@ -972,7 +1010,6 @@ const firebaseConfig = {
       `<div class="symhow">${escape(m.how)}</div></div></div>`).join("");
   }
   buildMedSchedule();
-  subscribeToday();   // 인슐린·복약 오늘 구독 시작 (medsCol 정의 이후)
 
 
   async function toggleMed(slot){
@@ -1602,6 +1639,54 @@ const firebaseConfig = {
     });
   }
 
+  // ================= 진료 기록 (날짜별) =================
+  const RECORDS = [
+    { date:"2026-07-15", label:"7월 15일 (화)", topics:[
+      { tag:"소화기내과", type:"dept", title:"항암 시작 · 임가람 교수",
+        body:"전이성 췌장암(체부·미부) 4기로 확진되어, 수술은 어려워 항암화학요법을 시작했어요.\n\n▪ 항암제: 아브락산 + 젬시타빈(젬자) — 부작용을 줄이려 80% 용량으로 시작\n▪ 주기: 4주 = 1사이클 (1·2·3주 주 1회 투여, 4주차는 쉬는 휴약기)\n▪ 채혈: 매주 아님, 각 사이클 첫 주에만\n▪ 2사이클(8주) 후 CT로 효과 평가\n▪ 유전자검사(NGS) 진행 — 표적치료 가능성 확인용\n\n다음 항암: 7/22(수) 오후 2:30, 7/29(수)\n다음 진료: 8/12(수) 오전 9:30 (본관 4층 소화기병센터)" },
+      { tag:"내분비내과", type:"dept", title:"혈당 관리 · 김소라 / 김혜경 교수",
+        body:"당화혈색소(HbA1c)가 10.9로 높아 혈당 관리 협진을 받았어요.\n\n▪ 인슐린 (모두 식전)\n   - 아침: 란투스 12 + 휴마로그 6\n   - 점심: 휴마로그 8\n   - 저녁: 휴마로그 8\n▪ 먹는 당뇨약: 글루파(메트포르민), 디아미크롱\n▪ 저녁 식후 혈당이 계속 높으면 저녁 휴마로그를 8→10으로 올리는 조절 가능(의료진 안내)\n▪ 퇴원 전 인슐린 자가조절(MDI) 교육 예정\n▪ 항암 때 쓰는 스테로이드로 혈당이 오를 수 있어요 — 교육 지침대로 대응, 급변 시 협진 연계\n\n다음 진료: 9/14(월) 오후 4:00 (본관 3층)\n당뇨병 교육실 ☎ 02-2228-5465" },
+      { tag:"항암 교육", type:"warn", title:"항암 주의사항 안내",
+        body:"🚨 즉시 응급실 6가지 징후\n흑색변 · 혈변 · 혈뇨 · 안 멈추는 코피 · 원인 모를 멍 · 38도 이상 고열\n\n▪ 감염 예방: 항암 후 7~14일 면역이 가장 낮음. 손씻기·마스크, 날음식(회·게장·생굴) 금지, 자몽 절대 금지\n▪ 부작용: 오심·구토(항구토제 즉시), 설사·변비, 손발저림(찬물 피하기), 탈모\n▪ 식사: 매 끼 단백질, 입맛 없으면 영양음료(뉴케어·하이뮨)\n▪ 치과 치료는 4주차 휴약기에\n▪ 응급·타병원 대비 서류 4종 항상 지참\n\n자세한 항목은 '돌봄 가이드 & 질문'에서 검색하면 나와요." },
+      { tag:"전체 진행상황", type:"sum", title:"진단 · 검사 요약",
+        body:"■ 진단\n췌장 체부·미부 5.4cm 선암(중등도 분화), 다발성 간 전이 + 복막 전이 의심(복수 동반). 수술은 불가해 항암으로 진행.\n종양표지자: CA19-9 20000 이상, CEA 67 (상승)\n\n■ 이번 입원 검사 (7/5~7/8)\n▪ 조직검사(EUS-FNA, 7/6): 선암 확진\n▪ MRI(7/6): 췌장 꼬리 종괴 + 간 전이\n▪ PET-CT(7/7): 간·림프절·복막 전이 소견\n▪ 혈액검사: HbA1c 10.9\n\n■ 과거 병력\n위암(2015, 위 절제 + 항암 8차 완치), 대장암 수술, 위 선종 내시경절제(2022)" },
+    ]},
+  ];
+
+  function renderRecords(){
+    const box = $("recList");
+    if (!box) return;
+    $("accSumRec").textContent = RECORDS.length ? `${RECORDS.length}일 기록` : "";
+    box.innerHTML = RECORDS.map((day, di)=>{
+      const topics = day.topics.map((t, ti)=>
+        `<div class="rectopic" data-day="${di}" data-topic="${ti}">
+           <button class="rectopic-h" type="button">
+             <span class="rectag ${t.type}">${escape(t.tag)}</span>
+             <span class="rt-t">${escape(t.title)}</span>
+             <span class="rt-chev">▾</span>
+           </button>
+           <div class="rectopic-body">${escape(t.body)}</div>
+         </div>`).join("");
+      return `<div class="recday ${di===0?'open':''}" data-day="${di}">
+          <button class="recday-h" type="button">
+            <span class="rd-date">${escape(day.label)}</span>
+            <span class="rd-cnt">${day.topics.length}건</span>
+            <span class="rd-chev">▾</span>
+          </button>
+          <div class="recday-body">${topics}</div>
+        </div>`;
+    }).join("");
+    // 날짜 토글
+    box.querySelectorAll(".recday-h").forEach(h=>{
+      h.addEventListener("click", ()=> h.closest(".recday").classList.toggle("open"));
+    });
+    // 주제 토글
+    box.querySelectorAll(".rectopic-h").forEach(h=>{
+      h.addEventListener("click", ()=> h.closest(".rectopic").classList.toggle("open"));
+    });
+  }
+  renderRecords();
+
   // ================= 아코디언 =================
   function sectionOpen(name){
     const a = document.querySelector(`.acc[data-acc="${name}"]`);
@@ -2073,6 +2158,7 @@ const firebaseConfig = {
   }
 
   // ---- 시작 ----
+  subscribeToday();   // 인슐린·복약 오늘 구독 (모든 상수 정의 이후 안전 호출)
   refreshWho();
   if (!who) askWho(false);
 })();
