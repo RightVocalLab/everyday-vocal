@@ -291,6 +291,35 @@
 
   .gsel{width:100%; font-family:inherit; font-size:16px; padding:13px 14px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA}
 
+  /* ===== 오늘의 돌봄 요약 ===== */
+  .today{background:linear-gradient(135deg,#2B7A6B,#3E9E86); border-radius:20px; padding:18px 18px 16px; margin-bottom:16px; color:#fff; box-shadow:0 6px 20px rgba(43,122,107,.25)}
+  .today h3{margin:0 0 12px; font-size:15px; font-weight:700; opacity:.95}
+  .today .row{display:flex; gap:10px}
+  .today .tcard{flex:1; background:rgba(255,255,255,.16); border-radius:14px; padding:12px 10px; text-align:center}
+  .today .tcard .big{font-size:26px; font-weight:800; line-height:1.1; letter-spacing:-.5px}
+  .today .tcard .lb{font-size:12px; font-weight:600; opacity:.9; margin-top:4px}
+  .today .tcard.tap{cursor:pointer}
+  .today .dday .big{font-size:23px}
+  .today .ddate{font-size:11px; opacity:.85; margin-top:3px}
+
+  /* ===== 복약 스케줄 ===== */
+  .medslot{border:1px solid var(--line); border-radius:16px; padding:14px 15px; margin-bottom:14px; background:#FBFBFA}
+  .medslot.done{background:rgba(43,122,107,.06); border-color:var(--green)}
+  .medhead{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .medhead .mh-t{font-size:16px; font-weight:800; flex:1}
+  .medchk{border:none; font-family:inherit; font-size:13px; font-weight:800; padding:8px 14px; border-radius:999px; cursor:pointer; background:#EFEDE7; color:var(--ink); white-space:nowrap}
+  .medslot.done .medchk{background:var(--green); color:#fff}
+  .medlist{display:flex; flex-direction:column; gap:9px}
+  .medrow{display:flex; align-items:center; gap:10px}
+  .medrow .pill{width:12px; height:12px; border-radius:50%; flex:none; border:1px solid rgba(0,0,0,.12)}
+  .medrow .mn{font-size:15px; font-weight:700; flex:none}
+  .medrow .mu{font-size:12.5px; color:var(--muted); flex:1}
+  .medrow .mw{font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; background:#EFEDE7; color:#6b6f76; flex:none}
+  .medrow .mw.before{background:rgba(224,122,60,.14); color:#C1611F}
+  .medwarn{font-size:12.5px; color:#C1611F; background:rgba(224,122,60,.08); border-radius:10px; padding:8px 10px; margin-top:10px; line-height:1.5}
+  .prnwrap .medrow{padding:9px 0; border-bottom:1px solid var(--line)}
+  .prnwrap .medrow:last-child{border-bottom:none}
+
 </style>
 </head>
 <body>
@@ -327,6 +356,25 @@
     <div class="who" id="whoBtn"><b id="whoName">-</b></div>
   </header>
 
+  <!-- 오늘의 돌봄 요약 -->
+  <div class="today" id="todayCard">
+    <h3>오늘의 돌봄</h3>
+    <div class="row">
+      <div class="tcard dday" id="ddayCard">
+        <div class="big" id="ddayBig">–</div>
+        <div class="ddate" id="ddayDate">항암 일정</div>
+      </div>
+      <div class="tcard tap" id="todayIns">
+        <div class="big" id="todayInsBig">0/3</div>
+        <div class="lb">💉 인슐린</div>
+      </div>
+      <div class="tcard tap" id="todayMed">
+        <div class="big" id="todayMedBig">0/3</div>
+        <div class="lb">💊 복약</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 인슐린 ===== -->
   <div class="acc" data-acc="insulin">
     <button class="acc-head" type="button">
@@ -346,6 +394,23 @@
         <h2 class="sec">인슐린 최근 7일</h2>
         <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== 복약 ===== -->
+  <div class="acc" data-acc="meds">
+    <button class="acc-head" type="button">
+      <span class="acc-title">💊 복약</span>
+      <span class="acc-sum" id="accSumMed"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block" id="medSchedule"></div>
+      <div class="block">
+        <h2 class="sec">필요시 복용</h2>
+        <div class="prnwrap" id="medPrn"></div>
+      </div>
+      <div class="note" style="margin-top:4px">복약 내용은 2026-07-15 처방 기준입니다. 처방이 바뀌면 알려주세요. 용법은 처방전 지침을 최우선으로 따르세요.</div>
     </div>
   </div>
 
@@ -760,6 +825,7 @@ const firebaseConfig = {
   // 오늘 인슐린 실시간 구독 (자정 지나면 자동으로 새 날짜 구독)
   let curDay = dayKey();
   let unsubToday = null;
+  let unsubMedToday = null;
   function updateInsDate(){
     const d = new Date();
     $("insDate").textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})`;
@@ -771,8 +837,13 @@ const firebaseConfig = {
       todaySlots = (doc.exists && doc.data().slots) ? doc.data().slots : {};
       renderTodayInsulin();
     }, err=>console.error(err));
+    if (unsubMedToday) unsubMedToday();
+    medsToday = {}; renderTodayMeds();
+    unsubMedToday = medsCol.doc(curDay).onSnapshot(doc=>{
+      medsToday = (doc.exists && doc.data().slots) ? doc.data().slots : {};
+      renderTodayMeds();
+    }, err=>console.error(err));
   }
-  subscribeToday();
   // 1분마다 날짜 바뀌었는지 확인
   setInterval(()=>{
     const k = dayKey();
@@ -792,6 +863,7 @@ const firebaseConfig = {
     $("insCount").innerHTML = `오늘 <b>${done}</b> / 3회 완료`;
     const sum = $("accSumIns"); sum.textContent = `오늘 ${done}/3`;
     sum.style.color = done===3 ? getCss("--green") : getCss("--muted");
+    if (typeof updateTodaySummary === "function") updateTodaySummary();
   }
 
   // 인슐린 용량 라벨 (식전, 의료진 지시 기준)
@@ -830,8 +902,144 @@ const firebaseConfig = {
     });
   }
 
-  // ---- 측정 시점 칩 ----
-  let ctx = "공복";
+  // ================= 복약 스케줄 =================
+  const medsCol = db.collection("meds");
+  let medsToday = {};   // {아침:{done,by,at},...}
+  const MED_SCHEDULE = {
+    "아침": [
+      { name:"메게이스에프", use:"식욕촉진 (잘 흔들어서)", when:"식전 1시간", color:"#F5F0E6" },
+      { name:"고덱스", use:"간장약", when:"식후", color:"#7A4B3A" },
+      { name:"우루사", use:"간장약(담즙)", when:"식후", color:"#F3C6D0" },
+      { name:"마이폴", use:"진통제 ⚠️마약성", when:"식후", color:"#5AA469" },
+      { name:"케이캡", use:"위산 차단", when:"식후", color:"#F3C6D0" },
+      { name:"맥페란", use:"매스꺼움", when:"식후", color:"#FFFFFF" },
+      { name:"글루파", use:"당뇨약", when:"식후", color:"#FFFFFF" },
+      { name:"디아미크롱", use:"당뇨약", when:"식후", color:"#FFFFFF" },
+      { name:"리바로젯", use:"고지혈증", when:"식후", color:"#D8C7A8" },
+    ],
+    "점심": [
+      { name:"고덱스", use:"간장약", when:"식후", color:"#7A4B3A" },
+      { name:"우루사", use:"간장약(담즙)", when:"식후", color:"#F3C6D0" },
+      { name:"마이폴", use:"진통제 ⚠️마약성", when:"식후", color:"#5AA469" },
+      { name:"맥페란", use:"매스꺼움", when:"식후", color:"#FFFFFF" },
+    ],
+    "저녁": [
+      { name:"고덱스", use:"간장약", when:"식후", color:"#7A4B3A" },
+      { name:"우루사", use:"간장약(담즙)", when:"식후", color:"#F3C6D0" },
+      { name:"마이폴", use:"진통제 ⚠️마약성", when:"식후", color:"#5AA469" },
+      { name:"맥페란", use:"매스꺼움", when:"식후", color:"#FFFFFF" },
+      { name:"글루파", use:"당뇨약", when:"식후", color:"#FFFFFF" },
+      { name:"디아미크롱", use:"당뇨약", when:"식후", color:"#FFFFFF" },
+    ],
+  };
+  const MED_WARN = {
+    "아침":"메게이스는 아침 식전 1시간(다른 약과 다름). 마이폴은 마약성 → 운전·술 금지. 글루파는 CT 조영검사 전 중단 상의.",
+  };
+  const MED_PRN = [
+    { name:"포타겔", use:"설사 시", color:"#C9A66B" },
+    { name:"마그밀에스", use:"변비 시", color:"#FFFFFF" },
+    { name:"듀락칸이지", use:"변비 시 (당뇨 안심)", color:"#EAD9B0" },
+    { name:"마이폴", use:"통증 조절 (정규 외 필요시, 처방 지침 우선)", color:"#5AA469" },
+  ];
+  const MED_ICON = { "아침":"🌅", "점심":"☀️", "저녁":"🌙" };
+
+  // 정적 스케줄 렌더 (약 목록) — 1회
+  function buildMedSchedule(){
+    const box = $("medSchedule");
+    box.innerHTML = SLOTS.map(slot=>{
+      const rows = MED_SCHEDULE[slot].map(m=>
+        `<div class="medrow"><span class="pill" style="background:${m.color}"></span>`+
+        `<span class="mn">${escape(m.name)}</span><span class="mu">${escape(m.use)}</span>`+
+        `<span class="mw ${m.when.indexOf('식전')>=0?'before':''}">${escape(m.when)}</span></div>`).join("");
+      const warn = MED_WARN[slot] ? `<div class="medwarn">⚠️ ${escape(MED_WARN[slot])}</div>` : "";
+      return `<div class="medslot" data-med="${slot}">
+        <div class="medhead"><span style="font-size:18px">${MED_ICON[slot]}</span>`+
+        `<span class="mh-t">${slot}</span>`+
+        `<button class="medchk" data-medslot="${slot}">복용 체크</button></div>`+
+        `<div class="medlist">${rows}</div>${warn}</div>`;
+    }).join("");
+    box.querySelectorAll(".medchk").forEach(b=>{
+      b.addEventListener("click", ()=>toggleMed(b.dataset.medslot));
+    });
+    // 필요시
+    $("medPrn").innerHTML = MED_PRN.map(m=>
+      `<div class="medrow"><span class="pill" style="background:${m.color}"></span>`+
+      `<span class="mn">${escape(m.name)}</span><span class="mu">${escape(m.use)}</span></div>`).join("");
+  }
+  buildMedSchedule();
+  subscribeToday();   // 인슐린·복약 오늘 구독 시작 (medsCol 정의 이후)
+
+  async function toggleMed(slot){
+    if (!who){ askWho(true); return; }
+    const key = dayKey();
+    const cur = medsToday[slot];
+    const done = !(cur && cur.done);
+    try{
+      await medsCol.doc(key).set({ date:key, slots:{ [slot]:{ done, by:who, at:Date.now() } } }, { merge:true });
+      toast(done ? `${slot}약 복용 체크 ✓` : `${slot}약 체크 해제`);
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+  }
+
+  function renderTodayMeds(){
+    let done = 0;
+    SLOTS.forEach(slot=>{
+      const el = document.querySelector(`.medslot[data-med="${slot}"]`);
+      const s = medsToday[slot];
+      const on = !!(s && s.done);
+      if (el){
+        el.classList.toggle("done", on);
+        const btn = el.querySelector(".medchk");
+        if (btn) btn.textContent = on ? `${s.by} · ${hhmm(s.at)} ✓` : "복용 체크";
+      }
+      if (on) done++;
+    });
+    $("accSumMed").textContent = `오늘 ${done}/3`;
+    $("accSumMed").style.color = done===3 ? getCss("--green") : getCss("--muted");
+    updateTodaySummary();
+  }
+
+  // ================= 항암 D-day & 오늘의 돌봄 =================
+  const CHEMO_DATES = ["2026-07-22","2026-07-29","2026-08-05","2026-08-26","2026-09-02","2026-09-09"]; // 항암 예정일(휴약주 제외, 추정 포함)
+  function nextChemo(){
+    const today = dayKey();
+    for (const d of CHEMO_DATES){ if (d >= today) return d; }
+    return null;
+  }
+  function ddayText(dateStr){
+    if (!dateStr) return { big:"–", sub:"일정 등록 필요" };
+    const today = new Date(dayKey()+"T00:00:00");
+    const target = new Date(dateStr+"T00:00:00");
+    const diff = Math.round((target - today)/86400000);
+    const [ , mm, dd ] = dateStr.split("-");
+    const wd = "일월화수목금토"[target.getDay()];
+    const dateLabel = `${+mm}/${+dd}(${wd})`;
+    if (diff === 0) return { big:"오늘", sub:`항암일 ${dateLabel}` };
+    return { big:`D-${diff}`, sub:`다음 항암 ${dateLabel}` };
+  }
+  function updateTodaySummary(){
+    // D-day
+    const dd = ddayText(nextChemo());
+    $("ddayBig").textContent = dd.big;
+    $("ddayDate").textContent = dd.sub;
+    // 인슐린 오늘
+    const insDone = SLOTS.filter(k=>todaySlots[k] && todaySlots[k].done).length;
+    $("todayInsBig").textContent = `${insDone}/3`;
+    // 복약 오늘
+    const medDone = SLOTS.filter(k=>medsToday[k] && medsToday[k].done).length;
+    $("todayMedBig").textContent = `${medDone}/3`;
+  }
+  // 요약 카드 탭 → 해당 아코디언 열기
+  function openAccByName(name){
+    const acc = document.querySelector(`.acc[data-acc="${name}"]`);
+    if (!acc) return;
+    if (!acc.classList.contains("open")){ acc.classList.add("open"); setTimeout(()=>drawSection(name),0); }
+    acc.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+  $("todayIns").addEventListener("click", ()=>openAccByName("insulin"));
+  $("todayMed").addEventListener("click", ()=>openAccByName("meds"));
+  $("ddayCard").addEventListener("click", ()=>openAccByName("guide"));
+
+
   $("ctxChips").addEventListener("click", e=>{
     const c = e.target.closest(".chip"); if(!c) return;
     document.querySelectorAll("#ctxChips .chip").forEach(x=>x.classList.remove("on"));
@@ -1228,8 +1436,8 @@ const firebaseConfig = {
       body:"항구토제는 증상 있으면 참지 말고 즉시 복용(참으면 약효↓). 편안하면 안 먹어도 됨. 하루 5~6회 소량씩 자주. 수분은 식사 전후 1시간 간격. 차갑고 냄새 적은 음식(아이스크림·식힌 죽·요플레)이 편함.",
       tags:["구토","오심","울렁","메스꺼움","토","항구토제"] },
     { category:"부작용 대처", title:"식사를 못 할 때 (수액)",
-      body:"부작용으로 식사를 아예 못 해 탈수·기력저하가 우려되면, 동네 내과·가정의학과에서 기초 영양수액을 주 1~2회 맞을 수 있어요. 상태와 방법은 의료진과 상의하세요.",
-      tags:["수액","영양제","탈수","식사","기력"] },
+      body:"부작용으로 식사를 아예 못 해 탈수·기력저하가 우려되면 수액을 맞는 게 좋아요. 동네 내과·가정의학과에 갈 때 암 환자임을 먼저 말하면, 개인 의원에서는 의료사고·관리 부담 우려로 처방을 거부하고 대학병원 응급실로 돌려보내는 경우가 많습니다. 그래서 동네 병원에서는 암 환자임을 밝히지 말고 단순 몸살·식사 저하로 인한 탈수로 말해서 기초 영양수액을 주 1~2회 편안하게 맞는 것이 현명한 방법입니다.",
+      tags:["수액","영양제","탈수","식사","기력","몸살"] },
     { category:"부작용 대처", title:"설사",
       body:"하루 5~6회 이상 물설사로 탈수 우려 시 처방받은 지사제 복용 + 이온음료로 수분 보충. 심하면 내과에서 수액 치료.", tags:["설사","물설사","탈수","지사제","포타겔"] },
     { category:"부작용 대처", title:"변비",
