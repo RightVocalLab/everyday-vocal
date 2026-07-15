@@ -216,6 +216,81 @@
     table.rt{font-size:11px}
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
   }
+
+  /* ===== 아코디언 ===== */
+  .acc{background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); margin-bottom:14px; overflow:hidden}
+  .acc-head{width:100%; display:flex; align-items:center; gap:10px; background:none; border:none;
+    padding:18px 18px; cursor:pointer; font-family:inherit; text-align:left}
+  .acc-title{font-size:18px; font-weight:800; flex:none}
+  .acc-sum{flex:1; font-size:14px; color:var(--muted); font-weight:700; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .acc-chev{font-size:15px; color:var(--muted); transition:transform .2s; flex:none}
+  .acc.open .acc-chev{transform:rotate(180deg)}
+  .acc-body{display:none; padding:2px 16px 18px}
+  .acc.open .acc-body{display:block}
+  .block{margin-bottom:18px}
+  .block:last-child{margin-bottom:0}
+  .acc-body .hero{background:#FBFBFA; border:1px solid var(--line); border-radius:14px}
+  .acc-body .insulin{padding:4px 0}
+  .sdose{display:inline-block; font-size:12px; font-weight:700; color:#B0446A; background:rgba(176,68,106,.10); padding:2px 8px; border-radius:999px; margin-left:2px; vertical-align:middle}
+
+  /* 시점별 미니 그래프 */
+  .byctx-title{font-size:14px; font-weight:800; margin:18px 2px 10px; color:var(--ink)}
+  .mini{margin-bottom:16px}
+  .mini h4{font-size:13px; font-weight:700; color:var(--muted); margin:0 2px 6px}
+  .mini .chartwrap{height:150px}
+  .mini .stat-line{font-size:12px; color:var(--muted); margin-top:4px; text-align:right}
+
+  /* ===== 혈압 ===== */
+  .bpnow{display:flex; align-items:baseline; gap:4px; margin-top:2px}
+  .bpbig{font-size:40px; font-weight:800; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; line-height:1}
+  .bpunit{font-size:16px; font-weight:700; color:var(--muted); margin-left:6px}
+  .bpstatus{display:inline-block; margin-left:8px; font-size:15px; font-weight:800; padding:5px 13px; border-radius:999px}
+  .bpmeta{font-size:14px; color:var(--muted); margin-top:8px}
+  .bp2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .bprec{display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line)}
+  .bprec:last-child{border-bottom:none}
+  .bprec .dot{width:10px; height:10px; border-radius:50%; flex:none}
+  .bprec .bv{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; width:92px}
+  .bprec .bsub{flex:1; font-size:13px; color:var(--muted)}
+  .bprec .del{border:none; background:none; color:#C4C0B8; font-size:22px; cursor:pointer; padding:6px 10px; line-height:1}
+  .bprec .del:active{color:var(--red)}
+
+  /* 리포트 항목 선택 */
+  .itemPick{text-align:left; margin:4px 0 4px}
+  .itemPick .ck{display:flex; align-items:center; gap:10px; padding:12px 4px; font-size:16px; font-weight:700; cursor:pointer}
+  .itemPick .ck input{width:20px; height:20px; accent-color:var(--green)}
+
+  /* ===== 돌봄 가이드 & 질답 ===== */
+  .askbox{display:flex; gap:8px; margin-bottom:12px}
+  .askbox input{flex:1; font-family:inherit; font-size:16px; padding:14px 15px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; outline:none}
+  .askbox input:focus{border-color:var(--green); background:#fff}
+  .askbox button{flex:none; font-family:inherit; font-size:16px; font-weight:800; color:#fff; background:var(--green); border:none; border-radius:12px; padding:0 18px; cursor:pointer}
+  .ansArea{margin-bottom:6px}
+  .ans{border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; background:#FBFBFA}
+  .ans .acat{font-size:12px; font-weight:800; color:var(--green); margin-bottom:4px}
+  .ans .atit{font-size:16px; font-weight:800; margin-bottom:4px}
+  .ans .abody{font-size:15px; line-height:1.6; white-space:pre-wrap}
+  .ans.emer{background:rgba(217,83,75,.08); border-color:var(--red)}
+  .ans.emer .acat{color:var(--red)}
+  .ansHint{font-size:14px; color:var(--muted); padding:10px 2px; line-height:1.6}
+
+  .emerBar{background:rgba(217,83,75,.10); border:1px solid var(--red); border-radius:14px; padding:14px 16px; margin-bottom:16px}
+  .emerBar .et{font-size:14px; font-weight:800; color:var(--red); margin-bottom:6px}
+  .emerBar .eb{font-size:15px; line-height:1.6}
+  .emerBar a{color:var(--red); font-weight:800; text-decoration:none}
+
+  .gcat{margin-top:16px}
+  .gcat h4{font-size:14px; font-weight:800; margin:0 0 8px; padding-bottom:6px; border-bottom:2px solid var(--line)}
+  .gitem{padding:11px 4px; border-bottom:1px solid var(--line)}
+  .gitem:last-child{border-bottom:none}
+  .gitem .git{font-size:15px; font-weight:700}
+  .gitem .gib{font-size:14px; color:#3a4453; margin-top:3px; line-height:1.55; white-space:pre-wrap}
+  .gitem .gia{margin-top:6px; display:flex; gap:14px}
+  .gitem .gia button{border:none; background:none; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; padding:2px 0}
+  .gitem .gia button.d:active{color:var(--red)}
+
+  .gsel{width:100%; font-family:inherit; font-size:16px; padding:13px 14px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA}
+
 </style>
 </head>
 <body>
@@ -248,136 +323,262 @@
 <!-- ===================== 메인 앱 ===================== -->
 <div id="app" class="wrap hidden">
   <header class="top">
-    <h1>아빠 혈당 다이어리</h1>
+    <h1>아빠 건강 다이어리</h1>
     <div class="who" id="whoBtn"><b id="whoName">-</b></div>
   </header>
 
-  <!-- 오늘 인슐린 (3회 체크) -->
-  <div class="card insulin">
-    <div class="ihead">
-      <div class="ititle">💉 오늘 인슐린</div>
-      <div class="idate" id="insDate"></div>
-    </div>
-    <div class="icount" id="insCount">오늘 <b>0</b> / 3회 완료</div>
-    <button class="slot" data-slot="아침">
-      <span class="box">✓</span><span class="sname">아침</span><span class="swho"></span>
+  <!-- ===== 인슐린 ===== -->
+  <div class="acc" data-acc="insulin">
+    <button class="acc-head" type="button">
+      <span class="acc-title">💉 오늘 인슐린</span>
+      <span class="acc-sum" id="accSumIns"></span>
+      <span class="acc-chev">▾</span>
     </button>
-    <button class="slot" data-slot="점심">
-      <span class="box">✓</span><span class="sname">점심</span><span class="swho"></span>
-    </button>
-    <button class="slot" data-slot="저녁">
-      <span class="box">✓</span><span class="sname">저녁</span><span class="swho"></span>
-    </button>
-  </div>
-
-  <!-- 최신 기록 -->
-  <div class="card hero empty" id="hero">
-    <div class="label">최근 혈당</div>
-    <div class="big" id="heroBig">아직 기록이 없어요</div>
-    <div class="meta" id="heroMeta"></div>
-  </div>
-
-  <!-- 통계 -->
-  <div class="stats">
-    <div class="stat"><div class="n" id="stAvg">-</div><div class="t">7일 평균</div></div>
-    <div class="stat"><div class="n" id="stHi">-</div><div class="t">최고</div></div>
-    <div class="stat"><div class="n" id="stLo">-</div><div class="t">최저</div></div>
-  </div>
-
-  <!-- 입력 -->
-  <div class="card" id="inputCard">
-    <h2 class="sec">혈당 기록하기</h2>
-    <div class="field valuebox">
-      <label class="fl">혈당 수치 (mg/dL)</label>
-      <input type="number" id="inValue" inputmode="numeric" placeholder="예) 120" min="10" max="900">
-    </div>
-    <div class="field">
-      <label class="fl">측정 시점</label>
-      <div class="chips" id="ctxChips">
-        <div class="chip on" data-v="공복">공복</div>
-        <div class="chip" data-v="식전">식전</div>
-        <div class="chip" data-v="아침식후">아침식후</div>
-        <div class="chip" data-v="점심식후">점심식후</div>
-        <div class="chip" data-v="저녁식후">저녁식후</div>
-        <div class="chip" data-v="취침전">취침전</div>
-        <div class="chip" data-v="기타">기타</div>
+    <div class="acc-body">
+      <div class="block insulin">
+        <div class="idate" id="insDate" style="text-align:right"></div>
+        <div class="icount" id="insCount">오늘 <b>0</b> / 3회 완료</div>
+        <button class="slot" data-slot="아침"><span class="box">✓</span><span class="sname">아침 <span class="sdose" id="doseAM"></span></span><span class="swho"></span></button>
+        <button class="slot" data-slot="점심"><span class="box">✓</span><span class="sname">점심 <span class="sdose" id="doseLU"></span></span><span class="swho"></span></button>
+        <button class="slot" data-slot="저녁"><span class="box">✓</span><span class="sname">저녁 <span class="sdose" id="doseDI"></span></span><span class="swho"></span></button>
+      </div>
+      <div class="block">
+        <h2 class="sec">인슐린 최근 7일</h2>
+        <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
       </div>
     </div>
-    <div class="field">
-      <label class="fl">측정 시간</label>
-      <input type="datetime-local" id="inWhen">
-    </div>
-    <div class="field">
-      <label class="fl">메모 (선택)</label>
-      <input type="text" id="inMemo" placeholder="예) 약 먹기 전, 컨디션 좋음">
-    </div>
-    <button class="btn" id="saveBtn">기록 저장</button>
   </div>
 
-  <!-- 그래프 -->
-  <div class="card">
-    <h2 class="sec">추이 그래프 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
-    <div class="chartwrap"><canvas id="chart"></canvas></div>
-    <div class="legend">
-      <span><i style="background:var(--blue)"></i>저혈당</span>
-      <span><i style="background:var(--green)"></i>정상</span>
-      <span><i style="background:var(--amber)"></i>주의</span>
-      <span><i style="background:var(--red)"></i>높음</span>
+  <!-- ===== 혈당 ===== -->
+  <div class="acc" data-acc="bg">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🩸 혈당</span>
+      <span class="acc-sum" id="accSumBg"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block hero empty" id="hero">
+        <div class="label">최근 혈당</div>
+        <div class="big" id="heroBig">아직 기록이 없어요</div>
+        <div class="meta" id="heroMeta"></div>
+      </div>
+      <div class="stats block">
+        <div class="stat"><div class="n" id="stAvg">-</div><div class="t">7일 평균</div></div>
+        <div class="stat"><div class="n" id="stHi">-</div><div class="t">최고</div></div>
+        <div class="stat"><div class="n" id="stLo">-</div><div class="t">최저</div></div>
+      </div>
+      <div class="block" id="inputCard">
+        <h2 class="sec">혈당 기록하기</h2>
+        <div class="field valuebox">
+          <label class="fl">혈당 수치 (mg/dL)</label>
+          <input type="number" id="inValue" inputmode="numeric" placeholder="예) 120" min="10" max="900">
+        </div>
+        <div class="field">
+          <label class="fl">측정 시점</label>
+          <div class="chips" id="ctxChips">
+            <div class="chip on" data-v="공복">공복</div>
+            <div class="chip" data-v="식전">식전</div>
+            <div class="chip" data-v="아침식후">아침식후</div>
+            <div class="chip" data-v="점심식후">점심식후</div>
+            <div class="chip" data-v="저녁식후">저녁식후</div>
+            <div class="chip" data-v="취침전">취침전</div>
+            <div class="chip" data-v="기타">기타</div>
+          </div>
+        </div>
+        <div class="field"><label class="fl">측정 시간</label><input type="datetime-local" id="inWhen"></div>
+        <div class="field"><label class="fl">메모 (선택)</label><input type="text" id="inMemo" placeholder="예) 약 먹기 전"></div>
+        <button class="btn" id="saveBtn">기록 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">전체 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+        <div class="chartwrap"><canvas id="chart"></canvas></div>
+        <div class="legend">
+          <span><i style="background:var(--blue)"></i>저혈당</span>
+          <span><i style="background:var(--green)"></i>정상</span>
+          <span><i style="background:var(--amber)"></i>주의</span>
+          <span><i style="background:var(--red)"></i>높음</span>
+        </div>
+        <div class="note" style="margin-top:12px">색상 기준(당뇨 관리 목표): <b>식전 80~130</b> · <b>식후 2시간 180 미만</b> · <b>70 미만 저혈당</b>.</div>
+      </div>
+      <div class="block">
+        <div class="byctx-title">📊 시점별 추이</div>
+        <div id="bgByCtx"><div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div></div>
+      </div>
+      <div class="block">
+        <h2 class="sec">혈당 전체 기록</h2>
+        <div id="list"><div class="emptylist">첫 혈당을 기록해 보세요.</div></div>
+      </div>
     </div>
-    <div class="note" style="margin-top:12px">색상 기준(당뇨 관리 목표): <b>식전 80~130</b> · <b>식후 2시간 180 미만</b> · <b>70 미만 저혈당</b>. 시점(공복·식전·식후·취침전)마다 기준이 달라요. 개인별 목표는 주치의와 상의하세요.</div>
-  </div>
-
-  <!-- 인슐린 최근 현황 -->
-  <div class="card">
-    <h2 class="sec">인슐린 최근 7일</h2>
-    <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
-  </div>
-
-  <!-- 기록 목록 -->
-  <div class="card">
-    <h2 class="sec">혈당 전체 기록</h2>
-    <div id="list"><div class="emptylist">첫 혈당을 기록해 보세요.</div></div>
   </div>
 
   <!-- ===== 체중 ===== -->
-  <div class="card">
-    <h2 class="sec">⚖️ 체중 기록</h2>
-    <div class="wnow" id="wNow">
-      <span class="wbig" id="wBig">–</span>
-      <span class="wunit">kg</span>
-      <span class="wchg" id="wChg"></span>
+  <div class="acc" data-acc="weight">
+    <button class="acc-head" type="button">
+      <span class="acc-title">⚖️ 체중</span>
+      <span class="acc-sum" id="accSumW"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="wnow"><span class="wbig" id="wBig">–</span><span class="wunit">kg</span><span class="wchg" id="wChg"></span></div>
+        <div class="wmeta" id="wMeta">아직 체중 기록이 없어요.</div>
+      </div>
+      <div class="block">
+        <div class="field valuebox">
+          <label class="fl">체중 (kg)</label>
+          <input type="number" id="wValue" inputmode="decimal" step="0.1" placeholder="예) 68.5" min="10" max="400">
+        </div>
+        <div class="field">
+          <label class="fl">측정 시점</label>
+          <div class="chips" id="wCtxChips">
+            <div class="chip on" data-v="아침공복">아침공복</div>
+            <div class="chip" data-v="일과중">일과중</div>
+          </div>
+        </div>
+        <div class="field"><label class="fl">측정 시간</label><input type="datetime-local" id="wWhen"></div>
+        <div class="field"><label class="fl">메모 (선택)</label><input type="text" id="wMemo" placeholder="예) 기상 직후"></div>
+        <button class="btn" id="wSaveBtn" style="background:#3E74D8">체중 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">전체 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+        <div class="chartwrap"><canvas id="wChart"></canvas></div>
+      </div>
+      <div class="block">
+        <div class="byctx-title">📊 시점별 추이</div>
+        <div id="wByCtx"><div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div></div>
+      </div>
+      <div class="block">
+        <h2 class="sec">체중 전체 기록</h2>
+        <div id="wList"><div class="emptylist">체중을 기록하면 여기에 쌓여요.</div></div>
+      </div>
     </div>
-    <div class="wmeta" id="wMeta">아직 체중 기록이 없어요.</div>
-    <div class="field valuebox" style="margin-top:16px">
-      <label class="fl">체중 (kg)</label>
-      <input type="number" id="wValue" inputmode="decimal" step="0.1" placeholder="예) 68.5" min="10" max="400">
-    </div>
-    <div class="field">
-      <label class="fl">측정 시간</label>
-      <input type="datetime-local" id="wWhen">
-    </div>
-    <div class="field">
-      <label class="fl">메모 (선택)</label>
-      <input type="text" id="wMemo" placeholder="예) 아침 공복">
-    </div>
-    <button class="btn" id="wSaveBtn" style="background:#3E74D8">체중 저장</button>
   </div>
 
-  <div class="card">
-    <h2 class="sec">체중 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
-    <div class="chartwrap"><canvas id="wChart"></canvas></div>
-    <div id="wList" style="margin-top:8px"><div class="emptylist">체중을 기록하면 여기에 쌓여요.</div></div>
+  <!-- ===== 혈압 ===== -->
+  <div class="acc" data-acc="bp">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🫀 혈압</span>
+      <span class="acc-sum" id="accSumBp"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="bpnow"><span class="bpbig" id="bpBig">–</span><span class="bpunit">mmHg</span><span class="bpstatus" id="bpStatus" style="display:none"></span></div>
+        <div class="bpmeta" id="bpMeta">아직 혈압 기록이 없어요.</div>
+      </div>
+      <div class="block">
+        <div class="bp2">
+          <div class="field valuebox" style="margin:0">
+            <label class="fl">수축기 (높은값)</label>
+            <input type="number" id="sysValue" inputmode="numeric" placeholder="120" min="50" max="300">
+          </div>
+          <div class="field valuebox" style="margin:0">
+            <label class="fl">이완기 (낮은값)</label>
+            <input type="number" id="diaValue" inputmode="numeric" placeholder="80" min="30" max="200">
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label class="fl">측정 시점</label>
+          <div class="chips" id="bpCtxChips">
+            <div class="chip on" data-v="아침">아침</div>
+            <div class="chip" data-v="저녁">저녁</div>
+            <div class="chip" data-v="기타">기타</div>
+          </div>
+        </div>
+        <div class="field"><label class="fl">맥박 (선택, bpm)</label><input type="number" id="pulseValue" inputmode="numeric" placeholder="예) 72" min="20" max="250"></div>
+        <div class="field"><label class="fl">측정 시간</label><input type="datetime-local" id="bpWhen"></div>
+        <div class="field"><label class="fl">메모 (선택)</label><input type="text" id="bpMemo" placeholder="예) 약 먹기 전"></div>
+        <button class="btn" id="bpSaveBtn" style="background:#B0446A">혈압 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">혈압 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+        <div class="chartwrap"><canvas id="bpChart"></canvas></div>
+        <div class="legend">
+          <span><i style="background:#D9534B"></i>수축기</span>
+          <span><i style="background:#3E74D8"></i>이완기</span>
+        </div>
+        <div class="note" style="margin-top:12px">기준(대한고혈압학회): 정상 <b>120/80 미만</b> · 주의 120~139/80~89 · 고혈압 <b>140/90 이상</b>. 가정혈압은 아침·저녁 하루 2회 권장.</div>
+      </div>
+      <div class="block">
+        <div class="byctx-title">📊 시점별 추이 (아침 / 저녁)</div>
+        <div id="bpByCtx"><div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div></div>
+      </div>
+      <div class="block">
+        <h2 class="sec">혈압 전체 기록</h2>
+        <div id="bpList"><div class="emptylist">첫 혈압을 기록해 보세요.</div></div>
+      </div>
+    </div>
   </div>
 
-  <!-- 병원용 출력 -->
-  <div class="card">
-    <h2 class="sec">🏥 병원용 기록 출력</h2>
-    <p style="font-size:14px;color:var(--muted);margin:0 0 14px;line-height:1.6">그래프와 표가 들어간 혈당 기록지를 만들어 바로 인쇄하거나 PDF로 저장할 수 있어요.</p>
-    <button class="btn report" id="openReport">기록지 만들기</button>
+  <!-- ===== 돌봄 가이드 & 질답 ===== -->
+  <div class="acc" data-acc="guide">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🩺 돌봄 가이드 & 질문</span>
+      <span class="acc-sum" id="accSumGuide"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="emerBar">
+          <div class="et">🚨 위급 상황이면 먼저</div>
+          <div class="eb">즉시 <a href="tel:119">119</a>에 전화하거나 응급실로 가세요. 판단이 어려우면 망설이지 말고 연락하세요.<br>
+          <span id="emerContacts" style="color:var(--muted)"></span></div>
+        </div>
+        <div class="askbox">
+          <input type="text" id="askInput" placeholder="예) 열이 나요 / 구토 / 다음 항암 언제">
+          <button id="askBtn">찾기</button>
+        </div>
+        <div class="ansArea" id="ansArea">
+          <div class="ansHint">궁금한 증상·상황을 입력하면, 등록된 가이드에서 대처법을 찾아드려요. 등록 안 된 내용은 지어내지 않고 병원 문의를 안내합니다.</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2 class="sec">가이드 추가 / 수정</h2>
+        <div class="field">
+          <label class="fl">분류</label>
+          <select class="gsel" id="gCat">
+            <option value="응급/주의신호">응급/주의신호</option>
+            <option value="항암 일정">항암 일정</option>
+            <option value="부작용 대처">부작용 대처</option>
+            <option value="식사·영양">식사·영양</option>
+            <option value="복약">복약</option>
+            <option value="연락처">연락처</option>
+            <option value="생활·돌봄">생활·돌봄</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="field"><label class="fl">제목 (질문/상황)</label><input type="text" id="gTitle" placeholder="예) 38도 이상 열이 날 때"></div>
+        <div class="field"><label class="fl">내용 (대처/답)</label><textarea id="gBody" rows="4" style="width:100%;font-family:inherit;font-size:16px;padding:14px 15px;border:1px solid var(--line);border-radius:12px;background:#FBFBFA;outline:none;resize:vertical" placeholder="예) 즉시 병원 항암 담당에게 연락. 해열제는 임의로 먹이지 말 것..."></textarea></div>
+        <div class="field"><label class="fl">검색 키워드 (선택, 쉼표로 구분)</label><input type="text" id="gTags" placeholder="예) 발열, 체온, 열, fever"></div>
+        <button class="btn" id="gSaveBtn" style="background:#2B7A6B">가이드 저장</button>
+        <button class="btn" id="gCancelBtn" style="background:#EFEDE7;color:var(--ink);margin-top:10px;display:none">수정 취소</button>
+      </div>
+
+      <div class="block">
+        <h2 class="sec">등록된 가이드</h2>
+        <div id="gList"><div class="emptylist">아직 등록된 가이드가 없어요. 위에서 추가하거나, 안내지를 정리해 넣어보세요.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 병원용 출력 ===== -->
+  <div class="acc" data-acc="report">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🏥 병원용 기록 출력</span>
+      <span class="acc-sum"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <p style="font-size:14px;color:var(--muted);margin:6px 0 14px;line-height:1.6">항목(혈당·체중·혈압)과 기간을 골라 기록지를 만들어 바로 인쇄하거나 PDF로 저장할 수 있어요.</p>
+        <button class="btn report" id="openReport">기록지 만들기</button>
+      </div>
+    </div>
   </div>
 
   <div class="synced" id="syncState">연결 중…</div>
-  <div class="note">이 화면의 정상/주의 표시는 일반 기준을 참고한 <b>참고용</b>이며 의료 진단이 아닙니다. 실제 판단과 약 조절은 담당 의료진과 상의하세요.</div>
+  <div class="note">화면의 정상/주의 표시는 일반 기준을 참고한 <b>참고용</b>이며 의료 진단이 아닙니다. 실제 판단과 약 조절은 담당 의료진과 상의하세요.</div>
 </div>
 
 <!-- 기록자 선택 모달 -->
@@ -400,8 +601,13 @@
 <!-- 출력 범위 선택 모달 -->
 <div class="modal hidden" id="rangeModal">
   <div class="box">
-    <h3>어느 기간을 출력할까요?</h3>
-    <p id="lastPrintInfo" style="margin-bottom:16px">마지막 출력 기록을 확인 중…</p>
+    <h3>기록지 만들기</h3>
+    <div class="itemPick">
+      <label class="ck"><input type="checkbox" id="itemBg" checked> 🩸 혈당</label>
+      <label class="ck"><input type="checkbox" id="itemW" checked> ⚖️ 체중</label>
+      <label class="ck"><input type="checkbox" id="itemBp" checked> 🫀 혈압</label>
+    </div>
+    <p id="lastPrintInfo" style="margin:14px 0 16px">마지막 출력 기록을 확인 중…</p>
     <div class="opts">
       <button data-mode="incremental">지난 출력 이후 ~ 지금</button>
       <button data-mode="all">처음 ~ 지금 (전체)</button>
@@ -584,7 +790,14 @@ const firebaseConfig = {
       if (on) done++;
     });
     $("insCount").innerHTML = `오늘 <b>${done}</b> / 3회 완료`;
+    const sum = $("accSumIns"); sum.textContent = `오늘 ${done}/3`;
+    sum.style.color = done===3 ? getCss("--green") : getCss("--muted");
   }
+
+  // 인슐린 용량 라벨 (식전, 의료진 지시 기준)
+  $("doseAM").textContent = "란투스12 + 휴마로그6";
+  $("doseLU").textContent = "휴마로그8";
+  $("doseDI").textContent = "휴마로그8";
 
   // 최근 7일 인슐린 요약 실시간 구독
   insCol.orderBy("date","desc").limit(8).onSnapshot(snap=>{
@@ -701,8 +914,15 @@ const firebaseConfig = {
 
   // ================= 체중 =================
   const wCol = db.collection("weights");
-  let wChart = null;
+  const W_CTX = ["아침공복","일과중"];
+  let wChart = null; let wCtxCharts = {};
+  let wCtx = "아침공복";
   $("wWhen").value = nowLocalInput();
+  $("wCtxChips").addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#wCtxChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); wCtx = c.dataset.v;
+  });
 
   const wSaveBtn = $("wSaveBtn");
   wSaveBtn.addEventListener("click", async ()=>{
@@ -715,7 +935,7 @@ const firebaseConfig = {
     const at = new Date(whenStr).getTime();
     wSaveBtn.disabled = true; wSaveBtn.textContent = "저장 중…";
     try{
-      await wCol.add({ value:v, at:at, atText:whenStr.replace("T"," "),
+      await wCol.add({ value:v, context:wCtx, at:at, atText:whenStr.replace("T"," "),
         memo:$("wMemo").value.trim(), by:who, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       $("wValue").value=""; $("wMemo").value=""; $("wWhen").value=nowLocalInput();
       toast("체중 저장 ✓");
@@ -735,10 +955,11 @@ const firebaseConfig = {
   }, err=>console.error(err));
 
   function renderWeights(rows){
+    allWeights = rows;   // 리포트에서 사용 (최신순)
     if (rows.length){
       const r = rows[0];
       $("wBig").textContent = r.value;
-      // 지난 기록 대비 증감
+      $("accSumW").textContent = r.value + "kg";
       const chg = $("wChg");
       if (rows[1]){
         const diff = Math.round((r.value - rows[1].value)*10)/10;
@@ -746,9 +967,10 @@ const firebaseConfig = {
         else if (diff < 0){ chg.className="wchg down"; chg.textContent=`▼ ${Math.abs(diff)}kg`; }
         else { chg.className="wchg same"; chg.textContent="변화 없음"; }
       } else { chg.className="wchg"; chg.textContent=""; }
-      $("wMeta").textContent = `${fmtWhen(r.atText, r.at)} · ${r.by} 기록` + (r.memo?` · ${r.memo}`:"");
+      $("wMeta").textContent = `${r.context||""} · ${fmtWhen(r.atText, r.at)} · ${r.by} 기록` + (r.memo?` · ${r.memo}`:"");
     } else {
       $("wBig").textContent="–"; $("wChg").textContent=""; $("wChg").className="wchg";
+      $("accSumW").textContent="";
       $("wMeta").textContent="아직 체중 기록이 없어요.";
     }
 
@@ -760,15 +982,19 @@ const firebaseConfig = {
       rows.forEach(r=>{
         const el=document.createElement("div"); el.className="wrec";
         el.innerHTML = `<span class="wv">${r.value} kg</span>`+
-          `<span class="wsub">${fmtWhen(r.atText,r.at)} · ${escape(r.by||"")}${r.memo?" · "+escape(r.memo):""}</span>`+
+          `<span class="wsub">${escape(r.context||"")} · ${fmtWhen(r.atText,r.at)} · ${escape(r.by||"")}${r.memo?" · "+escape(r.memo):""}</span>`+
           `<button class="del" title="삭제">✕</button>`;
         el.querySelector(".del").addEventListener("click", ()=>delWeight(r.id));
         list.appendChild(el);
       });
     }
 
-    // 그래프 (오래된→최신, 최근 30)
+    if (sectionOpen("weight")) drawWeightCharts(rows);
+  }
+
+  function drawWeightCharts(rows){
     drawWeightChart(rows.slice(0,30).reverse());
+    drawWeightByCtx(rows);
   }
 
   function drawWeightChart(rows){
@@ -789,9 +1015,420 @@ const firebaseConfig = {
     });
   }
 
+  function drawWeightByCtx(rows){
+    const box = $("wByCtx");
+    Object.values(wCtxCharts).forEach(c=>c&&c.destroy()); wCtxCharts={};
+    const by={}; rows.forEach(r=>{ const k=r.context||"기타"; (by[k]=by[k]||[]).push(r); });
+    const present = W_CTX.filter(k=>by[k]&&by[k].length);
+    // W_CTX에 없는 기타 컨텍스트도 포함
+    Object.keys(by).forEach(k=>{ if(!W_CTX.includes(k) && !present.includes(k)) present.push(k); });
+    if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
+    box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="wc_${i}"></canvas></div></div>`).join("");
+    if (typeof Chart==="undefined") return;
+    present.forEach((k,i)=>{
+      const arr = by[k].slice().sort((a,b)=>a.at-b.at).slice(-30);
+      const el = document.getElementById("wc_"+i); if(!el) return;
+      wCtxCharts[k] = new Chart(el.getContext("2d"), {
+        type:"line",
+        data:{ labels:arr.map(r=>fmtWhen(r.atText,r.at)), datasets:[{ data:arr.map(r=>r.value),
+          borderColor:"#3E74D8", borderWidth:2, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:4, fill:false }]},
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:c=>c.parsed.y+" kg"}}},
+          scales:{ y:{grid:{color:"#EFEDE7"},ticks:{font:{size:11}}}, x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:4}} } }
+      });
+    });
+  }
+
+  // ================= 혈압 =================
+  const bpCol = db.collection("bp");
+  const BP_CTX = ["아침","저녁","기타"];
+  let allBP = []; let bpChart = null; let bpCtxCharts = {};
+  let bpCtx = "아침";
+  $("bpWhen").value = nowLocalInput();
+  $("bpCtxChips").addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#bpCtxChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); bpCtx = c.dataset.v;
+  });
+
+  // 대한고혈압학회 2022 기준
+  function classifyBP(sys, dia){
+    const C={low:{key:"low",label:"저혈압",color:getCss("--blue")},
+             ok:{key:"ok",label:"정상",color:getCss("--green")},
+             warn:{key:"warn",label:"주의",color:getCss("--amber")},
+             high:{key:"high",label:"고혈압",color:getCss("--red")}};
+    if (sys < 90 || dia < 60) return C.low;
+    if (sys >= 140 || dia >= 90) return C.high;   // 고혈압 1·2기
+    if (sys >= 130 || dia >= 80) return C.warn;   // 고혈압 전단계
+    if (sys >= 120) return C.warn;                // 주의혈압
+    return C.ok;                                  // 정상
+  }
+
+  const bpSaveBtn = $("bpSaveBtn");
+  bpSaveBtn.addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const sys = parseInt($("sysValue").value, 10);
+    const dia = parseInt($("diaValue").value, 10);
+    const pulseRaw = $("pulseValue").value.trim();
+    const pulse = pulseRaw ? parseInt(pulseRaw,10) : null;
+    if (isNaN(sys) || isNaN(dia)){ toast("수축기·이완기를 입력하세요"); return; }
+    if (sys < 50 || sys > 300 || dia < 30 || dia > 200){ toast("혈압 수치를 확인하세요"); return; }
+    if (sys <= dia){ toast("수축기(높은값)가 이완기보다 커야 해요"); return; }
+    if (pulse !== null && (isNaN(pulse) || pulse < 20 || pulse > 250)){ toast("맥박을 확인하세요"); return; }
+    const whenStr = $("bpWhen").value || nowLocalInput();
+    const at = new Date(whenStr).getTime();
+    bpSaveBtn.disabled = true; bpSaveBtn.textContent = "저장 중…";
+    try{
+      await bpCol.add({ sys, dia, pulse, context:bpCtx, at, atText:whenStr.replace("T"," "),
+        memo:$("bpMemo").value.trim(), by:who, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      $("sysValue").value=""; $("diaValue").value=""; $("pulseValue").value=""; $("bpMemo").value=""; $("bpWhen").value=nowLocalInput();
+      toast("혈압 저장 ✓");
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+    finally{ bpSaveBtn.disabled=false; bpSaveBtn.textContent="혈압 저장"; }
+  });
+
+  async function delBP(id){
+    if (!confirm("이 혈압 기록을 삭제할까요?")) return;
+    try{ await bpCol.doc(id).delete(); toast("삭제했어요"); }
+    catch(err){ toast("삭제 실패: "+(err.code||err.message)); }
+  }
+
+  bpCol.orderBy("at","desc").onSnapshot(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(Object.assign({id:d.id}, d.data())));
+    renderBP(rows);
+  }, err=>console.error(err));
+
+  function renderBP(rows){
+    allBP = rows;
+    const st = $("bpStatus");
+    if (rows.length){
+      const r = rows[0]; const cl = classifyBP(r.sys, r.dia);
+      $("bpBig").textContent = `${r.sys}/${r.dia}`;
+      st.style.display="inline-block"; st.textContent = cl.label;
+      st.style.background = hexA(cl.color,.14); st.style.color = cl.color;
+      $("bpMeta").textContent = `${r.context||""} · ${fmtWhen(r.atText,r.at)} · ${r.by} 기록`
+        + (r.pulse?` · 맥박 ${r.pulse}`:"") + (r.memo?` · ${r.memo}`:"");
+      const sum=$("accSumBp"); sum.textContent = `${r.sys}/${r.dia} · ${cl.label}`; sum.style.color = cl.color;
+    } else {
+      $("bpBig").textContent="–"; st.style.display="none";
+      $("bpMeta").textContent="아직 혈압 기록이 없어요."; $("accSumBp").textContent="";
+    }
+
+    const list = $("bpList");
+    if (!rows.length){ list.innerHTML='<div class="emptylist">첫 혈압을 기록해 보세요.</div>'; }
+    else {
+      list.innerHTML="";
+      rows.forEach(r=>{
+        const cl = classifyBP(r.sys,r.dia);
+        const el=document.createElement("div"); el.className="bprec";
+        el.innerHTML = `<span class="dot" style="background:${cl.color}"></span>`+
+          `<span class="bv" style="color:${cl.color}">${r.sys}/${r.dia}</span>`+
+          `<span class="bsub">${escape(r.context||"")} · ${escape(cl.label)} · ${fmtWhen(r.atText,r.at)}${r.pulse?" · 맥박 "+r.pulse:""} · ${escape(r.by||"")}${r.memo?" · "+escape(r.memo):""}</span>`+
+          `<button class="del" title="삭제">✕</button>`;
+        el.querySelector(".del").addEventListener("click", ()=>delBP(r.id));
+        list.appendChild(el);
+      });
+    }
+
+    if (sectionOpen("bp")) drawBPCharts(rows);
+  }
+
+  function drawBPCharts(rows){
+    drawBPChart(rows);
+    drawBPByCtx(rows);
+  }
+
+  function bpLineChart(el, arr){
+    return new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels:arr.map(r=>fmtWhen(r.atText,r.at)), datasets:[
+        { data:arr.map(r=>r.sys), borderColor:"#D9534B", borderWidth:2, tension:.3, pointBackgroundColor:"#D9534B", pointRadius:3, fill:false },
+        { data:arr.map(r=>r.dia), borderColor:"#3E74D8", borderWidth:2, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:3, fill:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{mode:"index",intersect:false}},
+        scales:{ y:{grid:{color:"#EFEDE7"},ticks:{font:{size:11}}}, x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:4}} } }
+    });
+  }
+
+  function drawBPByCtx(rows){
+    const box = $("bpByCtx");
+    Object.values(bpCtxCharts).forEach(c=>c&&c.destroy()); bpCtxCharts={};
+    const by={}; rows.forEach(r=>{ const k=r.context||"기타"; (by[k]=by[k]||[]).push(r); });
+    const present = BP_CTX.filter(k=>by[k]&&by[k].length);
+    Object.keys(by).forEach(k=>{ if(!BP_CTX.includes(k) && !present.includes(k)) present.push(k); });
+    if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
+    box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="bpc_${i}"></canvas></div></div>`).join("");
+    if (typeof Chart==="undefined") return;
+    present.forEach((k,i)=>{
+      const arr = by[k].slice().sort((a,b)=>a.at-b.at).slice(-30);
+      const el = document.getElementById("bpc_"+i); if(!el) return;
+      bpCtxCharts[k] = bpLineChart(el, arr);
+    });
+  }
+
+  function drawBPChart(rows){
+    const wrap = document.querySelector("#bpChart").closest(".chartwrap");
+    if (typeof Chart === "undefined"){ if(wrap) wrap.innerHTML='<div style="text-align:center;color:var(--muted);font-size:14px;padding:70px 10px">그래프를 불러오지 못했어요.</div>'; return; }
+    const el = document.getElementById("bpChart"); if(!el) return;
+    const arr = rows.slice(0,30).reverse();
+    const labels = arr.map(r=>fmtWhen(r.atText,r.at));
+    if (bpChart){ bpChart.destroy(); }
+    bpChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[
+        { label:"수축기", data:arr.map(r=>r.sys), borderColor:"#D9534B", borderWidth:2.5, tension:.3, pointBackgroundColor:"#D9534B", pointRadius:4, fill:false },
+        { label:"이완기", data:arr.map(r=>r.dia), borderColor:"#3E74D8", borderWidth:2.5, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:4, fill:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ mode:"index", intersect:false } },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{color:"#9AA0A6",font:{size:12}} },
+                 x:{ grid:{display:false}, ticks:{color:"#9AA0A6",font:{size:11}, maxRotation:0, autoSkip:true, maxTicksLimit:5} } } }
+    });
+  }
+
+  // ================= 돌봄 가이드 & 질답 =================
+  const guideCol = db.collection("guide");
+  let allGuide = []; let editingId = null;
+
+  // 병원 자료 기반 기본 가이드 (첫 실행 시 자동 입력, 이후 가족이 수정·추가 가능)
+  const SEED_GUIDE = [
+    // 응급
+    { category:"응급/주의신호", title:"🚨 즉시 응급실 가야 하는 6가지 징후",
+      body:"아래 중 하나라도 나타나면 지체 없이 대학병원 응급실(구리 한양대병원 등)로:\n① 흑색변(짜장면처럼 까맣고 끈적)\n② 혈변·항문출혈\n③ 혈뇨(붉은 소변)\n④ 코피가 10분 이상 눌러도 안 멈춤\n⑤ 원인 모를 멍·점상출혈\n⑥ 38도 이상 고열(감염 신호)",
+      tags:["응급","흑색변","혈변","혈뇨","코피","멍","출혈","고열","38도","열","응급실"] },
+    // 연락처
+    { category:"연락처", title:"응급실 / 119",
+      body:"위급 시 119 또는 가까운 대학병원 응급실. (이사 후 구리 한양대학교병원 등)", tags:["응급실","119","한양대","구리"] },
+    { category:"연락처", title:"항암 예약 변경",
+      body:"입원·응급 등으로 항암 못 가면 예약 하루 전날 17:00까지 연락. ☎ 02-2228-4825 (월~금 08:00~17:00). 연락 없이 안 가면 조제된 항암제 자비 부담될 수 있음.", tags:["항암","예약","변경","취소","연락처"] },
+    { category:"연락처", title:"소화기내과 외래",
+      body:"본관 4층 ☎ 02-2228-1814 / 암병원 3층 ☎ 02-2228-4080, 4081", tags:["소화기내과","외래","연락처","임가람"] },
+    { category:"연락처", title:"당뇨병 교육실",
+      body:"본관 3층 당뇨병센터 9번방 ☎ 02-2228-5465 (인슐린 집중 교육)", tags:["당뇨","교육","내분비","연락처"] },
+    { category:"연락처", title:"진료예약센터 / 약국",
+      body:"진료예약센터 ☎ 1599-1004 · 세연약국(조제) ☎ 02-364-6141 (문의 오전9시~오후6시) · 항암 설명 간호사: 정시윤", tags:["예약","약국","세연약국","연락처","정시윤"] },
+    // 항암 일정
+    { category:"항암 일정", title:"다음 항암 주사 일정",
+      body:"7/22(수) 오후 2:30 (17호실 4번 병상)\n7/29(수) 소화기내과 주사/치료\n※ 예약 10분 전 도착 → 혈압 측정 → 무인키오스크 도착확인. 예약 늦으면 병실 자동취소.", tags:["항암","일정","주사","수요일","7월22일","예약"] },
+    { category:"항암 일정", title:"항암 당일 주의",
+      body:"발열·오한 있으면 간호사에게 미리 말하기. 항암 당일 자가운전 금지. 보호자 1인 동반 권장.", tags:["항암","당일","발열","오한","운전","보호자"] },
+    { category:"항암 일정", title:"다음 외래 진료",
+      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 2시간 전, 8시간 금식\n9/14(월) 오후 4:00 내분비내과 김혜경 (본관 3층) — 채혈 1~7일 전, 8시간 금식", tags:["진료","외래","8월12일","9월14일","채혈","금식"] },
+    { category:"항암 일정", title:"치료 사이클·채혈·CT",
+      body:"4주 1사이클(1~3주 주1회 투여, 4주차 휴약), 80% 용량으로 시작. 채혈은 각 사이클 1주차에만. 2사이클(8주) 후 CT로 효과 평가. 진료 후 귀가 전 암병원 4층 항암치료실 예약실 들러 다음 일정 확인.", tags:["사이클","채혈","휴약","CT","일정","예약실"] },
+    // 복약
+    { category:"복약", title:"복약 스케줄 (아침/점심/저녁)",
+      body:"아침(식후): 고덱스·우루사·마이폴·케이캡·맥페란·글루파·디아미크롱·리바로젯 / 메게이스는 아침 '식전 1시간'\n점심(식후): 고덱스·우루사·마이폴·맥페란\n저녁(식후): 고덱스·우루사·마이폴·맥페란·글루파·디아미크롱\n※ 당뇨약(글루파·디아미크롱)은 아침·저녁 2회, 케이캡·리바로젯은 아침만.", tags:["복약","약","스케줄","아침","점심","저녁","식전","식후"] },
+    { category:"복약", title:"인슐린 용량",
+      body:"아침 식전: 란투스 12 + 휴마로그 6\n점심 식전: 휴마로그 8\n저녁 식전: 휴마로그 8\n※ 용량 조절은 반드시 내분비 의료진 지시대로.", tags:["인슐린","용량","란투스","휴마로그","단위","주사"] },
+    { category:"복약", title:"약 복용 주의사항",
+      body:"• 마이폴은 마약성 진통제 → 졸림·어지럼, 운전·술 금지\n• 글루파(메트포르민) → CT 조영검사 전 중단 여부 반드시 상의(48시간 전후)\n• 메게이스만 아침 식전 1시간, 잘 흔들어서\n• 케이캡·리바로젯은 아침만\n• 검사 당일 먹는 당뇨약은 일시중단(홀드) 필요할 수 있음 — 의료진 지시 따를 것", tags:["약","주의","마이폴","글루파","CT","조영제","메게이스"] },
+    // 부작용
+    { category:"부작용 대처", title:"오심·구토",
+      body:"항구토제는 증상 있으면 참지 말고 즉시 복용(참으면 약효↓). 편안하면 안 먹어도 됨. 하루 5~6회 소량씩 자주. 수분은 식사 전후 1시간 간격. 차갑고 냄새 적은 음식(아이스크림·식힌 죽·요플레)이 편함.",
+      tags:["구토","오심","울렁","메스꺼움","토","항구토제"] },
+    { category:"부작용 대처", title:"식사를 못 할 때 (수액)",
+      body:"부작용으로 식사를 아예 못 해 탈수·기력저하가 우려되면, 동네 내과·가정의학과에서 기초 영양수액을 주 1~2회 맞을 수 있어요. 상태와 방법은 의료진과 상의하세요.",
+      tags:["수액","영양제","탈수","식사","기력"] },
+    { category:"부작용 대처", title:"설사",
+      body:"하루 5~6회 이상 물설사로 탈수 우려 시 처방받은 지사제 복용 + 이온음료로 수분 보충. 심하면 내과에서 수액 치료.", tags:["설사","물설사","탈수","지사제","포타겔"] },
+    { category:"부작용 대처", title:"변비",
+      body:"물 자주 마시고 가볍게 걷기. 안 나오면 처방 변비약(마그밀·듀락칸). 무리하게 힘주지 말 것(혈소판 감소로 출혈 위험).", tags:["변비","배변","마그밀","듀락칸","힘주기"] },
+    { category:"부작용 대처", title:"면역력 저하·감염 예방",
+      body:"항암 후 7~14일 사이 면역이 가장 떨어져 감염에 취약. 손 씻기(외출·식사 전·배변 후 30초 이상), 마스크 착용. 날음식 절대 금지(회·육회·간장게장·생굴·조개) → 완전히 익혀서. 과일은 씻어 껍질 벗겨(사과·배·바나나). 자몽 절대 금지(항암제 농도를 위험하게 높임).",
+      tags:["면역","감염","열","손씻기","날음식","회","자몽","호중구","마스크"] },
+    { category:"부작용 대처", title:"출혈·빈혈 주의",
+      body:"혈소판 감소로 지혈이 안 되거나 어지럼 생길 수 있음. 부드러운 미세모 칫솔, 면도는 전기면도기(날면도기 금지). 무리한 운동 피하고 가벼운 산책.", tags:["출혈","빈혈","혈소판","어지럼","면도","양치"] },
+    { category:"부작용 대처", title:"손발 저림",
+      body:"말초신경병증으로 손발 끝이 찌릿하거나 무뎌질 수 있음. 찬 바람·찬물에 노출되면 급격히 악화 → 미지근한 물 사용, 장갑·양말로 항상 따뜻하게.", tags:["손발저림","저림","마비","신경","찬물","장갑"] },
+    { category:"부작용 대처", title:"탈모·근육통·피부",
+      body:"탈모는 2~3주 후 시작(종료 후 다시 자람), 순한 샴푸·모자·두건. 근육통·관절통은 가벼운 온찜질·휴식. 피부 가려움엔 기존 항히스타민제·연고를 항암 중에도 그대로 병행 OK.", tags:["탈모","머리","근육통","관절통","가려움","피부"] },
+    { category:"부작용 대처", title:"저녁 식후 고혈당 (의료진 안내)",
+      body:"저녁 식후 혈당이 계속 높으면 저녁 휴마로그를 8→10단위로 올리는 등 유동 조절 가능(의료진 안내 지침). 구체적 자가조절법은 병원 교육을 따를 것.", tags:["저녁","식후","고혈당","휴마로그","혈당","조절"] },
+    { category:"부작용 대처", title:"항암 중 혈당 상승",
+      body:"항암 시 스테로이드(덱사메타손)가 함께 들어가 혈당이 평소보다 훨씬 높이 오를 수 있음. 당황 말고 혈당 자주 체크, 교육 지침대로 인슐린 증량. 급변 시 소화기내과가 내분비 협진 연계.", tags:["항암","혈당","스테로이드","덱사메타손","인슐린","협진"] },
+    // 식사
+    { category:"식사·영양", title:"항암 중 식단 (단백질 우선)",
+      body:"세포 재생·백혈구 상승을 위해 매 끼니 단백질 필수: 삶은 계란, 생선 구이/찜(가시 제거), 푹 삶은 살코기(소·돼지등심·닭), 두부, 콩비지. 입맛 없으면 억지로 밥 권하기보다 단백질 영양음료(뉴케어·하이뮨)를 시원하게 빨대로 조금씩 자주.",
+      tags:["식사","영양","단백질","입맛","뉴케어","하이뮨","식욕"] },
+    // 생활·돌봄
+    { category:"생활·돌봄", title:"치과 치료 타이밍",
+      body:"임플란트 등은 골수·면역이 떨어지는 항암 주간(1~3주차)을 피하고, 4주차 휴약기에. 치과에 '세포독성 항암 치료 중, 현재 휴약기'임을 반드시 고지.", tags:["치과","임플란트","휴약기","치아"] },
+    { category:"생활·돌봄", title:"응급실·타병원 대비 서류",
+      body:"항상 지참(병원 2층 서류발급센터): ① 외래 재진기록지 ② 투약기록지(처방전 상세) ③ 최근 1주 이내 혈액검사 결과지 ④ 최근 CT 판독지 + CD.", tags:["서류","응급실","기록지","혈액검사","CT","지참"] },
+    { category:"생활·돌봄", title:"입원 방식",
+      body:"본원에 며칠씩 입원 후 퇴원하는 치료는 불가. 입원 원하면 요양병원 입원 후 본원 항암 일정에 맞춰 통원.", tags:["입원","요양병원","통원"] },
+    // 기타(참고)
+    { category:"기타", title:"진단 요약",
+      body:"전이성 췌장암 4기(췌장 체부·미부, C25.8). 췌장 꼬리 약 5.4cm 선암(중등도 분화), 다발성 간전이 + 복막전이 의심(복수 동반). 수술 불가 → 항암화학요법. 약제: 아브락산 + 젬시타빈(젬자). 종양표지자 기준선 CA19-9 >20000, CEA 67.",
+      tags:["진단","병기","췌장암","5.4","간전이","복막","종양표지자"] },
+    { category:"기타", title:"과거 병력",
+      body:"위암(2015, 위 아전절제술 + XELOX 8차 완치), 에스결장(대장)암 수술, 위 선종 내시경절제(ESD, 2022). 위 절제 이력 있으니 식사 관련은 의료진 안내를 따를 것.",
+      tags:["과거력","위암","대장암","위절제","수술"] },
+    { category:"기타", title:"유전자 검사·재평가",
+      body:"표적치료제 가능성(약 5%) 확인 위해 유전자검사(Germline NGS) 진행. 항암 2사이클 후 반응 재평가 예정. 고주파 등 온열 보조치료는 담당의가 '근거 없다'고 안내.",
+      tags:["유전자","NGS","재평가","보조치료","고주파"] },
+  ];
+
+  async function seedGuideIfEmpty(){
+    try{
+      const metaRef = db.collection("meta").doc("guideSeed");
+      const m = await metaRef.get();
+      if (m.exists && m.data().done) return;
+      const snap = await guideCol.limit(1).get();
+      if (!snap.empty){ await metaRef.set({done:true}, {merge:true}); return; }
+      const batch = db.batch();
+      SEED_GUIDE.forEach((g,i)=>{
+        const ref = guideCol.doc();
+        batch.set(ref, Object.assign({}, g, { by:"기본자료", at: Date.now() - (SEED_GUIDE.length - i)*1000,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      });
+      batch.set(metaRef, {done:true});
+      await batch.commit();
+      console.log("가이드 기본자료 입력 완료");
+    }catch(e){ console.error("가이드 seed 실패:", e); }
+  }
+  seedGuideIfEmpty();
+
+  const GUIDE_SYN = {
+    "열":["발열","체온","fever","고열","미열"], "발열":["열","체온","fever"],
+    "구토":["토","메스꺼움","울렁","구역","nausea"], "토":["구토","메스꺼움","구역"],
+    "설사":["묽은변","배탈","diarrhea"], "통증":["아파","아픔","pain","쑤심","아플","아프"],
+    "출혈":["피","혈변","코피"], "항암":["항암제","케모","chemo","항암치료","항암약"],
+    "식사":["밥","음식","먹","식이","영양","입맛"], "약":["복약","투약","약물","진통제","해열제"],
+    "연락":["전화","번호","연락처"], "손발저림":["저림","마비","신경","손발"]
+  };
+  function ngrams(s){
+    s=(s||"").toLowerCase().replace(/\s+/g,"");
+    const out=new Set();
+    for(let n=2;n<=3;n++) for(let i=0;i+n<=s.length;i++) out.add(s.substr(i,n));
+    return [...out];
+  }
+  function scoreGuide(item, q){
+    q=(q||"").toLowerCase().replace(/\s+/g,"");
+    if(!q) return 0;
+    const title=(item.title||"").toLowerCase(), body=(item.body||"").toLowerCase();
+    const tags=(item.tags||[]).map(x=>x.toLowerCase().trim()).filter(Boolean);
+    // 태그 + 동의어 부분매칭 (한 글자 어근도 포함: 열, 토 등)
+    const kw=new Set(tags);
+    tags.forEach(t=>{ (GUIDE_SYN[t]||[]).forEach(s=>kw.add(s.toLowerCase())); });
+    Object.keys(GUIDE_SYN).forEach(k=>{ if(tags.includes(k) || title.includes(k)){ kw.add(k); GUIDE_SYN[k].forEach(s=>kw.add(s.toLowerCase())); } });
+    let s=0;
+    kw.forEach(k=>{ if(k && q.includes(k)) s += (k.length>=2?3:2); });
+    // 질문 n-gram ↔ 제목/본문 부분매칭 (한글 붙여쓰기 대응)
+    const hay=title+" "+body+" "+tags.join(" ");
+    ngrams(q).forEach(g=>{ if(hay.includes(g)) s += (title.includes(g)?2:1); });
+    return s;
+  }
+  function doAsk(){
+    const q = $("askInput").value.trim();
+    const area = $("ansArea");
+    if (!q){ area.innerHTML='<div class="ansHint">궁금한 증상·상황을 입력하면, 등록된 가이드에서 대처법을 찾아드려요.</div>'; return; }
+    const scored = allGuide.map(it=>({it, s:scoreGuide(it,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,5);
+    if (!scored.length){
+      area.innerHTML = `<div class="ans emer"><div class="acat">🚨 등록된 답이 없어요</div><div class="abody">이 내용은 아직 가이드에 없어요. 위급하면 119, 아니면 병원 항암 담당이나 안내지에 문의하세요.\n필요하면 아래에서 이 상황을 가이드에 추가해두면 다음엔 바로 찾을 수 있어요.</div></div>`;
+      return;
+    }
+    area.innerHTML = scored.map(({it})=>{
+      const emer = it.category === "응급/주의신호";
+      return `<div class="ans ${emer?'emer':''}"><div class="acat">${escape(it.category||"")}</div><div class="atit">${escape(it.title||"")}</div><div class="abody">${escape(it.body||"")}</div></div>`;
+    }).join("");
+  }
+  $("askBtn").addEventListener("click", doAsk);
+  $("askInput").addEventListener("keydown", e=>{ if(e.key==="Enter") doAsk(); });
+
+  function resetGuideForm(){
+    editingId=null; $("gTitle").value=""; $("gBody").value=""; $("gTags").value=""; $("gCat").value="응급/주의신호";
+    $("gSaveBtn").textContent="가이드 저장"; $("gCancelBtn").style.display="none";
+  }
+  $("gCancelBtn").addEventListener("click", resetGuideForm);
+
+  $("gSaveBtn").addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const title=$("gTitle").value.trim(), body=$("gBody").value.trim(), category=$("gCat").value;
+    const tags=$("gTags").value.split(",").map(s=>s.trim()).filter(Boolean);
+    if (!title || !body){ toast("제목과 내용을 입력하세요"); return; }
+    const data={ category, title, body, tags, by:who, at:Date.now() };
+    $("gSaveBtn").disabled=true;
+    try{
+      if (editingId){ await guideCol.doc(editingId).update(data); toast("수정했어요 ✓"); }
+      else{ await guideCol.add(Object.assign({}, data, {createdAt:firebase.firestore.FieldValue.serverTimestamp()})); toast("가이드 저장 ✓"); }
+      resetGuideForm();
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+    finally{ $("gSaveBtn").disabled=false; }
+  });
+
+  function editGuide(id){
+    const it = allGuide.find(x=>x.id===id); if(!it) return;
+    editingId=id; $("gCat").value=it.category||"기타"; $("gTitle").value=it.title||""; $("gBody").value=it.body||"";
+    $("gTags").value=(it.tags||[]).join(", ");
+    $("gSaveBtn").textContent="수정 저장"; $("gCancelBtn").style.display="block";
+    $("gTitle").scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  async function delGuide(id){
+    if (!confirm("이 가이드를 삭제할까요?")) return;
+    try{ await guideCol.doc(id).delete(); toast("삭제했어요"); if(editingId===id) resetGuideForm(); }
+    catch(err){ toast("삭제 실패: "+(err.code||err.message)); }
+  }
+
+  guideCol.orderBy("at","desc").onSnapshot(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(Object.assign({id:d.id}, d.data())));
+    allGuide=rows; renderGuide(rows);
+  }, err=>console.error(err));
+
+  function renderGuide(rows){
+    $("accSumGuide").textContent = rows.length ? `${rows.length}개 항목` : "";
+    const contacts = rows.filter(r=>r.category==="연락처");
+    $("emerContacts").textContent = contacts.length
+      ? contacts.map(c=>`${c.title}: ${c.body}`).join("  ·  ")
+      : "병원·담당자 연락처를 '연락처' 분류로 등록해두면 여기에 표시돼요.";
+
+    const box=$("gList");
+    if (!rows.length){ box.innerHTML='<div class="emptylist">아직 등록된 가이드가 없어요. 위에서 추가하거나, 안내지를 정리해 넣어보세요.</div>'; return; }
+    const order=["응급/주의신호","연락처","항암 일정","부작용 대처","복약","식사·영양","생활·돌봄","기타"];
+    const by={}; rows.forEach(r=>{ (by[r.category]=by[r.category]||[]).push(r); });
+    const cats=order.filter(c=>by[c]&&by[c].length);
+    Object.keys(by).forEach(c=>{ if(!order.includes(c)) cats.push(c); });
+    box.innerHTML="";
+    cats.forEach(c=>{
+      const wrap=document.createElement("div"); wrap.className="gcat";
+      const h=document.createElement("h4"); h.textContent=c; wrap.appendChild(h);
+      by[c].forEach(it=>{
+        const el=document.createElement("div"); el.className="gitem";
+        el.innerHTML=`<div class="git">${escape(it.title||"")}</div><div class="gib">${escape(it.body||"")}</div>`+
+          `<div class="gia"><button class="e">수정</button><button class="d">삭제</button></div>`;
+        el.querySelector(".e").addEventListener("click",()=>editGuide(it.id));
+        el.querySelector(".d").addEventListener("click",()=>delGuide(it.id));
+        wrap.appendChild(el);
+      });
+      box.appendChild(wrap);
+    });
+  }
+
+  // ================= 아코디언 =================
+  function sectionOpen(name){
+    const a = document.querySelector(`.acc[data-acc="${name}"]`);
+    return !!(a && a.classList.contains("open"));
+  }
+  function drawSection(name){
+    if (name === "bg") drawBgCharts(allReadings);
+    else if (name === "weight") drawWeightCharts(allWeights);
+    else if (name === "bp") drawBPCharts(allBP);
+  }
+  document.querySelectorAll(".acc-head").forEach(h=>{
+    h.addEventListener("click", ()=>{
+      const acc = h.closest(".acc");
+      acc.classList.toggle("open");
+      if (acc.classList.contains("open")) setTimeout(()=>drawSection(acc.dataset.acc), 0);
+    });
+  });
+
   // ================= 병원용 기록지 (출력) =================
   let allReadings = [];            // 최신순 전체 혈당 (render에서 채움)
+  let allWeights = [];             // 최신순 전체 체중 (renderWeights에서 채움)
   let reportChart = null;
+  let reportWChart = null;
+  let reportBpChart = null;
   let reportEnd = 0;               // 이번 리포트의 종료 시각(증분 커서 후보)
   let reportMode = "all";
   const metaRef = db.collection("meta").doc("print");
@@ -851,72 +1488,152 @@ const firebaseConfig = {
   // 리포트 생성
   function buildReport(start, end, mode){
     reportMode = mode; reportEnd = end;
-    // 필터 (증분은 start 초과, 나머지는 start 이상)
-    const rows = allReadings
-      .filter(r => typeof r.at === "number" && (mode === "incremental" ? r.at > start : r.at >= start) && r.at <= end)
-      .slice().sort((a,b)=> a.at - b.at);   // 오래된→최신
+    const useBg = $("itemBg").checked, useW = $("itemW").checked, useBp = $("itemBp").checked;
+    const inRange = r => typeof r.at === "number" && (mode === "incremental" ? r.at > start : r.at >= start) && r.at <= end;
+    const bg = useBg ? allReadings.filter(inRange).slice().sort((a,b)=> a.at - b.at) : [];
+    const wt = useW ? allWeights.filter(inRange).slice().sort((a,b)=> a.at - b.at) : [];
+    const bp = useBp ? allBP.filter(inRange).slice().sort((a,b)=> a.at - b.at) : [];
 
     const doc = $("reportDoc");
     const periodText = (start ? fmtDate(start) : "맨 처음") + " ~ " + fmtDate(end);
+    const header = `<h1>건강 기록지</h1>
+      <div class="sub">대상: 아빠 · 출력일 ${fmtDate(Date.now())}</div>
+      <div class="sub">기간: ${escape(periodText)}</div>
+      <div class="rule"></div>`;
 
-    if (!rows.length){
-      doc.innerHTML = `<h1>혈당 기록지</h1>
-        <div class="sub">대상: 아빠 · 출력일 ${fmtDate(Date.now())}</div>
-        <div class="sub">기간: ${escape(periodText)}</div>
-        <div class="rule"></div>
-        <div class="docEmpty">해당 기간에 혈당 기록이 없어요.<br>기간을 다시 선택해 주세요.</div>`;
+    if (!bg.length && !wt.length && !bp.length){
+      doc.innerHTML = header + `<div class="docEmpty">선택한 항목의 해당 기간 기록이 없어요.<br>항목이나 기간을 다시 선택해 주세요.</div>`;
       $("rangeModal").classList.add("hidden");
       $("reportMark").classList.add("hidden");
       openReportOverlay();
       return;
     }
 
-    // 통계
-    const vals = rows.map(r=>r.value);
-    const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
-    const hi = Math.max(...vals), lo = Math.min(...vals);
-    const lowCnt = rows.filter(r=>r.value < 70).length;
-    const highCnt = rows.filter(r=> classify(r.value,r.context).key==="high").length;
-    // 시점별 평균
-    const groups = {};
-    rows.forEach(r=>{ (groups[r.context]=groups[r.context]||[]).push(r.value); });
-    const ctxAvgHtml = Object.keys(groups).map(k=>{
-      const g=groups[k]; const a=Math.round(g.reduce((x,y)=>x+y,0)/g.length);
-      return `<b>${escape(k)}</b> 평균 ${a} (${g.length}회)`;
-    }).join(" · ");
+    // ===== 혈당 섹션 =====
+    let bgHtml = "";
+    if (bg.length){
+      const vals = bg.map(r=>r.value);
+      const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      const hi = Math.max(...vals), lo = Math.min(...vals);
+      const lowCnt = bg.filter(r=>r.value < 70).length;
+      const highCnt = bg.filter(r=> classify(r.value,r.context).key==="high").length;
+      const groups = {};
+      bg.forEach(r=>{ (groups[r.context]=groups[r.context]||[]).push(r.value); });
+      const ctxAvgHtml = Object.keys(groups).map(k=>{
+        const g=groups[k]; const a=Math.round(g.reduce((x,y)=>x+y,0)/g.length);
+        return `<b>${escape(k)}</b> 평균 ${a} (${g.length}회)`;
+      }).join(" · ");
+      const rowsHtml = bg.map(r=>{
+        const cl = classify(r.value, r.context);
+        return `<tr>
+          <td>${escape(fmtDate(r.at))}</td>
+          <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+          <td>${escape(r.context)}</td>
+          <td class="v" style="color:${cl.color}">${r.value}</td>
+          <td class="badge"><span style="color:${cl.color}">${cl.label}</span></td>
+          <td>${escape(r.by||"")}</td>
+          <td>${escape(r.memo||"")}</td>
+        </tr>`;
+      }).join("");
+      bgHtml = `
+        <h2 style="font-size:19px;margin:6px 0 12px">🩸 혈당 · 총 ${bg.length}회</h2>
+        <div class="sumGrid">
+          <div class="sumBox"><div class="n">${avg}</div><div class="t">평균 (mg/dL)</div></div>
+          <div class="sumBox"><div class="n">${hi}</div><div class="t">최고</div></div>
+          <div class="sumBox"><div class="n">${lo}</div><div class="t">최저</div></div>
+        </div>
+        <div class="ctxAvg">${ctxAvgHtml}<br>저혈당(70 미만) ${lowCnt}회 · 높음 ${highCnt}회</div>
+        <div class="docChart"><canvas id="reportCanvas"></canvas></div>
+        <table class="rt">
+          <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>혈당</th><th>판정</th><th>기록자</th><th>메모</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>`;
+    } else if (useBg) {
+      bgHtml = `<h2 style="font-size:19px;margin:6px 0 12px">🩸 혈당</h2><div class="ctxAvg">해당 기간 혈당 기록 없음</div>`;
+    }
 
-    // 표 행
-    const rowsHtml = rows.map(r=>{
-      const cl = classify(r.value, r.context);
-      return `<tr>
-        <td>${escape(fmtDate(r.at))}</td>
-        <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
-        <td>${escape(r.context)}</td>
-        <td class="v" style="color:${cl.color}">${r.value}</td>
-        <td class="badge"><span style="color:${cl.color}">${cl.label}</span></td>
-        <td>${escape(r.by||"")}</td>
-        <td>${escape(r.memo||"")}</td>
-      </tr>`;
-    }).join("");
+    // ===== 체중 섹션 =====
+    let wtHtml = "";
+    if (wt.length){
+      const wv = wt.map(r=>r.value);
+      const wStart = wt[0].value, wEnd = wt[wt.length-1].value;
+      const wDiff = Math.round((wEnd - wStart)*10)/10;
+      const diffTxt = wDiff>0 ? `▲ ${wDiff}kg 증가` : wDiff<0 ? `▼ ${Math.abs(wDiff)}kg 감소` : "변화 없음";
+      const wHi = Math.max(...wv), wLo = Math.min(...wv);
+      const wRowsHtml = wt.slice().reverse().map(r=>`<tr>
+          <td>${escape(fmtDate(r.at))}</td>
+          <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+          <td>${escape(r.context||"")}</td>
+          <td class="v">${r.value} kg</td>
+          <td>${escape(r.by||"")}</td>
+          <td>${escape(r.memo||"")}</td>
+        </tr>`).join("");
+      wtHtml = `
+        <div class="rule"></div>
+        <h2 style="font-size:19px;margin:6px 0 12px">⚖️ 체중 · 총 ${wt.length}회</h2>
+        <div class="sumGrid">
+          <div class="sumBox"><div class="n">${wEnd}</div><div class="t">최근 (kg)</div></div>
+          <div class="sumBox"><div class="n">${wHi}</div><div class="t">최고</div></div>
+          <div class="sumBox"><div class="n">${wLo}</div><div class="t">최저</div></div>
+        </div>
+        <div class="ctxAvg">기간 변화: <b>${wStart}kg → ${wEnd}kg</b> (${diffTxt})</div>
+        <div class="docChart"><canvas id="reportWCanvas"></canvas></div>
+        <table class="rt">
+          <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>체중</th><th>기록자</th><th>메모</th></tr></thead>
+          <tbody>${wRowsHtml}</tbody>
+        </table>`;
+    }
 
-    doc.innerHTML = `
-      <h1>혈당 기록지</h1>
-      <div class="sub">대상: 아빠 · 출력일 ${fmtDate(Date.now())}</div>
-      <div class="sub">기간: ${escape(periodText)} · 총 ${rows.length}회 측정</div>
-      <div class="rule"></div>
-      <div class="sumGrid">
-        <div class="sumBox"><div class="n">${avg}</div><div class="t">평균 (mg/dL)</div></div>
-        <div class="sumBox"><div class="n">${hi}</div><div class="t">최고</div></div>
-        <div class="sumBox"><div class="n">${lo}</div><div class="t">최저</div></div>
-      </div>
-      <div class="ctxAvg">${ctxAvgHtml}<br>저혈당(70 미만) ${lowCnt}회 · 높음 ${highCnt}회</div>
-      <div class="docChart"><canvas id="reportCanvas"></canvas></div>
-      <table class="rt">
-        <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>혈당</th><th>판정</th><th>기록자</th><th>메모</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
+    // ===== 혈압 섹션 =====
+    let bpHtml = "";
+    if (bp.length){
+      const sysArr = bp.map(r=>r.sys), diaArr = bp.map(r=>r.dia);
+      const sysAvg = Math.round(sysArr.reduce((a,b)=>a+b,0)/sysArr.length);
+      const diaAvg = Math.round(diaArr.reduce((a,b)=>a+b,0)/diaArr.length);
+      const highCnt = bp.filter(r=>classifyBP(r.sys,r.dia).key==="high").length;
+      // 시점별 평균 (아침/저녁/기타)
+      const bpG = {};
+      bp.forEach(r=>{ const k=r.context||"기타"; (bpG[k]=bpG[k]||[]).push(r); });
+      const bpCtxAvg = ["아침","저녁","기타"].filter(k=>bpG[k]&&bpG[k].length).map(k=>{
+        const g=bpG[k];
+        const sa=Math.round(g.reduce((x,r)=>x+r.sys,0)/g.length);
+        const da=Math.round(g.reduce((x,r)=>x+r.dia,0)/g.length);
+        return `<b>${escape(k)}</b> 평균 ${sa}/${da} (${g.length}회)`;
+      }).join(" · ");
+      const bpRowsHtml = bp.slice().reverse().map(r=>{
+        const cl = classifyBP(r.sys,r.dia);
+        return `<tr>
+          <td>${escape(fmtDate(r.at))}</td>
+          <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+          <td>${escape(r.context||"")}</td>
+          <td class="v" style="color:${cl.color}">${r.sys}/${r.dia}</td>
+          <td class="badge"><span style="color:${cl.color}">${cl.label}</span></td>
+          <td>${r.pulse||""}</td>
+          <td>${escape(r.by||"")}</td>
+        </tr>`;
+      }).join("");
+      bpHtml = `
+        <div class="rule"></div>
+        <h2 style="font-size:19px;margin:6px 0 12px">🫀 혈압 · 총 ${bp.length}회</h2>
+        <div class="sumGrid">
+          <div class="sumBox"><div class="n">${sysAvg}/${diaAvg}</div><div class="t">평균 (mmHg)</div></div>
+          <div class="sumBox"><div class="n">${Math.max(...sysArr)}</div><div class="t">수축기 최고</div></div>
+          <div class="sumBox"><div class="n">${Math.min(...diaArr)}</div><div class="t">이완기 최저</div></div>
+        </div>
+        <div class="ctxAvg">${bpCtxAvg}<br>고혈압(140/90 이상) ${highCnt}회</div>
+        <div class="docChart"><canvas id="reportBpCanvas"></canvas></div>
+        <table class="rt">
+          <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>혈압</th><th>판정</th><th>맥박</th><th>기록자</th></tr></thead>
+          <tbody>${bpRowsHtml}</tbody>
+        </table>`;
+    } else if (useBp) {
+      bpHtml = `<div class="rule"></div><h2 style="font-size:19px;margin:6px 0 12px">🫀 혈압</h2><div class="ctxAvg">해당 기간 혈압 기록 없음</div>`;
+    }
+
+    doc.innerHTML = header + bgHtml + wtHtml + bpHtml + `
       <div class="docNote">
-        색상 기준(당뇨 관리 목표): 식전 80~130 · 식후 2시간 180 미만 · 70 미만 저혈당.
+        혈당 기준(당뇨 관리 목표): 식전 80~130 · 식후 2시간 180 미만 · 70 미만 저혈당.
+        혈압 기준(대한고혈압학회): 정상 120/80 미만 · 고혈압 140/90 이상.
         본 기록지는 자가측정 참고자료이며 의료 진단이 아닙니다.
       </div>`;
 
@@ -925,7 +1642,9 @@ const firebaseConfig = {
 
     $("rangeModal").classList.add("hidden");
     openReportOverlay();
-    drawReportChart(rows);
+    if (bg.length) drawReportChart(bg);
+    if (wt.length) drawReportWeightChart(wt);
+    if (bp.length) drawReportBPChart(bp);
   }
 
   function drawReportChart(rows){
@@ -946,6 +1665,41 @@ const firebaseConfig = {
     });
   }
 
+  function drawReportWeightChart(rows){
+    if (typeof Chart === "undefined") return;
+    const el = document.getElementById("reportWCanvas"); if(!el) return;
+    const labels = rows.map(r => fmtDate(r.at) + " " + ((r.atText||"").split(" ")[1]||""));
+    const data = rows.map(r => r.value);
+    if (reportWChart){ reportWChart.destroy(); }
+    reportWChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[{ data, borderColor:"#3E74D8", borderWidth:2, tension:.3,
+        pointBackgroundColor:"#3E74D8", pointBorderColor:"#3E74D8", pointRadius:4, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> c.parsed.y + " kg" } } },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{font:{size:11}} },
+                 x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6} } } }
+    });
+  }
+
+  function drawReportBPChart(rows){
+    if (typeof Chart === "undefined") return;
+    const el = document.getElementById("reportBpCanvas"); if(!el) return;
+    const labels = rows.map(r => fmtDate(r.at) + " " + ((r.atText||"").split(" ")[1]||""));
+    if (reportBpChart){ reportBpChart.destroy(); }
+    reportBpChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[
+        { label:"수축기", data:rows.map(r=>r.sys), borderColor:"#D9534B", borderWidth:2, tension:.3, pointBackgroundColor:"#D9534B", pointRadius:3, fill:false },
+        { label:"이완기", data:rows.map(r=>r.dia), borderColor:"#3E74D8", borderWidth:2, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:3, fill:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false} },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{font:{size:11}} },
+                 x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6} } } }
+    });
+  }
+
   function openReportOverlay(){
     $("reportOverlay").classList.add("on");
     document.body.classList.add("report-open");
@@ -955,6 +1709,8 @@ const firebaseConfig = {
     $("reportOverlay").classList.remove("on");
     document.body.classList.remove("report-open");
     if (reportChart){ reportChart.destroy(); reportChart = null; }
+    if (reportWChart){ reportWChart.destroy(); reportWChart = null; }
+    if (reportBpChart){ reportBpChart.destroy(); reportBpChart = null; }
   }
   $("reportClose").addEventListener("click", closeReportOverlay);
   $("reportPrint").addEventListener("click", ()=> window.print());
@@ -998,7 +1754,7 @@ const firebaseConfig = {
     const hero = $("hero");
     if (rows.length){
       const r = rows[0]; const cl = classify(r.value, r.context);
-      hero.className = "card hero";
+      hero.className = "block hero";
       $("heroBig").innerHTML = r.value + '<span class="unit">mg/dL</span>';
       let statusEl = hero.querySelector(".status");
       if (!statusEl){ statusEl = document.createElement("div"); statusEl.className="status"; $("heroBig").after(statusEl); }
@@ -1006,11 +1762,13 @@ const firebaseConfig = {
       statusEl.style.background = hexA(cl.color, .14);
       statusEl.style.color = cl.color;
       $("heroMeta").textContent = `${r.context} · ${fmtWhen(r.atText, r.at)} · ${r.by} 기록`;
+      const sb = $("accSumBg"); sb.textContent = `${r.value} · ${cl.label}`; sb.style.color = cl.color;
     } else {
-      hero.className = "card hero empty";
+      hero.className = "block hero empty";
       $("heroBig").textContent = "아직 기록이 없어요";
       const s = hero.querySelector(".status"); if(s) s.remove();
       $("heroMeta").textContent = "";
+      $("accSumBg").textContent = "";
     }
 
     // 통계 (최근 7일)
@@ -1042,9 +1800,38 @@ const firebaseConfig = {
       });
     }
 
-    // 그래프 (오래된→최신, 최근 30)
-    const chartRows = rows.slice(0,30).reverse();
-    drawChart(chartRows);
+    if (sectionOpen("bg")) drawBgCharts(rows);
+  }
+
+  function drawBgCharts(rows){
+    drawChart(rows.slice(0,30).reverse());
+    drawBgByCtx(rows);
+  }
+
+  const BG_CTX = ["공복","식전","아침식후","점심식후","저녁식후","취침전","기타"];
+  let bgCtxCharts = {};
+  function drawBgByCtx(rows){
+    const box = $("bgByCtx");
+    Object.values(bgCtxCharts).forEach(c=>c&&c.destroy()); bgCtxCharts={};
+    const by={}; rows.forEach(r=>{ (by[r.context]=by[r.context]||[]).push(r); });
+    const present = BG_CTX.filter(k=>by[k]&&by[k].length);
+    if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
+    box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="bgc_${i}"></canvas></div></div>`).join("");
+    if (typeof Chart==="undefined") return;
+    present.forEach((k,i)=>{
+      const arr = by[k].slice().sort((a,b)=>a.at-b.at).slice(-30);
+      const el = document.getElementById("bgc_"+i); if(!el) return;
+      bgCtxCharts[k] = new Chart(el.getContext("2d"), {
+        type:"line",
+        data:{ labels:arr.map(r=>fmtWhen(r.atText,r.at)), datasets:[{ data:arr.map(r=>r.value),
+          borderColor:"#B9B6AE", borderWidth:2, tension:.3,
+          pointBackgroundColor:arr.map(r=>classify(r.value,r.context).color),
+          pointBorderColor:arr.map(r=>classify(r.value,r.context).color), pointRadius:4, fill:false }]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.parsed.y+" mg/dL"}}},
+          scales:{ y:{suggestedMin:60,grid:{color:"#EFEDE7"},ticks:{font:{size:11}}}, x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:4}} } }
+      });
+    });
   }
 
   function drawChart(rows){
