@@ -6989,6 +6989,7 @@ function _clearLitKey(){
 window.addEventListener('resize',()=>{if(curMod&&!document.getElementById('scr-train').classList.contains('hidden'))setTimeout(()=>buildPianoSVG(curMod.startNote,curMod.endNote),50);});
 
 let curMod=null,playing=false,allSteps=[],sch={s:0,p:0,nx:0},loopT=null,curBpm=60,coachT=[];
+let _finishing=false;   /* 완료 처리 진행 플래그 (runLoop 재arm/재진입 차단) */
 let seqList=[],seqIdx=0,isSeq=false;
 
 /* 현재 BPM과 일치하는 빠른설정 버튼 강조 */
@@ -7229,7 +7230,7 @@ function togglePlay(){
   if(!curMod) return;
   if(playing){window._pausedSch={s:sch.s,p:sch.p};stopEngine();}
   else{const sv=window._pausedSch||window._savedSch;
-  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;_setPpIcon('pause');sch.s=sv.s;sch.p=0;sch.nx=0;
+  if(sv&&sv.s>0){window._pausedSch=null;window._savedSch=null;gCtx();playing=true;_finishing=false;_setPpIcon('pause');sch.s=sv.s;sch.p=0;sch.nx=0;
 /* 일시정지 후 재개 시 polling 재시작 */
 _scheduledNotes=[];_lastDisplayedSIdx=-1;
 if(_displayRafId){cancelAnimationFrame(_displayRafId);_displayRafId=null;}
@@ -7291,7 +7292,7 @@ return mod.startNote+firstSemi;
 
 function startEngine(){
 
-gCtx();playing=true;_setPpIcon('pause');
+gCtx();playing=true;_finishing=false;_setPpIcon('pause');
 const pt=curMod.previewType;
 
 /* 빛 polling 시스템 초기화 */
@@ -7326,7 +7327,7 @@ setTimeout(()=>{if(playing){schedCoach(curMod);sch.nx=0;runLoop();}},delayMs);
 } else {schedCoach(curMod);runLoop();}
 }
 function stopEngine(){
-playing=false;if(loopT)clearTimeout(loopT);clrCT();
+playing=false;_finishing=false;if(loopT)clearTimeout(loopT);clrCT();
 _stopMetronome();
 /* [추가 2026-07-12] 미리 예약된(아직 시작 전) 음 취소 — 정확 예약 방식이라 필수 */
 _cancelScheduledNotes();
@@ -7340,6 +7341,7 @@ if(coachAuto&&window.speechSynthesis)speechSynthesis.cancel();
 
 function runLoop(){
 if(!playing)return;
+if(_finishing)return;   /* 완료 처리 시작됨 — 재진입 금지 */
 /* [먹통 방지 2026-07-13] 스케줄 생성 중 어떤 예외가 나도 다음 틱 재예약을 보장한다.
    iOS Safari에서 DOM/오디오 접근이 순간 실패하면 예전엔 loopT 재arm 전에 죽어 영구 정지(먹통)했다. */
 try{
@@ -7347,6 +7349,10 @@ const ctx=gCtx(),spb=60/curBpm;
 if(sch.nx===0)sch.nx=ctx.currentTime+0.12;
 while(sch.nx<ctx.currentTime+0.38){
 if(sch.s>=allSteps.length){
+/* [완료 반복 수정 2026-07-13] onDone은 _downDelay 후 실행돼 그 사이 playing이 아직 true다.
+   먹통방지 finally가 이 틈에 runLoop을 재arm하면 매 50ms마다 onDone이 다시 예약돼
+   완료 모달이 무한 반복된다(아이폰에서 관측). _finishing 플래그로 재arm을 차단한다. */
+_finishing=true;
 const _downDelay=(curMod&&(curMod.scaleId||curMod.id||'').indexOf('DN')!==-1)?1200:700;
 setTimeout(onDone,_downDelay);return;
 }
@@ -7402,7 +7408,7 @@ sch.nx+=spb*0.15;
 }
 }
 }catch(e){ /* 한 틱 실패는 삼키고 계속 진행 — 절대 멈추지 않는다 */ }
-finally{ if(playing){ loopT=setTimeout(runLoop,50); } }
+finally{ if(playing && !_finishing){ loopT=setTimeout(runLoop,50); } }
 }
 
 function onDone(){
