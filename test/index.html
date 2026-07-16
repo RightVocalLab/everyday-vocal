@@ -1083,7 +1083,6 @@ const firebaseConfig = {
   $("ddayCard").addEventListener("click", ()=>openAccByName("guide"));
 
 
-  let ctx = "공복";   // 혈당 측정 시점 (기본 칩과 일치). 선언 누락 시 저장에서 ReferenceError 발생했었음.
   $("ctxChips").addEventListener("click", e=>{
     const c = e.target.closest(".chip"); if(!c) return;
     document.querySelectorAll("#ctxChips .chip").forEach(x=>x.classList.remove("on"));
@@ -1457,15 +1456,19 @@ const firebaseConfig = {
       body:"본관 4층 ☎ 02-2228-1814 / 암병원 3층 ☎ 02-2228-4080, 4081", tags:["소화기내과","외래","연락처","임가람"] },
     { category:"연락처", title:"당뇨병 교육실",
       body:"본관 3층 당뇨병센터 9번방 ☎ 02-2228-5465 (인슐린 집중 교육)", tags:["당뇨","교육","내분비","연락처"] },
-    { category:"연락처", title:"진료예약센터 / 약국",
-      body:"진료예약센터 ☎ 1599-1004 · 세연약국(조제) ☎ 02-364-6141 (문의 오전9시~오후6시) · 항암 설명 간호사: 정시윤", tags:["예약","약국","세연약국","연락처","정시윤"] },
+    { category:"연락처", title:"진료예약센터",
+      body:"☎ 1599-1004", tags:["예약","진료예약","연락처","전화"] },
+    { category:"연락처", title:"세연약국 (약 조제)",
+      body:"☎ 02-364-6141 (문의 오전 9시 ~ 오후 6시)", tags:["약국","세연약국","조제","연락처","약"] },
+    { category:"연락처", title:"항암 설명 간호사",
+      body:"정시윤 간호사 — 연락은 소화기내과 외래(02-2228-1814)를 통해서.", tags:["항암","간호사","정시윤","연락처"] },
     // 항암 일정
     { category:"항암 일정", title:"다음 항암 주사 일정",
       body:"7/22(수) 오후 2:30 (17호실 4번 병상)\n7/29(수) 소화기내과 주사/치료\n※ 예약 10분 전 도착 → 혈압 측정 → 무인키오스크 도착확인. 예약 늦으면 병실 자동취소.", tags:["항암","일정","주사","수요일","7월22일","예약"] },
     { category:"항암 일정", title:"항암 당일 주의",
       body:"발열·오한 있으면 간호사에게 미리 말하기. 항암 당일 자가운전 금지. 보호자 1인 동반 권장.", tags:["항암","당일","발열","오한","운전","보호자"] },
     { category:"항암 일정", title:"다음 외래 진료",
-      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 2시간 전, 8시간 금식\n9/14(월) 오후 4:00 내분비내과 김혜경 (본관 3층) — 채혈 1~7일 전, 8시간 금식", tags:["진료","외래","8월12일","9월14일","채혈","금식"] },
+      body:"8/12(수) 오전 9:30 · 소화기내과 임가람 (본관 4층 소화기병센터)\n   → 채혈은 진료 2시간 전까지, 4시간 금식 (물은 마셔도 됨)\n\n9/14(월) 오후 4:00 · 내분비내과 김혜경 (본관 3층)\n   → 채혈은 진료 2시간 전까지, 8시간 금식", tags:["진료","외래","8월12일","9월14일","채혈","금식","공복"] },
     { category:"항암 일정", title:"치료 사이클·채혈·CT",
       body:"4주 1사이클(1~3주 주1회 투여, 4주차 휴약), 80% 용량으로 시작. 채혈은 각 사이클 1주차에만. 2사이클(8주) 후 CT로 효과 평가. 진료 후 귀가 전 암병원 4층 항암치료실 예약실 들러 다음 일정 확인.", tags:["사이클","채혈","휴약","CT","일정","예약실"] },
     // 복약
@@ -1510,6 +1513,19 @@ const firebaseConfig = {
       body:"항상 지참(병원 2층 서류발급센터): ① 외래 재진기록지 ② 투약기록지(처방전 상세) ③ 최근 1주 이내 혈액검사 결과지 ④ 최근 CT 판독지 + CD.", tags:["서류","응급실","기록지","혈액검사","CT","지참"] },
     { category:"생활·돌봄", title:"입원 방식",
       body:"본원에 며칠씩 입원 후 퇴원하는 치료는 불가. 입원 원하면 요양병원 입원 후 본원 항암 일정에 맞춰 통원.", tags:["입원","요양병원","통원"] },
+    { category:"생활·돌봄", title:"채혈·금식 팁",
+      body:"채혈(피검사)은 진료 2시간 전까지 완료해야 결과가 진료 시간에 맞춰 나와요. 여유 있게 도착하세요.\n\n금식 시간이 과마다 달라요:\n• 소화기내과(항암) 검사 전 — 4시간 금식 (물은 마셔도 됨)\n• 내분비내과(당뇨) 검사 전 — 8시간 금식\n당일 검사 목적에 맞춰 꼭 확인하세요.",
+      tags:["채혈","피검사","금식","공복","검사","진료","물","2시간"] },
+    // 병원 운영시간
+    { category:"병원 운영시간", title:"채혈실 (피검사)",
+      body:"본관 4층: 평일 06:30~18:00 / 토 07:00~12:00 (공휴일 운영안함)\n본관 3층: 평일 07:00~13:00 (토·공휴일 운영안함)\n암병원 2층: 평일 07:00~18:00 (토·공휴일 운영안함)",
+      tags:["채혈실","채혈","피검사","운영시간","시간","몇시"] },
+    { category:"병원 운영시간", title:"주사·치료실",
+      body:"암병원 4층 항암약물치료센터: 평일 08:00~17:30 / 토 08:30~12:30\n본관 3층 주사실: 평일 08:30~17:30 (토·공휴일 운영안함)",
+      tags:["주사실","치료실","항암","주사","운영시간","시간","몇시"] },
+    { category:"병원 운영시간", title:"서류·영상 발급센터",
+      body:"본관 2층: 평일 08:30~17:30 (토·공휴일 운영안함)\n암병원 3층: 평일 08:30~17:30 (토·공휴일 운영안함)",
+      tags:["서류","영상","발급","기록지","CT","운영시간","시간","몇시"] },
     // 기타(참고)
     { category:"기타", title:"진단 요약",
       body:"전이성 췌장암 4기(췌장 체부·미부, C25.8). 췌장 꼬리 약 5.4cm 선암(중등도 분화), 다발성 간전이 + 복막전이 의심(복수 동반). 수술 불가 → 항암화학요법. 약제: 아브락산 + 젬시타빈(젬자). 종양표지자 기준선 CA19-9 >20000, CEA 67.",
@@ -1522,25 +1538,30 @@ const firebaseConfig = {
       tags:["유전자","NGS","재평가","보조치료","고주파"] },
   ];
 
-  async function seedGuideIfEmpty(){
+  // 기본자료 버전 — SEED_GUIDE 내용을 바꿀 때마다 숫자를 올리면, 기존에 깔린
+  // '기본자료'는 지우고 새로 넣습니다(가족이 추가한 항목 by=이름 은 보존).
+  const SEED_VERSION = 2;
+  async function seedGuide(){
     try{
       const metaRef = db.collection("meta").doc("guideSeed");
       const m = await metaRef.get();
-      if (m.exists && m.data().done) return;
-      const snap = await guideCol.limit(1).get();
-      if (!snap.empty){ await metaRef.set({done:true}, {merge:true}); return; }
+      const curVer = m.exists ? (m.data().version || (m.data().done ? 1 : 0)) : 0;
+      if (curVer >= SEED_VERSION) return;
       const batch = db.batch();
+      // 기존 기본자료만 삭제(가족 추가 항목은 유지)
+      const old = await guideCol.where("by","==","기본자료").get();
+      old.forEach(d=> batch.delete(d.ref));
       SEED_GUIDE.forEach((g,i)=>{
         const ref = guideCol.doc();
         batch.set(ref, Object.assign({}, g, { by:"기본자료", at: Date.now() - (SEED_GUIDE.length - i)*1000,
           createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
       });
-      batch.set(metaRef, {done:true});
+      batch.set(metaRef, { done:true, version: SEED_VERSION });
       await batch.commit();
-      console.log("가이드 기본자료 입력 완료");
+      console.log("가이드 기본자료 갱신 완료 (v"+SEED_VERSION+")");
     }catch(e){ console.error("가이드 seed 실패:", e); }
   }
-  seedGuideIfEmpty();
+  seedGuide();
 
   const GUIDE_SYN = {
     "열":["발열","체온","fever","고열","미열"], "발열":["열","체온","fever"],
@@ -1623,7 +1644,7 @@ const firebaseConfig = {
 
     const box=$("gList");
     if (!rows.length){ box.innerHTML='<div class="emptylist">가이드를 불러오는 중…</div>'; return; }
-    const order=["응급/주의신호","연락처","항암 일정","부작용 대처","복약","식사·영양","생활·돌봄","기타"];
+    const order=["응급/주의신호","연락처","항암 일정","부작용 대처","복약","식사·영양","병원 운영시간","생활·돌봄","기타"];
     const by={}; rows.forEach(r=>{ (by[r.category]=by[r.category]||[]).push(r); });
     const cats=order.filter(c=>by[c]&&by[c].length);
     Object.keys(by).forEach(c=>{ if(!order.includes(c)) cats.push(c); });
