@@ -765,9 +765,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-07-17a";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-07-17b";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 혈당저장 수정본"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 혈당저장+혈압분류 수정본"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1315,10 +1315,10 @@ const firebaseConfig = {
              ok:{key:"ok",label:"정상",color:getCss("--green")},
              warn:{key:"warn",label:"주의",color:getCss("--amber")},
              high:{key:"high",label:"고혈압",color:getCss("--red")}};
-    if (sys < 90 || dia < 60) return C.low;
-    if (sys >= 140 || dia >= 90) return C.high;   // 고혈압 1·2기
+    if (sys >= 140 || dia >= 90) return C.high;   // 고혈압 1·2기 (수축기·이완기 중 하나라도 높으면 우선)
     if (sys >= 130 || dia >= 80) return C.warn;   // 고혈압 전단계
     if (sys >= 120) return C.warn;                // 주의혈압
+    if (sys < 90 || dia < 60) return C.low;       // 저혈압 (고혈압/주의가 아닐 때만 — 고립성 수축기고혈압 오분류 방지)
     return C.ok;                                  // 정상
   }
 
