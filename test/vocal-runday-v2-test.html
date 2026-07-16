@@ -6909,6 +6909,7 @@ let _lastDisplayedSIdx=-1;
 
 function _displayLoop(){
   if(!playing){_displayRafId=null;return;}
+  try{
   const ctx=gCtx();const now=ctx.currentTime;
   
   /* 현재 시점에 재생 중인(또는 직전에 시작된) 음 찾기 */
@@ -6937,7 +6938,8 @@ function _displayLoop(){
         document.getElementById('cur-n').textContent=n.name;
         document.getElementById('cur-o').textContent=n.oct;
         if(curMod){
-          document.getElementById('cur-key').textContent=m2n(curMod.startNote+note.si).full;
+          var _ck=document.getElementById('cur-key');
+          if(_ck) _ck.textContent=m2n(curMod.startNote+note.si).full;
         }
         const dt=note.dir==='up'?'↑ 상행':'↓ 하행';
         document.getElementById('dir-l').textContent=dt;
@@ -6955,8 +6957,10 @@ function _displayLoop(){
       _scheduledNotes.splice(0,curIdx);
     }
   }
-  
-  _displayRafId=requestAnimationFrame(_displayLoop);
+  }catch(e){ /* 표시 갱신 실패는 무시 — 소리/스케줄러는 계속 돈다 */ }
+  /* RAF 재귀는 예외와 무관하게 항상 보장 (표시 멈춤 = 먹통 증상 방지) */
+  if(playing){ _displayRafId=requestAnimationFrame(_displayLoop); }
+  else { _displayRafId=null; }
 }
 
 function litKey(midi){
@@ -7336,6 +7340,9 @@ if(coachAuto&&window.speechSynthesis)speechSynthesis.cancel();
 
 function runLoop(){
 if(!playing)return;
+/* [먹통 방지 2026-07-13] 스케줄 생성 중 어떤 예외가 나도 다음 틱 재예약을 보장한다.
+   iOS Safari에서 DOM/오디오 접근이 순간 실패하면 예전엔 loopT 재arm 전에 죽어 영구 정지(먹통)했다. */
+try{
 const ctx=gCtx(),spb=60/curBpm;
 if(sch.nx===0)sch.nx=ctx.currentTime+0.12;
 while(sch.nx<ctx.currentTime+0.38){
@@ -7394,7 +7401,8 @@ sch.nx+=spb*0.15;
 }
 }
 }
-loopT=setTimeout(runLoop,50);
+}catch(e){ /* 한 틱 실패는 삼키고 계속 진행 — 절대 멈추지 않는다 */ }
+finally{ if(playing){ loopT=setTimeout(runLoop,50); } }
 }
 
 function onDone(){
@@ -16885,6 +16893,27 @@ var PT_G_5D = [0,2,4,5,7,5,4,2,0];                          /* 5도 스케일 (�
 var PT_G_9D = [0,2,4,5,7,9,11,12,14,12,11,9,7,5,4,2,0];     /* 9도 스케일 (앱 DB 9D-A 동일) */
 var PT_G_REGIDX = { chest:0, mix:1, falsetto:2 };           /* 접촉 축: 강 → 중 → 약 */
 
+/* ═══ PVR 아이콘 세트 — 이모지 대신 인라인 SVG [2026-07-13]
+   스타일 교체는 이 함수 하나만 갈아끼우면 된다. (미리보기: pvr-icons-preview.html) */
+function _ptIcon(k, size, color){
+  /* PVR 아이콘 — 2안 채움 지오메트릭 (파형/블록). 이모지 대체.
+     falsetto/mix/chest = 파형 막대의 진폭·두께로 접촉량 표현. */
+  var s = size || 40, c = color || '#334155';
+  var W = 'width="' + s + '" height="' + s + '" viewBox="0 0 48 48"';
+  var P = {
+    falsetto: '<g fill="' + c + '"><rect x="8" y="22" width="3" height="4" rx="1.5" opacity=".35"/><rect x="15" y="19" width="3" height="10" rx="1.5" opacity=".5"/><rect x="22" y="16" width="3" height="16" rx="1.5" opacity=".65"/><rect x="29" y="19" width="3" height="10" rx="1.5" opacity=".5"/><rect x="36" y="22" width="3" height="4" rx="1.5" opacity=".35"/></g>',
+    mix: '<g fill="' + c + '"><rect x="8" y="19" width="3" height="10" rx="1.5" opacity=".5"/><rect x="15" y="14" width="3" height="20" rx="1.5" opacity=".7"/><rect x="22" y="10" width="3" height="28" rx="1.5"/><rect x="29" y="14" width="3" height="20" rx="1.5" opacity=".7"/><rect x="36" y="19" width="3" height="10" rx="1.5" opacity=".5"/></g>',
+    chest: '<g fill="' + c + '"><rect x="7" y="15" width="5" height="18" rx="2.5" opacity=".6"/><rect x="14" y="9" width="5" height="30" rx="2.5" opacity=".8"/><rect x="21" y="5" width="5" height="38" rx="2.5"/><rect x="28" y="9" width="5" height="30" rx="2.5" opacity=".8"/><rect x="35" y="15" width="5" height="18" rx="2.5" opacity=".6"/></g>',
+    free: '<path d="M6 34C12 34 12 14 20 14s10 16 16 16 6-10 6-10" stroke="' + c + '" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="20" cy="14" r="3.5" fill="' + c + '"/><circle cx="36" cy="30" r="3.5" fill="' + c + '"/>',
+    guide: '<g fill="' + c + '"><rect x="6" y="32" width="9" height="9" rx="2" opacity=".45"/><rect x="17" y="24" width="9" height="17" rx="2" opacity=".7"/><rect x="28" y="14" width="9" height="27" rx="2"/></g><path d="M8 26l10-8 10-6" stroke="' + c + '" stroke-width="2" fill="none" stroke-linecap="round" opacity=".5"/>',
+    lead: '<rect x="6" y="15" width="36" height="20" rx="3" fill="none" stroke="' + c + '" stroke-width="2.5"/><g fill="' + c + '"><rect x="14" y="15" width="4" height="11" rx="1"/><rect x="24" y="15" width="4" height="11" rx="1"/><rect x="33" y="15" width="4" height="11" rx="1"/></g>',
+    mic: '<rect x="19" y="7" width="10" height="20" rx="5" fill="' + c + '"/><path d="M13 23a11 11 0 0 0 22 0" stroke="' + c + '" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M24 34v6" stroke="' + c + '" stroke-width="2.5" stroke-linecap="round"/>',
+    done: '<circle cx="24" cy="24" r="17" fill="' + c + '"/><path d="M16 24.5l5.5 5.5L33 18" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+  };
+  return '<svg ' + W + '>' + (P[k] || P.done) + '</svg>';
+}
+
+
 function _ptRunGuided(onComplete){
   var done = function(){ try{ onComplete && onComplete(); }catch(e){} };
   var cancelled = false;
@@ -16893,17 +16922,23 @@ function _ptRunGuided(onComplete){
   var miss = { falsetto: 0,  mix: 0,  chest: 0  };
   var scaleMode = '5d';
 
-  /* 시작음 — 가성: 남 G3(55)·여 E4(64). 진성/강한진성: 최저음부터 훑어야 하므로 낮게 시작 + [반음↓] 제공 */
+  /* ── 음역 (전부 국제표기 / midi. 앱 화면 표기는 +1옥타브로 보임)
+     가성   : 남 A3(57)→B5(83)  ·  여 D4(62)→B6(95)
+              A3=220Hz는 훈련 스케일 '중성'의 시작음(DB startNote 57)과 동일. 상단은 휘슬 위까지.
+     진성/강한진성 : 남녀 C2(36) → 남 B5(83) / 여 B6(95)
+              하한 근거: Roubeau et al.(2009) EGG 실측 M1 하한 평균 = 남 E♭2(78Hz)·여 D3(147Hz).
+              C2(65Hz)는 그보다 낮은 '가장 낮은 성종' 기준이라, 실제 시작점은 최저음 프리스캔으로 정한다. */
+  var HI = isFemale ? 95 : 83;
   var STAGES = [
-    { key:'falsetto', name:'가성', emoji:'🫧', color:'#a855f7',
-      desc:'<b>가성</b>(성대 접촉이 <b>약한</b> 소리)으로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
-      start: isFemale ? 64 : 55 },
-    { key:'mix', name:'진성 (믹스)', emoji:'🌤️', color:'#84cc16',
+    { key:'falsetto', name:'가성', color:'#a855f7',
+      desc:'<b>가성</b> — 성대 접촉이 <b>약한</b> 소리로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
+      lo: (isFemale ? 62 : 57), hi: HI, scan: false },
+    { key:'mix', name:'진성 (믹스)', color:'#84cc16',
       desc:'<b>진성(믹스)</b> — 성대 접촉이 <b>적당한</b> 소리로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
-      start: isFemale ? 55 : 48 },
-    { key:'chest', name:'강한 진성', emoji:'🔥', color:'#3b82f6',
+      lo: 36, hi: HI, scan: true },
+    { key:'chest', name:'강한 진성', color:'#3b82f6',
       desc:'<b>강한 진성</b> — 성대 접촉이 <b>강한</b> 소리로<br>낼 수 있는 <b>모든 음역</b>을 <b>‘아’</b> 모음으로 내주세요.',
-      start: isFemale ? 55 : 48 }
+      lo: 36, hi: HI, scan: true }
   ];
 
   var ov = document.getElementById('pt-g-overlay');
@@ -16923,13 +16958,13 @@ function _ptRunGuided(onComplete){
   }
   function nn(m){ try{ return _freqToNote(440 * Math.pow(2, (m - 69) / 12)).note; }catch(e){ return String(m); } }
   function pat(){ return scaleMode === '9d' ? PT_G_9D : PT_G_5D; }
-  function beatMs(){ return 60000 / (scaleMode === '9d' ? 140 : 120); }
+  function beatMs(){ return 60000 / 140; }   /* 5도·9도 모두 BPM 140 (음당 약 26프레임 — 판정에 충분) */
 
   intro();
 
   /* ── 1. 리드음 방식 */
   function intro(){
-    show('<div style="font-size:34px">🎯</div>'
+    show(_ptIcon('guide', 44, '#16a34a')
       + '<div style="font-weight:900;font-size:16px;margin:10px 0 6px">가이드 측정</div>'
       + '<div style="font-size:12.5px;color:#475569;line-height:1.7;margin-bottom:12px">가성 · 진성(믹스) · 강한 진성을 순서대로 내면<br><b>그 자리에서 등고선이 그려집니다.</b><br><span style="color:#94a3b8">측정을 한 번 더 하지 않습니다</span></div>'
       + '<div style="text-align:left;font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7">'
@@ -16948,7 +16983,7 @@ function _ptRunGuided(onComplete){
     if(si >= STAGES.length){ finishAll(); return; }
     var st = STAGES[si];
     show('<div style="font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:.5px">STEP ' + (si+1) + ' / 3</div>'
-      + '<div style="font-size:34px;margin-top:6px">' + st.emoji + '</div>'
+      + '<div style="margin-top:8px">' + _ptIcon(st.key, 46, st.color) + '</div>'
       + '<div style="font-weight:900;font-size:17px;margin:6px 0 8px;color:' + st.color + '">' + st.name + '</div>'
       + '<div style="font-size:12.5px;color:#475569;line-height:1.75;margin-bottom:14px">' + st.desc + '</div>'
       + (scaleMode === 'none'
@@ -16957,17 +16992,66 @@ function _ptRunGuided(onComplete){
       + '<button id="pt-g-go" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>');
     document.getElementById('pt-g-go').onclick = function(){
       if(scaleMode === 'none') sweep(si, st);
-      else ladder(si, st, st.start, 0);
+      else if(st.scan) prescan(si, st);          /* 진성/강한진성: 최저음부터 훑어야 하므로 프리스캔 */
+      else ladder(si, st, st.lo, 0);
     };
+  }
+
+  /* ── 2-b. 최저음 프리스캔 — 못 내는 저음을 통째로 건너뛴다
+     C2(36)부터 무작정 올리면 여성은 30반음 가까이 헛돌아 측정이 20분을 넘긴다.
+     3초간 최저음을 받아 그 2반음 아래부터 시작한다. 실패하면 학술 평균값으로 폴백. */
+  function prescan(si, st){
+    if(!_ptAnalyser || !_ptDetector || !_ptCtx){ ladder(si, st, st.lo, 0); return; }
+    var buf = new Float32Array(_ptAnalyser.fftSize);
+    var lowest = null, t0 = null, running = false;
+    show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · 최저음 확인</div>'
+      + '<div style="font-weight:900;font-size:15.5px;margin:12px 0 8px;color:#334155">낼 수 있는 <b>가장 낮은 소리</b>를<br>‘아’로 3초간 내주세요</div>'
+      + '<div style="font-size:11.5px;color:#64748b;line-height:1.6;margin-bottom:12px">못 내는 저음을 건너뛰기 위한 확인입니다.<br>이 소리는 등고선에 기록되지 않습니다.</div>'
+      + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:12px">'
+      + '<div style="font-size:22px;font-weight:900;color:' + st.color + '" id="pt-g-plow">–</div>'
+      + '<div style="font-size:11px;color:#94a3b8;margin-top:3px">감지된 최저음</div></div>'
+      + '<button id="pt-g-pgo" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>'
+      + '<button id="pt-g-pskip" style="' + BTN + ';background:#fff;color:#64748b;border:1.5px solid #e2e8f0;font-size:12.5px">건너뛰기 (' + nn(st.lo) + '부터)</button>');
+    var eLow = document.getElementById('pt-g-plow');
+    document.getElementById('pt-g-pskip').onclick = function(){ running = false; ladder(si, st, st.lo, 0); };
+    document.getElementById('pt-g-pgo').onclick = function(){
+      if(running) return;
+      running = true; t0 = performance.now();
+      document.getElementById('pt-g-pgo').textContent = '듣는 중…';
+      scanLoop();
+    };
+    function scanLoop(){
+      if(cancelled || !running) return;
+      try{
+        _ptAnalyser.getFloatTimeDomainData(buf);
+        var pr = _ptDetector.findPitch(buf, _ptCtx.sampleRate);
+        var pitch = pr[0], clarity = pr[1];
+        var rms = 0, k;
+        for(k = 0; k < buf.length; k++) rms += buf[k] * buf[k];
+        rms = Math.sqrt(rms / buf.length);
+        var dB = (rms > 0 ? 20 * Math.log10(rms) : -100) + 94;
+        if(clarity > 0.9 && dB > _ptVoiceGateDb && pitch > 55 && pitch < 700){
+          var m = _freqToNote(pitch).midi;
+          if(lowest === null || m < lowest){ lowest = m; if(eLow) eLow.textContent = nn(m); }
+        }
+        if(performance.now() - t0 > 3200){
+          running = false;
+          var startM = (lowest !== null) ? Math.max(st.lo, lowest - 2) : (isFemale ? 50 : 43);  /* 폴백: 여 D3 / 남 G2 */
+          ladder(si, st, startM, 0);
+          return;
+        }
+      }catch(e){}
+      requestAnimationFrame(scanLoop);
+    }
   }
 
   /* ── 3-a. 리드음 사다리 */
   function ladder(si, st, cur, silent){
     if(cancelled) return;
-    if(cur > 96 || cur < 36 || silent >= 2){ endStage(si, st); return; }   /* 2회 연속 무성 → 종료 */
+    if(cur > st.hi || cur < 36 || silent >= 2){ endStage(si, st); return; }   /* 상한 도달 또는 2회 연속 무성 → 종료 */
     var P = pat(), bm = beatMs();
     show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
-      + '<div style="font-size:34px;margin-top:8px">🎹</div>'
+      + '<div style="margin-top:8px">' + _ptIcon('lead', 42, '#64748b') + '</div>'
       + '<div style="font-weight:900;font-size:15px;margin:10px 0 6px;color:#334155">리드음 재생 중</div>'
       + '<div id="pt-g-dots" style="margin-top:10px;font-size:16px;letter-spacing:2px;color:#cbd5e1">' + P.map(function(){ return '·'; }).join('') + '</div>'
       + '<div style="font-size:11.5px;color:#94a3b8;margin-top:10px">이 소리는 녹음되지 않습니다</div>');
@@ -16982,7 +17066,7 @@ function _ptRunGuided(onComplete){
     setTimeout(function(){
       if(cancelled) return;
       show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
-        + '<div style="font-size:40px;margin-top:10px">🎤</div>'
+        + '<div style="margin-top:10px">' + _ptIcon('mic', 44, st.color) + '</div>'
         + '<div style="font-weight:900;font-size:15.5px;margin:8px 0 12px;color:' + st.color + '">같은 스케일을 ‘아’로 내주세요</div>'
         + '<button id="pt-g-rec" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>'
         + '<div style="display:flex;gap:6px;margin-top:8px">'
@@ -17002,7 +17086,7 @@ function _ptRunGuided(onComplete){
   /* ── 3-b. 자유 스윕 */
   function sweep(si, st){
     show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + '</div>'
-      + '<div style="font-size:38px;margin-top:8px">🎤</div>'
+      + '<div style="margin-top:8px">' + _ptIcon('mic', 42, st.color) + '</div>'
       + '<div style="font-weight:900;font-size:15px;margin:8px 0 12px;color:' + st.color + '">낮은 음부터 천천히 훑어 올려주세요</div>'
       + '<button id="pt-g-rec" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>');
     document.getElementById('pt-g-rec').onclick = function(){ rec(si, st, null, 60000, function(){ endStage(si, st); }); };
@@ -17089,14 +17173,14 @@ function _ptRunGuided(onComplete){
       var nHit = got[k].filter(function(r){ return r.algo === k; }).length;
       tot += nAll; hit += nHit;
       var pc = Math.round(100 * nHit / nAll);
-      var label = (k === 'falsetto' ? '🫧 가성' : k === 'mix' ? '🌤️ 진성(믹스)' : '🔥 강한 진성');
+      var label = (k === 'falsetto' ? '가성' : k === 'mix' ? '진성(믹스)' : '강한 진성');
       var col = pc >= 80 ? '#16a34a' : pc >= 50 ? '#f59e0b' : '#dc2626';
       rows += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px">'
             + '<span style="color:#334155;font-weight:700">' + label + '</span>'
             + '<span style="font-weight:800;color:' + col + '">' + pc + '% 일치</span></div>';
     });
     var overall = tot ? Math.round(100 * hit / tot) : 0;
-    show('<div style="font-size:36px">📊</div>'
+    show(_ptIcon('done', 44, '#16a34a')
       + '<div style="font-weight:900;font-size:16px;margin:10px 0 4px">측정 완료</div>'
       + '<div style="font-size:11.5px;color:#94a3b8;margin-bottom:12px">등고선은 자유 측정과 <b>같은 기준</b>으로 판정했습니다</div>'
       + '<div style="text-align:left;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:10px">'
@@ -17127,15 +17211,22 @@ function _ptChooseMode(){
   var BTN = 'width:100%;padding:13px;border:none;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px';
   ov.innerHTML = '<button id="pt-mo-x" title="취소" style="position:fixed;top:18px;right:20px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;line-height:1;z-index:100000">✕</button>'
     + '<div style="' + CARD + '">'
-    + '<div style="font-size:34px">🎚️</div>'
-    + '<div style="font-weight:900;font-size:16px;margin:10px 0 12px">측정 방식을 골라주세요</div>'
-    + '<div style="text-align:left;font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;margin-bottom:14px;line-height:1.75">'
-    + '<b style="color:#334155">자유 측정</b> — 편하게 전 음역을 훑습니다. 기존 방식 그대로.<br>'
-    + '<b style="color:#334155">가이드 측정</b> — 가성 · 진성(믹스) · 강한 진성을 순서대로 내면 <b>그 자리에서 등고선이 그려집니다.</b> 리드음(5도/9도)을 반음씩 올려주고, <b>선언한 성구로 측정된 소리만</b> 기록합니다.'
-    + '<br><span style="color:#16a34a;font-weight:800">✓ 판정 기준은 두 모드가 완전히 동일합니다</span>'
+    + '<div style="font-weight:900;font-size:17px;margin-bottom:4px">측정 방식</div>'
+    + '<div style="font-size:12px;color:#94a3b8;margin-bottom:16px">두 방식 모두 <b>같은 기준</b>으로 판정합니다</div>'
+
+    + '<div id="pt-mo-free" style="text-align:left;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer">'
+    +   '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">' + _ptIcon('free', 30, '#2563eb')
+    +   '<div><div style="font-weight:900;font-size:14.5px;color:#0f172a">자유 측정</div>'
+    +   '<div style="font-size:11px;color:#94a3b8;font-weight:700">약 2~3분</div></div></div>'
+    +   '<div style="font-size:11.5px;color:#64748b;line-height:1.65">낮은 음부터 높은 음까지 편하게 소리를 내면, 앱이 <b>알아서 가성·진성·강한진성을 판정</b>해 등고선을 그립니다. 빠르게 내 음역을 보고 싶을 때.</div>'
     + '</div>'
-    + '<button id="pt-mo-guide" style="' + BTN + ';background:#16a34a;color:#fff">🎯 가이드 측정 (권장)</button>'
-    + '<button id="pt-mo-free" style="' + BTN + ';background:#fff;color:#2563eb;border:1.5px solid #93c5fd">자유 측정</button>'
+
+    + '<div id="pt-mo-guide" style="text-align:left;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;cursor:pointer">'
+    +   '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">' + _ptIcon('guide', 30, '#16a34a')
+    +   '<div><div style="font-weight:900;font-size:14.5px;color:#0f172a">가이드 측정</div>'
+    +   '<div style="font-size:11px;color:#94a3b8;font-weight:700">약 6~8분</div></div></div>'
+    +   '<div style="font-size:11.5px;color:#64748b;line-height:1.65">가성 · 진성(믹스) · 강한 진성을 <b>하나씩 안내에 따라</b> 냅니다. 리드음을 반음씩 올려주고, <b>낸다고 한 소리로 실제 측정된 것만</b> 기록합니다. 어떤 소리를 내야 할지 잘 모를 때.</div>'
+    + '</div>'
     + '</div>';
   function close(){ ov.style.display = 'none'; ov.innerHTML = ''; }
   document.getElementById('pt-mo-x').onclick = function(){ close(); try{ _closePitchTest(); }catch(e){} };
