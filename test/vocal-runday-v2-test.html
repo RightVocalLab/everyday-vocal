@@ -12160,27 +12160,45 @@ async function _hwUploadConfirm(){
     const curMeta = metaSnap.val() || {};
     const newVer = (parseInt(curMeta.schemaVersion, 10) || 0) + 1;
     
-    /* 2. students/* 전체 갱신 (트랜잭션 대신 batch) */
-    const updates = {};
-    /* 추가/변경 학생: 새 데이터 */
-    _hwUploadParsed.students.forEach(function(s){
-      updates['students/' + s.name] = {
-        pw: s.pw,
-        homework: s.homework,
-        updatedAt: now,
-      };
+    /* 2. students/* 갱신
+       ★ [2026-07-22 수정] 예전엔 db.ref().update({멀티경로})로 '루트'에서 한 번에 썼는데,
+          RTDB 최상위 규칙이 ".write": false 여서 루트 시작 멀티경로 update가 통째로 PERMISSION_DENIED로 거부됐다.
+          (개별 경로 ref('students/이름').set(...)는 students 규칙만 타서 정상 통과 — 콘솔 실측 확인함)
+          → 학생별 개별 set + meta 개별 update로 분리한다. 실패한 학생은 모아서 보고한다. */
+    const okStudents = [];
+    const failStudents = [];
+    /* 2-1. 추가/변경 학생: 개별 경로 set */
+    for(let _i = 0; _i < _hwUploadParsed.students.length; _i++){
+      const s = _hwUploadParsed.students[_i];
+      try{
+        await db.ref('students/' + s.name).set({
+          pw: s.pw,
+          homework: s.homework,
+          updatedAt: now,
+        });
+        okStudents.push(s.name);
+      }catch(_e){
+        console.error('[hwUpload] 학생 저장 실패:', s.name, _e.code || _e.message);
+        failStudents.push(s.name + ' (' + (_e.code || _e.message) + ')');
+      }
+    }
+    /* 2-2. 제거된 학생: 개별 경로 remove */
+    for(let _i = 0; _i < diff.studentsRemoved.length; _i++){
+      const _rmName = diff.studentsRemoved[_i];
+      try{ await db.ref('students/' + _rmName).remove(); }
+      catch(_e){ console.error('[hwUpload] 학생 삭제 실패:', _rmName, _e.code); failStudents.push(_rmName + ' 삭제(' + (_e.code||'') + ')'); }
+    }
+    /* 2-3. 하나라도 실패했으면 meta를 올리지 않는다 (버전만 올라가고 데이터는 안 바뀌는 불일치 방지) */
+    if(failStudents.length > 0){
+      throw new Error('일부 학생 저장 실패 (' + failStudents.length + '명): ' + failStudents.join(', '));
+    }
+    /* 2-4. meta 개별 update (students 경로 규칙 통과 후) */
+    await db.ref('students_meta').update({
+      schemaVersion: newVer,
+      lastUpdatedAt: now,
+      lastUpdatedBy: user.email,
+      studentCount: _hwUploadParsed.students.length,
     });
-    /* 제거된 학생: null로 삭제 */
-    diff.studentsRemoved.forEach(function(name){
-      updates['students/' + name] = null;
-    });
-    /* meta 업데이트 */
-    updates['students_meta/schemaVersion'] = newVer;
-    updates['students_meta/lastUpdatedAt'] = now;
-    updates['students_meta/lastUpdatedBy'] = user.email;
-    updates['students_meta/studentCount'] = _hwUploadParsed.students.length;
-    
-    await db.ref().update(updates);
     
     /* 3. 로컬 STUDENTS_DB 갱신 + localStorage 캐시 */
     STUDENTS_DB = _hwUploadParsed.students.map(function(s){
