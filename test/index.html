@@ -301,6 +301,10 @@
   .today .tcard.tap{cursor:pointer}
   .today .dday .big{font-size:23px}
   .today .ddate{font-size:11px; opacity:.85; margin-top:3px}
+  .today .nextChemo{margin-top:10px; background:rgba(255,255,255,.16); border-radius:12px; padding:11px 13px;
+    font-size:13.5px; font-weight:700; line-height:1.45; letter-spacing:-.2px; display:none}
+  .today .nextChemo.show{display:block}
+  .today .nextChemo .nc-place{display:block; font-weight:600; opacity:.9; font-size:12.5px; margin-top:2px}
 
   /* ===== 복약 스케줄 ===== */
   .medslot{border:1px solid var(--line); border-radius:16px; padding:14px 15px; margin-bottom:14px; background:#FBFBFA}
@@ -419,6 +423,7 @@
         <div class="lb">💊 복약</div>
       </div>
     </div>
+    <div class="nextChemo tap" id="nextChemoLine"></div>
   </div>
 
   <!-- ===== 인슐린 ===== -->
@@ -765,9 +770,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-07-22b";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-07-22d";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 7·29예약+발열기준+연락처 정리"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 다음항암 예약시간 표시"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1049,6 +1054,10 @@ const firebaseConfig = {
 
   // ================= 항암 D-day & 오늘의 돌봄 =================
   const CHEMO_DATES = ["2026-07-29","2026-08-05","2026-08-26","2026-09-02","2026-09-09"]; // 항암 예정일(7/22 완료 제거). 8/5·8/26·9/2·9/9는 추정 — 확정 시 교체
+  // 확정된 예약 시간·병상 (예약 확정되면 여기에 추가. 없는 날짜는 시간 미표시)
+  const CHEMO_INFO = {
+    "2026-07-29": { time:"오후 2:30", place:"17호실 3번 병상" }
+  };
   function nextChemo(){
     const today = dayKey();
     for (const d of CHEMO_DATES){ if (d >= today) return d; }
@@ -1070,6 +1079,23 @@ const firebaseConfig = {
     const dd = ddayText(nextChemo());
     $("ddayBig").textContent = dd.big;
     $("ddayDate").textContent = dd.sub;
+    // 다음 항암 상세 줄 (날짜·시간·병상)
+    const ncDate = nextChemo();
+    const ncEl = $("nextChemoLine");
+    if (ncEl){
+      if (ncDate){
+        const info = CHEMO_INFO[ncDate] || {};
+        const t = new Date(ncDate+"T00:00:00");
+        const wd = "일월화수목금토"[t.getDay()];
+        const [ , mm, dd2 ] = ncDate.split("-");
+        const timeTxt = info.time ? ` ${info.time}` : " · 시간 미정";
+        const placeTxt = info.place ? `<span class="nc-place">📍 ${info.place}</span>` : "";
+        ncEl.innerHTML = `🗓️ 다음 항암 ${+mm}/${+dd2}(${wd})${timeTxt}${placeTxt}`;
+        ncEl.classList.add("show");
+      } else {
+        ncEl.classList.remove("show");
+      }
+    }
     // 인슐린 오늘
     const insDone = SLOTS.filter(k=>todaySlots[k] && todaySlots[k].done).length;
     $("todayInsBig").textContent = `${insDone}/3`;
@@ -1087,6 +1113,7 @@ const firebaseConfig = {
   $("todayIns").addEventListener("click", ()=>openAccByName("insulin"));
   $("todayMed").addEventListener("click", ()=>openAccByName("meds"));
   $("ddayCard").addEventListener("click", ()=>openAccByName("guide"));
+  $("nextChemoLine").addEventListener("click", ()=>openAccByName("records"));
 
 
   let ctx = "공복";   // 혈당 측정 시점 (기본 칩과 일치). 선언 누락 시 저장에서 ReferenceError 발생했었음.
@@ -1528,25 +1555,34 @@ const firebaseConfig = {
       tags:["유전자","NGS","재평가","보조치료","고주파"] },
   ];
 
-  async function seedGuideIfEmpty(){
+  const SEED_VERSION = 3;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
+  async function syncGuideSeed(){
     try{
       const metaRef = db.collection("meta").doc("guideSeed");
       const m = await metaRef.get();
-      if (m.exists && m.data().done) return;
-      const snap = await guideCol.limit(1).get();
-      if (!snap.empty){ await metaRef.set({done:true}, {merge:true}); return; }
-      const batch = db.batch();
-      SEED_GUIDE.forEach((g,i)=>{
+      const curV = (m.exists && m.data().version) || 0;
+      if (curV >= SEED_VERSION) return;  // 이미 최신이면 아무것도 안 함
+
+      // 1) 기존 '기본자료' 항목만 삭제 (가족이 직접 추가한 항목 by!=="기본자료"는 보존)
+      const old = await guideCol.where("by","==","기본자료").get();
+      let batch = db.batch(); let ops = 0;
+      const flush = async ()=>{ if(ops){ await batch.commit(); batch = db.batch(); ops = 0; } };
+      for (const d of old.docs){ batch.delete(d.ref); if(++ops >= 400) await flush(); }
+      // 2) 최신 SEED_GUIDE 재입력
+      for (let i=0;i<SEED_GUIDE.length;i++){
         const ref = guideCol.doc();
-        batch.set(ref, Object.assign({}, g, { by:"기본자료", at: Date.now() - (SEED_GUIDE.length - i)*1000,
+        batch.set(ref, Object.assign({}, SEED_GUIDE[i], { by:"기본자료", seedVer:SEED_VERSION,
+          at: Date.now() - (SEED_GUIDE.length - i)*1000,
           createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
-      });
-      batch.set(metaRef, {done:true});
+        if(++ops >= 400) await flush();
+      }
+      // 3) 버전 기록
+      batch.set(metaRef, { version:SEED_VERSION, done:true }, {merge:true});
       await batch.commit();
-      console.log("가이드 기본자료 입력 완료");
+      console.log("가이드 기본자료 v"+SEED_VERSION+" 갱신 완료 (삭제 "+old.size+"건 → 재입력 "+SEED_GUIDE.length+"건)");
     }catch(e){ console.error("가이드 seed 실패:", e); }
   }
-  seedGuideIfEmpty();
+  syncGuideSeed();
 
   const GUIDE_SYN = {
     "열":["발열","체온","fever","고열","미열"], "발열":["열","체온","fever"],
