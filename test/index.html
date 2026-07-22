@@ -770,9 +770,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-07-22d";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-07-22e";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 다음항암 예약시간 표시"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 진료기록 전화 자동링크"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1624,7 +1624,7 @@ const firebaseConfig = {
     if (!q){ area.innerHTML='<div class="ansHint">궁금한 증상·상황을 입력하면, 아빠 기록·안내지를 토대로 정리해서 답해드려요.</div>'; return; }
     const scored = allGuide.map(it=>({it, s:scoreGuide(it,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,4);
     if (!scored.length){
-      area.innerHTML = `<div class="ans emer"><div class="acat">🚨 기록에 없는 내용이에요</div><div class="abody">이 내용은 아빠 기록·안내지에 없어서 정확히 답하기 어려워요. 지어내지 않을게요.\n위급하면 119, 그 외엔 암병원 3층 항암치료센터(02-2228-4080/4081)나 소화기내과 외래(02-2228-1814)로 문의하세요.</div></div>`;
+      area.innerHTML = `<div class="ans emer"><div class="acat">🚨 기록에 없는 내용이에요</div><div class="abody">${linkifyTel("이 내용은 아빠 기록·안내지에 없어서 정확히 답하기 어려워요. 지어내지 않을게요.\n위급하면 119, 그 외엔 암병원 3층 항암치료센터(02-2228-4080/4081)나 소화기내과 외래(02-2228-1814)로 문의하세요.")}</div></div>`;
       return;
     }
     const top = scored[0].it;
@@ -1712,7 +1712,7 @@ const firebaseConfig = {
              <span class="rt-t">${escape(t.title)}</span>
              <span class="rt-chev">▾</span>
            </button>
-           <div class="rectopic-body">${escape(t.body)}</div>
+           <div class="rectopic-body">${linkifyTel(t.body)}</div>
          </div>`).join("");
       return `<div class="recday ${di===0?'open':''}" data-day="${di}">
           <button class="recday-h" type="button">
