@@ -16920,7 +16920,7 @@ var PT_G_9D = [0,2,4,5,7,9,11,12,14,12,11,9,7,5,4,2,0];     /* 9도 스케일 (�
    - 정밀: 반음마다 [시작] 버튼 눌러 측정. BPM 140. 약 20분+.
    5도(9음)는 반음씩 올리면 검은건반도 다음 시작음 스케일이 지나가며 전부 커버됨. */
 var PT_G_NORMAL_BPM = 200;   /* 노말모드 BPM (음당 300ms=18프레임, 판정최소 200ms의 1.5배 — 안전) */
-var PT_G_PRECISE_BPM = 140;  /* 정밀모드 BPM */
+var PT_G_PRECISE_BPM = 200;  /* 정밀모드 BPM (노말과 동일 — 이 템포가 측정하기 적당) */
 var PT_G_REGIDX = { chest:0, mix:1, falsetto:2 };           /* 접촉 축: 강 → 중 → 약 */
 
 /* ═══ PVR 아이콘 세트 — 이모지 대신 인라인 SVG [2026-07-13]
@@ -16951,6 +16951,7 @@ function _ptRunGuided(onComplete){
   var got  = { falsetto: [], mix: [], chest: [] };
   var miss = { falsetto: 0,  mix: 0,  chest: 0  };
   var scaleMode = 'normal';
+  var _gEnded = false;   /* 성구 종료 버튼 눌림 플래그 (자동진행 중 다음 음 차단용) */
 
   /* ── 음역 (전부 국제표기 / midi. 앱 화면 표기는 +1옥타브로 보임)
      가성   : 남 A3(57)→B5(83)  ·  여 D4(62)→B6(95)
@@ -16996,15 +16997,28 @@ function _ptRunGuided(onComplete){
 
   /* ── 1. 리드음 방식 */
   function intro(){
+    /* ── 튜토리얼(1회) → 모드 선택 순서 ── */
     show(_ptIcon('guide', 44, '#16a34a')
-      + '<div style="font-weight:900;font-size:16px;margin:10px 0 6px">가이드 측정</div>'
-      + '<div style="font-size:12.5px;color:#475569;line-height:1.7;margin-bottom:12px">가성 · 진성(믹스) · 강한 진성을 순서대로 내면<br><b>그 자리에서 등고선이 그려집니다.</b><br><span style="color:#94a3b8">측정을 한 번 더 하지 않습니다</span></div>'
-      + '<div style="text-align:left;font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7">'
-      + '리드음을 <b>반음씩 올려가며</b> 들려드립니다. 음역은 정해두지 않습니다 — <b>낼 수 있는 데까지</b>.<br><b>리드음이 끝나고 1초 뒤 [시작]</b>을 누르면 녹음됩니다. 리드음은 녹음되지 않습니다.</div>'
+      + '<div style="font-weight:900;font-size:16px;margin:10px 0 8px">가이드 측정이 처음이신가요?</div>'
+      + '<div style="text-align:left;font-size:12px;color:#475569;line-height:1.85;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:13px 15px;margin-bottom:14px">'
+      + '<div style="margin-bottom:7px"><b style="color:#0f172a">① 순서</b> — 가성 → 진성(믹스) → 강한 진성을 차례로 냅니다.</div>'
+      + '<div style="margin-bottom:7px"><b style="color:#0f172a">② 리드음</b> — 스케일을 먼저 들려드립니다. <b>이 소리는 녹음되지 않습니다.</b></div>'
+      + '<div style="margin-bottom:7px"><b style="color:#0f172a">③ 따라 내기</b> — 리드음이 끝나면 <b>같은 스케일을 ‘아’ 모음으로</b> 따라 냅니다.</div>'
+      + '<div style="margin-bottom:7px"><b style="color:#0f172a">④ 진행</b> — 반음씩 올라갑니다. <b>낼 수 있는 데까지</b>만, 못 올리면 자동으로 멈춥니다.</div>'
+      + '<div><b style="color:#0f172a">⑤ 등고선</b> — 내는 즉시 그 자리에 그려집니다. 측정을 한 번 더 하지 않습니다.</div></div>'
+      + '<button id="pt-g-tut-ok" style="' + BTN + ';background:#16a34a;color:#fff">이해했어요 · 모드 선택</button>'
+      + '<button id="pt-g-tut-skip" style="' + BTN + ';background:#fff;color:#94a3b8;border:1.5px solid #e2e8f0;font-size:12px">튜토리얼 건너뛰기</button>');
+    document.getElementById('pt-g-tut-ok').onclick   = pickMode;
+    document.getElementById('pt-g-tut-skip').onclick = pickMode;
+  }
+
+  function pickMode(){
+    show(_ptIcon('guide', 44, '#16a34a')
+      + '<div style="font-weight:900;font-size:16px;margin:10px 0 10px">측정 방식 선택</div>'
       + '<button id="pt-g-normal" style="' + BTN + ';background:#16a34a;color:#fff">노말 측정 <span style="font-weight:700;opacity:.85">· 빠름 · 자동진행</span></button>'
       + '<div style="font-size:10.5px;color:#94a3b8;margin:2px 0 8px;line-height:1.5">리드음을 듣고 따라 내면 자동으로 다음 음으로 넘어갑니다. 버튼 누를 필요 없이 쭉 진행. 초심자·빠른 측정용.</div>'
       + '<button id="pt-g-precise" style="' + BTN + ';background:#2563eb;color:#fff">정밀 측정 <span style="font-weight:700;opacity:.85">· 반음씩 · 수동</span></button>'
-      + '<div style="font-size:10.5px;color:#94a3b8;margin:2px 0 8px;line-height:1.5">5도 스케일로 반음마다 [시작]을 눌러 촘촘히 측정합니다. 시간이 오래 걸리지만 정확한 음역 기록용.</div>'
+      + '<div style="font-size:10.5px;color:#94a3b8;margin:2px 0 8px;line-height:1.5">반음마다 [시작]을 눌러 촘촘히 측정합니다. 시간이 더 걸리지만 정확한 음역 기록용.</div>'
       + '<button id="pt-g-free" style="' + BTN + ';background:#fff;color:#64748b;border:1.5px solid #e2e8f0;font-size:12.5px">리드음 없이 자유 스윕</button>');
     document.getElementById('pt-g-normal').onclick  = function(){ scaleMode = 'normal';  runStage(0); };
     document.getElementById('pt-g-precise').onclick = function(){ scaleMode = 'precise'; runStage(0); };
@@ -17022,7 +17036,9 @@ function _ptRunGuided(onComplete){
       + '<div style="font-size:12.5px;color:#475569;line-height:1.75;margin-bottom:14px">' + st.desc + '</div>'
       + (scaleMode === 'none'
           ? '<div style="font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.6">낮은 음 → 높은 음으로 <b>천천히</b> 훑어 올려주세요.</div>'
-          : '<div style="font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.6">' + (scaleMode === '9d' ? '9도' : '5도') + ' 스케일을 <b>' + nn(st.start) + '</b>부터 반음씩 올려 들려드립니다.<br>더 낮게 시작하려면 [반음 ↓]를 누르세요.</div>')
+          : (st.scan
+              ? '<div style="font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.6">먼저 낼 수 있는 <b>가장 낮은 음</b>을 확인한 뒤,<br>거기서부터 5도 스케일을 반음씩 올려 들려드립니다.<br>리드음을 듣고 <b>같은 스케일을 ‘아’로</b> 따라 내세요.</div>'
+              : '<div style="font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.6">5도 스케일을 <b>' + nn(st.lo) + '</b>부터 반음씩 올려 들려드립니다.<br>리드음을 듣고 <b>같은 스케일을 ‘아’로</b> 따라 내세요.</div>'))
       + '<button id="pt-g-go" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>');
     document.getElementById('pt-g-go').onclick = function(){
       if(scaleMode === 'none') sweep(si, st);
@@ -17099,7 +17115,7 @@ function _ptRunGuided(onComplete){
     });
     setTimeout(function(){
       if(cancelled) return;
-      var recDur = P.length * bm + 400;   /* 녹음 시간 = 리드음 길이 + 약간 여유 */
+      var recDur = P.length * bm + 1400;   /* 녹음 시간 = 리드음 길이 + 1초 여유 (따라 부를 시간 확보) */
       if(isAuto()){
         /* ── 노말: 확인 버튼 없이 리드음 끝→바로 녹음→끝나면 자동 다음 음 ── */
         show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
@@ -17108,8 +17124,11 @@ function _ptRunGuided(onComplete){
           + '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px">리드음이 끝나면 자동으로 다음 음으로 넘어갑니다</div>'
           + '<button id="pt-g-end" style="' + MINI + ';background:#fee2e2;color:#b91c1c;width:auto;padding:8px 16px">성구 종료</button>');
         var eend = document.getElementById('pt-g-end');
-        if(eend) eend.onclick = function(){ endStage(si, st); };
-        rec(si, st, cur, recDur, function(n){ ladder(si, st, cur + 1, n > 0 ? 0 : silent + 1); });
+        if(eend) eend.onclick = function(){ _gEnded = true; endStage(si, st); };
+        rec(si, st, cur, recDur, function(n){
+          if(_gEnded){ _gEnded = false; return; }   /* 성구 종료 눌렀으면 다음 음으로 안 넘어감 */
+          ladder(si, st, cur + 1, n > 0 ? 0 : silent + 1);
+        });
       } else {
         /* ── 정밀: [시작] 버튼 눌러야 녹음. 반음↓/건너뛰기/종료 제공 ── */
         show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
@@ -18178,6 +18197,19 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      글리산도 M2→M1 하강 전환점도 279Hz(C#4)로, 208Hz 아래에서 M2 유지는 관측되지 않음.
      → 강등 전용(승격 없음) = 기존 mix/chest 판정 영향 0. */
   if(isFemale && result === 'falsetto' && f0 < 208){
+    result = 'mix';
+  }
+
+  /* [실측 2026-07-25 — 여성 C6+ 고음 가성/진성 분리]
+     문제: 여성 C6(1047Hz) 이상에서 진성(믹스)을 전부 가성으로 오판.
+     실측 2파일(가성만 1315f / 진성 319f) C6+ 구간 분석:
+       H1H2 중앙 = 가성 30.1 / 진성 15.0 (거의 겹침 없음, 균형정확도 96%).
+     논문 근거: H1-H2는 가성>믹스>흉성 순으로 큼 (Sundberg 2001; Herbst 2021 J Voice;
+       Keating 2014). 모달 H1-H2 3~15dB, 가성 10.7~34.3dB (Sundberg&Högset).
+     → 여성 C6+ 가성 판정이라도 H1H2 < 20이면 진성계열(mix)로 강등.
+     검증: 진성 96% 정상화, 가성 오강등 6%만. C6 미만은 f0 조건으로 미적용(기존 유지).
+     강등 전용(승격 없음) = 기존 mix/chest 판정 영향 0. OR 확장이라 회귀 불가. */
+  if(isFemale && result === 'falsetto' && f0 >= 1047 && h1h2 < 20){
     result = 'mix';
   }
 
