@@ -16913,8 +16913,14 @@ function _ptRegCalCompute(F, M, C){
    · 음역을 고정하지 않는다. 리드음은 반음씩 사다리로 따라 올라갈 뿐 범위를 정하지 않는다.
      (훈련도에 따라 강한진성으로 가성역까지 내는 사람도, 믹스로 저음까지 내는 사람도 있다)
    ═══════════════════════════════════════════════════════════════════ */
-var PT_G_5D = [0,2,4,5,7,5,4,2,0];                          /* 5도 스케일 (앱 DB 5D-A 동일) */
-var PT_G_9D = [0,2,4,5,7,9,11,12,14,12,11,9,7,5,4,2,0];     /* 9도 스케일 (앱 DB 9D-A 동일) */
+var PT_G_5D = [0,2,4,5,7,5,4,2,0];                          /* 5도 스케일 (앱 DB 5D-A 동일) — 정밀모드 */
+var PT_G_9D = [0,2,4,5,7,9,11,12,14,12,11,9,7,5,4,2,0];     /* 9도 스케일 (앱 DB 9D-A 동일) — 정밀모드 */
+/* 노말·정밀 모두 5도 스케일 반음씩. 차이는 진행 방식:
+   - 노말: 확인버튼 없이 리드음→자동 녹음→자동 다음 음. BPM 200(빠름). 약 13분.
+   - 정밀: 반음마다 [시작] 버튼 눌러 측정. BPM 140. 약 20분+.
+   5도(9음)는 반음씩 올리면 검은건반도 다음 시작음 스케일이 지나가며 전부 커버됨. */
+var PT_G_NORMAL_BPM = 200;   /* 노말모드 BPM (음당 300ms=18프레임, 판정최소 200ms의 1.5배 — 안전) */
+var PT_G_PRECISE_BPM = 140;  /* 정밀모드 BPM */
 var PT_G_REGIDX = { chest:0, mix:1, falsetto:2 };           /* 접촉 축: 강 → 중 → 약 */
 
 /* ═══ PVR 아이콘 세트 — 이모지 대신 인라인 SVG [2026-07-13]
@@ -16944,7 +16950,7 @@ function _ptRunGuided(onComplete){
   var isFemale = (typeof _ptGender !== 'undefined' && _ptGender === 'female');
   var got  = { falsetto: [], mix: [], chest: [] };
   var miss = { falsetto: 0,  mix: 0,  chest: 0  };
-  var scaleMode = '5d';
+  var scaleMode = 'normal';
 
   /* ── 음역 (전부 국제표기 / midi. 앱 화면 표기는 +1옥타브로 보임)
      가성   : 남 A3(57)→B5(83)  ·  여 D4(62)→B6(95)
@@ -16981,8 +16987,10 @@ function _ptRunGuided(onComplete){
     var x = document.getElementById('pt-g-x'); if(x) x.onclick = abort;
   }
   function nn(m){ try{ return _freqToNote(440 * Math.pow(2, (m - 69) / 12)).note; }catch(e){ return String(m); } }
-  function pat(){ return scaleMode === '9d' ? PT_G_9D : PT_G_5D; }
-  function beatMs(){ return 60000 / 140; }   /* 5도·9도 모두 BPM 140 (음당 약 26프레임 — 판정에 충분) */
+  function pat(){ return PT_G_5D; }   /* 노말·정밀 모두 5도 스케일 (차이: 노말=자동진행 BPM200 / 정밀=수동 BPM140) */
+  function stepSemi(){ return 1; }   /* 둘 다 반음씩 → 검은건반 전부 커버 */
+  function beatMs(){ return 60000 / (scaleMode === 'normal' ? PT_G_NORMAL_BPM : PT_G_PRECISE_BPM); }
+  function isAuto(){ return scaleMode === 'normal'; }   /* 노말=확인버튼 없이 자동진행 */
 
   intro();
 
@@ -16993,12 +17001,14 @@ function _ptRunGuided(onComplete){
       + '<div style="font-size:12.5px;color:#475569;line-height:1.7;margin-bottom:12px">가성 · 진성(믹스) · 강한 진성을 순서대로 내면<br><b>그 자리에서 등고선이 그려집니다.</b><br><span style="color:#94a3b8">측정을 한 번 더 하지 않습니다</span></div>'
       + '<div style="text-align:left;font-size:11.5px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7">'
       + '리드음을 <b>반음씩 올려가며</b> 들려드립니다. 음역은 정해두지 않습니다 — <b>낼 수 있는 데까지</b>.<br><b>리드음이 끝나고 1초 뒤 [시작]</b>을 누르면 녹음됩니다. 리드음은 녹음되지 않습니다.</div>'
-      + '<button id="pt-g-5d" style="' + BTN + ';background:#16a34a;color:#fff">5도 스케일 <span style="font-weight:700;opacity:.85">· BPM 120</span></button>'
-      + '<button id="pt-g-9d" style="' + BTN + ';background:#2563eb;color:#fff">9도 스케일 <span style="font-weight:700;opacity:.85">· BPM 140</span></button>'
+      + '<button id="pt-g-normal" style="' + BTN + ';background:#16a34a;color:#fff">노말 측정 <span style="font-weight:700;opacity:.85">· 빠름 · 자동진행</span></button>'
+      + '<div style="font-size:10.5px;color:#94a3b8;margin:2px 0 8px;line-height:1.5">리드음을 듣고 따라 내면 자동으로 다음 음으로 넘어갑니다. 버튼 누를 필요 없이 쭉 진행. 초심자·빠른 측정용.</div>'
+      + '<button id="pt-g-precise" style="' + BTN + ';background:#2563eb;color:#fff">정밀 측정 <span style="font-weight:700;opacity:.85">· 반음씩 · 수동</span></button>'
+      + '<div style="font-size:10.5px;color:#94a3b8;margin:2px 0 8px;line-height:1.5">5도 스케일로 반음마다 [시작]을 눌러 촘촘히 측정합니다. 시간이 오래 걸리지만 정확한 음역 기록용.</div>'
       + '<button id="pt-g-free" style="' + BTN + ';background:#fff;color:#64748b;border:1.5px solid #e2e8f0;font-size:12.5px">리드음 없이 자유 스윕</button>');
-    document.getElementById('pt-g-5d').onclick   = function(){ scaleMode = '5d';   runStage(0); };
-    document.getElementById('pt-g-9d').onclick   = function(){ scaleMode = '9d';   runStage(0); };
-    document.getElementById('pt-g-free').onclick = function(){ scaleMode = 'none'; runStage(0); };
+    document.getElementById('pt-g-normal').onclick  = function(){ scaleMode = 'normal';  runStage(0); };
+    document.getElementById('pt-g-precise').onclick = function(){ scaleMode = 'precise'; runStage(0); };
+    document.getElementById('pt-g-free').onclick    = function(){ scaleMode = 'none';    runStage(0); };
   }
 
   /* ── 2. 성구 단계 */
@@ -17089,22 +17099,36 @@ function _ptRunGuided(onComplete){
     });
     setTimeout(function(){
       if(cancelled) return;
-      show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
-        + '<div style="margin-top:10px">' + _ptIcon('mic', 44, st.color) + '</div>'
-        + '<div style="font-weight:900;font-size:15.5px;margin:8px 0 12px;color:' + st.color + '">같은 스케일을 ‘아’로 내주세요</div>'
-        + '<button id="pt-g-rec" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>'
-        + '<div style="display:flex;gap:6px;margin-top:8px">'
-        + '<button id="pt-g-dn" style="' + MINI + ';background:#f1f5f9;color:#475569">반음 ↓</button>'
-        + '<button id="pt-g-sk" style="' + MINI + ';background:#f1f5f9;color:#475569">건너뛰기</button>'
-        + '<button id="pt-g-end" style="' + MINI + ';background:#fee2e2;color:#b91c1c">성구 종료</button>'
-        + '</div>');
-      document.getElementById('pt-g-rec').onclick = function(){
-        rec(si, st, cur, P.length * bm + 1600, function(n){ ladder(si, st, cur + 1, n > 0 ? 0 : silent + 1); });
-      };
-      document.getElementById('pt-g-dn').onclick  = function(){ ladder(si, st, cur - 1, 0); };
-      document.getElementById('pt-g-sk').onclick  = function(){ ladder(si, st, cur + 1, silent); };
-      document.getElementById('pt-g-end').onclick = function(){ endStage(si, st); };
-    }, P.length * bm + 1000);   /* ★ 리드음 끝난 뒤 1초 */
+      var recDur = P.length * bm + 400;   /* 녹음 시간 = 리드음 길이 + 약간 여유 */
+      if(isAuto()){
+        /* ── 노말: 확인 버튼 없이 리드음 끝→바로 녹음→끝나면 자동 다음 음 ── */
+        show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
+          + '<div style="margin-top:10px">' + _ptIcon('mic', 44, st.color) + '</div>'
+          + '<div style="font-weight:900;font-size:15.5px;margin:8px 0 6px;color:' + st.color + '">지금 ‘아’로 따라 내세요</div>'
+          + '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px">리드음이 끝나면 자동으로 다음 음으로 넘어갑니다</div>'
+          + '<button id="pt-g-end" style="' + MINI + ';background:#fee2e2;color:#b91c1c;width:auto;padding:8px 16px">성구 종료</button>');
+        var eend = document.getElementById('pt-g-end');
+        if(eend) eend.onclick = function(){ endStage(si, st); };
+        rec(si, st, cur, recDur, function(n){ ladder(si, st, cur + 1, n > 0 ? 0 : silent + 1); });
+      } else {
+        /* ── 정밀: [시작] 버튼 눌러야 녹음. 반음↓/건너뛰기/종료 제공 ── */
+        show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + ' · ' + nn(cur) + '</div>'
+          + '<div style="margin-top:10px">' + _ptIcon('mic', 44, st.color) + '</div>'
+          + '<div style="font-weight:900;font-size:15.5px;margin:8px 0 12px;color:' + st.color + '">같은 스케일을 ‘아’로 내주세요</div>'
+          + '<button id="pt-g-rec" style="' + BTN + ';background:' + st.color + ';color:#fff">시작</button>'
+          + '<div style="display:flex;gap:6px;margin-top:8px">'
+          + '<button id="pt-g-dn" style="' + MINI + ';background:#f1f5f9;color:#475569">반음 ↓</button>'
+          + '<button id="pt-g-sk" style="' + MINI + ';background:#f1f5f9;color:#475569">건너뛰기</button>'
+          + '<button id="pt-g-end" style="' + MINI + ';background:#fee2e2;color:#b91c1c">성구 종료</button>'
+          + '</div>');
+        document.getElementById('pt-g-rec').onclick = function(){
+          rec(si, st, cur, P.length * bm + 1600, function(n){ ladder(si, st, cur + 1, n > 0 ? 0 : silent + 1); });
+        };
+        document.getElementById('pt-g-dn').onclick  = function(){ ladder(si, st, cur - 1, 0); };
+        document.getElementById('pt-g-sk').onclick  = function(){ ladder(si, st, cur + 1, silent); };
+        document.getElementById('pt-g-end').onclick = function(){ endStage(si, st); };
+      }
+    }, P.length * bm + 700);   /* ★ 리드음 끝난 뒤 0.7초 (노말은 이 뒤 자동 녹음) */
   }
 
   /* ── 3-b. 자유 스윕 */
@@ -17119,10 +17143,13 @@ function _ptRunGuided(onComplete){
   /* ── 4. 실시간 수집 → 등고선(_ptAddPoint)에 바로 반영 */
   function rec(si, st, cur, maxMs, onEnd){
     if(!_ptAnalyser || !_ptDetector || !_ptCtx){ onEnd(0); return; }
+    /* ★ 녹음 중에는 오버레이를 반투명 + 카드를 하단으로 내려, 뒤에서 그려지는 등고선이 실시간으로 보이게 한다. */
+    ov.style.background = 'rgba(15,23,42,.30)';
+    ov.style.alignItems = 'flex-end';
     var buf = new Float32Array(_ptAnalyser.fftSize);
     var t0 = performance.now(), running = true, nV = 0, nM = 0;
     show('<div style="font-size:11px;font-weight:800;color:#94a3b8">' + st.name + (cur !== null ? ' · ' + nn(cur) : '') + '</div>'
-      + '<div style="font-size:28px;margin-top:8px;color:' + st.color + ';font-weight:900">● REC</div>'
+      + '<div style="font-size:24px;margin-top:2px;color:' + st.color + ';font-weight:900">● REC · 등고선 기록 중</div>'
       + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin:12px 0">'
       + '<div style="height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden"><div id="pt-g-vol" style="height:100%;width:0%;background:' + st.color + ';transition:width .06s"></div></div>'
       + '<div style="display:flex;justify-content:space-between;margin-top:9px;font-size:12.5px;color:#334155;font-weight:800"><span id="pt-g-note">–</span><span id="pt-g-cnt" style="color:#94a3b8;font-weight:700">0</span></div>'
@@ -17133,6 +17160,8 @@ function _ptRunGuided(onComplete){
     function stop(){
       if(!running) return;
       running = false;
+      ov.style.background = 'rgba(15,23,42,.92)';   /* 오버레이 원복 */
+      ov.style.alignItems = 'center';
       try{ _ptFinalizeCurrentTone(); }catch(e){}
       miss[st.key] += nM;
       onEnd(nV);
@@ -17160,6 +17189,9 @@ function _ptRunGuided(onComplete){
           var ni = _freqToNote(pitch);
           if(algo === st.key){
             try{ _ptAddPoint(ni.midi + (ni.cents / 100), dB, algo); }catch(e){}   /* 측정 = 선언 → 기록 */
+            /* ★ 실시간 등고선: 자유모드는 _ptAnalyzeLoop가 매 프레임 그리지만 가이드모드는
+               그 루프를 안 돈다. 여기서 직접 그려 배경 등고선이 쌓이는 게 보이게 한다. */
+            try{ if(_ptDrawNeeded){ _ptCanvasDraw(); _ptDrawNeeded = false; } }catch(e){}
             nV++;
             if(eNote) eNote.textContent = ni.note;
             if(eCnt) eCnt.textContent = nV;
