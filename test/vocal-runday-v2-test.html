@@ -16952,6 +16952,7 @@ function _ptRunGuided(onComplete){
   var miss = { falsetto: 0,  mix: 0,  chest: 0  };
   var scaleMode = 'normal';
   var _gEnded = false;   /* 성구 종료 버튼 눌림 플래그 (자동진행 중 다음 음 차단용) */
+  var _gBgInterrupted = false;   /* iOS 백그라운드 진입으로 자동측정 중단됨 플래그 */
 
   /* ── 음역 (전부 국제표기 / midi. 앱 화면 표기는 +1옥타브로 보임)
      가성   : 남 A3(57)→B5(83)  ·  여 D4(62)→B6(95)
@@ -16979,7 +16980,29 @@ function _ptRunGuided(onComplete){
   var BTN  = 'width:100%;padding:13px;border:none;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px';
   var MINI = 'flex:1;padding:10px;border:none;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer';
 
-  function close(){ ov.style.display = 'none'; ov.innerHTML = ''; }
+  /* ★ iOS 대비: 자동진행(노말) 중 화면잠금·앱전환으로 백그라운드 진입하면 rAF/오디오가 멈춰
+     리드음과 녹음 타이밍이 어긋난다. 측정이 조용히 깨지는 것보다, 감지해서 안내하는 게 안전하다.
+     자동모드에서 백그라운드로 가면 현재 성구 측정을 멈추고 재시작 안내를 띄운다.
+     (정밀/자유는 사용자가 버튼으로 진행하므로 영향 적음 → 자동모드만 대상) */
+  function _gVisHandler(){
+    if(document.hidden && isAuto() && !cancelled && ov && ov.style.display !== 'none'){
+      cancelled = true;
+      /* 복귀 시 안내 (숨은 동안엔 렌더 안 보이므로 플래그만) */
+      _gBgInterrupted = true;
+    } else if(!document.hidden && _gBgInterrupted){
+      _gBgInterrupted = false;
+      show('<div style="font-weight:900;font-size:15px;margin:8px 0 6px;color:#b45309">측정이 중단되었어요</div>'
+        + '<div style="font-size:12px;color:#64748b;line-height:1.7;margin-bottom:14px">화면이 꺼지거나 다른 앱으로 전환되어<br>자동 측정이 멈췄습니다. 처음부터 다시 시작해 주세요.</div>'
+        + '<button id="pt-g-restart" style="' + BTN + ';background:#16a34a;color:#fff">다시 시작</button>');
+      var er = document.getElementById('pt-g-restart');
+      if(er) er.onclick = function(){ cancelled = false; _gEnded = false; intro(); };
+    }
+  }
+  document.addEventListener('visibilitychange', _gVisHandler);
+  function close(){
+    ov.style.display = 'none'; ov.innerHTML = '';
+    try{ document.removeEventListener('visibilitychange', _gVisHandler); }catch(e){}
+  }
   function abort(){ cancelled = true; close(); try{ _closePitchTest(); }catch(e){} }
   function show(inner){
     ov.style.display = 'flex';
@@ -17176,9 +17199,15 @@ function _ptRunGuided(onComplete){
       + '<button id="pt-g-stop" style="' + BTN + ';background:#0f172a;color:#fff">완료</button>');
     var eVol = document.getElementById('pt-g-vol'), eNote = document.getElementById('pt-g-note');
     var eCnt = document.getElementById('pt-g-cnt'), eMis = document.getElementById('pt-g-mis');
+    /* ★ iOS 대비: rec 종료를 rAF(performance.now)에만 의존하면, iOS Safari가 화면잠금·앱전환 시
+       rAF를 멈춰 maxMs 체크를 못 해 stop()이 영영 안 불린다(자동진행 정지).
+       setTimeout 백업 타이머로 rAF가 죽어도 maxMs 뒤 반드시 stop()이 불리도록 이중화한다.
+       (백그라운드에선 setTimeout도 느려지지만, 복귀 즉시 밀린 콜백이 실행돼 정상 종료된다.) */
+    var _recGuard = setTimeout(function(){ if(running) stop(); }, maxMs + 500);
     function stop(){
       if(!running) return;
       running = false;
+      try{ clearTimeout(_recGuard); }catch(e){}
       ov.style.background = 'rgba(15,23,42,.92)';   /* 오버레이 원복 */
       ov.style.alignItems = 'center';
       try{ _ptFinalizeCurrentTone(); }catch(e){}
