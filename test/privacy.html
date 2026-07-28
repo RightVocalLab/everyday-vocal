@@ -53,14 +53,14 @@
     <tr><td><strong>필수</strong> (이메일 가입)</td><td>이메일, 비밀번호(암호화 저장), 닉네임</td><td>회원가입 시 직접 입력</td></tr>
     <tr><td><strong>필수</strong> (소셜 가입)</td><td>카카오/네이버 식별자(고유 ID), 이메일, 프로필 닉네임</td><td>OAuth 인증 시 자동 수신</td></tr>
     <tr><td><strong>선택</strong></td><td>마케팅 수신 동의 여부</td><td>회원가입 시 체크박스</td></tr>
-    <tr><td><strong>서비스 이용 중</strong></td><td>음성 데이터(음정·강도 수치, 원본 음성 미저장), 훈련 기록, 게시글, 댓글</td><td>서비스 이용 시 자동 수집</td></tr>
+    <tr><td><strong>서비스 이용 중</strong></td><td>음성 데이터(음역대 측정(PVR)은 음정·강도 수치만 저장하고 원본 음성은 저장하지 않음 / 보컬 진단실은 이용자가 녹음·업로드한 음성 파일을 강사 피드백 제공을 위해 서버에 저장), 훈련 기록, 게시글, 댓글</td><td>서비스 이용 시 자동 수집</td></tr>
     <tr><td><strong>자동 생성</strong></td><td>접속 IP, 접속 시각, 기기 정보(브라우저), 쿠키</td><td>서비스 이용 시 자동 생성</td></tr>
     <tr><td><strong>학생 회원</strong></td><td>실명, 학생 코드, 숙제 진도, 시작/완료 시각</td><td>회사가 학생 등록 시 수기 입력</td></tr>
     <tr><td><strong>만 14세 미만</strong></td><td>생년월일, 법정대리인 이메일</td><td>회원가입 시 직접 입력</td></tr>
   </table>
 
   <h2>3. 개인정보의 보유 및 이용 기간</h2>
-  <p>회사는 회원 탈퇴 시 개인정보를 <strong>즉시 파기</strong>합니다. 다만, 다음 각 호의 경우에는 관련 법령에 따라 일정 기간 보관합니다.</p>
+  <p>회사는 회원 탈퇴 시 개인정보를 <strong>즉시 파기</strong>합니다. 보컬 진단실에 저장된 음성 파일도 회원 탈퇴(계정 삭제) 시 함께 삭제됩니다. 다만, 다음 각 호의 경우에는 관련 법령에 따라 일정 기간 보관합니다.</p>
   <table>
     <tr><th>항목</th><th>보존 기간</th><th>근거 법령</th></tr>
     <tr><td>전자상거래 계약·청약철회 기록</td><td>5년</td><td>전자상거래법</td></tr>
@@ -82,7 +82,7 @@
   <p>회사는 원활한 서비스 제공을 위하여 다음과 같이 개인정보 처리 업무를 외부 전문 업체에 위탁하고 있습니다.</p>
   <table>
     <tr><th>수탁업체</th><th>위탁 업무</th><th>이전 국가</th></tr>
-    <tr><td><strong>Google LLC</strong> (Firebase)</td><td>회원 인증, 데이터베이스, 파일 저장, 서버리스 함수 실행</td><td>싱가포르 (asia-southeast1) · 일본 (asia-northeast3)</td></tr>
+    <tr><td><strong>Google LLC</strong> (Firebase)</td><td>회원 인증, 데이터베이스, 파일 저장(보컬 진단실 음성 파일 포함), 서버리스 함수 실행</td><td>싱가포르 (asia-southeast1) · 일본 (asia-northeast3)</td></tr>
     <tr><td><strong>Resend Inc.</strong></td><td>이메일 인증 코드 발송</td><td>미국</td></tr>
     <tr><td><strong>Cloudflare Inc.</strong></td><td>DNS 관리, 트래픽 보안</td><td>미국 (글로벌 CDN)</td></tr>
     <tr><td><strong>ElevenLabs Inc.</strong></td><td>음성 합성(TTS) 서비스</td><td>미국</td></tr>
