@@ -11911,7 +11911,11 @@ function _hwUploadParseExcel(file){
               if(!exName) continue; /* 빈 행 스킵 */
               const scaleId = String(row[2] || '').trim();
               const repeat = parseInt(row[3], 10) || 1;
-              const comment = String(row[4] || '').trim();
+              /* ★ [2026-07-30 수정] 엑셀 셀 줄바꿈이 \r\n(2글자)로 저장되면
+                    SheetJS는 \r\n 그대로 읽는데 Firebase엔 예전에 \n(1글자)으로 저장돼 있어,
+                    내용이 같아도 글자수/문자열이 달라 '가짜 변경'으로 잡히고 반영 시 롤백됨.
+                    → 읽는 즉시 \r\n·\r 을 \n 으로 통일해 비교·저장을 일관되게 만든다. */
+              const comment = String(row[4] || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
               /* F=활성 컬럼: 'Y'일 때만 active=true. 빈칸/N/기타는 active=false (숨김) */
               const activeRaw = String(row[5] || '').trim().toUpperCase();
               const active = (activeRaw === 'Y');
