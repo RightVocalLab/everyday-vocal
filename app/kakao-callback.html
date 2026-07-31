@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>로그인 처리 중…</title>
+  <style>
+    html,body{height:100%;margin:0}
+    body{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+      background:#fff7f0;color:#c2410c;text-align:center;padding:24px;
+    }
+    .spin{
+      width:44px;height:44px;border:4px solid #fde3cf;border-top-color:#f97316;
+      border-radius:50%;animation:r 0.9s linear infinite;margin-bottom:18px;
+    }
+    @keyframes r{to{transform:rotate(360deg)}}
+    p{font-size:16px;line-height:1.6;margin:6px 0}
+    .sub{color:#9a6a4d;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="spin"></div>
+  <p id="msg">로그인 처리 중입니다…</p>
+  <p class="sub" id="sub">앱으로 자동으로 돌아갑니다.</p>
+
+  <script>
+  (function () {
+    // 카카오가 ?code=...&state=... 형태로 이 페이지에 리다이렉트함
+    var qs = window.location.search || '';
+
+    // 앱 전용 링크(커스텀 스킴)로 그대로 넘겨서 앱을 깨움
+    var target = 'com.rightvocallab.app://oauth' + qs;
+    // provider 표시 추가 (앱에서 카카오/네이버 구분용)
+    target += (qs.indexOf('?') === -1 ? '?' : '&') + 'provider=kakao';
+
+    try {
+      window.location.href = target;
+    } catch (e) {}
+
+    // 일부 브라우저에서 자동 이동이 막힐 때를 대비한 안내
+    setTimeout(function () {
+      var m = document.getElementById('msg');
+      var s = document.getElementById('sub');
+      if (m) m.textContent = '앱으로 돌아가는 중입니다.';
+      if (s) s.innerHTML = '자동으로 이동하지 않으면<br>이 창을 닫고 앱을 다시 열어주세요.';
+    }, 2500);
+  })();
+  </script>
+</body>
+</html>
