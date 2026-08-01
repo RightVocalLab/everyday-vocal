@@ -13415,6 +13415,94 @@ const _KAKAO_LOGIN_FN = 'https://asia-northeast3-everyday-vocal.cloudfunctions.n
 let _kakaoSdkLoaded = false;
 let _kakaoSdkLoading = false;
 
+/* ===== [앱 전용] 네이티브 감지 + 소셜 로그인 딥링크 헬퍼 (2026-07 추가) ===== */
+function _isNativeApp(){
+  return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+}
+
+/* 카카오 REST API 키 + 리다이렉트 URI (카카오 콘솔 등록값과 반드시 동일) */
+const _KAKAO_REST_KEY = '12abbf9cc9052f9baac4d72ca6506e36';
+const _KAKAO_REDIRECT_URI = 'https://rightvocallab.github.io/everyday-vocal/app/kakao-callback.html';
+
+/* [앱] 인앱 브라우저로 카카오 로그인 → 딥링크로 돌아온 인가 코드(code) 반환 */
+function _kakaoNativeGetCode(){
+  return new Promise((resolve, reject) => {
+    const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+    if(!App || !Browser){
+      reject(new Error('앱 플러그인을 찾을 수 없습니다.'));
+      return;
+    }
+
+    const state = 'k' + Date.now() + Math.random().toString(36).slice(2, 8);
+    let done = false;
+    let sub = null;
+    let timer = null;
+
+    const cleanup = () => {
+      if(sub && typeof sub.remove === 'function'){ try{ sub.remove(); }catch(e){} }
+      if(timer){ clearTimeout(timer); timer = null; }
+    };
+
+    const finish = (fn, arg) => {
+      if(done) return;
+      done = true;
+      cleanup();
+      try{ Browser.close(); }catch(e){}
+      fn(arg);
+    };
+
+    /* 딥링크 복귀 리스너 (com.rightvocallab.app://oauth?code=...&state=...) */
+    const _subReturn = App.addListener('appUrlOpen', (data) => {
+      try{
+        const url = (data && data.url) || '';
+        if(url.indexOf('com.rightvocallab.app://oauth') !== 0) return;
+        const q = url.split('?')[1] || '';
+        const params = new URLSearchParams(q);
+        if(params.get('error')){
+          finish(reject, new Error('카카오 로그인 취소 또는 실패'));
+          return;
+        }
+        if(params.get('state') !== state){
+          finish(reject, new Error('로그인 상태값 불일치'));
+          return;
+        }
+        const code = params.get('code');
+        if(!code){
+          finish(reject, new Error('인가 코드를 받지 못했습니다.'));
+          return;
+        }
+        finish(resolve, code);
+      }catch(e){
+        finish(reject, e);
+      }
+    });
+    if(_subReturn && typeof _subReturn.then === 'function'){
+      _subReturn.then((s) => { sub = s; });
+    } else {
+      sub = _subReturn;
+    }
+
+    /* 타임아웃 (3분) */
+    timer = setTimeout(() => {
+      finish(reject, new Error('로그인 시간이 초과되었습니다. 다시 시도해주세요.'));
+    }, 180000);
+
+    /* 카카오 인가 페이지 열기 */
+    const authUrl =
+      'https://kauth.kakao.com/oauth/authorize' +
+      '?client_id=' + encodeURIComponent(_KAKAO_REST_KEY) +
+      '&redirect_uri=' + encodeURIComponent(_KAKAO_REDIRECT_URI) +
+      '&response_type=code' +
+      '&scope=' + encodeURIComponent('profile_nickname') +
+      '&state=' + encodeURIComponent(state);
+
+    Browser.open({ url: authUrl }).catch((e) => {
+      finish(reject, e);
+    });
+  });
+}
+
 /* 카카오 SDK 동적 로드 (1회만) */
 function _loadKakaoSdk(){
   return new Promise((resolve, reject) => {
@@ -13494,34 +13582,48 @@ async function _loginWithKakao(){
   };
   
   try {
-    /* 1. 카카오 SDK 로드 */
-    await _loadKakaoSdk();
-    
-    /* 2. 카카오 로그인 (팝업 방식) */
-    const kakaoAccessToken = await new Promise((resolve, reject) => {
-      Kakao.Auth.login({
-        scope: 'profile_nickname',
-        success: function(authObj){
-          if(authObj && authObj.access_token){
-            resolve(authObj.access_token);
-          } else {
-            reject(new Error('카카오 액세스 토큰을 받지 못했습니다.'));
-          }
-        },
-        fail: function(err){
-          reject(new Error('카카오 로그인 취소 또는 실패'));
-        },
+    let fnResponse;
+
+    if(_isNativeApp()){
+      /* [앱] 인앱 브라우저 + 딥링크로 인가 코드(code) 받기 */
+      const kakaoCode = await _kakaoNativeGetCode();
+      console.log('✅ 카카오 인가 코드 받음 (앱)');
+
+      /* Cloud Function 호출 (code 방식) → Firebase Custom Token 받기 */
+      fnResponse = await fetch(_KAKAO_LOGIN_FN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: kakaoCode }),
       });
-    });
-    
-    console.log('✅ 카카오 액세스 토큰 받음');
-    
-    /* 3. Cloud Function 호출 → Firebase Custom Token 받기 */
-    const fnResponse = await fetch(_KAKAO_LOGIN_FN, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: kakaoAccessToken }),
-    });
+    } else {
+      /* [웹] 카카오 SDK 팝업 방식 (기존 그대로) */
+      await _loadKakaoSdk();
+
+      const kakaoAccessToken = await new Promise((resolve, reject) => {
+        Kakao.Auth.login({
+          scope: 'profile_nickname',
+          success: function(authObj){
+            if(authObj && authObj.access_token){
+              resolve(authObj.access_token);
+            } else {
+              reject(new Error('카카오 액세스 토큰을 받지 못했습니다.'));
+            }
+          },
+          fail: function(err){
+            reject(new Error('카카오 로그인 취소 또는 실패'));
+          },
+        });
+      });
+
+      console.log('✅ 카카오 액세스 토큰 받음 (웹)');
+
+      /* Cloud Function 호출 (accessToken 방식) → Firebase Custom Token 받기 */
+      fnResponse = await fetch(_KAKAO_LOGIN_FN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: kakaoAccessToken }),
+      });
+    }
     
     if(!fnResponse.ok){
       const errData = await fnResponse.json().catch(() => ({}));
@@ -13662,6 +13764,84 @@ const _NAVER_LOGIN_FN = 'https://asia-northeast3-everyday-vocal.cloudfunctions.n
 const _NAVER_REDIRECT_URI = 'https://rightvocallab.github.io/everyday-vocal/test/vocal-runday-v2.html';
 
 /* 네이버 로그인 메인 함수 */
+/* [앱] 네이버 로그인 콜백 (콘솔 Callback URL에 등록) */
+const _NAVER_APP_REDIRECT_URI = 'https://rightvocallab.github.io/everyday-vocal/app/naver-callback.html';
+
+/* [앱] 인앱 브라우저로 네이버 로그인 → 딥링크로 돌아온 { code, state } 반환 */
+function _naverNativeGetCode(){
+  return new Promise((resolve, reject) => {
+    const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+    if(!App || !Browser){
+      reject(new Error('앱 플러그인을 찾을 수 없습니다.'));
+      return;
+    }
+
+    const state = 'n' + Date.now() + Math.random().toString(36).slice(2, 8);
+    let done = false;
+    let sub = null;
+    let timer = null;
+
+    const cleanup = () => {
+      if(sub && typeof sub.remove === 'function'){ try{ sub.remove(); }catch(e){} }
+      if(timer){ clearTimeout(timer); timer = null; }
+    };
+
+    const finish = (fn, arg) => {
+      if(done) return;
+      done = true;
+      cleanup();
+      try{ Browser.close(); }catch(e){}
+      fn(arg);
+    };
+
+    const _subReturn = App.addListener('appUrlOpen', (data) => {
+      try{
+        const url = (data && data.url) || '';
+        if(url.indexOf('com.rightvocallab.app://oauth') !== 0) return;
+        const q = url.split('?')[1] || '';
+        const params = new URLSearchParams(q);
+        if(params.get('provider') && params.get('provider') !== 'naver') return;
+        if(params.get('error')){
+          finish(reject, new Error('네이버 로그인 취소 또는 실패'));
+          return;
+        }
+        if(params.get('state') !== state){
+          finish(reject, new Error('네이버 로그인 상태값 불일치'));
+          return;
+        }
+        const code = params.get('code');
+        if(!code){
+          finish(reject, new Error('인가 코드를 받지 못했습니다.'));
+          return;
+        }
+        finish(resolve, { code: code, state: params.get('state') });
+      }catch(e){
+        finish(reject, e);
+      }
+    });
+    if(_subReturn && typeof _subReturn.then === 'function'){
+      _subReturn.then((s) => { sub = s; });
+    } else {
+      sub = _subReturn;
+    }
+
+    timer = setTimeout(() => {
+      finish(reject, new Error('로그인 시간이 초과되었습니다. 다시 시도해주세요.'));
+    }, 180000);
+
+    const authUrl = 'https://nid.naver.com/oauth2.0/authorize'
+      + '?response_type=code'
+      + '&client_id=' + encodeURIComponent(_NAVER_CLIENT_ID)
+      + '&redirect_uri=' + encodeURIComponent(_NAVER_APP_REDIRECT_URI)
+      + '&state=' + encodeURIComponent(state);
+
+    Browser.open({ url: authUrl }).catch((e) => {
+      finish(reject, e);
+    });
+  });
+}
+
 async function _loginWithNaver(){
   const btn = document.querySelector('button[onclick="_loginWithNaver()"]');
   const originalContent = btn ? btn.innerHTML : null;
@@ -13689,6 +13869,18 @@ async function _loginWithNaver(){
   };
   
   try {
+    let fnResponse;
+
+    if(_isNativeApp()){
+      /* [앱] 인앱 브라우저 + 딥링크로 네이버 인가 코드 받기 */
+      const _nv = await _naverNativeGetCode();
+      console.log('✅ 네이버 인가 코드 받음 (앱)');
+      fnResponse = await fetch(_NAVER_LOGIN_FN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authCode: _nv.code, state: _nv.state }),
+      });
+    } else {
     /* 1. 네이버 OAuth 인증 URL 생성 */
     const state = Math.random().toString(36).slice(2);
     const authUrl = 'https://nid.naver.com/oauth2.0/authorize?'
@@ -13798,12 +13990,13 @@ async function _loginWithNaver(){
        해결: Cloud Function을 인가 코드 받도록 수정 필요 */
     
     /* 일단 인가 코드를 액세스 토큰처럼 전송 (Cloud Function이 둘 다 처리하도록) */
-    const fnResponse = await fetch(_NAVER_LOGIN_FN, {
+    fnResponse = await fetch(_NAVER_LOGIN_FN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ authCode: authCode, state: state }),
     });
-    
+    }
+
     if(!fnResponse.ok){
       const errData = await fnResponse.json().catch(() => ({}));
       throw new Error(errData.error || `서버 오류 (${fnResponse.status})`);
@@ -18179,7 +18372,13 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      mix로 강등되던 문제. 진짜 숨섞인(breathy) 약접촉은 고배음이 약해 highRatio가 어두움(매우 음수).
      반면 눌린 흉성은 highRatio가 밝음(≈-14). → highRatio<=-25(어두움)일 때만 강등.
      실측(남자 흉성만): 이 조건으로 눌린 흉성 466개(C#3 포함) 흉성 유지, 숨섞인 193개만 mix. */
-  if(result === 'chest' && h1h2 > _weakContactH1H2 && highRatio <= -25){
+  /* [저음흉성 카브아웃 2026-08-02, 실측 남자 저음흉성 3137프레임 근거]
+     남성 C3(130Hz) 미만에선 진성 흉성도 기저주파수가 낮아 highRatio가 자연히 어두워지고(중앙값≈-35)
+     H1H2가 저음 아티팩트로 살짝 양수(중앙값≈+7.6)로 떠서, 위 약접촉 조건에 오검됨.
+     실측: f0<110 baseChest 659개 중 580개가 score≤-3(명백흉성)인데도 mix로 오강등됨.
+     → 남성 f0<130 & 베이스흉성은 약접촉 강등 면제. OR-면제라 회귀 불가.
+     검증(로그 델타): 저음흉성 580개 흉성 복구 / f0>=130("위에 중성 맞음") 회귀 0 / 베이스mix 불변 / 여성 불변. */
+  if(result === 'chest' && h1h2 > _weakContactH1H2 && highRatio <= -25 && !(!isFemale && f0 < 130)){
     result = 'mix';
   }
 
