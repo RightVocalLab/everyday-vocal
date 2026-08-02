@@ -5467,7 +5467,7 @@ async function _playFromCache(text, onEnd, callToken, isCoach){
     const volRatio = targetVol / 100;
     audio.volume = isCoach 
       ? Math.max(0, Math.min(1, volRatio * 1.8))
-      : Math.max(0, Math.min(1, volRatio));
+      : Math.max(0, Math.min(1, volRatio * 1.15));
     _ttsCacheAudio = audio;
     /* 어떤 종류 audio인지 표시 (슬라이더 변경 시 구분) */
     audio._isCoach = !!isCoach;
@@ -6342,7 +6342,7 @@ const audioBuf=await ctx.decodeAudioData(arrayBufCopy);
 const src=ctx.createBufferSource();
 src.buffer=audioBuf;
 const _elGain=ctx.createGain();
-_elGain.gain.value=_isCoachFlag?(_volCoach/100)*1.8:(_volTTS/100);
+_elGain.gain.value=_isCoachFlag?(_volCoach/100)*1.8:Math.min(1,(_volTTS/100)*1.15);
 src.connect(_elGain);_elGain.connect(ctx.destination);
 if(window._elSrc){try{window._elSrc.onended=null;window._elSrc.stop();}catch(e){}}
 window._elSrc=src;
@@ -6579,7 +6579,7 @@ function _setStudentTtsVol(val){
   _volTTS = Math.max(1, displayVal);
   if(typeof _saveVolSettings === 'function') _saveVolSettings();
   /* 진행중 audio의 실제 volume은 슬라이더 값 그대로 (0이면 무음) */
-  const realRatio = Math.max(0, Math.min(1, displayVal / 100));
+  const realRatio = Math.max(0, Math.min(1, (displayVal / 100) * 1.15));
   if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach) {
     try { _ttsCacheAudio.volume = realRatio; } catch(e){}
   }
@@ -6622,7 +6622,7 @@ function _applyVolTTS(){
   /* 단순 볼륨 조절: 진행 중 audio들의 .volume만 즉시 반영
      음소거가 필요하면 토글 버튼(설명OFF/화이팅OFF) 또는 정지 버튼(⏹) 사용
      예전엔 0일 때 강제 정지+토큰무효화했지만, 그러면 다시 올려도 시퀀스가 안 살아남 → 제거 */
-  const ratio = Math.max(0, Math.min(1, _volTTS / 100));
+  const ratio = Math.max(0, Math.min(1, (_volTTS / 100) * 1.15));
   if (typeof _ttsCacheAudio !== 'undefined' && _ttsCacheAudio && !_ttsCacheAudio._isCoach) {
     try { _ttsCacheAudio.volume = ratio; } catch(e){}
   }
