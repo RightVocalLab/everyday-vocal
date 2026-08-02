@@ -301,10 +301,15 @@
   .today .tcard.tap{cursor:pointer}
   .today .dday .big{font-size:23px}
   .today .ddate{font-size:11px; opacity:.85; margin-top:3px}
-  .today .nextChemo{margin-top:10px; background:rgba(255,255,255,.16); border-radius:12px; padding:11px 13px;
-    font-size:13.5px; font-weight:700; line-height:1.45; letter-spacing:-.2px; display:none}
-  .today .nextChemo.show{display:block}
-  .today .nextChemo .nc-place{display:block; font-weight:600; opacity:.9; font-size:12.5px; margin-top:2px}
+  .today .nextChemo{margin-top:10px; display:none; flex-direction:column; gap:7px}
+  .today .nextChemo.show{display:flex}
+  .today .up-item{background:rgba(255,255,255,.14); border-radius:12px; padding:10px 12px; line-height:1.4}
+  .today .up-item.chemo{background:rgba(255,255,255,.24)}
+  .today .up-top{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+  .today .up-title{font-size:13.5px; font-weight:800; letter-spacing:-.2px}
+  .today .up-when{font-size:12.5px; font-weight:700; opacity:.95; white-space:nowrap}
+  .today .up-sub{font-size:12px; font-weight:600; opacity:.9; margin-top:2px}
+  .today .up-prep{font-size:11.5px; font-weight:600; opacity:.82; margin-top:3px}
 
   /* ===== 복약 스케줄 ===== */
   .medslot{border:1px solid var(--line); border-radius:16px; padding:14px 15px; margin-bottom:14px; background:#FBFBFA}
@@ -770,9 +775,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-07-25a";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-07-25b";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 요양병원 기록 10건 반영"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 상단 진료일정 표시"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1058,6 +1063,11 @@ const firebaseConfig = {
   const CHEMO_INFO = {
     "2026-07-29": { time:"오후 2:30", place:"17호실 3번 병상" }
   };
+  // 항암 외 진료 일정 (지난 날짜는 상단 카드에서 자동으로 숨김)
+  const APPTS = [
+    { date:"2026-08-12", time:"오전 9:30", dept:"소화기내과", doctor:"임가람", place:"본관 4층 소화기병센터", prep:"채혈 진료 2시간 전 · 4시간 금식" },
+    { date:"2026-09-14", time:"오후 4:00", dept:"내분비내과", doctor:"김혜경", place:"본관 3층",              prep:"채혈 진료 2시간 전 · 8시간 금식" }
+  ];
   function nextChemo(){
     const today = dayKey();
     for (const d of CHEMO_DATES){ if (d >= today) return d; }
@@ -1079,18 +1089,31 @@ const firebaseConfig = {
     const dd = ddayText(nextChemo());
     $("ddayBig").textContent = dd.big;
     $("ddayDate").textContent = dd.sub;
-    // 다음 항암 상세 줄 (날짜·시간·병상)
-    const ncDate = nextChemo();
+    // 다가오는 일정 (항암 + 진료, 날짜순, 지난 건 숨김)
     const ncEl = $("nextChemoLine");
     if (ncEl){
+      const wdOf = s => "일월화수목금토"[new Date(s+"T00:00:00").getDay()];
+      const lbl = s => { const [ ,m,d] = s.split("-"); return `${+m}/${+d}(${wdOf(s)})`; };
+      const today = dayKey();
+      const list = [];
+      const ncDate = nextChemo();
       if (ncDate){
         const info = CHEMO_INFO[ncDate] || {};
-        const t = new Date(ncDate+"T00:00:00");
-        const wd = "일월화수목금토"[t.getDay()];
-        const [ , mm, dd2 ] = ncDate.split("-");
-        const timeTxt = info.time ? ` ${info.time}` : " · 시간 미정";
-        const placeTxt = info.place ? `<span class="nc-place">📍 ${info.place}</span>` : "";
-        ncEl.innerHTML = `🗓️ 다음 항암 ${+mm}/${+dd2}(${wd})${timeTxt}${placeTxt}`;
+        list.push({ date:ncDate, chemo:true, icon:"🗓️", title:"다음 항암",
+          time: info.time || "시간 미정", sub: info.place ? `📍 ${info.place}` : "", prep:"" });
+      }
+      APPTS.forEach(a=>{
+        if (a.date >= today) list.push({ date:a.date, chemo:false, icon:"🩺", title:a.dept,
+          time:a.time, sub:`${a.doctor} · ${a.place}`, prep:a.prep });
+      });
+      list.sort((x,y)=> x.date<y.date?-1 : x.date>y.date?1 : 0);
+      if (list.length){
+        ncEl.innerHTML = list.map(it=>`
+          <div class="up-item${it.chemo?' chemo':''}">
+            <div class="up-top"><span class="up-title">${it.icon} ${it.title}</span><span class="up-when">${lbl(it.date)} ${it.time}</span></div>
+            ${it.sub  ? `<div class="up-sub">${it.sub}</div>` : ""}
+            ${it.prep ? `<div class="up-prep">🩸 ${it.prep}</div>` : ""}
+          </div>`).join("");
         ncEl.classList.add("show");
       } else {
         ncEl.classList.remove("show");
@@ -1539,7 +1562,7 @@ const firebaseConfig = {
     { category:"항암 일정", title:"항암 당일 주의",
       body:"체온 37.8도 정도라도 오한·몸살 등 증상이 함께 있으면 간호사에게 미리 알리기(증상 없이 체온만 살짝 높은 건 대개 경과관찰). 38도 이상 고열은 증상과 무관하게 즉시 응급실. 항암 당일 자가운전 금지, 낙상 주의, 보호자 1인 동반 가능.", tags:["항암","당일","발열","오한","열","체온","운전","보호자","낙상"] },
     { category:"항암 일정", title:"다음 외래 진료",
-      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 2시간 전, 8시간 금식\n9/14(월) 오후 4:00 내분비내과 김혜경 (본관 3층) — 채혈 1~7일 전, 8시간 금식", tags:["진료","외래","8월12일","9월14일","채혈","금식"] },
+      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 진료 2시간 전, 4시간 금식\n9/14(월) 오후 4:00 내분비내과 김혜경 (본관 3층) — 채혈 진료 2시간 전, 8시간 금식", tags:["진료","외래","8월12일","9월14일","채혈","금식","임가람","김혜경"] },
     { category:"항암 일정", title:"치료 사이클·채혈·CT",
       body:"4주 1사이클(1~3주 주1회 투여, 4주차 휴약), 80% 용량으로 시작. 채혈은 각 사이클 1주차에만. 2사이클(8주) 후 CT로 효과 평가. 진료 후 귀가 전 암병원 4층 항암치료실 예약실 들러 다음 일정 확인.", tags:["사이클","채혈","휴약","CT","일정","예약실"] },
     // 복약
@@ -1596,7 +1619,7 @@ const firebaseConfig = {
       tags:["유전자","NGS","재평가","보조치료","고주파"] },
   ];
 
-  const SEED_VERSION = 3;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
+  const SEED_VERSION = 4;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
   async function syncGuideSeed(){
     try{
       const metaRef = db.collection("meta").doc("guideSeed");
@@ -1731,9 +1754,9 @@ const firebaseConfig = {
     ]},
     { date:"2026-07-15", label:"7월 15일 (수)", topics:[
       { tag:"소화기내과", type:"dept", title:"항암 시작 · 임가람 교수",
-        body:"전이성 췌장암(체부·미부) 4기로 확진되어, 수술은 어려워 항암화학요법을 시작했어요.\n\n▪ 항암제: 아브락산 + 젬시타빈(젬자) — 부작용을 줄이려 80% 용량으로 시작\n▪ 주기: 4주 = 1사이클 (1·2·3주 주 1회 투여, 4주차는 쉬는 휴약기)\n▪ 채혈: 매주 아님, 각 사이클 첫 주에만\n▪ 2사이클(8주) 후 CT로 효과 평가\n▪ 유전자검사(NGS) 진행 — 표적치료 가능성 확인용\n\n다음 항암: 7/22(수) 오후 2:30, 7/29(수)\n다음 진료: 8/12(수) 오전 9:30 (본관 4층 소화기병센터)" },
+        body:"전이성 췌장암(체부·미부) 4기로 확진되어, 수술은 어려워 항암화학요법을 시작했어요.\n\n▪ 항암제: 아브락산 + 젬시타빈(젬자) — 부작용을 줄이려 80% 용량으로 시작\n▪ 주기: 4주 = 1사이클 (1·2·3주 주 1회 투여, 4주차는 쉬는 휴약기)\n▪ 채혈: 매주 아님, 각 사이클 첫 주에만\n▪ 2사이클(8주) 후 CT로 효과 평가\n▪ 유전자검사(NGS) 진행 — 표적치료 가능성 확인용\n\n다음 항암: 7/22(수) 오후 2:30, 7/29(수)\n다음 진료: 8/12(수) 오전 9:30 · 임가람 (본관 4층 소화기병센터)\n채혈 진료 2시간 전, 4시간 금식" },
       { tag:"내분비내과", type:"dept", title:"혈당 관리 · 김소라 / 김혜경 교수",
-        body:"당화혈색소(HbA1c)가 10.9로 높아 혈당 관리 협진을 받았어요.\n\n▪ 인슐린 (모두 식전)\n   - 아침: 란투스 12 + 휴마로그 6\n   - 점심: 휴마로그 8\n   - 저녁: 휴마로그 8\n▪ 먹는 당뇨약: 글루파(메트포르민), 디아미크롱\n▪ 저녁 식후 혈당이 계속 높으면 저녁 휴마로그를 8→10으로 올리는 조절 가능(의료진 안내)\n▪ 퇴원 전 인슐린 자가조절(MDI) 교육 예정\n▪ 항암 때 쓰는 스테로이드로 혈당이 오를 수 있어요 — 교육 지침대로 대응, 급변 시 협진 연계\n\n다음 진료: 9/14(월) 오후 4:00 (본관 3층)\n당뇨병 교육실 ☎ 02-2228-5465" },
+        body:"당화혈색소(HbA1c)가 10.9로 높아 혈당 관리 협진을 받았어요.\n\n▪ 인슐린 (모두 식전)\n   - 아침: 란투스 12 + 휴마로그 6\n   - 점심: 휴마로그 8\n   - 저녁: 휴마로그 8\n▪ 먹는 당뇨약: 글루파(메트포르민), 디아미크롱\n▪ 저녁 식후 혈당이 계속 높으면 저녁 휴마로그를 8→10으로 올리는 조절 가능(의료진 안내)\n▪ 퇴원 전 인슐린 자가조절(MDI) 교육 예정\n▪ 항암 때 쓰는 스테로이드로 혈당이 오를 수 있어요 — 교육 지침대로 대응, 급변 시 협진 연계\n\n다음 진료: 9/14(월) 오후 4:00 · 김혜경 (본관 3층)\n채혈 진료 2시간 전, 8시간 금식\n당뇨병 교육실 ☎ 02-2228-5465" },
       { tag:"항암 교육", type:"warn", title:"항암 주의사항 안내",
         body:"🚨 즉시 응급실 6가지 징후\n흑색변 · 혈변 · 혈뇨 · 안 멈추는 코피 · 원인 모를 멍 · 38도 이상 고열\n\n🌡 발열 기준 (의료진 안내)\n▪ 38도 이상 고열은 증상과 관계없이 즉시 응급실 (감염 신호)\n▪ 37.8도 정도는 오한·몸살 등 다른 증상이 함께 있을 때 간호사에게 미리 알리기\n▪ 증상 없이 체온만 살짝 높은 정도는 대개 경과관찰 (판단 어려우면 암병원 3층 항암치료센터 02-2228-4080/4081로 문의)\n\n▪ 감염 예방: 항암 후 7~14일 면역이 가장 낮음. 손씻기·마스크, 날음식(회·게장·생굴) 금지, 자몽 절대 금지\n▪ 부작용: 오심·구토(항구토제 즉시), 설사·변비, 손발저림(찬물 피하기), 탈모\n▪ 식사: 매 끼 단백질, 입맛 없으면 영양음료(뉴케어·하이뮨)\n▪ 치과 치료는 4주차 휴약기에\n▪ 응급·타병원 대비 서류 4종 항상 지참\n\n자세한 항목은 '돌봄 가이드 & 질문'에서 검색하면 나와요." },
       { tag:"전체 진행상황", type:"sum", title:"진단 · 검사 요약",
