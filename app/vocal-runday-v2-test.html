@@ -12439,25 +12439,27 @@ _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
     if(fbProg && typeof fbProg==='object'){
       const localProg=_getHwProgress();
       Object.keys(fbProg).forEach(function(k){
+        if(k.indexOf('|')<0) return; /* 옛 순번키(숫자) 무시 — 서명키만 병합 */
         const a=parseInt(localProg[k])||0;
         const b=parseInt(fbProg[k])||0;
         localProg[k]=Math.max(a,b);
       });
       try{ localStorage.setItem(_hwProgressKey(),JSON.stringify(localProg)); }catch(e){}
     }
-    /* === 자동 마이그레이션: hwDone에 있지만 progress 부족한 항목 정리 === */
+    /* === 자동 마이그레이션: 현재 목록의 유효 서명만 유지 (옛 순번데이터 자동 폐기) === */
     const _doneNow=_getHwDone();
     const _progNow=_getHwProgress();
-    const _cleaned=_doneNow.filter(function(idx){
-      const item=(hwList||[])[idx];
-      if(!item) return false;
-      const need=(item.repeat)||1;
-      const cur=parseInt(_progNow[idx])||0;
-      return cur>=need; /* 회차 충족된 것만 유지 */
+    const _validSig={};
+    (hwList||[]).forEach(function(it,ii){ const s=_hwSigAt(ii); if(s) _validSig[s]=(it.repeat)||1; });
+    const _cleaned=_doneNow.filter(function(sig){
+      if(!(sig in _validSig)) return false; /* 현재 목록에 없는 서명(옛 순번 포함) 폐기 */
+      const cur=parseInt(_progNow[sig])||0;
+      return cur>=_validSig[sig];
     });
     if(_cleaned.length !== _doneNow.length){
-      console.log('[숙제 정합성 마이그레이션] '+_doneNow.length+'→'+_cleaned.length+' 항목으로 정리');
+      console.log('[숙제 정합성 마이그레이션] '+_doneNow.length+'→'+_cleaned.length+' (서명 기반)');
       _setHwDone(_cleaned);
+      if(curStudent) _fbSaveHwDone(curStudent.name, _cleaned);
     }
     push('scr-homework');
     rndrHw();_updateHwProgress();
@@ -12537,11 +12539,11 @@ const total=list.length;
 let totalReps=0, doneReps=0, finishedItems=0;
 list.forEach(function(item,i){
 const need=(item.repeat)||1;
-const cur=Math.min(progress[i]||0, need);
+const cur=Math.min(_hwCurAt(i), need);
 totalReps += need;
 doneReps += cur;
-/* 정합성: hwDone에 있고 progress도 충족하면 완료 */
-if(done.includes(i) && cur>=need) finishedItems++;
+/* 정합성: 서명 기반 완료 판정 */
+if(_hwIsDoneAt(i)) finishedItems++;
 });
 const pct=totalReps>0?Math.min(100, Math.round(doneReps/totalReps*100)):0;
 const bar=document.getElementById('hw-progress-bar');
@@ -12590,9 +12592,9 @@ hwList.forEach((item, i) => {
 const hasScale = !!item.scaleId && !!(DB.scales||[]).find(s=>s.id===item.scaleId);
 const sc = hasScale ? (DB.scales||[]).find(s=>s.id===item.scaleId) : null;
 const need=item.repeat||1;
-const cur=Math.min(progress[i]||0, need);
-/* 정합성 검증: 옛날 잘못된 hwDone이 있어도 progress가 부족하면 완료 무시 */
-const isDone = done.includes(i) && cur>=need;
+const cur=Math.min(_hwCurAt(i), need);
+/* 정합성 검증: 서명 기반 — 순번이 바뀌어도 정확한 항목에 고정 */
+const isDone = _hwIsDoneAt(i);
 const isInProgress = !isDone && cur>0;
 const repeatLabel = need>1 ? ' · '+cur+'/'+need+'회' : '';
 
@@ -12658,6 +12660,19 @@ const tmp=hwList[i];hwList[i]=hwList[j];hwList[j]=tmp;
 _saveHwList(); rndrHw();
 }
 
+function _hwSigAt(i){
+if(!hwList||i<0||i>=hwList.length) return null;
+const seen={};
+for(let k=0;k<=i;k++){
+const it=hwList[k]||{};
+const base=(it.exName||it.name||it.exId||'')+'|'+(it.scaleId||'');
+seen[base]=(seen[base]||0)+1;
+if(k===i) return base+'#'+seen[base];
+}
+return null;
+}
+function _hwCurAt(i){ const s=_hwSigAt(i); if(!s) return 0; const p=_getHwProgress(); return parseInt(p[s])||0; }
+function _hwIsDoneAt(i){ const s=_hwSigAt(i); if(!s) return false; const it=(hwList||[])[i]||{}; const need=(it.repeat)||1; return _getHwDone().includes(s) && _hwCurAt(i)>=need; }
 function _hwDoneKey(){
 const d=new Date();
 const dateStr=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
@@ -12673,14 +12688,16 @@ function _markHwDone(i){
 /* 정합성 검증: 필요 회차에 도달했는지 확인 */
 const item=(hwList||[])[i];
 const need=(item && item.repeat) || 1;
+const sig=_hwSigAt(i);
+if(!sig) return;
 const prog=_getHwProgress();
-const cur=prog[i]||0;
+const cur=prog[sig]||0;
 if(cur<need){
-  console.warn('[_markHwDone] 회차 부족으로 완료 등록 거부: idx='+i+', '+cur+'/'+need);
+  console.warn('[_markHwDone] 회차 부족으로 완료 등록 거부: sig='+sig+', '+cur+'/'+need);
   return;
 }
 const done=_getHwDone();
-if(!done.includes(i)) done.push(i);
+if(!done.includes(sig)) done.push(sig);
 _setHwDone(done);
 /* Firebase에 완료 기록 저장 */
 if(curStudent){
@@ -12705,12 +12722,14 @@ if(curStudent && typeof _fbSaveHwProgress==='function'){ _fbSaveHwProgress(curSt
 }
 /* 회차 +1 증가. 필요 회차 도달 시 자동 완료 처리. */
 function _incHwRepeat(i){
+const sig=_hwSigAt(i);
+if(!sig) return;
 const prog=_getHwProgress();
-prog[i]=(prog[i]||0)+1;
+prog[sig]=(prog[sig]||0)+1;
 _setHwProgress(prog);
 const item=(hwList||[])[i];
 const need=(item && item.repeat) || 1;
-if(prog[i]>=need){ _markHwDone(i); }
+if(prog[sig]>=need){ _markHwDone(i); }
 }
 
 function startHwItem(i){
