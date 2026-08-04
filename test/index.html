@@ -131,6 +131,26 @@
   .setup ol{font-size:14px; padding-left:20px; line-height:1.7}
   .setup code{background:#F0EEE9; padding:2px 6px; border-radius:6px; font-size:12.5px}
   .hidden{display:none!important}
+  /* 메모장 */
+  .noteInput{width:100%; font-family:inherit; font-size:15px; line-height:1.5; padding:12px 13px;
+    border:1px solid var(--line); border-radius:12px; background:#FBFBFA; color:var(--ink); resize:vertical; box-sizing:border-box}
+  .noteInput:focus{outline:none; border-color:var(--green)}
+  .noteItem{border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:8px; background:#fff}
+  .noteItem .nmeta{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px}
+  .noteItem .nwho{font-size:12.5px; font-weight:700; color:var(--green)}
+  .noteItem .ntime{font-size:11.5px; color:var(--muted)}
+  .noteItem .ntext{font-size:15px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+  .noteItem .ndel{background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:2px 4px}
+  /* 인슐린 용량 편집 */
+  .doseEdit{margin-top:2px}
+  .doseHead{display:flex; justify-content:space-between; align-items:center}
+  .doseToggle{background:none; border:1px solid var(--line); border-radius:8px; font-family:inherit;
+    font-size:12.5px; font-weight:700; color:var(--muted); padding:4px 10px; cursor:pointer}
+  .doseRow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--line)}
+  .doseRow label{font-size:14.5px; font-weight:600}
+  .doseRow input{width:76px; font-family:inherit; font-size:16px; font-weight:800; text-align:center;
+    padding:7px 6px; border:1px solid var(--line); border-radius:9px; background:#FBFBFA; color:var(--ink)}
+  .doseRow input:focus{outline:none; border-color:var(--green)}
 
   /* toast */
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
@@ -446,6 +466,20 @@
         <button class="slot" data-slot="점심"><span class="box">✓</span><span class="sname">점심 <span class="sdose" id="doseLU"></span></span><span class="swho"></span></button>
         <button class="slot" data-slot="저녁"><span class="box">✓</span><span class="sname">저녁 <span class="sdose" id="doseDI"></span></span><span class="swho"></span></button>
       </div>
+      <div class="block doseEdit">
+        <div class="doseHead">
+          <h2 class="sec" style="margin:0">인슐린 용량</h2>
+          <button class="doseToggle" id="doseToggle" type="button">수정</button>
+        </div>
+        <div class="doseForm hidden" id="doseForm">
+          <div class="doseRow"><label>아침 · 란투스</label><input type="number" id="dAmLan" min="0" max="100" inputmode="numeric"></div>
+          <div class="doseRow"><label>아침 · 휴마로그</label><input type="number" id="dAmHum" min="0" max="100" inputmode="numeric"></div>
+          <div class="doseRow"><label>점심 · 휴마로그</label><input type="number" id="dLuHum" min="0" max="100" inputmode="numeric"></div>
+          <div class="doseRow"><label>저녁 · 휴마로그</label><input type="number" id="dDiHum" min="0" max="100" inputmode="numeric"></div>
+          <button class="btn" id="doseSave" type="button" style="margin-top:12px">용량 저장</button>
+          <div class="note">⚠️ 용량 조절은 반드시 담당 의료진 지시대로 하세요. 이 칸은 의료진이 조절해준 값을 가족이 함께 보도록 반영하는 용도예요.</div>
+        </div>
+      </div>
       <div class="block">
         <h2 class="sec">인슐린 최근 7일</h2>
         <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
@@ -676,6 +710,25 @@
     </div>
   </div>
 
+  <!-- ===== 메모장 ===== -->
+  <div class="acc" data-acc="notes">
+    <button class="acc-head" type="button">
+      <span class="acc-title">📝 메모장</span>
+      <span class="acc-sum" id="accSumNote"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <textarea class="noteInput" id="noteInput" rows="3" placeholder="자유롭게 기록해요 (증상·특이사항·가족 전달사항 등). 시간과 작성자는 자동으로 남아요."></textarea>
+        <button class="btn" id="noteSave" type="button" style="margin-top:10px">메모 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">기록</h2>
+        <div id="noteList"><div class="emptylist">아직 메모가 없어요.</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 병원용 출력 ===== -->
   <div class="acc" data-acc="report">
     <button class="acc-head" type="button">
@@ -775,9 +828,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-07-25c";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-07-25d";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 항암 사이클·휴지기 반영"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 메모장+인슐린용량 편집"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -921,10 +974,78 @@ const firebaseConfig = {
     if (typeof updateTodaySummary === "function") updateTodaySummary();
   }
 
-  // 인슐린 용량 라벨 (식전, 의료진 지시 기준)
-  $("doseAM").textContent = "란투스12 + 휴마로그6";
-  $("doseLU").textContent = "휴마로그8";
-  $("doseDI").textContent = "휴마로그8";
+  // 인슐린 용량 (Firebase 저장 · 편집 가능 · 실시간 반영). 조절 판단은 의료진 몫.
+  const INS_DOSE_DEFAULT = { amLantus:12, amHumalog:6, luHumalog:8, diHumalog:8 };
+  const doseRef = db.collection("meta").doc("insulinDose");
+  let curDose = Object.assign({}, INS_DOSE_DEFAULT);
+  function renderDoseLabels(d){
+    $("doseAM").textContent = `란투스${d.amLantus} + 휴마로그${d.amHumalog}`;
+    $("doseLU").textContent = `휴마로그${d.luHumalog}`;
+    $("doseDI").textContent = `휴마로그${d.diHumalog}`;
+  }
+  function fillDoseForm(d){
+    $("dAmLan").value = d.amLantus; $("dAmHum").value = d.amHumalog;
+    $("dLuHum").value = d.luHumalog; $("dDiHum").value = d.diHumalog;
+  }
+  renderDoseLabels(curDose);
+  doseRef.onSnapshot(snap=>{
+    curDose = Object.assign({}, INS_DOSE_DEFAULT, snap.exists ? snap.data() : {});
+    renderDoseLabels(curDose);
+    if ($("doseForm").classList.contains("hidden")) fillDoseForm(curDose);
+  }, err=>console.error("용량 구독 실패:", err));
+  $("doseToggle").addEventListener("click", ()=>{
+    const f = $("doseForm"); const opening = f.classList.contains("hidden");
+    if (opening) fillDoseForm(curDose);
+    f.classList.toggle("hidden");
+    $("doseToggle").textContent = opening ? "닫기" : "수정";
+  });
+  $("doseSave").addEventListener("click", async ()=>{
+    const rd = id => { const n = parseInt($(id).value, 10); return isNaN(n) ? null : n; };
+    const nd = { amLantus:rd("dAmLan"), amHumalog:rd("dAmHum"), luHumalog:rd("dLuHum"), diHumalog:rd("dDiHum") };
+    for (const k in nd){ if (nd[k]===null || nd[k]<0 || nd[k]>100){ toast("용량을 0~100 사이 숫자로 입력해줘"); return; } }
+    try{
+      await doseRef.set(Object.assign({}, nd, { by:who||"", updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), {merge:true});
+      $("doseForm").classList.add("hidden"); $("doseToggle").textContent = "수정";
+      toast("인슐린 용량을 저장했어요");
+    }catch(e){ console.error(e); toast("저장 실패: " + (e.code||e.message)); }
+  });
+
+  // ================= 메모장 =================
+  const notesCol = db.collection("notes");
+  $("noteSave").addEventListener("click", async ()=>{
+    const t = $("noteInput").value.trim();
+    if (!t){ toast("내용을 입력해줘"); return; }
+    try{
+      const now = Date.now();
+      await notesCol.add({ text:t, by:who||"", at:now, atText: dayKey()+" "+hhmm(now),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      $("noteInput").value = "";
+      toast("메모를 저장했어요");
+    }catch(e){ console.error(e); toast("저장 실패: "+(e.code||e.message)); }
+  });
+  function renderNotes(list){
+    const box = $("noteList");
+    if (!list.length){ box.innerHTML = `<div class="emptylist">아직 메모가 없어요.</div>`; }
+    else {
+      box.innerHTML = list.map(n=>`
+        <div class="noteItem">
+          <div class="nmeta"><span class="nwho">${escape(n.by||"가족")}</span><span class="ntime">${escape(n.atText||"")}</span></div>
+          <div class="ntext">${linkifyTel(n.text||"")}</div>
+          <div style="text-align:right"><button class="ndel" data-id="${escape(n.id)}" type="button">삭제</button></div>
+        </div>`).join("");
+    }
+    const sum = $("accSumNote"); if (sum) sum.textContent = list.length ? `${list.length}개` : "";
+  }
+  notesCol.orderBy("at","desc").limit(100).onSnapshot(snap=>{
+    const list = []; snap.forEach(d=> list.push(Object.assign({id:d.id}, d.data())));
+    renderNotes(list);
+  }, err=>console.error("메모 구독 실패:", err));
+  $("noteList").addEventListener("click", async e=>{
+    const btn = e.target.closest(".ndel"); if (!btn) return;
+    if (!confirm("이 메모를 삭제할까요?")) return;
+    try{ await notesCol.doc(btn.dataset.id).delete(); toast("메모를 삭제했어요"); }
+    catch(err){ console.error(err); toast("삭제 실패"); }
+  });
 
   // 최근 7일 인슐린 요약 실시간 구독
   insCol.orderBy("date","desc").limit(8).onSnapshot(snap=>{
