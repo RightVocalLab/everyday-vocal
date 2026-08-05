@@ -9511,6 +9511,26 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
+function _showAppVersion(){
+try{
+var inner=document.querySelector('#scr-home .inner');
+if(!inner) return;
+var b=document.getElementById('app-ver-badge');
+if(!b){
+b=document.createElement('div');
+b.id='app-ver-badge';
+b.style.cssText='text-align:center;color:#9ca3af;font-size:11px;padding:12px 0 6px;letter-spacing:0.3px;';
+inner.appendChild(b);
+}
+var App=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
+if(App&&App.getInfo){
+b.style.display='';
+App.getInfo().then(function(info){ b.textContent='v'+info.version+' ('+info.build+')'; }).catch(function(){ b.style.display='none'; });
+}else{
+b.style.display='none';
+}
+}catch(e){}
+}
 function goHome(){
 cancelTTS();stopEngine();_bgmStop();
 _introHLActive=false; try{ _introClearHL(); }catch(e){}
@@ -9520,6 +9540,7 @@ scrStack=['scr-home'];
 var _fnav=document.getElementById('step-fixed-nav');
 if(_fnav)_fnav.style.display='none';
 buildHome();
+_showAppVersion();
 _applyMenuVis();
 /* Phase 4: 홈 진입 시 사용자 버튼 상태 갱신 */
 if(typeof _updateHomeUserBtn === 'function') _updateHomeUserBtn();
@@ -12798,10 +12819,9 @@ rndrHw();
 function startHomeworkSeq(){
 if(!hwList.length){ alert('숙제가 없습니다.'); return; }
 const trainList = [];
-const _doneBefore=_getHwDone();
 hwList.forEach((item,_hwIdx)=>{
-/* 이미 완료된 항목은 건너뜀 */
-if(_doneBefore.includes(_hwIdx)) return;
+/* 이미 완료된 항목은 건너뜀 (서명 기반 — v5 완료저장과 일치) */
+if(_hwIsDoneAt(_hwIdx)) return;
 const sc=(DB.scales||[]).find(s=>s.id===item.scaleId);
 const repeat=item.repeat||1;
 for(let r=0;r<repeat;r++){
