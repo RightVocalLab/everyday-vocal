@@ -9511,6 +9511,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
+var _WEB_VER='1.8';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -9522,14 +9523,7 @@ b.id='app-ver-badge';
 b.style.cssText='text-align:center;color:#9ca3af;font-size:11px;padding:12px 0 6px;letter-spacing:0.3px;';
 inner.appendChild(b);
 }
-var App=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
-if(App&&App.getInfo){
-b.style.display='';
-App.getInfo().then(function(info){ b.textContent='v'+info.version+' ('+info.build+')'; }).catch(function(){ b.style.display='none'; });
-}else{
-b.style.display='none';
-}
-}catch(e){}
+b.style.display='';var App=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;if(App&&App.getInfo){App.getInfo().then(function(info){ b.textContent='앱 v'+info.version+' ('+info.build+') · 웹 '+_WEB_VER; }).catch(function(){ b.textContent='웹 v'+_WEB_VER; });}else{b.textContent='웹 v'+_WEB_VER;}}catch(e){}
 }
 function goHome(){
 cancelTTS();stopEngine();_bgmStop();
