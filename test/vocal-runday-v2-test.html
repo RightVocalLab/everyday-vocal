@@ -12915,20 +12915,29 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
 
 /* Firebase 초기화 */
 (function _initFirebase(){
-  const script1 = document.createElement('script');
-  script1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
-  script1.onload = function(){
-    const script2 = document.createElement('script');
-    script2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
-    script2.onload = function(){
-      /* Auth SDK 추가 로드 (게시판용 익명 로그인) */
-      const scriptAuth = document.createElement('script');
-      scriptAuth.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
-      scriptAuth.onload = function(){
-        /* Storage SDK 추가 로드 (음성 파일 다운로드 URL 재생성용) */
-        const scriptStorage = document.createElement('script');
-        scriptStorage.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js';
-        scriptStorage.onload = function(){
+  var _fbSdkBase = 'https://www.gstatic.com/firebasejs/10.12.0/';
+  var _fbSdkMax = 8;
+  function _fbSdkGet(src, ok, tries){
+    tries = tries || 0;
+    var s = document.createElement('script');
+    s.src = src;
+    var done = false;
+    s.onload = function(){ if(done) return; done = true; ok(); };
+    s.onerror = function(){
+      if(done) return; done = true;
+      try{ if(s.parentNode) s.parentNode.removeChild(s); }catch(_e){}
+      if(tries < _fbSdkMax){
+        setTimeout(function(){ _fbSdkGet(src, ok, tries + 1); }, Math.min(400 * (tries + 1), 4000));
+      } else {
+        console.warn('Firebase SDK 로드 최종 실패(재시도 소진): ' + src);
+      }
+    };
+    document.head.appendChild(s);
+  }
+  _fbSdkGet(_fbSdkBase + 'firebase-app-compat.js', function(){
+    _fbSdkGet(_fbSdkBase + 'firebase-database-compat.js', function(){
+      _fbSdkGet(_fbSdkBase + 'firebase-auth-compat.js', function(){
+        _fbSdkGet(_fbSdkBase + 'firebase-storage-compat.js', function(){
         try{
           if(!firebase.apps.length){
             _fbApp = firebase.initializeApp(_FB_CONFIG);
@@ -13026,14 +13035,10 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
             }
           });
         }catch(e){ console.warn('Firebase 초기화 실패:', e); }
-        };
-        document.head.appendChild(scriptStorage);
-      };
-      document.head.appendChild(scriptAuth);
-    };
-    document.head.appendChild(script2);
-  };
-  document.head.appendChild(script1);
+        });
+      });
+    });
+  });
 })();
 
 /* ── Firebase 저장/로드 함수 ── */
