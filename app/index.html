@@ -1,1 +1,2437 @@
-준비 중
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>아빠 혈당 다이어리</title>
+
+<!-- Pretendard (한글 가독성) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+<style>
+  :root{
+    --bg:#F5F4F0; --card:#FFFFFF; --ink:#1B2430; --muted:#6B7684; --line:#E7E5DF;
+    --green:#12A186; --amber:#E0942F; --red:#D9534B; --blue:#3E74D8;
+    --shadow:0 1px 2px rgba(20,30,45,.05), 0 6px 20px rgba(20,30,45,.06);
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    font-family:"Pretendard",system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink);
+    line-height:1.5; padding-bottom:40px; font-size:17px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:540px; margin:0 auto; padding:16px 16px calc(16px + env(safe-area-inset-bottom));}
+  header.top{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 16px;}
+  header.top h1{font-size:22px; font-weight:800; margin:0; letter-spacing:-.3px}
+  .who{font-size:15px; color:var(--muted); background:#fff; border:1px solid var(--line);
+    padding:9px 15px; border-radius:999px; font-weight:700; cursor:pointer}
+  .who b{color:var(--ink)}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:18px; margin-bottom:14px}
+
+  /* Hero: latest reading */
+  .hero{padding:20px 18px 18px; text-align:center; position:relative; overflow:hidden}
+  .hero .label{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:6px}
+  .hero .big{font-size:64px; font-weight:800; line-height:1; letter-spacing:-2px; font-variant-numeric:tabular-nums}
+  .hero .unit{font-size:18px; font-weight:700; color:var(--muted); margin-left:4px}
+  .hero .status{display:inline-block; margin-top:10px; font-size:16px; font-weight:800;
+    padding:6px 16px; border-radius:999px}
+  .hero .meta{margin-top:11px; font-size:15px; color:var(--muted)}
+  .hero.empty .big{font-size:26px; color:var(--muted); font-weight:700; letter-spacing:-.5px}
+
+  /* stat row */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 8px; text-align:center; box-shadow:var(--shadow)}
+  .stat .n{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums}
+  .stat .t{font-size:13px; color:var(--muted); font-weight:600; margin-top:3px}
+
+  h2.sec{font-size:17px; font-weight:800; color:var(--ink); margin:2px 2px 12px; letter-spacing:-.2px}
+
+  /* form */
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  label.fl{display:block; font-size:14px; font-weight:700; color:var(--muted); margin-bottom:8px}
+  input[type=number], input[type=datetime-local], input[type=text]{
+    width:100%; font-family:inherit; font-size:17px; color:var(--ink);
+    padding:14px 15px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; outline:none}
+  input:focus{border-color:var(--green); background:#fff}
+  .valuebox input{font-size:34px; font-weight:800; text-align:center; letter-spacing:-1px; padding:16px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{flex:1 0 auto; min-width:0; text-align:center; font-size:15px; font-weight:700; color:var(--muted);
+    padding:13px 6px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; cursor:pointer; transition:.12s}
+  .chip.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+  .btn{width:100%; font-family:inherit; font-size:18px; font-weight:800; color:#fff; background:var(--green);
+    border:none; border-radius:14px; padding:17px; cursor:pointer; transition:.12s}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{opacity:.5; cursor:default}
+
+  /* ===== 인슐린 (오늘 3회 체크) ===== */
+  .insulin{padding:20px 18px}
+  .insulin .ihead{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px}
+  .insulin .ititle{font-size:19px; font-weight:800}
+  .insulin .idate{font-size:14px; color:var(--muted); font-weight:600}
+  .insulin .icount{font-size:14px; color:var(--muted); font-weight:600; margin-bottom:14px}
+  .insulin .icount b{color:var(--green); font-size:16px}
+  .slot{display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:#FBFBFA; border:2px solid var(--line); border-radius:16px; padding:16px 16px;
+    margin-bottom:10px; cursor:pointer; transition:.15s; font-family:inherit}
+  .slot:last-child{margin-bottom:0}
+  .slot .box{width:34px; height:34px; border-radius:10px; border:2.5px solid #C7C4BC; flex:none;
+    display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; transition:.15s}
+  .slot .sname{font-size:21px; font-weight:800; flex:none}
+  .slot .swho{flex:1; text-align:right; font-size:14px; color:var(--muted); font-weight:600}
+  .slot.done{background:rgba(18,161,134,.10); border-color:var(--green)}
+  .slot.done .box{background:var(--green); border-color:var(--green)}
+  .slot.done .sname{color:var(--green)}
+  .slot:active{transform:scale(.99)}
+
+  /* 인슐린 최근 요약 */
+  .ilog{display:flex; align-items:center; justify-content:space-between; padding:11px 4px; border-bottom:1px solid var(--line); font-size:15px}
+  .ilog:last-child{border-bottom:none}
+  .ilog .id{font-weight:700}
+  .ilog .idot{display:inline-flex; gap:7px; align-items:center}
+  .ilog .idot i{width:15px; height:15px; border-radius:50%; display:inline-block}
+  .ilog .idot i.on{background:var(--green)}
+  .ilog .idot i.off{background:#E2DFD8}
+  .ilog .idot small{font-size:12px; color:var(--muted); margin-right:2px}
+
+  /* chart */
+  .chartwrap{height:200px; position:relative}
+
+  /* list */
+  .rec{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--line)}
+  .rec:last-child{border-bottom:none}
+  .rec .dot{width:10px; height:10px; border-radius:50%; flex:none}
+  .rec .rv{font-size:23px; font-weight:800; font-variant-numeric:tabular-nums; width:56px; text-align:right}
+  .rec .rmid{flex:1; min-width:0}
+  .rec .rctx{font-size:16px; font-weight:700}
+  .rec .rsub{font-size:13px; color:var(--muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .rec .del{border:none; background:none; color:#C4C0B8; font-size:22px; cursor:pointer; padding:6px 10px; line-height:1}
+  .rec .del:active{color:var(--red)}
+  .emptylist{text-align:center; color:var(--muted); font-size:15px; padding:24px 0}
+
+  .legend{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:6px; font-size:11.5px; color:var(--muted)}
+  .legend span{display:inline-flex; align-items:center; gap:5px}
+  .legend i{width:9px; height:9px; border-radius:50%}
+
+  .note{font-size:11.5px; color:var(--muted); text-align:center; line-height:1.5; margin-top:8px}
+  .synced{font-size:11.5px; color:var(--muted); text-align:center; margin-top:2px}
+  .synced b{color:var(--green)}
+
+  /* setup screen */
+  .setup{max-width:520px; margin:40px auto; padding:0 18px}
+  .setup .card{padding:22px}
+  .setup h1{font-size:20px; margin:0 0 6px}
+  .setup p{font-size:14px; color:var(--muted); margin:0 0 14px}
+  .setup ol{font-size:14px; padding-left:20px; line-height:1.7}
+  .setup code{background:#F0EEE9; padding:2px 6px; border-radius:6px; font-size:12.5px}
+  .hidden{display:none!important}
+  /* 메모장 */
+  .noteInput{width:100%; font-family:inherit; font-size:15px; line-height:1.5; padding:12px 13px;
+    border:1px solid var(--line); border-radius:12px; background:#FBFBFA; color:var(--ink); resize:vertical; box-sizing:border-box}
+  .noteInput:focus{outline:none; border-color:var(--green)}
+  .noteItem{border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:8px; background:#fff}
+  .noteItem .nmeta{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px}
+  .noteItem .nwho{font-size:12.5px; font-weight:700; color:var(--green)}
+  .noteItem .ntime{font-size:11.5px; color:var(--muted)}
+  .noteItem .ntext{font-size:15px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+  .noteItem .ndel{background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:2px 4px}
+  /* 인슐린 용량 편집 */
+  .doseEdit{margin-top:2px}
+  .doseHead{display:flex; justify-content:space-between; align-items:center}
+  .doseToggle{background:none; border:1px solid var(--line); border-radius:8px; font-family:inherit;
+    font-size:12.5px; font-weight:700; color:var(--muted); padding:4px 10px; cursor:pointer}
+  .doseRow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--line)}
+  .doseRow label{font-size:14.5px; font-weight:600}
+  .doseRow input{width:76px; font-family:inherit; font-size:16px; font-weight:800; text-align:center;
+    padding:7px 6px; border:1px solid var(--line); border-radius:9px; background:#FBFBFA; color:var(--ink)}
+  .doseRow input:focus{outline:none; border-color:var(--green)}
+  .doseGuideBox{font-size:14.5px; line-height:1.5}
+  .doseGuideBox .dgRow{font-weight:800; margin-top:9px}
+  .doseGuideBox .dgSub{padding-left:4px; margin-top:3px}
+  .doseGuideBox .dgWarn{margin-top:12px; background:#FFF4E5; border:1px solid #F0C98A; border-radius:10px; padding:11px 13px; font-size:13px; line-height:1.55}
+
+  /* toast */
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; font-size:14px; font-weight:600; padding:12px 20px; border-radius:999px;
+    opacity:0; transition:.25s; pointer-events:none; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* who modal */
+  .modal{position:fixed; inset:0; background:rgba(20,30,45,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:24px}
+  .modal .box{background:#fff; border-radius:20px; padding:26px; width:100%; max-width:360px; text-align:center}
+  .modal h3{margin:0 0 8px; font-size:22px; font-weight:800}
+  .modal p{margin:0 0 20px; font-size:15px; color:var(--muted)}
+  .modal .opts{display:flex; flex-direction:column; gap:12px}
+  .modal .opts button{width:100%; font-family:inherit; font-size:20px; font-weight:800; padding:18px; border-radius:16px;
+    border:2px solid var(--line); background:#FBFBFA; cursor:pointer}
+  .modal .opts button:active{background:var(--green); color:#fff; border-color:var(--green)}
+
+  /* ===== 리포트 열기 버튼 ===== */
+  .btn.report{background:#2B3A4B}
+  .btn.report:active{background:#1f2b38}
+
+  /* 범위 선택 모달의 날짜 입력 */
+  .rangePick{display:none; margin-top:6px; text-align:left}
+  .rangePick.on{display:block}
+  .rangePick label{display:block; font-size:13px; font-weight:700; color:var(--muted); margin:10px 0 6px}
+
+  /* ===== 리포트 오버레이 ===== */
+  .report{position:fixed; inset:0; background:#fff; z-index:80; overflow-y:auto; display:none}
+  .report.on{display:block}
+  .reportBar{position:sticky; top:0; background:#fff; border-bottom:1px solid var(--line);
+    display:flex; gap:8px; padding:12px 16px; align-items:center; z-index:2}
+  .reportBar .sp{flex:1}
+  .reportBar button{font-family:inherit; font-weight:800; font-size:15px; padding:11px 16px; border-radius:12px; border:none; cursor:pointer}
+  .reportBar .print{background:var(--green); color:#fff}
+  .reportBar .mark{background:#2B3A4B; color:#fff}
+  .reportBar .close{background:#EFEDE7; color:var(--ink)}
+  .doc{max-width:760px; margin:0 auto; padding:24px 28px 60px}
+  .doc h1{font-size:26px; font-weight:800; margin:0 0 4px}
+  .doc .sub{font-size:14px; color:var(--muted); margin-bottom:2px}
+  .doc .rule{height:2px; background:var(--ink); margin:14px 0 18px}
+  .sumGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px}
+  .sumBox{border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center}
+  .sumBox .n{font-size:24px; font-weight:800; font-variant-numeric:tabular-nums}
+  .sumBox .t{font-size:12px; color:var(--muted); font-weight:600; margin-top:2px}
+  .ctxAvg{font-size:13px; color:var(--muted); margin-bottom:18px; line-height:1.7}
+  .ctxAvg b{color:var(--ink)}
+  .docChart{height:230px; margin-bottom:20px}
+  table.rt{width:100%; border-collapse:collapse; font-size:13px}
+  table.rt th{background:#F5F4F0; text-align:left; padding:8px 8px; font-weight:700; border-bottom:2px solid var(--line); white-space:nowrap}
+  table.rt td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+  table.rt td.v{font-weight:800; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+  table.rt td.badge span{font-weight:700; font-size:12px}
+  .docNote{font-size:12px; color:var(--muted); margin-top:18px; line-height:1.6}
+  .docEmpty{text-align:center; color:var(--muted); padding:50px 0; font-size:15px}
+
+  /* ===== 체중 ===== */
+  .wnow{display:flex; align-items:baseline; gap:6px; margin-top:2px}
+  .wbig{font-size:44px; font-weight:800; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; line-height:1}
+  .wunit{font-size:18px; font-weight:700; color:var(--muted)}
+  .wchg{font-size:16px; font-weight:800; margin-left:8px}
+  .wchg.up{color:var(--red)}
+  .wchg.down{color:var(--blue)}
+  .wchg.same{color:var(--muted)}
+  .wmeta{font-size:14px; color:var(--muted); margin-top:6px}
+  .wrec{display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line)}
+  .wrec:last-child{border-bottom:none}
+  .wrec .wv{font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; width:78px}
+  .wrec .wsub{flex:1; font-size:13px; color:var(--muted)}
+  .wrec .del{border:none; background:none; color:#C4C0B8; font-size:22px; cursor:pointer; padding:6px 10px; line-height:1}
+  .wrec .del:active{color:var(--red)}
+
+  /* ===== 인쇄 ===== */
+  @media print{
+    body{background:#fff}
+    .reportBar{display:none!important}
+    body.report-open #app,
+    body.report-open #setupScreen,
+    body.report-open #loadError,
+    body.report-open .modal,
+    body.report-open .toast{display:none!important}
+    body.report-open .report{position:static!important; display:block!important; overflow:visible!important}
+    .doc{max-width:none; padding:0}
+    table.rt{font-size:11px}
+    *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  }
+
+  /* ===== 아코디언 ===== */
+  .acc{background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); margin-bottom:14px; overflow:hidden}
+  .acc-head{width:100%; display:flex; align-items:center; gap:10px; background:none; border:none;
+    padding:18px 18px; cursor:pointer; font-family:inherit; text-align:left}
+  .acc-title{font-size:18px; font-weight:800; flex:none}
+  .acc-sum{flex:1; font-size:14px; color:var(--muted); font-weight:700; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .acc-chev{font-size:15px; color:var(--muted); transition:transform .2s; flex:none}
+  .acc.open .acc-chev{transform:rotate(180deg)}
+  .acc-body{display:none; padding:2px 16px 18px}
+  .acc.open .acc-body{display:block}
+  .block{margin-bottom:18px}
+  .block:last-child{margin-bottom:0}
+  .acc-body .hero{background:#FBFBFA; border:1px solid var(--line); border-radius:14px}
+  .acc-body .insulin{padding:4px 0}
+  .sdose{display:inline-block; font-size:12px; font-weight:700; color:#B0446A; background:rgba(176,68,106,.10); padding:2px 8px; border-radius:999px; margin-left:2px; vertical-align:middle}
+
+  /* 시점별 미니 그래프 */
+  .byctx-title{font-size:14px; font-weight:800; margin:18px 2px 10px; color:var(--ink)}
+  .mini{margin-bottom:16px}
+  .mini h4{font-size:13px; font-weight:700; color:var(--muted); margin:0 2px 6px}
+  .mini .chartwrap{height:150px}
+  .mini .stat-line{font-size:12px; color:var(--muted); margin-top:4px; text-align:right}
+
+  /* ===== 혈압 ===== */
+  .bpnow{display:flex; align-items:baseline; gap:4px; margin-top:2px}
+  .bpbig{font-size:40px; font-weight:800; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; line-height:1}
+  .bpunit{font-size:16px; font-weight:700; color:var(--muted); margin-left:6px}
+  .bpstatus{display:inline-block; margin-left:8px; font-size:15px; font-weight:800; padding:5px 13px; border-radius:999px}
+  .bpmeta{font-size:14px; color:var(--muted); margin-top:8px}
+  .bp2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .bprec{display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line)}
+  .bprec:last-child{border-bottom:none}
+  .bprec .dot{width:10px; height:10px; border-radius:50%; flex:none}
+  .bprec .bv{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; width:92px}
+  .bprec .bsub{flex:1; font-size:13px; color:var(--muted)}
+  .bprec .del{border:none; background:none; color:#C4C0B8; font-size:22px; cursor:pointer; padding:6px 10px; line-height:1}
+  .bprec .del:active{color:var(--red)}
+
+  /* 리포트 항목 선택 */
+  .itemPick{text-align:left; margin:4px 0 4px}
+  .itemPick .ck{display:flex; align-items:center; gap:10px; padding:12px 4px; font-size:16px; font-weight:700; cursor:pointer}
+  .itemPick .ck input{width:20px; height:20px; accent-color:var(--green)}
+
+  /* ===== 돌봄 가이드 & 질답 ===== */
+  .askbox{display:flex; gap:8px; margin-bottom:12px}
+  .askbox input{flex:1; font-family:inherit; font-size:16px; padding:14px 15px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA; outline:none}
+  .askbox input:focus{border-color:var(--green); background:#fff}
+  .askbox button{flex:none; font-family:inherit; font-size:16px; font-weight:800; color:#fff; background:var(--green); border:none; border-radius:12px; padding:0 18px; cursor:pointer}
+  .ansArea{margin-bottom:6px}
+  .ans{border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; background:#FBFBFA}
+  .ans .acat{font-size:12px; font-weight:800; color:var(--green); margin-bottom:4px}
+  .ans .atit{font-size:16px; font-weight:800; margin-bottom:4px}
+  .ans .abody{font-size:15px; line-height:1.6; white-space:pre-wrap}
+  .ans.emer{background:rgba(217,83,75,.08); border-color:var(--red)}
+  .ans.emer .acat{color:var(--red)}
+  .ansHint{font-size:14px; color:var(--muted); padding:10px 2px; line-height:1.6}
+
+  .emerBar{background:rgba(217,83,75,.10); border:1px solid var(--red); border-radius:14px; padding:14px 16px; margin-bottom:16px}
+  .emerBar .et{font-size:14px; font-weight:800; color:var(--red); margin-bottom:6px}
+  .emerBar .eb{font-size:15px; line-height:1.6}
+  .emerBar a{color:var(--red); font-weight:800; text-decoration:none}
+
+  .gcat{margin-top:16px}
+  .gcat h4{font-size:14px; font-weight:800; margin:0 0 8px; padding-bottom:6px; border-bottom:2px solid var(--line)}
+  .gitem{padding:11px 4px; border-bottom:1px solid var(--line)}
+  .gitem:last-child{border-bottom:none}
+  .gitem .git{font-size:15px; font-weight:700}
+  .gitem .gib{font-size:14px; color:#3a4453; margin-top:3px; line-height:1.55; white-space:pre-wrap}
+  .gitem .gia{margin-top:6px; display:flex; gap:14px}
+  .gitem .gia button{border:none; background:none; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; padding:2px 0}
+  .gitem .gia button.d:active{color:var(--red)}
+
+  .gsel{width:100%; font-family:inherit; font-size:16px; padding:13px 14px; border:1px solid var(--line); border-radius:12px; background:#FBFBFA}
+
+  /* ===== 오늘의 돌봄 요약 ===== */
+  .today{background:linear-gradient(135deg,#2B7A6B,#3E9E86); border-radius:20px; padding:18px 18px 16px; margin-bottom:16px; color:#fff; box-shadow:0 6px 20px rgba(43,122,107,.25)}
+  .today h3{margin:0 0 12px; font-size:15px; font-weight:700; opacity:.95}
+  .today .row{display:flex; gap:10px}
+  .today .tcard{flex:1; background:rgba(255,255,255,.16); border-radius:14px; padding:12px 10px; text-align:center}
+  .today .tcard .big{font-size:26px; font-weight:800; line-height:1.1; letter-spacing:-.5px}
+  .today .tcard .lb{font-size:12px; font-weight:600; opacity:.9; margin-top:4px}
+  .today .tcard.tap{cursor:pointer}
+  .today .dday .big{font-size:23px}
+  .today .ddate{font-size:11px; opacity:.85; margin-top:3px}
+  .today .nextChemo{margin-top:10px; display:none; flex-direction:column; gap:7px}
+  .today .nextChemo.show{display:flex}
+  .today .up-item{background:rgba(255,255,255,.14); border-radius:12px; padding:10px 12px; line-height:1.4}
+  .today .up-item.chemo{background:rgba(255,255,255,.24)}
+  .today .up-top{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+  .today .up-title{font-size:13.5px; font-weight:800; letter-spacing:-.2px}
+  .today .up-when{font-size:12.5px; font-weight:700; opacity:.95; white-space:nowrap}
+  .today .up-sub{font-size:12px; font-weight:600; opacity:.9; margin-top:2px}
+  .today .up-prep{font-size:11.5px; font-weight:600; opacity:.82; margin-top:3px}
+
+  /* ===== 복약 스케줄 ===== */
+  .medslot{border:1px solid var(--line); border-radius:16px; padding:14px 15px; margin-bottom:14px; background:#FBFBFA}
+  .medslot.done{background:rgba(43,122,107,.06); border-color:var(--green)}
+  .medhead{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .medhead .mh-t{font-size:16px; font-weight:800; flex:1}
+  .medchk{border:none; font-family:inherit; font-size:13px; font-weight:800; padding:8px 14px; border-radius:999px; cursor:pointer; background:#EFEDE7; color:var(--ink); white-space:nowrap}
+  .medslot.done .medchk{background:var(--green); color:#fff}
+  .medlist{display:flex; flex-direction:column; gap:9px}
+  .medrow{display:flex; align-items:center; gap:10px}
+  .medrow .pill{width:12px; height:12px; border-radius:50%; flex:none; border:1px solid rgba(0,0,0,.12)}
+  .medrow .mn{font-size:15px; font-weight:700; flex:none}
+  .medrow .mu{font-size:12.5px; color:var(--muted); flex:1}
+  .medrow .mw{font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; background:#EFEDE7; color:#6b6f76; flex:none}
+  .medrow .mw.before{background:rgba(224,122,60,.14); color:#C1611F}
+  .medwarn{font-size:12.5px; color:#C1611F; background:rgba(224,122,60,.08); border-radius:10px; padding:8px 10px; margin-top:10px; line-height:1.5}
+  .prnwrap .medrow{padding:9px 0; border-bottom:1px solid var(--line)}
+  .prnwrap .medrow:last-child{border-bottom:none}
+  .secintro{font-size:13px; font-weight:700; color:var(--muted); margin:0 2px 12px}
+  .secintro span{font-weight:600}
+  .mimg{width:44px; height:44px; border-radius:10px; object-fit:cover; flex:none; border:1px solid var(--line); background:#fff}
+  .mimg-x{display:inline-block; background:#EFEDE7}
+  .symrow{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--line)}
+  .symrow:last-child{border-bottom:none}
+  .symtxt{flex:1; min-width:0}
+  .symtop{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px}
+  .symtag{font-size:12px; font-weight:800; color:#B0446A; background:rgba(176,68,106,.10); padding:2px 9px; border-radius:999px}
+  .symhow{font-size:13.5px; color:#3a4453; line-height:1.55}
+
+  /* 연락처 목록(줄바꿈) */
+  .conbox{margin:4px 0 14px; display:flex; flex-direction:column; gap:1px; background:var(--line); border-radius:12px; overflow:hidden; border:1px solid var(--line)}
+  .conrow{display:flex; gap:10px; align-items:baseline; background:#fff; padding:11px 13px}
+  .conrow .cont{font-size:13px; font-weight:800; color:var(--ink); flex:none; min-width:88px}
+  .conrow .conb{font-size:13.5px; color:#3a4453; line-height:1.5; flex:1}
+  .conrow a{color:#2B7A6B; font-weight:700; text-decoration:none}
+  /* 검색 답변 */
+  .anslead{font-size:13px; font-weight:700; color:var(--muted); margin:2px 2px 8px}
+  .anslead.emerlead{color:#C0392B}
+  .ansmore{font-size:12.5px; font-weight:700; color:var(--muted); margin:14px 2px 8px}
+  .ans.mini{opacity:.92}
+  .ans.mini .atit{font-size:14px}
+
+  /* 진료 기록(날짜별) */
+  .recday{border:1px solid var(--line); border-radius:16px; margin-bottom:14px; overflow:hidden; background:#fff}
+  .recday-h{width:100%; text-align:left; border:none; background:#F7F5F0; font-family:inherit; cursor:pointer; padding:14px 16px; display:flex; align-items:center; gap:10px}
+  .recday-h .rd-date{font-size:16px; font-weight:800; flex:1}
+  .recday-h .rd-cnt{font-size:12px; font-weight:700; color:var(--muted)}
+  .recday-h .rd-chev{transition:transform .2s; color:var(--muted)}
+  .recday.open .rd-chev{transform:rotate(180deg)}
+  .recday-body{display:none; padding:6px 14px 14px}
+  .recday.open .recday-body{display:block}
+  .rectopic{border-top:1px solid var(--line); padding:12px 2px 4px}
+  .rectopic:first-child{border-top:none}
+  .rectopic-h{width:100%; text-align:left; border:none; background:none; font-family:inherit; cursor:pointer; display:flex; align-items:center; gap:8px; padding:6px 0}
+  .rectag{font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; flex:none}
+  .rectag.dept{background:rgba(43,122,107,.12); color:#2B7A6B}
+  .rectag.warn{background:rgba(224,122,60,.14); color:#C1611F}
+  .rectag.sum{background:rgba(90,110,140,.14); color:#4a5568}
+  .rectopic-h .rt-t{font-size:14.5px; font-weight:700; flex:1}
+  .rectopic-h .rt-chev{font-size:12px; color:var(--muted); transition:transform .2s}
+  .rectopic.open .rt-chev{transform:rotate(180deg)}
+  .rectopic-body{display:none; font-size:14px; line-height:1.65; color:#333a45; white-space:pre-wrap; padding:4px 2px 8px}
+  .rectopic.open .rectopic-body{display:block}
+  .rectopic-body b{color:var(--ink)}
+
+</style>
+</head>
+<body>
+
+<!-- ===================== 설정 안내 화면 (Firebase 미설정 시) ===================== -->
+<div id="setupScreen" class="setup hidden">
+  <div class="card">
+    <h1>⚙️ 1분 설정만 하면 시작</h1>
+    <p>이 앱은 두 사람이 같은 혈당 기록을 실시간으로 보기 위해 무료 Firebase 저장소를 씁니다. 아래 <code>firebaseConfig</code> 값만 채우면 끝이에요.</p>
+    <ol>
+      <li><b>console.firebase.google.com</b> 접속 → 프로젝트 만들기</li>
+      <li>왼쪽 <b>빌드 → Firestore Database</b> → 데이터베이스 만들기 → <b>테스트 모드</b>로 시작</li>
+      <li>프로젝트 설정(⚙️) → 하단 <b>내 앱</b> → 웹 <b>&lt;/&gt;</b> 앱 추가</li>
+      <li>나오는 <code>firebaseConfig</code>의 값 6줄을 이 HTML 파일 위쪽 <code>firebaseConfig</code>에 붙여넣기</li>
+      <li>깃허브에 다시 푸시 → 끝!</li>
+    </ol>
+    <p style="margin-top:14px">막히면 스크린샷 찍어서 물어보세요. 바로 잡아드릴게요.</p>
+  </div>
+</div>
+
+<!-- ===================== 로드 실패 화면 ===================== -->
+<div id="loadError" class="setup hidden">
+  <div class="card">
+    <h1>📶 연결에 문제가 있어요</h1>
+    <p id="loadErrorMsg">필요한 데이터를 불러오지 못했어요. 인터넷 연결을 확인하고 화면을 새로고침 해주세요.</p>
+    <button class="btn" onclick="location.reload()">새로고침</button>
+  </div>
+</div>
+
+<!-- ===================== 메인 앱 ===================== -->
+<div id="app" class="wrap hidden">
+  <header class="top">
+    <h1>아빠 건강 다이어리</h1>
+    <div class="who" id="whoBtn"><b id="whoName">-</b></div>
+  </header>
+
+  <!-- 오늘의 돌봄 요약 -->
+  <div class="today" id="todayCard">
+    <h3>오늘의 돌봄</h3>
+    <div class="row">
+      <div class="tcard dday" id="ddayCard">
+        <div class="big" id="ddayBig">–</div>
+        <div class="ddate" id="ddayDate">항암 일정</div>
+      </div>
+      <div class="tcard tap" id="todayIns">
+        <div class="big" id="todayInsBig">0/3</div>
+        <div class="lb">💉 인슐린</div>
+      </div>
+      <div class="tcard tap" id="todayMed">
+        <div class="big" id="todayMedBig">0/3</div>
+        <div class="lb">💊 복약</div>
+      </div>
+    </div>
+    <div class="nextChemo tap" id="nextChemoLine"></div>
+  </div>
+
+  <!-- ===== 인슐린 ===== -->
+  <div class="acc" data-acc="insulin">
+    <button class="acc-head" type="button">
+      <span class="acc-title">💉 오늘 인슐린</span>
+      <span class="acc-sum" id="accSumIns"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block insulin">
+        <div class="idate" id="insDate" style="text-align:right"></div>
+        <div class="icount" id="insCount">오늘 <b>0</b> / 3회 완료</div>
+        <button class="slot" data-slot="아침"><span class="box">✓</span><span class="sname">아침 <span class="sdose" id="doseAM"></span></span><span class="swho"></span></button>
+        <button class="slot" data-slot="점심"><span class="box">✓</span><span class="sname">점심 <span class="sdose" id="doseLU"></span></span><span class="swho"></span></button>
+        <button class="slot" data-slot="저녁"><span class="box">✓</span><span class="sname">저녁 <span class="sdose" id="doseDI"></span></span><span class="swho"></span></button>
+      </div>
+      <div class="block doseEdit">
+        <div class="doseHead">
+          <h2 class="sec" style="margin:0">인슐린 용량</h2>
+          <button class="doseToggle" id="doseToggle" type="button">수정</button>
+        </div>
+        <div class="doseForm hidden" id="doseForm">
+          <div class="doseRow"><label>아침 · 란투스</label><input type="number" id="dAmLan" min="0" max="100" inputmode="numeric"></div>
+          <div class="doseRow"><label>아침 · 휴마로그</label><input type="number" id="dAmHum" min="0" max="100" inputmode="numeric"></div>
+          <div class="doseRow"><label>점심 · 휴마로그</label><input type="number" id="dLuHum" min="0" max="100" inputmode="numeric"></div>
+          <div class="doseRow"><label>저녁 · 휴마로그</label><input type="number" id="dDiHum" min="0" max="100" inputmode="numeric"></div>
+          <button class="btn" id="doseSave" type="button" style="margin-top:12px">용량 저장</button>
+          <div class="note">⚠️ 용량 조절은 반드시 담당 의료진 지시대로 하세요. 이 칸은 의료진이 조절해준 값을 가족이 함께 보도록 반영하는 용도예요.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="doseHead"><h2 class="sec" style="margin:0">용량 조절 지침</h2><span class="note" style="margin:0">의료진 안내</span></div>
+        <div class="doseGuideBox">
+          <div class="dgRow">💧 란투스 = 공복혈당 기준</div>
+          <div class="dgSub">· 공복이 낮게 나와서 <b>지금은 중단</b><br>· 공복이 <b>130 넘으면 란투스 4</b>로</div>
+          <div class="dgRow">🍚 휴마로그 = 식후혈당 기준</div>
+          <div class="dgSub">· 식후가 <b>300을 계속 넘으면 1~2 증량</b></div>
+          <div class="dgWarn">⚠️ 최소 <b>2~3일 지켜보고</b> 조절해요. 그때그때 수치로 즉시 바꾸지 말라고 하셨어요. 조절은 담당 의료진 안내대로.</div>
+        </div>
+      </div>
+      <div class="block">
+        <h2 class="sec">인슐린 최근 7일</h2>
+        <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 복약 ===== -->
+  <div class="acc" data-acc="meds">
+    <button class="acc-head" type="button">
+      <span class="acc-title">💊 복약</span>
+      <span class="acc-sum" id="accSumMed"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block" id="medSchedule"></div>
+      <div class="block">
+        <h2 class="sec">증상이 있을 때만 먹는 약</h2>
+        <div class="prnwrap" id="medPrn"></div>
+      </div>
+      <div class="note" style="margin-top:4px">복약 내용은 2026-07-15 처방 기준입니다. 처방이 바뀌면 알려주세요. 용법은 처방전 지침을 최우선으로 따르세요.</div>
+    </div>
+  </div>
+
+  <!-- ===== 혈당 ===== -->
+  <div class="acc" data-acc="bg">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🩸 혈당</span>
+      <span class="acc-sum" id="accSumBg"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block hero empty" id="hero">
+        <div class="label">최근 혈당</div>
+        <div class="big" id="heroBig">아직 기록이 없어요</div>
+        <div class="meta" id="heroMeta"></div>
+      </div>
+      <div class="stats block">
+        <div class="stat"><div class="n" id="stAvg">-</div><div class="t">7일 평균</div></div>
+        <div class="stat"><div class="n" id="stHi">-</div><div class="t">최고</div></div>
+        <div class="stat"><div class="n" id="stLo">-</div><div class="t">최저</div></div>
+      </div>
+      <div class="block" id="inputCard">
+        <h2 class="sec">혈당 기록하기</h2>
+        <div class="field valuebox">
+          <label class="fl">혈당 수치 (mg/dL)</label>
+          <input type="number" id="inValue" inputmode="numeric" placeholder="예) 120" min="10" max="900">
+        </div>
+        <div class="field">
+          <label class="fl">측정 시점</label>
+          <div class="chips" id="ctxChips">
+            <div class="chip on" data-v="공복">공복</div>
+            <div class="chip" data-v="식전">식전</div>
+            <div class="chip" data-v="아침식후">아침식후</div>
+            <div class="chip" data-v="점심식후">점심식후</div>
+            <div class="chip" data-v="저녁식후">저녁식후</div>
+            <div class="chip" data-v="취침전">취침전</div>
+            <div class="chip" data-v="기타">기타</div>
+          </div>
+        </div>
+        <div class="field"><label class="fl">측정 시간</label><input type="datetime-local" id="inWhen"></div>
+        <div class="field"><label class="fl">메모 (선택)</label><input type="text" id="inMemo" placeholder="예) 약 먹기 전"></div>
+        <button class="btn" id="saveBtn">기록 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">전체 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+        <div class="chartwrap"><canvas id="chart"></canvas></div>
+        <div class="legend">
+          <span><i style="background:var(--blue)"></i>저혈당</span>
+          <span><i style="background:var(--green)"></i>정상</span>
+          <span><i style="background:var(--amber)"></i>주의</span>
+          <span><i style="background:var(--red)"></i>높음</span>
+        </div>
+        <div class="note" style="margin-top:12px">색상 기준(당뇨 관리 목표): <b>식전 80~130</b> · <b>식후 2시간 180 미만</b> · <b>70 미만 저혈당</b>.</div>
+      </div>
+      <div class="block">
+        <div class="byctx-title">📊 시점별 추이</div>
+        <div id="bgByCtx"><div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div></div>
+      </div>
+      <div class="block">
+        <h2 class="sec">혈당 전체 기록</h2>
+        <div id="list"><div class="emptylist">첫 혈당을 기록해 보세요.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 체중 ===== -->
+  <div class="acc" data-acc="weight">
+    <button class="acc-head" type="button">
+      <span class="acc-title">⚖️ 체중</span>
+      <span class="acc-sum" id="accSumW"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="wnow"><span class="wbig" id="wBig">–</span><span class="wunit">kg</span><span class="wchg" id="wChg"></span></div>
+        <div class="wmeta" id="wMeta">아직 체중 기록이 없어요.</div>
+      </div>
+      <div class="block">
+        <div class="field valuebox">
+          <label class="fl">체중 (kg)</label>
+          <input type="number" id="wValue" inputmode="decimal" step="0.1" placeholder="예) 68.5" min="10" max="400">
+        </div>
+        <div class="field">
+          <label class="fl">측정 시점</label>
+          <div class="chips" id="wCtxChips">
+            <div class="chip on" data-v="아침공복">아침공복</div>
+            <div class="chip" data-v="일과중">일과중</div>
+          </div>
+        </div>
+        <div class="field"><label class="fl">측정 시간</label><input type="datetime-local" id="wWhen"></div>
+        <div class="field"><label class="fl">메모 (선택)</label><input type="text" id="wMemo" placeholder="예) 기상 직후"></div>
+        <button class="btn" id="wSaveBtn" style="background:#3E74D8">체중 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">전체 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+        <div class="chartwrap"><canvas id="wChart"></canvas></div>
+      </div>
+      <div class="block">
+        <div class="byctx-title">📊 시점별 추이</div>
+        <div id="wByCtx"><div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div></div>
+      </div>
+      <div class="block">
+        <h2 class="sec">체중 전체 기록</h2>
+        <div id="wList"><div class="emptylist">체중을 기록하면 여기에 쌓여요.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 혈압 ===== -->
+  <div class="acc" data-acc="bp">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🫀 혈압</span>
+      <span class="acc-sum" id="accSumBp"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="bpnow"><span class="bpbig" id="bpBig">–</span><span class="bpunit">mmHg</span><span class="bpstatus" id="bpStatus" style="display:none"></span></div>
+        <div class="bpmeta" id="bpMeta">아직 혈압 기록이 없어요.</div>
+      </div>
+      <div class="block">
+        <div class="bp2">
+          <div class="field valuebox" style="margin:0">
+            <label class="fl">수축기 (높은값)</label>
+            <input type="number" id="sysValue" inputmode="numeric" placeholder="120" min="50" max="300">
+          </div>
+          <div class="field valuebox" style="margin:0">
+            <label class="fl">이완기 (낮은값)</label>
+            <input type="number" id="diaValue" inputmode="numeric" placeholder="80" min="30" max="200">
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label class="fl">측정 시점</label>
+          <div class="chips" id="bpCtxChips">
+            <div class="chip on" data-v="아침">아침</div>
+            <div class="chip" data-v="저녁">저녁</div>
+            <div class="chip" data-v="기타">기타</div>
+          </div>
+        </div>
+        <div class="field"><label class="fl">맥박 (선택, bpm)</label><input type="number" id="pulseValue" inputmode="numeric" placeholder="예) 72" min="20" max="250"></div>
+        <div class="field"><label class="fl">측정 시간</label><input type="datetime-local" id="bpWhen"></div>
+        <div class="field"><label class="fl">메모 (선택)</label><input type="text" id="bpMemo" placeholder="예) 약 먹기 전"></div>
+        <button class="btn" id="bpSaveBtn" style="background:#B0446A">혈압 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">혈압 추이 <span style="font-weight:600;color:var(--muted);font-size:12px">· 최근 30회</span></h2>
+        <div class="chartwrap"><canvas id="bpChart"></canvas></div>
+        <div class="legend">
+          <span><i style="background:#D9534B"></i>수축기</span>
+          <span><i style="background:#3E74D8"></i>이완기</span>
+        </div>
+        <div class="note" style="margin-top:12px">기준(대한고혈압학회): 정상 <b>120/80 미만</b> · 주의 120~139/80~89 · 고혈압 <b>140/90 이상</b>. 가정혈압은 아침·저녁 하루 2회 권장.</div>
+      </div>
+      <div class="block">
+        <div class="byctx-title">📊 시점별 추이 (아침 / 저녁)</div>
+        <div id="bpByCtx"><div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div></div>
+      </div>
+      <div class="block">
+        <h2 class="sec">혈압 전체 기록</h2>
+        <div id="bpList"><div class="emptylist">첫 혈압을 기록해 보세요.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 돌봄 가이드 & 질답 ===== -->
+  <div class="acc" data-acc="guide">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🩺 돌봄 가이드 & 질문</span>
+      <span class="acc-sum" id="accSumGuide"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="emerBar">
+          <div class="et">🚨 위급 상황이면 먼저</div>
+          <div class="eb">즉시 <a href="tel:119">119</a>에 전화하거나 응급실로 가세요.<br>판단이 어려우면 망설이지 말고 연락하세요.</div>
+        </div>
+        <div class="conbox" id="emerContacts"></div>
+        <div class="askbox">
+          <input type="text" id="askInput" placeholder="예) 열이 나요 / 구토 / 다음 항암 언제">
+          <button id="askBtn">찾기</button>
+        </div>
+        <div class="ansArea" id="ansArea">
+          <div class="ansHint">궁금한 증상·상황을 입력하면, 아빠 기록·안내지를 토대로 정리해서 답해드려요. 등록 안 된 내용은 지어내지 않고 병원 문의를 안내합니다.</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2 class="sec">전체 가이드</h2>
+        <div id="gList"><div class="emptylist">가이드를 불러오는 중…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 진료 기록 (날짜별) ===== -->
+  <div class="acc" data-acc="records">
+    <button class="acc-head" type="button">
+      <span class="acc-title">📋 진료 기록 (날짜별)</span>
+      <span class="acc-sum" id="accSumRec"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <div class="note" style="margin-bottom:12px">진료·검사·교육 때 들은 내용을 날짜별로 정리했어요. 날짜를 누르면 그날 기록이 열립니다.</div>
+        <div id="recList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 메모장 ===== -->
+  <div class="acc" data-acc="notes">
+    <button class="acc-head" type="button">
+      <span class="acc-title">📝 메모장</span>
+      <span class="acc-sum" id="accSumNote"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <textarea class="noteInput" id="noteInput" rows="3" placeholder="자유롭게 기록해요 (증상·특이사항·가족 전달사항 등). 시간과 작성자는 자동으로 남아요."></textarea>
+        <button class="btn" id="noteSave" type="button" style="margin-top:10px">메모 저장</button>
+      </div>
+      <div class="block">
+        <h2 class="sec">기록</h2>
+        <div id="noteList"><div class="emptylist">아직 메모가 없어요.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 병원용 출력 ===== -->
+  <div class="acc" data-acc="report">
+    <button class="acc-head" type="button">
+      <span class="acc-title">🏥 병원용 기록 출력</span>
+      <span class="acc-sum"></span>
+      <span class="acc-chev">▾</span>
+    </button>
+    <div class="acc-body">
+      <div class="block">
+        <p style="font-size:14px;color:var(--muted);margin:6px 0 14px;line-height:1.6">항목(혈당·체중·혈압)과 기간을 골라 기록지를 만들어 바로 인쇄하거나 PDF로 저장할 수 있어요.</p>
+        <button class="btn report" id="openReport">기록지 만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="synced" id="syncState">연결 중…</div>
+  <div class="note">화면의 정상/주의 표시는 일반 기준을 참고한 <b>참고용</b>이며 의료 진단이 아닙니다. 실제 판단과 약 조절은 담당 의료진과 상의하세요.</div>
+</div>
+
+<!-- 기록자 선택 모달 -->
+<div class="modal hidden" id="whoModal">
+  <div class="box">
+    <h3>누구세요?</h3>
+    <p>한 번만 선택하면 다음부터 자동으로 로그인돼요.</p>
+    <div class="opts" id="whoOpts">
+      <button data-v="아빠">아빠</button>
+      <button data-v="동현">동현</button>
+      <button data-v="동진">동진</button>
+      <button data-v="현아">현아</button>
+      <button data-v="영주">영주</button>
+    </div>
+  </div>
+</div>
+
+<div id="appVer" style="text-align:center; font-size:11px; color:var(--muted); padding:14px 0 26px; opacity:.75">버전 확인 중…</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 출력 범위 선택 모달 -->
+<div class="modal hidden" id="rangeModal">
+  <div class="box">
+    <h3>기록지 만들기</h3>
+    <div class="itemPick">
+      <label class="ck"><input type="checkbox" id="itemBg" checked> 🩸 혈당</label>
+      <label class="ck"><input type="checkbox" id="itemW" checked> ⚖️ 체중</label>
+      <label class="ck"><input type="checkbox" id="itemBp" checked> 🫀 혈압</label>
+    </div>
+    <p id="lastPrintInfo" style="margin:14px 0 16px">마지막 출력 기록을 확인 중…</p>
+    <div class="opts">
+      <button data-mode="incremental">지난 출력 이후 ~ 지금</button>
+      <button data-mode="all">처음 ~ 지금 (전체)</button>
+      <button data-mode="custom" id="customBtn">기간 직접 지정</button>
+    </div>
+    <div class="rangePick" id="rangePick">
+      <label>시작일 (비우면 맨 처음부터)</label>
+      <input type="date" id="rangeStart">
+      <label>종료일</label>
+      <input type="date" id="rangeEnd">
+      <button class="btn" id="makeCustom" style="margin-top:16px">이 기간으로 만들기</button>
+    </div>
+    <button class="btn" id="rangeCancel" style="background:#EFEDE7;color:var(--ink);margin-top:14px">취소</button>
+  </div>
+</div>
+
+<!-- 리포트(기록지) 화면 -->
+<div class="report" id="reportOverlay">
+  <div class="reportBar">
+    <button class="close" id="reportClose">← 닫기</button>
+    <div class="sp"></div>
+    <button class="mark hidden" id="reportMark">출력완료로 표시</button>
+    <button class="print" id="reportPrint">🖨 인쇄 / PDF</button>
+  </div>
+  <div class="doc" id="reportDoc"></div>
+</div>
+
+<!-- Firebase (compat: 빌드 불필요, 단일 파일로 동작) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+/* ============================================================
+   ① 여기에 Firebase 설정값을 붙여넣으세요 (딱 이 부분만!)
+   Firebase 콘솔 → 프로젝트 설정 → 내 앱(웹)에서 복사한 값
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCHtrKuFml2-Pc1y4yx7qiSYCIESUPrX-Q",
+  authDomain: "abba-blood-sugar.firebaseapp.com",
+  projectId: "abba-blood-sugar",
+  storageBucket: "abba-blood-sugar.firebasestorage.app",
+  messagingSenderId: "312092975960",
+  appId: "1:312092975960:web:8b99c8c53c667712b9bb2d"
+};
+/* ============================================================ */
+
+(function(){
+  "use strict";
+
+  const APP_VERSION = "2026-07-26a";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 내분비8·26+당뇨교육+인슐린지침"; } catch(e){}
+
+  const $ = id => document.getElementById(id);
+  function showLoadError(msg){
+    if (msg) $("loadErrorMsg").textContent = msg;
+    $("app").classList.add("hidden");
+    $("setupScreen").classList.add("hidden");
+    $("loadError").classList.remove("hidden");
+  }
+
+  // ---- 설정 여부 확인: 안 채웠으면 안내 화면 ----
+  const isConfigured = firebaseConfig.projectId && !firebaseConfig.projectId.includes("여기에");
+  if (!isConfigured) {
+    $("setupScreen").classList.remove("hidden");
+    return;
+  }
+
+  // ---- Firebase SDK 로드 확인 (네트워크 차단 등) ----
+  if (typeof firebase === "undefined" || !firebase.initializeApp) {
+    showLoadError("데이터 서버(Firebase)에 연결하지 못했어요. 인터넷 연결을 확인하고 새로고침 해주세요.");
+    return;
+  }
+
+  document.getElementById("app").classList.remove("hidden");
+
+  // ---- Firebase 초기화 ----
+  let db;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch (err) {
+    console.error(err);
+    showLoadError("앱을 시작하는 중 문제가 생겼어요. 새로고침 해도 계속되면 알려주세요. (" + (err.code||err.message||"init error") + ")");
+    return;
+  }
+  const col = db.collection("readings");
+  const insCol = db.collection("insulin");
+
+  // ---- localStorage 안전 래퍼 (사생활 보호 모드 등 대비) ----
+  const store = {
+    get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  };
+
+  // ---- 요소 ----
+  const toastEl = $("toast");
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(()=>toastEl.classList.remove("show"), 1800);
+  }
+
+  // ---- 기록자(사용자) ----
+  let who = store.get("bg_user") || "";
+  function refreshWho(){
+    $("whoName").textContent = "👤 " + (who || "로그인");
+  }
+  function askWho(force){
+    if (who && !force) { refreshWho(); return; }
+    $("whoModal").classList.remove("hidden");
+  }
+  $("whoOpts").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    who = b.dataset.v; store.set("bg_user", who);
+    $("whoModal").classList.add("hidden"); refreshWho();
+  });
+  $("whoBtn").addEventListener("click", ()=>askWho(true));
+
+  // ================= 인슐린 (오늘 3회 체크) =================
+  const SLOTS = ["아침","점심","저녁"];
+  let todaySlots = {};   // {아침:{done,by,at}, ...}
+
+  function dayKey(d){
+    d = d || new Date();
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), da=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+  function hhmm(ms){
+    const d=new Date(ms); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  }
+
+  // 슬롯 탭 → 토글
+  document.querySelectorAll(".slot").forEach(btn=>{
+    btn.addEventListener("click", ()=>toggleInsulin(btn.dataset.slot));
+  });
+  async function toggleInsulin(slot){
+    if (!who){ askWho(true); return; }
+    const key = dayKey();
+    const cur = todaySlots[slot];
+    const done = !(cur && cur.done);
+    try{
+      await insCol.doc(key).set({
+        date: key,
+        slots: { [slot]: { done: done, by: who, at: Date.now() } }
+      }, { merge: true });
+      toast(done ? `${slot} 인슐린 체크 ✓` : `${slot} 체크 해제`);
+    }catch(err){
+      console.error(err); toast("저장 실패: " + (err.code||err.message));
+    }
+  }
+
+  // 오늘 인슐린 실시간 구독 (자정 지나면 자동으로 새 날짜 구독)
+  let curDay = dayKey();
+  let unsubToday = null;
+  let unsubMedToday = null;
+  function updateInsDate(){
+    const d = new Date();
+    $("insDate").textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})`;
+  }
+  function subscribeToday(){
+    if (unsubToday) unsubToday();
+    todaySlots = {}; renderTodayInsulin(); updateInsDate();
+    unsubToday = insCol.doc(curDay).onSnapshot(doc=>{
+      todaySlots = (doc.exists && doc.data().slots) ? doc.data().slots : {};
+      renderTodayInsulin();
+    }, err=>console.error(err));
+    if (unsubMedToday) unsubMedToday();
+    medsToday = {}; renderTodayMeds();
+    unsubMedToday = medsCol.doc(curDay).onSnapshot(doc=>{
+      medsToday = (doc.exists && doc.data().slots) ? doc.data().slots : {};
+      renderTodayMeds();
+    }, err=>console.error(err));
+  }
+  // 1분마다 날짜 바뀌었는지 확인
+  setInterval(()=>{
+    const k = dayKey();
+    if (k !== curDay){ curDay = k; subscribeToday(); }
+  }, 60000);
+
+  function renderTodayInsulin(){
+    let done = 0;
+    SLOTS.forEach(slot=>{
+      const el = document.querySelector(`.slot[data-slot="${slot}"]`);
+      const s = todaySlots[slot];
+      const on = !!(s && s.done);
+      el.classList.toggle("done", on);
+      el.querySelector(".swho").textContent = on ? `${s.by} · ${hhmm(s.at)} 완료` : "탭하면 체크";
+      if (on) done++;
+    });
+    $("insCount").innerHTML = `오늘 <b>${done}</b> / 3회 완료`;
+    const sum = $("accSumIns"); sum.textContent = `오늘 ${done}/3`;
+    sum.style.color = done===3 ? getCss("--green") : getCss("--muted");
+    if (typeof updateTodaySummary === "function") updateTodaySummary();
+  }
+
+  // 인슐린 용량 (Firebase 저장 · 편집 가능 · 실시간 반영). 조절 판단은 의료진 몫.
+  const INS_DOSE_DEFAULT = { amLantus:0, amHumalog:6, luHumalog:8, diHumalog:8 };  // 란투스: 공복 낮아 현재 중단 (공복 130 넘으면 4)
+  const doseRef = db.collection("meta").doc("insulinDose");
+  let curDose = Object.assign({}, INS_DOSE_DEFAULT);
+  function renderDoseLabels(d){
+    $("doseAM").textContent = (d.amLantus>0 ? `란투스${d.amLantus} + ` : "") + `휴마로그${d.amHumalog}`;
+    $("doseLU").textContent = `휴마로그${d.luHumalog}`;
+    $("doseDI").textContent = `휴마로그${d.diHumalog}`;
+  }
+  function fillDoseForm(d){
+    $("dAmLan").value = d.amLantus; $("dAmHum").value = d.amHumalog;
+    $("dLuHum").value = d.luHumalog; $("dDiHum").value = d.diHumalog;
+  }
+  renderDoseLabels(curDose);
+  doseRef.onSnapshot(snap=>{
+    curDose = Object.assign({}, INS_DOSE_DEFAULT, snap.exists ? snap.data() : {});
+    renderDoseLabels(curDose);
+    if ($("doseForm").classList.contains("hidden")) fillDoseForm(curDose);
+  }, err=>console.error("용량 구독 실패:", err));
+  $("doseToggle").addEventListener("click", ()=>{
+    const f = $("doseForm"); const opening = f.classList.contains("hidden");
+    if (opening) fillDoseForm(curDose);
+    f.classList.toggle("hidden");
+    $("doseToggle").textContent = opening ? "닫기" : "수정";
+  });
+  $("doseSave").addEventListener("click", async ()=>{
+    const rd = id => { const n = parseInt($(id).value, 10); return isNaN(n) ? null : n; };
+    const nd = { amLantus:rd("dAmLan"), amHumalog:rd("dAmHum"), luHumalog:rd("dLuHum"), diHumalog:rd("dDiHum") };
+    for (const k in nd){ if (nd[k]===null || nd[k]<0 || nd[k]>100){ toast("용량을 0~100 사이 숫자로 입력해줘"); return; } }
+    try{
+      await doseRef.set(Object.assign({}, nd, { by:who||"", updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), {merge:true});
+      $("doseForm").classList.add("hidden"); $("doseToggle").textContent = "수정";
+      toast("인슐린 용량을 저장했어요");
+    }catch(e){ console.error(e); toast("저장 실패: " + (e.code||e.message)); }
+  });
+
+  // ================= 메모장 =================
+  const notesCol = db.collection("notes");
+  $("noteSave").addEventListener("click", async ()=>{
+    const t = $("noteInput").value.trim();
+    if (!t){ toast("내용을 입력해줘"); return; }
+    try{
+      const now = Date.now();
+      await notesCol.add({ text:t, by:who||"", at:now, atText: dayKey()+" "+hhmm(now),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      $("noteInput").value = "";
+      toast("메모를 저장했어요");
+    }catch(e){ console.error(e); toast("저장 실패: "+(e.code||e.message)); }
+  });
+  function renderNotes(list){
+    const box = $("noteList");
+    if (!list.length){ box.innerHTML = `<div class="emptylist">아직 메모가 없어요.</div>`; }
+    else {
+      box.innerHTML = list.map(n=>`
+        <div class="noteItem">
+          <div class="nmeta"><span class="nwho">${escape(n.by||"가족")}</span><span class="ntime">${escape(n.atText||"")}</span></div>
+          <div class="ntext">${linkifyTel(n.text||"")}</div>
+          <div style="text-align:right"><button class="ndel" data-id="${escape(n.id)}" type="button">삭제</button></div>
+        </div>`).join("");
+    }
+    const sum = $("accSumNote"); if (sum) sum.textContent = list.length ? `${list.length}개` : "";
+  }
+  notesCol.orderBy("at","desc").limit(100).onSnapshot(snap=>{
+    const list = []; snap.forEach(d=> list.push(Object.assign({id:d.id}, d.data())));
+    renderNotes(list);
+  }, err=>console.error("메모 구독 실패:", err));
+  $("noteList").addEventListener("click", async e=>{
+    const btn = e.target.closest(".ndel"); if (!btn) return;
+    if (!confirm("이 메모를 삭제할까요?")) return;
+    try{ await notesCol.doc(btn.dataset.id).delete(); toast("메모를 삭제했어요"); }
+    catch(err){ console.error(err); toast("삭제 실패"); }
+  });
+
+  // 최근 7일 인슐린 요약 실시간 구독
+  insCol.orderBy("date","desc").limit(8).onSnapshot(snap=>{
+    const rows = []; snap.forEach(d=>rows.push(d.data()));
+    renderInsLog(rows);
+  }, err=>console.error(err));
+
+  function renderInsLog(rows){
+    const box = $("insLog");
+    const today = dayKey();
+    const past = rows.filter(r => r.date !== today);
+    if (!past.length){ box.innerHTML = '<div class="emptylist">지난 기록이 아직 없어요.</div>'; return; }
+    box.innerHTML = "";
+    past.forEach(r=>{
+      const s = r.slots || {};
+      const dots = SLOTS.map(k=>{
+        const on = !!(s[k] && s[k].done);
+        return `<i class="${on?'on':'off'}" title="${k}"></i>`;
+      }).join("");
+      const cnt = SLOTS.filter(k=>s[k]&&s[k].done).length;
+      const md = r.date.slice(5).replace("-","/");
+      const el = document.createElement("div");
+      el.className = "ilog";
+      el.innerHTML = `<span class="id">${md}</span>`+
+        `<span class="idot"><small>아침</small><i class="${s['아침']&&s['아침'].done?'on':'off'}"></i>`+
+        `<small>점심</small><i class="${s['점심']&&s['점심'].done?'on':'off'}"></i>`+
+        `<small>저녁</small><i class="${s['저녁']&&s['저녁'].done?'on':'off'}"></i>`+
+        `<span style="margin-left:8px;font-weight:700;color:${cnt===3?'var(--green)':'var(--muted)'}">${cnt}/3</span></span>`;
+      box.appendChild(el);
+    });
+  }
+
+  // ================= 복약 스케줄 =================
+  const medsCol = db.collection("meds");
+  let medsToday = {};   // {아침:{done,by,at},...}
+  const MED_IMG = {"고덱스": "data:image/jpeg;base64,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", "우루사": "data:image/jpeg;base64,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", "케이캡": "data:image/jpeg;base64,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", "마이폴": "data:image/jpeg;base64,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", "메게이스": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5Ojf/2wBDAQoKCg0MDRoPDxo3JR8lNzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzf/wAARCAB4AHgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3GqF5f29tKUmk2kAdqv1wni+68rWihJwFUkDr0qoq7MMRV9lDmOji1mwlz5c4bHXAPFN/t3Ts4+0rmuFlJJ3WhJXb8xUYpLW3dZULFeT0J/rWnIjh+uzvax6B/atnjPm/pSPrFigBadcHvXElHE26SRlUL8ydKp3E73EgVA+zOAuckn1pezQ5Y5pbanoEetadJ9y6Qn0zzUjapZIAXnVQRnJrh41js4WJ+aTgEjgqD6UTSvCwlZi8bkZG7jPt/hT5ENY2SWqO2OsWAAJuY9rdDng0Nq9guN1ygz0yeteeJvkk2jKLnjGSBV9VLoCWLN7jBIo9mgjjZv7J2bazp6kBrqME+poGtacePtkX/fVef3CytcEFsk9M8Yoitm3/AL0jZuJ4GaORC+v1L/CehLq1g33bmNvYHNWLK+trmZo4Jkd1XJUHkCvPoJNszJ5eB78Vt+DJEl1ScqpDCEgkn/aFKUEka08XKUlFrc7OiiisjvCuC8WwJNr7YHzBFDHPX0rva5HX9Ku7vWpJrbZsKKG3HuBVw3OTGRcqaSXUwIhEoKouB6DqCPeopDIhWaNtwxg+4rXuPDt664BXJPr2qqPDuob18yMBAclQ/X3q01c850qi0SMq4uGmdtoOMYwDmpbfEFuHZdzsPxwa0ZNLmhVzDbM0gOCF6USW10tvv8mTI4C7SCfar5lchUZ3vJEEmFj3SA7T0OeT7VRiia4lCKSFXnHPAqaSG8nk2FGXHX5eBV2OJ4cRopBP8QHU96baBxlJ6rQgfbEE2AsB94g8/WonLWrboWRgQcLn7vvRMGtmCKmVPIRv4aitrbzNzyAhQOp4zSE77JElo+5WLAZJ+8R94fWlebykXY7M5/iPfmpJNwRWCjbjkjoMf0psr+eViwg3c5X19qQ+VkMl47fw49SOtdD4EhZb2aZzy8PQD/aFY6wgERoMIRyzD9K2/BTx/wBoXMa/eWMgZ9MilLY1w8H7aLZ2VFFFYHtBVOVgs8pI6Y/lVyqc/MrgYzxTQn0F4yMU+mkDg0ZxmkmMjggSIyYH33LHPrUpVT2FUxOI4btpJQwjLEkfwjFcJH4lv44IGM8swktZZHGBxzhT9K0hTlN6ESmo7nonlR/3Fo8iLHEa89eOtcv4X1Zp7G+muZdsVuFBkY9MLk1SvPFN3FbRNJGyO6vJtZSMp/DiqVKXM4onnja7Oza1gb70SH6igW0GABEmB7VgabrU0+pPYEqFt7USSOeuSAc/So9M8Ry382lr5W37S0oYg9l6Go5JXHePY6P7Lb7dphjwe20UwWFoORBH7fKKxdb8SJbTrBYnzDGc3TopYQr7471r2eoW+o2f2jT5o5lPQqe9J8y1HaLexKLO3Ax5SYPoKmtbeGGQtHGqsRgkDBqgLifzJEYYK47cVesix3butK7KcEnsWqKKKQwqrL/r2OfT+VWqqS/65u3TmmiX0FJ6Vna7cva2BlimMb7gAwTcfyrQ4PWs/XUeWxAiWR2DgjYen19qSKdx1qgntp0uE4l4btvyozXOa14VtrbSJ10m3ke6cLEo8zJCbskDNaekPfzrqi3CONsu2DPptHT8asJYXRnSR5DtweM8A1pdxloSoxmrSMfw1oDtaTLqSSxxm6Z/IbGJBxtLev0qn4y0vU7/AFb/AEK0keFbYRqwxtyW5H5V1caXKIql2yp9eo96rTw6gsRVHZizcEN0FP2klPmBUYtcrY248NWd2yyyGaGcwiOUxSbd64HBrNvtJuk8Q2q6baoLW2tCsZkJCZORt4rXW2v1jTbJhsY5OarTW+qDcySnng/N/KoUmivZQfUS1t9btofKhsNJSPoVWR+frxzUf2PU7axufJtbK2lZ9/l2pPz8c/jVgRakFA80Fsdd3er1iJ0J+0ckADJ6Z9qabB00luc6bTWhbqGac/6PwN2SHx3962vDdpqEEvmXty8yNFgBuoO7uPpWmH6AgVNAQWIHpQ5PYhR1vcnoooqCwrNuLyCO8likkVWUA4b0xWlXCeL5hDrDlhkFFwAeelVBXZz4ir7OHMdWLmAtjzU4/wBoUxb214/0iI59Grz/AO1KAxTBZhjBGDUNvbymQMRmPGSM9RV+zOR4++0Tv7a6t4zdybgq+bkt2PA5HtVObX4HlEMRO48VyV1JcLsJchVHA7f/AKqWKXdIrxqMoMsc9faq9nYHjXokjqptXWBQZS3TsKYuvwvwEcg/d9z6VgXt+4txGQ5bGMsOoNUIJXU8KSo5OP50cqJnjZJ2R083iiFH2mNvc006/I6gxRbkJwpz1HrXPqiTSiXGEPAUn+dTlxHESAUVuQduNvOP8inyIzWMrPd6G42rBgMgq3fPrTX1oIuXDZx696wZG8thOjAg9c9DVVzJLKWCHqM4HSlyh9cq9DpIvEEkzYjh+XOCxPQVs6BqIu7ySNQwCx5O4YwciuN+aLakcZPzZbHBrovCDg6nOhYbxCeO+Nw61MkrG1DEVJTSkzrqKKKyPTCuB8YxedrUixf6wIu49gMV31cb4k0q/udXkuLVAyFFUc9eORVwdmcmMjzU7eZzws0j3Jliw4Jz0zUpR3dNshAX7y4xWi2k6iEOy3Ic8de1VT4f1MtvEB5zxurW6PN9lJbRZQvLgkmKNlK4wcfyp9uEgiaZwGYpkIp6Veh8P3yKWa3O7tjBqydIvXiA+zkOD7HFDkJUZtuTRjsqXEO6M4KDu3StKzNu1rs27Rs+8D1/wqtJoeoLJ+7tGAznBPFWZdHunibZavvIAGFxildFRhNNvlMqWRUu32EmLP0z7+1SXDCRAyNvPTk5LH1xVqHQLrzMy2smMYAFP/si7ifdFaSc8MDT5iFSnrdFaCFkXc5XGOBjIFOlbyEVEjBGeR147mrx027B3pbSGTGKrLpepqWJti2c546UXH7OSVrMq3Nz8ish3N/tDkAVs+A8vqlzKTnMOM+vzCqJ0S4EgBglK4yeO9b3hGxmtLqbzoGjynBxx1FKTVjTDU5+1jJrQ6miiisD2gqGT75qaopB81AGJr+txaO1iJAv+k3AiO5sbQerfyrGsvGJuzqIWCNDZxM+ZH2qxDEAZPritjX9DGpiNknFvIqlC/krJuU9Rg9Oaw7Pw/eabJfRKq3cTWW2KRkVN0mSdmB9c0xDrLxlO9t51zppj2yQqwR9x+fPb1Hp15rq5Ly2jliikmVJZgTHGxwWx6CvOdO0XWhqFoZNOnt41nWVirkgnPOQWx+NegXizNf2jJawyRqW3zOfmj4/h+tAjH8Q+Kl0a6W2+xyTkqJGZSAFTOCf/wBdPj8UwtpOoX7RbVspNm1mAL8A8fnWX4u0me81mKT7Pey25h2s1sqttbPQg9RUml+HjNpVxBKsgla5M0Rv4gdpwBkqDg8UwL1r4tt7nXE0pIG81n2g7uMbA2f1xW9cyvHbySQRCWRVyqFgu78e1cfYeGr7TdZstzRT27s5keGHy/LJXAOc/hWv/wAI9Z6bbzvFFeX2+PyzA85ORnJxk8GkOw19evYJ7WO90hoY55Vi3idX2sfYVXTxcrakbQWm7G8b45AwBUE8+lUDpMct5p72/h2+tGguFkaQyKQQOxyxrK1LRtSW7vYrXTZVg81jEsauVcHvkMOtMR2CeI7aWz0qfyyG1E4RM8rwT/SpPCfiOHXzN5MLR+Sq7snPJzx+lYY8NXN9pGmYSG2uY7cJItxGX2jOcDB+U+9aPgnSLnSLzUILhFKhYxHMibRIOSe/bOKQzraKKKQwqN/vUUUAcn4xuryxvdMubNzHGnm+cxjZ0UbRjcFrI0++utQbU7q9eaa2ayXY1vG8YJyfu55z7iiigRnQzX1pNaC3S/Q3E8IWC4LsAwB3Aue3Ir0aaW5S6t0S2V4Xz50hfHl+mB3oooA5nxdrNzYapaJHsihjPmnzJCv2j/ZGAenvgVntrM1zo+o3MWomNX1ALGwJzswPlBAO3vziiimAzwrqxn1yERXNzFE+5JIbqZpWkPbb8vH1zXRzvcXPime3jnaMW1krwjJ2l3JGWHfGOlFFIZT8P61cQWN9Jq8810IbswK8cRYkfRelM8Rajf21xbXttfSRWkjxKsHk/KuT8xlJ5GQeBRRTEV01fU2u4b0XZNtNqDWgtAoAVemc9d3FWvAk7yXtyt7eX7321yYZwfLCBwAy8c9vzoooA7WiiikM/9k=", "맥페란": "data:image/jpeg;base64,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", "포타겔": "data:image/jpeg;base64,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", "마그밀": "data:image/jpeg;base64,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", "듀락칸": "data:image/jpeg;base64,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", "글루파": "data:image/jpeg;base64,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", "디아미크롱": "data:image/jpeg;base64,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", "리바로젯": "data:image/jpeg;base64,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"};
+  const IMG = n => (typeof MED_IMG!=="undefined" && MED_IMG[n]) ? MED_IMG[n] : "";
+  // 매일 무조건 먹는 약 (간장·위보호·당뇨·고지혈)
+  const MED_REGULAR = {
+    "아침": [
+      { name:"고덱스", use:"간장약", img:"고덱스" },
+      { name:"우루사", use:"간장약(담즙)", img:"우루사" },
+      { name:"케이캡", use:"위 보호(위산 차단)", img:"케이캡" },
+      { name:"글루파", use:"당뇨약", img:"글루파" },
+      { name:"디아미크롱", use:"당뇨약", img:"디아미크롱" },
+      { name:"리바로젯", use:"고지혈증", img:"리바로젯" },
+    ],
+    "점심": [
+      { name:"고덱스", use:"간장약", img:"고덱스" },
+      { name:"우루사", use:"간장약(담즙)", img:"우루사" },
+    ],
+    "저녁": [
+      { name:"고덱스", use:"간장약", img:"고덱스" },
+      { name:"우루사", use:"간장약(담즙)", img:"우루사" },
+      { name:"글루파", use:"당뇨약", img:"글루파" },
+      { name:"디아미크롱", use:"당뇨약", img:"디아미크롱" },
+    ],
+  };
+  const MED_ICON = { "아침":"🌅", "점심":"☀️", "저녁":"🌙" };
+  const MED_NOTE = "모두 식후에 복용. 케이캡·리바로젯은 아침만, 당뇨약(글루파·디아미크롱)은 아침·저녁. 글루파는 CT 조영검사 전 중단 여부 상의.";
+
+  // 증상이 있을 때만 먹는 약 (언제·어떻게)
+  const MED_SYMPTOM = [
+    { name:"맥페란", img:"맥페란", when:"메스꺼움·구토", how:"구토 증상 있을 때. 하루 최대 3회, 식전 30분에 복용하면 예방에 효과적." },
+    { name:"메게이스", img:"메게이스", when:"식욕이 없을 때", how:"하루 1회, 아침 식전 1시간에. 잘 흔들어서 복용." },
+    { name:"마이폴", img:"마이폴", when:"통증이 있을 때", how:"1~2캡슐, 하루 12캡슐 이내. ⚠️ 마약성 진통제 — 졸림·어지럼, 운전·술 금지." },
+    { name:"포타겔", img:"포타겔", when:"설사할 때", how:"설사 증상 있을 때. 다른 약과 1~2시간 간격, 수분 충분히." },
+    { name:"마그밀", img:"마그밀", when:"변비일 때", how:"변비 증상 있을 때. 물을 충분히 마시기." },
+    { name:"듀락칸", img:"듀락칸", when:"변비일 때", how:"보통 아침 식사 전. 단맛이지만 혈당 영향은 적음(당뇨 안심)." },
+  ];
+
+  function medPhoto(imgKey){
+    const src = IMG(imgKey);
+    return src ? `<img class="mimg" src="${src}" alt="">` : `<span class="mimg mimg-x"></span>`;
+  }
+
+  function buildMedSchedule(){
+    const box = $("medSchedule");
+    box.innerHTML = `<div class="secintro">매일 꼭 챙기는 약 <span>(간장·위보호·당뇨·고지혈)</span></div>` +
+      SLOTS.map(slot=>{
+        const rows = MED_REGULAR[slot].map(m=>
+          `<div class="medrow">${medPhoto(m.img)}`+
+          `<span class="mn">${escape(m.name)}</span><span class="mu">${escape(m.use)}</span></div>`).join("");
+        return `<div class="medslot" data-med="${slot}">
+          <div class="medhead"><span style="font-size:18px">${MED_ICON[slot]}</span>`+
+          `<span class="mh-t">${slot} <span style="font-weight:600;color:var(--muted);font-size:12px">식후</span></span>`+
+          `<button class="medchk" data-medslot="${slot}">복용 체크</button></div>`+
+          `<div class="medlist">${rows}</div></div>`;
+      }).join("") +
+      `<div class="medwarn">💡 ${escape(MED_NOTE)}</div>`;
+    box.querySelectorAll(".medchk").forEach(b=>{
+      b.addEventListener("click", ()=>toggleMed(b.dataset.medslot));
+    });
+    // 증상시 약
+    $("medPrn").innerHTML = MED_SYMPTOM.map(m=>
+      `<div class="symrow">${medPhoto(m.img)}`+
+      `<div class="symtxt"><div class="symtop"><span class="mn">${escape(m.name)}</span>`+
+      `<span class="symtag">${escape(m.when)}</span></div>`+
+      `<div class="symhow">${escape(m.how)}</div></div></div>`).join("");
+  }
+  buildMedSchedule();
+
+
+  async function toggleMed(slot){
+    if (!who){ askWho(true); return; }
+    const key = dayKey();
+    const cur = medsToday[slot];
+    const done = !(cur && cur.done);
+    try{
+      await medsCol.doc(key).set({ date:key, slots:{ [slot]:{ done, by:who, at:Date.now() } } }, { merge:true });
+      toast(done ? `${slot}약 복용 체크 ✓` : `${slot}약 체크 해제`);
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+  }
+
+  function renderTodayMeds(){
+    let done = 0;
+    SLOTS.forEach(slot=>{
+      const el = document.querySelector(`.medslot[data-med="${slot}"]`);
+      const s = medsToday[slot];
+      const on = !!(s && s.done);
+      if (el){
+        el.classList.toggle("done", on);
+        const btn = el.querySelector(".medchk");
+        if (btn) btn.textContent = on ? `${s.by} · ${hhmm(s.at)} ✓` : "복용 체크";
+      }
+      if (on) done++;
+    });
+    $("accSumMed").textContent = `오늘 ${done}/3`;
+    $("accSumMed").style.color = done===3 ? getCss("--green") : getCss("--muted");
+    updateTodaySummary();
+  }
+
+  // ================= 항암 D-day & 오늘의 돌봄 =================
+  const CHEMO_START = "2026-07-15"; // 1사이클 1주차(항암 시작일). 3주 투여 + 1주 휴약 = 4주 1사이클
+  // 항암 '투여일'만 (휴약주 8/5·9/2·9/30 제외). 매주 수요일 추정 — 실제 예약 확정되면 교체
+  const CHEMO_DATES = ["2026-07-29","2026-08-12","2026-08-19","2026-08-26","2026-09-09","2026-09-16","2026-09-23"];
+  // 사이클/주차 계산 (week 1~3 투여, 4 휴약)
+  function chemoCycle(dateStr){
+    const w = Math.floor((new Date(dateStr+"T00:00:00") - new Date(CHEMO_START+"T00:00:00"))/(7*86400000));
+    if (w < 0) return null;
+    return { cycle: Math.floor(w/4)+1, week: (w%4)+1, rest: (w%4)+1 === 4 };
+  }
+  // 확정된 예약 시간·병상 (예약 확정되면 여기에 추가. 없는 날짜는 시간 미표시)
+  const CHEMO_INFO = {
+    "2026-07-29": { time:"오후 2:30", place:"17호실 3번 병상" },
+    "2026-08-26": { time:"오후 2:30" }  // 내분비 진료(오후 1:30) 후 항암
+  };
+  // 항암 외 진료 일정 (지난 날짜는 상단 카드에서 자동으로 숨김)
+  const APPTS = [
+    { date:"2026-08-12", time:"오전 9:30",  dept:"소화기내과",   doctor:"임가람", place:"본관 4층 소화기병센터",        prep:"채혈 진료 2시간 전 · 4시간 금식" },
+    { date:"2026-08-12", time:"오전 10:30", dept:"당뇨병 교육",  doctor:"",       place:"본관 3층 당뇨병센터 9번 교육실", prep:"지금 상황에 맞는 당뇨 대처 교육" },
+    { date:"2026-08-26", time:"오후 1:30",  dept:"내분비내과",   doctor:"김혜경", place:"본관 3층",                     prep:"채혈 진료 2시간 전 · 8시간 금식 · 오후 2:30 항암 전 진료" }
+  ];
+  function nextChemo(){
+    const today = dayKey();
+    for (const d of CHEMO_DATES){ if (d >= today) return d; }
+    return null;
+  }
+  function ddayText(dateStr){
+    if (!dateStr) return { big:"–", sub:"일정 등록 필요" };
+    const today = new Date(dayKey()+"T00:00:00");
+    const target = new Date(dateStr+"T00:00:00");
+    const diff = Math.round((target - today)/86400000);
+    const [ , mm, dd ] = dateStr.split("-");
+    const wd = "일월화수목금토"[target.getDay()];
+    const dateLabel = `${+mm}/${+dd}(${wd})`;
+    if (diff === 0) return { big:"오늘", sub:`항암일 ${dateLabel}` };
+    return { big:`D-${diff}`, sub:`다음 항암 ${dateLabel}` };
+  }
+  function updateTodaySummary(){
+    // D-day
+    const dd = ddayText(nextChemo());
+    $("ddayBig").textContent = dd.big;
+    $("ddayDate").textContent = dd.sub;
+    // 다가오는 일정 (항암 + 진료, 날짜순, 지난 건 숨김)
+    const ncEl = $("nextChemoLine");
+    if (ncEl){
+      const wdOf = s => "일월화수목금토"[new Date(s+"T00:00:00").getDay()];
+      const lbl = s => { const [ ,m,d] = s.split("-"); return `${+m}/${+d}(${wdOf(s)})`; };
+      const today = dayKey();
+      const list = [];
+      // 시각 문자열("오후 1:30")을 분으로 (같은 날 정렬용)
+      const toMin = t => { const m = (t||"").match(/(오전|오후)?\s*(\d+):(\d+)/); if(!m) return 0;
+        let h=+m[2]; const mi=+m[3]; if(m[1]==="오후"&&h<12)h+=12; if(m[1]==="오전"&&h===12)h=0; return h*60+mi; };
+      // 이번 주가 휴약주면 휴지기 안내
+      const tci = chemoCycle(today);
+      if (tci && tci.rest){
+        list.push({ date:today, order:-1, chemo:true, icon:"🌙", title:"이번 주는 휴지기", when:"",
+          sub:`${tci.cycle}사이클 휴약주 — 항암 쉬는 주예요`, prep:"" });
+      }
+      // 다음 항암
+      const ncDate = nextChemo();
+      if (ncDate){
+        const info = CHEMO_INFO[ncDate] || {};
+        const ci = chemoCycle(ncDate);
+        const cyc = ci ? `${ci.cycle}사이클 ${ci.week}주차` : "";
+        const sub = [cyc, info.place ? `📍 ${info.place}` : ""].filter(Boolean).join(" · ");
+        list.push({ date:ncDate, order: info.time?toMin(info.time):9999, chemo:true, icon:"🗓️", title:"다음 항암",
+          when:`${lbl(ncDate)} ${info.time || "시간 미정"}`, sub, prep:"" });
+      }
+      // 진료
+      APPTS.forEach(a=>{
+        if (a.date >= today) list.push({ date:a.date, order:toMin(a.time), chemo:false, icon:"🩺", title:a.dept,
+          when:`${lbl(a.date)} ${a.time}`, sub: a.doctor ? `${a.doctor} · ${a.place}` : a.place, prep:a.prep });
+      });
+      list.sort((x,y)=> x.date<y.date?-1 : x.date>y.date?1 : x.order-y.order);
+      if (list.length){
+        ncEl.innerHTML = list.map(it=>`
+          <div class="up-item${it.chemo?' chemo':''}">
+            <div class="up-top"><span class="up-title">${it.icon} ${it.title}</span>${it.when?`<span class="up-when">${it.when}</span>`:""}</div>
+            ${it.sub  ? `<div class="up-sub">${it.sub}</div>` : ""}
+            ${it.prep ? `<div class="up-prep">🩸 ${it.prep}</div>` : ""}
+          </div>`).join("");
+        ncEl.classList.add("show");
+      } else {
+        ncEl.classList.remove("show");
+      }
+    }
+    // 인슐린 오늘
+    const insDone = SLOTS.filter(k=>todaySlots[k] && todaySlots[k].done).length;
+    $("todayInsBig").textContent = `${insDone}/3`;
+    // 복약 오늘
+    const medDone = SLOTS.filter(k=>medsToday[k] && medsToday[k].done).length;
+    $("todayMedBig").textContent = `${medDone}/3`;
+  }
+  // 요약 카드 탭 → 해당 아코디언 열기
+  function openAccByName(name){
+    const acc = document.querySelector(`.acc[data-acc="${name}"]`);
+    if (!acc) return;
+    if (!acc.classList.contains("open")){ acc.classList.add("open"); setTimeout(()=>drawSection(name),0); }
+    acc.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+  $("todayIns").addEventListener("click", ()=>openAccByName("insulin"));
+  $("todayMed").addEventListener("click", ()=>openAccByName("meds"));
+  $("ddayCard").addEventListener("click", ()=>openAccByName("guide"));
+  $("nextChemoLine").addEventListener("click", ()=>openAccByName("records"));
+
+
+  let ctx = "공복";   // 혈당 측정 시점 (기본 칩과 일치). 선언 누락 시 저장에서 ReferenceError 발생했었음.
+  $("ctxChips").addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#ctxChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); ctx = c.dataset.v;
+  });
+
+  // ---- 시간 기본값 = 지금 (로컬) ----
+  function nowLocalInput(){
+    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,16);
+  }
+  $("inWhen").value = nowLocalInput();
+
+  // ---- 혈당 분류 (당뇨 관리 목표 기준, 참고용) ----
+  // 대한당뇨병학회 조절 목표: 식전 80~130, 식후 2시간 <180, 저혈당 <70
+  // 반환: {key, label, color}
+  function classify(v, context){
+    const C = {low:{key:"low",label:"저혈당",color:getCss("--blue")},
+               ok:{key:"ok",label:"정상",color:getCss("--green")},
+               warn:{key:"warn",label:"주의",color:getCss("--amber")},
+               high:{key:"high",label:"높음",color:getCss("--red")}};
+    if (v < 70) return C.low;                       // 저혈당 (모든 시점 공통)
+    if (/식후/.test(context)){                       // 식후 2시간: 목표 180 미만
+      if (v < 180) return C.ok;
+      if (v < 250) return C.warn;
+      return C.high;                                 // 250+ 현저한 고혈당
+    }
+    if (context === "취침전"){                        // 취침전: 90~150 목표
+      if (v < 90) return C.warn;                      // 낮은 편(야간 저혈당 주의)
+      if (v <= 150) return C.ok;
+      if (v <= 180) return C.warn;
+      return C.high;
+    }
+    // 공복 / 식전 / 기타: 목표 80~130
+    if (v < 80) return C.warn;                        // 70~79 살짝 낮음
+    if (v <= 130) return C.ok;
+    if (v <= 180) return C.warn;
+    return C.high;
+  }
+  function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // ---- 과거 기록 일괄 입력 (병원 수기기록 옮김, 한 번만 실행) ----
+  const BACKFILL_ID = "hosp_20260723_25_v3";   // 요양병원 퇴원 전 기록 최종본 (7/23~7/25, 시점 수정)
+  const BACKFILL_BG = [
+    { d:"2026-07-23T11:30", v:157, c:"식전",     m:"병원 기록 · 오전 11:30" },
+    { d:"2026-07-23T14:00", v:167, c:"점심식후", m:"병원 기록 · 오후 2시 (식후)" },
+    { d:"2026-07-23T19:00", v:138, c:"저녁식후", m:"병원 기록 · 오후 7시 (식후)" },
+    { d:"2026-07-24T07:00", v:80,  c:"식전",     m:"병원 기록 · 아침 식전 (7시)" },
+    { d:"2026-07-24T07:30", v:119, c:"식전",     m:"병원 기록 · 아침 식전 (7시반, 재측정)" },
+    { d:"2026-07-24T09:00", v:258, c:"아침식후", m:"병원 기록 · 아침 식후 (9시)" },
+    { d:"2026-07-24T14:00", v:307, c:"점심식후", m:"병원 기록 · 오후 2시 (식후)" },
+    { d:"2026-07-24T19:00", v:386, c:"저녁식후", m:"병원 기록 · 오후 7시 (식후)" },
+    { d:"2026-07-25T07:00", v:95,  c:"식전",     m:"병원 기록 · 아침 식전 (7시)" },
+    { d:"2026-07-25T09:00", v:256, c:"아침식후", m:"병원 기록 · 아침 식후 (9시)" }
+  ];
+  async function runBackfill(){
+    try{
+      const ref = db.collection("meta").doc("backfill");
+      const snap = await ref.get();
+      if (snap.exists && snap.data()[BACKFILL_ID]) return;  // 이미 입력됨 → 중복 방지
+      const batch = db.batch();
+      // 이전 버전으로 들어간 병원 기록 먼저 정리 (memo가 '병원 기록'으로 시작하는 것만, 7/23~7/25 범위)
+      const s = new Date("2026-07-23T00:00").getTime(), e = new Date("2026-07-26T00:00").getTime();
+      const olds = await col.where("at", ">=", s).where("at", "<=", e).get();
+      let removed = 0;
+      olds.forEach(d=>{
+        if ((d.data().memo || "").indexOf("병원 기록") === 0){ batch.delete(d.ref); removed++; }
+      });
+      BACKFILL_BG.forEach(r=>{
+        batch.set(col.doc(), {
+          value: r.v, context: r.c, at: new Date(r.d).getTime(),
+          atText: r.d.replace("T"," "), memo: r.m, by: "동현",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      batch.set(ref, { [BACKFILL_ID]: true }, {merge:true});
+      await batch.commit();
+      console.log("과거 혈당 기록 입력 완료 (기존 정리 " + removed + "건 → 입력 " + BACKFILL_BG.length + "건)");
+    }catch(e){ console.error("과거 기록 입력 실패:", e); }
+  }
+  runBackfill();
+
+  // ---- 저장 ----
+  const saveBtn = $("saveBtn");
+  saveBtn.addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const raw = $("inValue").value.trim();
+    const v = parseInt(raw, 10);
+    if (!raw || isNaN(v)){ toast("혈당 수치를 입력하세요"); $("inValue").focus(); return; }
+    if (v < 10 || v > 900){ toast("혈당 수치를 확인하세요 (10~900)"); return; }
+    const whenStr = $("inWhen").value || nowLocalInput();
+    const at = new Date(whenStr).getTime();
+
+    saveBtn.disabled = true; saveBtn.textContent = "저장 중…";
+    try{
+      await col.add({
+        value: v,
+        context: ctx,
+        at: at,
+        atText: whenStr.replace("T"," "),
+        memo: $("inMemo").value.trim(),
+        by: who,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      $("inValue").value = ""; $("inMemo").value = ""; $("inWhen").value = nowLocalInput();
+      toast("저장했어요 ✓");
+    }catch(err){
+      console.error(err);
+      toast("저장 실패: " + (err.code || err.message));
+    }finally{
+      saveBtn.disabled = false; saveBtn.textContent = "기록 저장";
+    }
+  });
+
+  // ---- 삭제 ----
+  async function del(id){
+    if (!confirm("이 기록을 삭제할까요?")) return;
+    try{ await col.doc(id).delete(); toast("삭제했어요"); }
+    catch(err){ toast("삭제 실패: " + (err.code||err.message)); }
+  }
+
+  // ================= 체중 =================
+  const wCol = db.collection("weights");
+  const W_CTX = ["아침공복","일과중"];
+  let wChart = null; let wCtxCharts = {};
+  let wCtx = "아침공복";
+  $("wWhen").value = nowLocalInput();
+  $("wCtxChips").addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#wCtxChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); wCtx = c.dataset.v;
+  });
+
+  const wSaveBtn = $("wSaveBtn");
+  wSaveBtn.addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const raw = $("wValue").value.trim();
+    const v = Math.round(parseFloat(raw) * 10) / 10;   // 소수 1자리
+    if (!raw || isNaN(v)){ toast("체중을 입력하세요"); $("wValue").focus(); return; }
+    if (v < 10 || v > 400){ toast("체중을 확인하세요 (10~400kg)"); return; }
+    const whenStr = $("wWhen").value || nowLocalInput();
+    const at = new Date(whenStr).getTime();
+    wSaveBtn.disabled = true; wSaveBtn.textContent = "저장 중…";
+    try{
+      await wCol.add({ value:v, context:wCtx, at:at, atText:whenStr.replace("T"," "),
+        memo:$("wMemo").value.trim(), by:who, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      $("wValue").value=""; $("wMemo").value=""; $("wWhen").value=nowLocalInput();
+      toast("체중 저장 ✓");
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+    finally{ wSaveBtn.disabled=false; wSaveBtn.textContent="체중 저장"; }
+  });
+
+  async function delWeight(id){
+    if (!confirm("이 체중 기록을 삭제할까요?")) return;
+    try{ await wCol.doc(id).delete(); toast("삭제했어요"); }
+    catch(err){ toast("삭제 실패: "+(err.code||err.message)); }
+  }
+
+  wCol.orderBy("at","desc").onSnapshot(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(Object.assign({id:d.id}, d.data())));
+    renderWeights(rows);
+  }, err=>console.error(err));
+
+  function renderWeights(rows){
+    allWeights = rows;   // 리포트에서 사용 (최신순)
+    if (rows.length){
+      const r = rows[0];
+      $("wBig").textContent = r.value;
+      $("accSumW").textContent = r.value + "kg";
+      const chg = $("wChg");
+      if (rows[1]){
+        const diff = Math.round((r.value - rows[1].value)*10)/10;
+        if (diff > 0){ chg.className="wchg up"; chg.textContent=`▲ ${diff}kg`; }
+        else if (diff < 0){ chg.className="wchg down"; chg.textContent=`▼ ${Math.abs(diff)}kg`; }
+        else { chg.className="wchg same"; chg.textContent="변화 없음"; }
+      } else { chg.className="wchg"; chg.textContent=""; }
+      $("wMeta").textContent = `${r.context||""} · ${fmtWhen(r.atText, r.at)} · ${r.by} 기록` + (r.memo?` · ${r.memo}`:"");
+    } else {
+      $("wBig").textContent="–"; $("wChg").textContent=""; $("wChg").className="wchg";
+      $("accSumW").textContent="";
+      $("wMeta").textContent="아직 체중 기록이 없어요.";
+    }
+
+    // 목록
+    const list = $("wList");
+    if (!rows.length){ list.innerHTML='<div class="emptylist">체중을 기록하면 여기에 쌓여요.</div>'; }
+    else {
+      list.innerHTML="";
+      rows.forEach(r=>{
+        const el=document.createElement("div"); el.className="wrec";
+        el.innerHTML = `<span class="wv">${r.value} kg</span>`+
+          `<span class="wsub">${escape(r.context||"")} · ${fmtWhen(r.atText,r.at)} · ${escape(r.by||"")}${r.memo?" · "+escape(r.memo):""}</span>`+
+          `<button class="del" title="삭제">✕</button>`;
+        el.querySelector(".del").addEventListener("click", ()=>delWeight(r.id));
+        list.appendChild(el);
+      });
+    }
+
+    if (sectionOpen("weight")) drawWeightCharts(rows);
+  }
+
+  function drawWeightCharts(rows){
+    drawWeightChart(rows.slice(0,30).reverse());
+    drawWeightByCtx(rows);
+  }
+
+  function drawWeightChart(rows){
+    const wrap = document.querySelector("#wChart").closest(".chartwrap");
+    if (typeof Chart === "undefined"){ if(wrap) wrap.innerHTML='<div style="text-align:center;color:var(--muted);font-size:14px;padding:70px 10px">그래프를 불러오지 못했어요.</div>'; return; }
+    const el = document.getElementById("wChart"); if(!el) return;
+    const labels = rows.map(r=>fmtWhen(r.atText,r.at));
+    const data = rows.map(r=>r.value);
+    if (wChart){ wChart.destroy(); }
+    wChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[{ data, borderColor:"#3E74D8", borderWidth:2.5, tension:.3,
+        pointBackgroundColor:"#3E74D8", pointBorderColor:"#fff", pointBorderWidth:1.5, pointRadius:5, pointHoverRadius:7, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> c.parsed.y + " kg" } } },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{color:"#9AA0A6",font:{size:12}} },
+                 x:{ grid:{display:false}, ticks:{color:"#9AA0A6",font:{size:11}, maxRotation:0, autoSkip:true, maxTicksLimit:5} } } }
+    });
+  }
+
+  function drawWeightByCtx(rows){
+    const box = $("wByCtx");
+    Object.values(wCtxCharts).forEach(c=>c&&c.destroy()); wCtxCharts={};
+    const by={}; rows.forEach(r=>{ const k=r.context||"기타"; (by[k]=by[k]||[]).push(r); });
+    const present = W_CTX.filter(k=>by[k]&&by[k].length);
+    // W_CTX에 없는 기타 컨텍스트도 포함
+    Object.keys(by).forEach(k=>{ if(!W_CTX.includes(k) && !present.includes(k)) present.push(k); });
+    if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
+    box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="wc_${i}"></canvas></div></div>`).join("");
+    if (typeof Chart==="undefined") return;
+    present.forEach((k,i)=>{
+      const arr = by[k].slice().sort((a,b)=>a.at-b.at).slice(-30);
+      const el = document.getElementById("wc_"+i); if(!el) return;
+      wCtxCharts[k] = new Chart(el.getContext("2d"), {
+        type:"line",
+        data:{ labels:arr.map(r=>fmtWhen(r.atText,r.at)), datasets:[{ data:arr.map(r=>r.value),
+          borderColor:"#3E74D8", borderWidth:2, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:4, fill:false }]},
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:c=>c.parsed.y+" kg"}}},
+          scales:{ y:{grid:{color:"#EFEDE7"},ticks:{font:{size:11}}}, x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:4}} } }
+      });
+    });
+  }
+
+  // ================= 혈압 =================
+  const bpCol = db.collection("bp");
+  const BP_CTX = ["아침","저녁","기타"];
+  let allBP = []; let bpChart = null; let bpCtxCharts = {};
+  let bpCtx = "아침";
+  $("bpWhen").value = nowLocalInput();
+  $("bpCtxChips").addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#bpCtxChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); bpCtx = c.dataset.v;
+  });
+
+  // 대한고혈압학회 2022 기준
+  function classifyBP(sys, dia){
+    const C={low:{key:"low",label:"저혈압",color:getCss("--blue")},
+             ok:{key:"ok",label:"정상",color:getCss("--green")},
+             warn:{key:"warn",label:"주의",color:getCss("--amber")},
+             high:{key:"high",label:"고혈압",color:getCss("--red")}};
+    if (sys >= 140 || dia >= 90) return C.high;   // 고혈압 1·2기 (수축기·이완기 중 하나라도 높으면 우선)
+    if (sys >= 130 || dia >= 80) return C.warn;   // 고혈압 전단계
+    if (sys >= 120) return C.warn;                // 주의혈압
+    if (sys < 90 || dia < 60) return C.low;       // 저혈압 (고혈압/주의가 아닐 때만 — 고립성 수축기고혈압 오분류 방지)
+    return C.ok;                                  // 정상
+  }
+
+  const bpSaveBtn = $("bpSaveBtn");
+  bpSaveBtn.addEventListener("click", async ()=>{
+    if (!who){ askWho(true); return; }
+    const sys = parseInt($("sysValue").value, 10);
+    const dia = parseInt($("diaValue").value, 10);
+    const pulseRaw = $("pulseValue").value.trim();
+    const pulse = pulseRaw ? parseInt(pulseRaw,10) : null;
+    if (isNaN(sys) || isNaN(dia)){ toast("수축기·이완기를 입력하세요"); return; }
+    if (sys < 50 || sys > 300 || dia < 30 || dia > 200){ toast("혈압 수치를 확인하세요"); return; }
+    if (sys <= dia){ toast("수축기(높은값)가 이완기보다 커야 해요"); return; }
+    if (pulse !== null && (isNaN(pulse) || pulse < 20 || pulse > 250)){ toast("맥박을 확인하세요"); return; }
+    const whenStr = $("bpWhen").value || nowLocalInput();
+    const at = new Date(whenStr).getTime();
+    bpSaveBtn.disabled = true; bpSaveBtn.textContent = "저장 중…";
+    try{
+      await bpCol.add({ sys, dia, pulse, context:bpCtx, at, atText:whenStr.replace("T"," "),
+        memo:$("bpMemo").value.trim(), by:who, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      $("sysValue").value=""; $("diaValue").value=""; $("pulseValue").value=""; $("bpMemo").value=""; $("bpWhen").value=nowLocalInput();
+      toast("혈압 저장 ✓");
+    }catch(err){ console.error(err); toast("저장 실패: "+(err.code||err.message)); }
+    finally{ bpSaveBtn.disabled=false; bpSaveBtn.textContent="혈압 저장"; }
+  });
+
+  async function delBP(id){
+    if (!confirm("이 혈압 기록을 삭제할까요?")) return;
+    try{ await bpCol.doc(id).delete(); toast("삭제했어요"); }
+    catch(err){ toast("삭제 실패: "+(err.code||err.message)); }
+  }
+
+  bpCol.orderBy("at","desc").onSnapshot(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(Object.assign({id:d.id}, d.data())));
+    renderBP(rows);
+  }, err=>console.error(err));
+
+  function renderBP(rows){
+    allBP = rows;
+    const st = $("bpStatus");
+    if (rows.length){
+      const r = rows[0]; const cl = classifyBP(r.sys, r.dia);
+      $("bpBig").textContent = `${r.sys}/${r.dia}`;
+      st.style.display="inline-block"; st.textContent = cl.label;
+      st.style.background = hexA(cl.color,.14); st.style.color = cl.color;
+      $("bpMeta").textContent = `${r.context||""} · ${fmtWhen(r.atText,r.at)} · ${r.by} 기록`
+        + (r.pulse?` · 맥박 ${r.pulse}`:"") + (r.memo?` · ${r.memo}`:"");
+      const sum=$("accSumBp"); sum.textContent = `${r.sys}/${r.dia} · ${cl.label}`; sum.style.color = cl.color;
+    } else {
+      $("bpBig").textContent="–"; st.style.display="none";
+      $("bpMeta").textContent="아직 혈압 기록이 없어요."; $("accSumBp").textContent="";
+    }
+
+    const list = $("bpList");
+    if (!rows.length){ list.innerHTML='<div class="emptylist">첫 혈압을 기록해 보세요.</div>'; }
+    else {
+      list.innerHTML="";
+      rows.forEach(r=>{
+        const cl = classifyBP(r.sys,r.dia);
+        const el=document.createElement("div"); el.className="bprec";
+        el.innerHTML = `<span class="dot" style="background:${cl.color}"></span>`+
+          `<span class="bv" style="color:${cl.color}">${r.sys}/${r.dia}</span>`+
+          `<span class="bsub">${escape(r.context||"")} · ${escape(cl.label)} · ${fmtWhen(r.atText,r.at)}${r.pulse?" · 맥박 "+r.pulse:""} · ${escape(r.by||"")}${r.memo?" · "+escape(r.memo):""}</span>`+
+          `<button class="del" title="삭제">✕</button>`;
+        el.querySelector(".del").addEventListener("click", ()=>delBP(r.id));
+        list.appendChild(el);
+      });
+    }
+
+    if (sectionOpen("bp")) drawBPCharts(rows);
+  }
+
+  function drawBPCharts(rows){
+    drawBPChart(rows);
+    drawBPByCtx(rows);
+  }
+
+  function bpLineChart(el, arr){
+    return new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels:arr.map(r=>fmtWhen(r.atText,r.at)), datasets:[
+        { data:arr.map(r=>r.sys), borderColor:"#D9534B", borderWidth:2, tension:.3, pointBackgroundColor:"#D9534B", pointRadius:3, fill:false },
+        { data:arr.map(r=>r.dia), borderColor:"#3E74D8", borderWidth:2, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:3, fill:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{mode:"index",intersect:false}},
+        scales:{ y:{grid:{color:"#EFEDE7"},ticks:{font:{size:11}}}, x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:4}} } }
+    });
+  }
+
+  function drawBPByCtx(rows){
+    const box = $("bpByCtx");
+    Object.values(bpCtxCharts).forEach(c=>c&&c.destroy()); bpCtxCharts={};
+    const by={}; rows.forEach(r=>{ const k=r.context||"기타"; (by[k]=by[k]||[]).push(r); });
+    const present = BP_CTX.filter(k=>by[k]&&by[k].length);
+    Object.keys(by).forEach(k=>{ if(!BP_CTX.includes(k) && !present.includes(k)) present.push(k); });
+    if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
+    box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="bpc_${i}"></canvas></div></div>`).join("");
+    if (typeof Chart==="undefined") return;
+    present.forEach((k,i)=>{
+      const arr = by[k].slice().sort((a,b)=>a.at-b.at).slice(-30);
+      const el = document.getElementById("bpc_"+i); if(!el) return;
+      bpCtxCharts[k] = bpLineChart(el, arr);
+    });
+  }
+
+  function drawBPChart(rows){
+    const wrap = document.querySelector("#bpChart").closest(".chartwrap");
+    if (typeof Chart === "undefined"){ if(wrap) wrap.innerHTML='<div style="text-align:center;color:var(--muted);font-size:14px;padding:70px 10px">그래프를 불러오지 못했어요.</div>'; return; }
+    const el = document.getElementById("bpChart"); if(!el) return;
+    const arr = rows.slice(0,30).reverse();
+    const labels = arr.map(r=>fmtWhen(r.atText,r.at));
+    if (bpChart){ bpChart.destroy(); }
+    bpChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[
+        { label:"수축기", data:arr.map(r=>r.sys), borderColor:"#D9534B", borderWidth:2.5, tension:.3, pointBackgroundColor:"#D9534B", pointRadius:4, fill:false },
+        { label:"이완기", data:arr.map(r=>r.dia), borderColor:"#3E74D8", borderWidth:2.5, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:4, fill:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ mode:"index", intersect:false } },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{color:"#9AA0A6",font:{size:12}} },
+                 x:{ grid:{display:false}, ticks:{color:"#9AA0A6",font:{size:11}, maxRotation:0, autoSkip:true, maxTicksLimit:5} } } }
+    });
+  }
+
+  // ================= 돌봄 가이드 & 질답 =================
+  const guideCol = db.collection("guide");
+  let allGuide = [];
+
+  // 병원 자료 기반 기본 가이드 (첫 실행 시 자동 입력, 이후 가족이 수정·추가 가능)
+  const SEED_GUIDE = [
+    // 응급
+    { category:"응급/주의신호", title:"🚨 즉시 응급실 가야 하는 6가지 징후",
+      body:"아래 중 하나라도 나타나면 지체 없이 대학병원 응급실(구리 한양대병원 등)로:\n① 흑색변(짜장면처럼 까맣고 끈적)\n② 혈변·항문출혈\n③ 혈뇨(붉은 소변)\n④ 코피가 10분 이상 눌러도 안 멈춤\n⑤ 원인 모를 멍·점상출혈\n⑥ 38도 이상 고열(감염 신호)",
+      tags:["응급","흑색변","혈변","혈뇨","코피","멍","출혈","고열","38도","열","응급실"] },
+    // 연락처
+    { category:"연락처", title:"응급실 / 119",
+      body:"위급 시 119 또는 가까운 대학병원 응급실. (이사 후 구리 한양대학교병원 등)", tags:["응급실","119","한양대","구리"] },
+    { category:"연락처", title:"항암 예약 변경",
+      body:"입원·응급 등으로 항암 못 가면 예약 하루 전날 17:00까지 연락. ☎ 02-2228-4825 (월~금 08:00~17:00). 연락 없이 안 가면 조제된 항암제 자비 부담될 수 있음.", tags:["항암","예약","변경","취소","연락처"] },
+    { category:"연락처", title:"소화기내과 외래",
+      body:"본관 4층 ☎ 02-2228-1814 / 암병원 3층 ☎ 02-2228-4080, 4081", tags:["소화기내과","외래","연락처","임가람"] },
+    { category:"연락처", title:"당뇨병 교육실",
+      body:"본관 3층 당뇨병센터 9번방 ☎ 02-2228-5465 (인슐린 집중 교육)", tags:["당뇨","교육","내분비","연락처"] },
+    { category:"연락처", title:"진료예약센터 / 약국",
+      body:"진료예약센터 ☎ 1599-1004 · 세연약국(조제) ☎ 02-364-6141 (문의 오전9시~오후6시) · 암병원 3층 항암치료센터 ☎ 02-2228-4080 / 4081", tags:["예약","약국","세연약국","연락처","항암치료센터","항암","간호사"] },
+    // 항암 일정
+    { category:"항암 일정", title:"다음 항암 주사 일정",
+      body:"7/22(수) 오후 2:30 (17호실 4번 병상)\n7/29(수) 소화기내과 주사/치료\n※ 예약 10분 전 도착 → 혈압 측정 → 무인키오스크 도착확인. 예약 늦으면 병실 자동취소.", tags:["항암","일정","주사","수요일","7월22일","예약"] },
+    { category:"항암 일정", title:"항암 당일 주의",
+      body:"체온 37.8도 정도라도 오한·몸살 등 증상이 함께 있으면 간호사에게 미리 알리기(증상 없이 체온만 살짝 높은 건 대개 경과관찰). 38도 이상 고열은 증상과 무관하게 즉시 응급실. 항암 당일 자가운전 금지, 낙상 주의, 보호자 1인 동반 가능.", tags:["항암","당일","발열","오한","열","체온","운전","보호자","낙상"] },
+    { category:"항암 일정", title:"다음 외래 진료",
+      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 진료 2시간 전, 4시간 금식\n8/12(수) 오전 10:30 당뇨병 교육 (본관 3층 당뇨병센터 9번 교육실)\n8/26(수) 오후 1:30 내분비내과 김혜경 (본관 3층) — 채혈 진료 2시간 전, 8시간 금식, 오후 2:30 항암 전 진료", tags:["진료","외래","교육","8월12일","8월26일","채혈","금식","임가람","김혜경"] },
+    { category:"항암 일정", title:"치료 사이클·채혈·CT",
+      body:"4주 1사이클(1~3주 주1회 투여, 4주차 휴약), 80% 용량으로 시작. 채혈은 각 사이클 1주차에만. 2사이클(8주) 후 CT로 효과 평가. 진료 후 귀가 전 암병원 4층 항암치료실 예약실 들러 다음 일정 확인.", tags:["사이클","채혈","휴약","CT","일정","예약실"] },
+    // 복약
+    { category:"복약", title:"복약 스케줄 (아침/점심/저녁)",
+      body:"아침(식후): 고덱스·우루사·마이폴·케이캡·맥페란·글루파·디아미크롱·리바로젯 / 메게이스는 아침 '식전 1시간'\n점심(식후): 고덱스·우루사·마이폴·맥페란\n저녁(식후): 고덱스·우루사·마이폴·맥페란·글루파·디아미크롱\n※ 당뇨약(글루파·디아미크롱)은 아침·저녁 2회, 케이캡·리바로젯은 아침만.", tags:["복약","약","스케줄","아침","점심","저녁","식전","식후"] },
+    { category:"복약", title:"인슐린 용량",
+      body:"아침 식전: 란투스 12 + 휴마로그 6\n점심 식전: 휴마로그 8\n저녁 식전: 휴마로그 8\n※ 용량 조절은 반드시 내분비 의료진 지시대로.", tags:["인슐린","용량","란투스","휴마로그","단위","주사"] },
+    { category:"복약", title:"약 복용 주의사항",
+      body:"• 마이폴은 마약성 진통제 → 졸림·어지럼, 운전·술 금지\n• 글루파(메트포르민) → CT 조영검사 전 중단 여부 반드시 상의(48시간 전후)\n• 메게이스만 아침 식전 1시간, 잘 흔들어서\n• 케이캡·리바로젯은 아침만\n• 검사 당일 먹는 당뇨약은 일시중단(홀드) 필요할 수 있음 — 의료진 지시 따를 것", tags:["약","주의","마이폴","글루파","CT","조영제","메게이스"] },
+    // 부작용
+    { category:"부작용 대처", title:"오심·구토",
+      body:"항구토제는 증상 있으면 참지 말고 즉시 복용(참으면 약효↓). 편안하면 안 먹어도 됨. 하루 5~6회 소량씩 자주. 수분은 식사 전후 1시간 간격. 차갑고 냄새 적은 음식(아이스크림·식힌 죽·요플레)이 편함.",
+      tags:["구토","오심","울렁","메스꺼움","토","항구토제"] },
+    { category:"부작용 대처", title:"식사를 못 할 때 (수액)",
+      body:"부작용으로 식사를 아예 못 해 탈수·기력저하가 우려되면 수액을 맞는 게 좋아요. 동네 내과·가정의학과에 갈 때 암 환자임을 먼저 말하면, 개인 의원에서는 의료사고·관리 부담 우려로 처방을 거부하고 대학병원 응급실로 돌려보내는 경우가 많습니다. 그래서 동네 병원에서는 암 환자임을 밝히지 말고 단순 몸살·식사 저하로 인한 탈수로 말해서 기초 영양수액을 주 1~2회 편안하게 맞는 것이 현명한 방법입니다.",
+      tags:["수액","영양제","탈수","식사","기력","몸살"] },
+    { category:"부작용 대처", title:"설사",
+      body:"하루 5~6회 이상 물설사로 탈수 우려 시 처방받은 지사제 복용 + 이온음료로 수분 보충. 심하면 내과에서 수액 치료.", tags:["설사","물설사","탈수","지사제","포타겔"] },
+    { category:"부작용 대처", title:"변비",
+      body:"물 자주 마시고 가볍게 걷기. 안 나오면 처방 변비약(마그밀·듀락칸). 무리하게 힘주지 말 것(혈소판 감소로 출혈 위험).", tags:["변비","배변","마그밀","듀락칸","힘주기"] },
+    { category:"부작용 대처", title:"면역력 저하·감염 예방",
+      body:"항암 후 7~14일 사이 면역이 가장 떨어져 감염에 취약. 손 씻기(외출·식사 전·배변 후 30초 이상), 마스크 착용. 날음식 절대 금지(회·육회·간장게장·생굴·조개) → 완전히 익혀서. 과일은 씻어 껍질 벗겨(사과·배·바나나). 자몽 절대 금지(항암제 농도를 위험하게 높임).",
+      tags:["면역","감염","열","손씻기","날음식","회","자몽","호중구","마스크"] },
+    { category:"부작용 대처", title:"출혈·빈혈 주의",
+      body:"혈소판 감소로 지혈이 안 되거나 어지럼 생길 수 있음. 부드러운 미세모 칫솔, 면도는 전기면도기(날면도기 금지). 무리한 운동 피하고 가벼운 산책.", tags:["출혈","빈혈","혈소판","어지럼","면도","양치"] },
+    { category:"부작용 대처", title:"손발 저림",
+      body:"말초신경병증으로 손발 끝이 찌릿하거나 무뎌질 수 있음. 찬 바람·찬물에 노출되면 급격히 악화 → 미지근한 물 사용, 장갑·양말로 항상 따뜻하게.", tags:["손발저림","저림","마비","신경","찬물","장갑"] },
+    { category:"부작용 대처", title:"탈모·근육통·피부",
+      body:"탈모는 2~3주 후 시작(종료 후 다시 자람), 순한 샴푸·모자·두건. 근육통·관절통은 가벼운 온찜질·휴식. 피부 가려움엔 기존 항히스타민제·연고를 항암 중에도 그대로 병행 OK.", tags:["탈모","머리","근육통","관절통","가려움","피부"] },
+    { category:"부작용 대처", title:"저녁 식후 고혈당 (의료진 안내)",
+      body:"인슐린 조절(의료진 지침): 란투스=공복혈당 기준(공복 낮으면 중단, 130 넘으면 란투스 4) · 휴마로그=식후혈당 기준(식후 300 계속 넘으면 1~2 증량) · 최소 2~3일 지켜보고 조절, 실시간 수치로 즉시 조절 금지. 자가조절법은 병원 교육을 따를 것.", tags:["인슐린","란투스","휴마로그","공복","식후","고혈당","혈당","조절","용량"] },
+    { category:"부작용 대처", title:"항암 중 혈당 상승",
+      body:"항암 시 스테로이드(덱사메타손)가 함께 들어가 혈당이 평소보다 훨씬 높이 오를 수 있음. 당황 말고 혈당 자주 체크, 교육 지침대로 인슐린 증량. 급변 시 소화기내과가 내분비 협진 연계.", tags:["항암","혈당","스테로이드","덱사메타손","인슐린","협진"] },
+    // 식사
+    { category:"식사·영양", title:"항암 중 식단 (단백질 우선)",
+      body:"세포 재생·백혈구 상승을 위해 매 끼니 단백질 필수: 삶은 계란, 생선 구이/찜(가시 제거), 푹 삶은 살코기(소·돼지등심·닭), 두부, 콩비지. 입맛 없으면 억지로 밥 권하기보다 단백질 영양음료(뉴케어·하이뮨)를 시원하게 빨대로 조금씩 자주.",
+      tags:["식사","영양","단백질","입맛","뉴케어","하이뮨","식욕"] },
+    // 생활·돌봄
+    { category:"생활·돌봄", title:"치과 치료 타이밍",
+      body:"임플란트 등은 골수·면역이 떨어지는 항암 주간(1~3주차)을 피하고, 4주차 휴약기에. 치과에 '세포독성 항암 치료 중, 현재 휴약기'임을 반드시 고지.", tags:["치과","임플란트","휴약기","치아"] },
+    { category:"생활·돌봄", title:"응급실·타병원 대비 서류",
+      body:"항상 지참(병원 2층 서류발급센터): ① 외래 재진기록지 ② 투약기록지(처방전 상세) ③ 최근 1주 이내 혈액검사 결과지 ④ 최근 CT 판독지 + CD.", tags:["서류","응급실","기록지","혈액검사","CT","지참"] },
+    { category:"생활·돌봄", title:"입원 방식",
+      body:"본원에 며칠씩 입원 후 퇴원하는 치료는 불가. 입원 원하면 요양병원 입원 후 본원 항암 일정에 맞춰 통원.", tags:["입원","요양병원","통원"] },
+    // 기타(참고)
+    { category:"기타", title:"진단 요약",
+      body:"전이성 췌장암 4기(췌장 체부·미부, C25.8). 췌장 꼬리 약 5.4cm 선암(중등도 분화), 다발성 간전이 + 복막전이 의심(복수 동반). 수술 불가 → 항암화학요법. 약제: 아브락산 + 젬시타빈(젬자). 종양표지자 기준선 CA19-9 >20000, CEA 67.",
+      tags:["진단","병기","췌장암","5.4","간전이","복막","종양표지자"] },
+    { category:"기타", title:"과거 병력",
+      body:"위암(2015, 위 아전절제술 + XELOX 8차 완치), 에스결장(대장)암 수술, 위 선종 내시경절제(ESD, 2022). 위 절제 이력 있으니 식사 관련은 의료진 안내를 따를 것.",
+      tags:["과거력","위암","대장암","위절제","수술"] },
+    { category:"기타", title:"유전자 검사·재평가",
+      body:"표적치료제 가능성(약 5%) 확인 위해 유전자검사(Germline NGS) 진행. 항암 2사이클 후 반응 재평가 예정. 고주파 등 온열 보조치료는 담당의가 '근거 없다'고 안내.",
+      tags:["유전자","NGS","재평가","보조치료","고주파"] },
+  ];
+
+  const SEED_VERSION = 6;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
+  async function syncGuideSeed(){
+    try{
+      const metaRef = db.collection("meta").doc("guideSeed");
+      const m = await metaRef.get();
+      const curV = (m.exists && m.data().version) || 0;
+      if (curV >= SEED_VERSION) return;  // 이미 최신이면 아무것도 안 함
+
+      // 1) 기존 '기본자료' 항목만 삭제 (가족이 직접 추가한 항목 by!=="기본자료"는 보존)
+      const old = await guideCol.where("by","==","기본자료").get();
+      let batch = db.batch(); let ops = 0;
+      const flush = async ()=>{ if(ops){ await batch.commit(); batch = db.batch(); ops = 0; } };
+      for (const d of old.docs){ batch.delete(d.ref); if(++ops >= 400) await flush(); }
+      // 2) 최신 SEED_GUIDE 재입력
+      for (let i=0;i<SEED_GUIDE.length;i++){
+        const ref = guideCol.doc();
+        batch.set(ref, Object.assign({}, SEED_GUIDE[i], { by:"기본자료", seedVer:SEED_VERSION,
+          at: Date.now() - (SEED_GUIDE.length - i)*1000,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
+        if(++ops >= 400) await flush();
+      }
+      // 3) 버전 기록
+      batch.set(metaRef, { version:SEED_VERSION, done:true }, {merge:true});
+      await batch.commit();
+      console.log("가이드 기본자료 v"+SEED_VERSION+" 갱신 완료 (삭제 "+old.size+"건 → 재입력 "+SEED_GUIDE.length+"건)");
+    }catch(e){ console.error("가이드 seed 실패:", e); }
+  }
+  syncGuideSeed();
+
+  const GUIDE_SYN = {
+    "열":["발열","체온","fever","고열","미열"], "발열":["열","체온","fever"],
+    "구토":["토","메스꺼움","울렁","구역","nausea"], "토":["구토","메스꺼움","구역"],
+    "설사":["묽은변","배탈","diarrhea"], "통증":["아파","아픔","pain","쑤심","아플","아프"],
+    "출혈":["피","혈변","코피"], "항암":["항암제","케모","chemo","항암치료","항암약"],
+    "식사":["밥","음식","먹","식이","영양","입맛"], "약":["복약","투약","약물","진통제","해열제"],
+    "연락":["전화","번호","연락처"], "손발저림":["저림","마비","신경","손발"]
+  };
+  function ngrams(s){
+    s=(s||"").toLowerCase().replace(/\s+/g,"");
+    const out=new Set();
+    for(let n=2;n<=3;n++) for(let i=0;i+n<=s.length;i++) out.add(s.substr(i,n));
+    return [...out];
+  }
+  function scoreGuide(item, q){
+    q=(q||"").toLowerCase().replace(/\s+/g,"");
+    if(!q) return 0;
+    const title=(item.title||"").toLowerCase(), body=(item.body||"").toLowerCase();
+    const tags=(item.tags||[]).map(x=>x.toLowerCase().trim()).filter(Boolean);
+    // 태그 + 동의어 부분매칭 (한 글자 어근도 포함: 열, 토 등)
+    const kw=new Set(tags);
+    tags.forEach(t=>{ (GUIDE_SYN[t]||[]).forEach(s=>kw.add(s.toLowerCase())); });
+    Object.keys(GUIDE_SYN).forEach(k=>{ if(tags.includes(k) || title.includes(k)){ kw.add(k); GUIDE_SYN[k].forEach(s=>kw.add(s.toLowerCase())); } });
+    let s=0;
+    kw.forEach(k=>{ if(k && q.includes(k)) s += (k.length>=2?3:2); });
+    // 질문 n-gram ↔ 제목/본문 부분매칭 (한글 붙여쓰기 대응)
+    const hay=title+" "+body+" "+tags.join(" ");
+    ngrams(q).forEach(g=>{ if(hay.includes(g)) s += (title.includes(g)?2:1); });
+    return s;
+  }
+  function linkifyTel(text){
+    return escape(text).replace(/(\d{2,4}-\d{3,4}-\d{4}|1\d{3}-\d{4}|\b119\b)/g, '<a href="tel:$1">$1</a>');
+  }
+
+  function doAsk(){
+    const q = $("askInput").value.trim();
+    const area = $("ansArea");
+    if (!q){ area.innerHTML='<div class="ansHint">궁금한 증상·상황을 입력하면, 아빠 기록·안내지를 토대로 정리해서 답해드려요.</div>'; return; }
+    const scored = allGuide.map(it=>({it, s:scoreGuide(it,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,4);
+    if (!scored.length){
+      area.innerHTML = `<div class="ans emer"><div class="acat">🚨 기록에 없는 내용이에요</div><div class="abody">${linkifyTel("이 내용은 아빠 기록·안내지에 없어서 정확히 답하기 어려워요. 지어내지 않을게요.\n위급하면 119, 그 외엔 암병원 3층 항암치료센터(02-2228-4080/4081)나 소화기내과 외래(02-2228-1814)로 문의하세요.")}</div></div>`;
+      return;
+    }
+    const top = scored[0].it;
+    const rest = scored.slice(1).map(x=>x.it);
+    const emer = top.category === "응급/주의신호";
+    // 관련 연락처가 있으면 함께
+    const relContacts = allGuide.filter(g=>g.category==="연락처" && scoreGuide(g,q)>0).slice(0,2);
+
+    let html = "";
+    if (emer) html += `<div class=" anslead emerlead">🚨 응급 상황일 수 있어요. 아래를 먼저 확인하세요.</div>`;
+    else html += `<div class="anslead">기록을 토대로 정리하면:</div>`;
+    html += `<div class="ans ${emer?'emer':''}"><div class="acat">${escape(top.category||"")}</div>`+
+            `<div class="atit">${escape(top.title||"")}</div><div class="abody">${linkifyTel(top.body||"")}</div></div>`;
+    if (relContacts.length){
+      html += `<div class="ans"><div class="acat">📞 연락처</div>`+
+        relContacts.map(c=>`<div class="atit">${escape(c.title)}</div><div class="abody">${linkifyTel(c.body)}</div>`).join("")+`</div>`;
+    }
+    if (rest.length){
+      html += `<div class="ansmore">함께 참고하면 좋아요</div>`;
+      html += rest.map(it=>`<div class="ans mini"><div class="acat">${escape(it.category||"")}</div><div class="atit">${escape(it.title||"")}</div><div class="abody">${linkifyTel(it.body||"")}</div></div>`).join("");
+    }
+    area.innerHTML = html;
+  }
+  $("askBtn").addEventListener("click", doAsk);
+  $("askInput").addEventListener("keydown", e=>{ if(e.key==="Enter") doAsk(); });
+
+  guideCol.orderBy("at","desc").onSnapshot(snap=>{
+    const rows=[]; snap.forEach(d=>rows.push(Object.assign({id:d.id}, d.data())));
+    allGuide=rows; renderGuide(rows);
+  }, err=>console.error(err));
+
+  function renderGuide(rows){
+    $("accSumGuide").textContent = rows.length ? `${rows.length}개 항목` : "";
+    const contacts = rows.filter(r=>r.category==="연락처");
+    $("emerContacts").innerHTML = contacts.length
+      ? contacts.map(c=>`<div class="conrow"><span class="cont">${escape(c.title)}</span><span class="conb">${linkifyTel(c.body)}</span></div>`).join("")
+      : "";
+
+    const box=$("gList");
+    if (!rows.length){ box.innerHTML='<div class="emptylist">가이드를 불러오는 중…</div>'; return; }
+    const order=["응급/주의신호","연락처","항암 일정","부작용 대처","복약","식사·영양","생활·돌봄","기타"];
+    const by={}; rows.forEach(r=>{ (by[r.category]=by[r.category]||[]).push(r); });
+    const cats=order.filter(c=>by[c]&&by[c].length);
+    Object.keys(by).forEach(c=>{ if(!order.includes(c)) cats.push(c); });
+    box.innerHTML="";
+    cats.forEach(c=>{
+      const wrap=document.createElement("div"); wrap.className="gcat";
+      const h=document.createElement("h4"); h.textContent=c; wrap.appendChild(h);
+      by[c].forEach(it=>{
+        const el=document.createElement("div"); el.className="gitem";
+        el.innerHTML=`<div class="git">${escape(it.title||"")}</div><div class="gib">${linkifyTel(it.body||"")}</div>`;
+        wrap.appendChild(el);
+      });
+      box.appendChild(wrap);
+    });
+  }
+
+  // ================= 진료 기록 (날짜별) =================
+  const RECORDS = [
+    { date:"2026-07-22", label:"7월 22일 (수)", topics:[
+      { tag:"항암 2차", type:"dept", title:"항암 2차 투여 · 다음(3차) 예약 확정",
+        body:"2차 항암을 받았어요. (아브락산 + 젬자, 80% 용량)\n\n■ 다음(3차) 항암 예약 확정\n▪ 일시: 7/29(수) 오후 2:30\n▪ 장소: 암병원 항암약물치료센터 17호실 3번 병상\n▪ 도착: 예약 10분 전 내원 → '혈압전송' 후 무인키오스크에서 '도착확인'\n▪ 수납: 원무과에서 항암제 수납 후 귀가 (가능하면 하이패스 등록)\n▪ 예약 확정되면 SMS 발송 · 늦으면 병실 자동취소\n\n■ 못 가게 되면\n예약 하루 전날(7/28) 17:00까지 연락 ☎ 02-2228-4825 (월~금 08:00~17:00)\n연락 없이 안 가면 조제된 항암제가 자비 부담될 수 있음\n\n■ 당일 주의\n발열(열감)·오한 있으면 간호사에게 미리 알리기 · 자가운전 금지 · 낙상 주의 · 보호자 1인 동반 가능\n\n※ 환자 등록번호 7410691" },
+    ]},
+    { date:"2026-07-15", label:"7월 15일 (수)", topics:[
+      { tag:"소화기내과", type:"dept", title:"항암 시작 · 임가람 교수",
+        body:"전이성 췌장암(체부·미부) 4기로 확진되어, 수술은 어려워 항암화학요법을 시작했어요.\n\n▪ 항암제: 아브락산 + 젬시타빈(젬자) — 부작용을 줄이려 80% 용량으로 시작\n▪ 주기: 4주 = 1사이클 (1·2·3주 주 1회 투여, 4주차는 쉬는 휴약기)\n▪ 채혈: 매주 아님, 각 사이클 첫 주에만\n▪ 2사이클(8주) 후 CT로 효과 평가\n▪ 유전자검사(NGS) 진행 — 표적치료 가능성 확인용\n\n다음 항암: 7/22(수) 오후 2:30, 7/29(수)\n다음 진료: 8/12(수) 오전 9:30 · 임가람 (본관 4층 소화기병센터)\n채혈 진료 2시간 전, 4시간 금식" },
+      { tag:"내분비내과", type:"dept", title:"혈당 관리 · 김소라 / 김혜경 교수",
+        body:"당화혈색소(HbA1c)가 10.9로 높아 혈당 관리 협진을 받았어요.\n\n▪ 인슐린 (모두 식전, 7/15 협진 시작 기준)\n   - 아침: 란투스 12 + 휴마로그 6\n   - 점심: 휴마로그 8\n   - 저녁: 휴마로그 8\n▪ 먹는 당뇨약: 글루파(메트포르민), 디아미크롱\n▪ 퇴원 전 인슐린 자가조절(MDI) 교육 예정\n▪ 항암 때 쓰는 스테로이드로 혈당이 오를 수 있어요 — 교육 지침대로 대응, 급변 시 협진 연계\n\n■ 최신 인슐린 조절 지침 (의료진)\n▪ 란투스 = 공복혈당 기준: 공복이 낮아 현재 중단, 공복 130 넘으면 란투스 4\n▪ 휴마로그 = 식후혈당 기준: 식후 300 계속 넘으면 1~2 증량\n▪ 최소 2~3일 지켜보고 조절 · 실시간 수치로 즉시 조절 금지\n\n다음 진료: 8/26(수) 오후 1:30 · 김혜경 (본관 3층) — 오후 2:30 항암 전 진료\n채혈 진료 2시간 전, 8시간 금식\n당뇨병 교육실 ☎ 02-2228-5465\n※ 진료일 9/14 → 9/2 → 8/26로 변경됨 (예약변경 1599-1004)\n\n■ 당뇨 교육: 8/12(수) 오전 10:30 · 본관 3층 당뇨병센터 9번 교육실 (지금 상황 대처 교육)" },
+      { tag:"항암 교육", type:"warn", title:"항암 주의사항 안내",
+        body:"🚨 즉시 응급실 6가지 징후\n흑색변 · 혈변 · 혈뇨 · 안 멈추는 코피 · 원인 모를 멍 · 38도 이상 고열\n\n🌡 발열 기준 (의료진 안내)\n▪ 38도 이상 고열은 증상과 관계없이 즉시 응급실 (감염 신호)\n▪ 37.8도 정도는 오한·몸살 등 다른 증상이 함께 있을 때 간호사에게 미리 알리기\n▪ 증상 없이 체온만 살짝 높은 정도는 대개 경과관찰 (판단 어려우면 암병원 3층 항암치료센터 02-2228-4080/4081로 문의)\n\n▪ 감염 예방: 항암 후 7~14일 면역이 가장 낮음. 손씻기·마스크, 날음식(회·게장·생굴) 금지, 자몽 절대 금지\n▪ 부작용: 오심·구토(항구토제 즉시), 설사·변비, 손발저림(찬물 피하기), 탈모\n▪ 식사: 매 끼 단백질, 입맛 없으면 영양음료(뉴케어·하이뮨)\n▪ 치과 치료는 4주차 휴약기에\n▪ 응급·타병원 대비 서류 4종 항상 지참\n\n자세한 항목은 '돌봄 가이드 & 질문'에서 검색하면 나와요." },
+      { tag:"전체 진행상황", type:"sum", title:"진단 · 검사 요약",
+        body:"■ 진단\n췌장 체부·미부 5.4cm 선암(중등도 분화), 다발성 간 전이 + 복막 전이 의심(복수 동반). 수술은 불가해 항암으로 진행.\n종양표지자: CA19-9 20000 이상, CEA 67 (상승)\n\n■ 이번 입원 검사 (7/5~7/8)\n▪ 조직검사(EUS-FNA, 7/6): 선암 확진\n▪ MRI(7/6): 췌장 꼬리 종괴 + 간 전이\n▪ PET-CT(7/7): 간·림프절·복막 전이 소견\n▪ 혈액검사: HbA1c 10.9\n\n■ 과거 병력\n위암(2015, 위 절제 + 항암 8차 완치), 대장암 수술, 위 선종 내시경절제(2022)" },
+    ]},
+  ];
+
+  function renderRecords(){
+    const box = $("recList");
+    if (!box) return;
+    $("accSumRec").textContent = RECORDS.length ? `${RECORDS.length}일 기록` : "";
+    box.innerHTML = RECORDS.map((day, di)=>{
+      const topics = day.topics.map((t, ti)=>
+        `<div class="rectopic" data-day="${di}" data-topic="${ti}">
+           <button class="rectopic-h" type="button">
+             <span class="rectag ${t.type}">${escape(t.tag)}</span>
+             <span class="rt-t">${escape(t.title)}</span>
+             <span class="rt-chev">▾</span>
+           </button>
+           <div class="rectopic-body">${linkifyTel(t.body)}</div>
+         </div>`).join("");
+      return `<div class="recday ${di===0?'open':''}" data-day="${di}">
+          <button class="recday-h" type="button">
+            <span class="rd-date">${escape(day.label)}</span>
+            <span class="rd-cnt">${day.topics.length}건</span>
+            <span class="rd-chev">▾</span>
+          </button>
+          <div class="recday-body">${topics}</div>
+        </div>`;
+    }).join("");
+    // 날짜 토글
+    box.querySelectorAll(".recday-h").forEach(h=>{
+      h.addEventListener("click", ()=> h.closest(".recday").classList.toggle("open"));
+    });
+    // 주제 토글
+    box.querySelectorAll(".rectopic-h").forEach(h=>{
+      h.addEventListener("click", ()=> h.closest(".rectopic").classList.toggle("open"));
+    });
+  }
+  renderRecords();
+
+  // ================= 아코디언 =================
+  function sectionOpen(name){
+    const a = document.querySelector(`.acc[data-acc="${name}"]`);
+    return !!(a && a.classList.contains("open"));
+  }
+  function drawSection(name){
+    if (name === "bg") drawBgCharts(allReadings);
+    else if (name === "weight") drawWeightCharts(allWeights);
+    else if (name === "bp") drawBPCharts(allBP);
+  }
+  document.querySelectorAll(".acc-head").forEach(h=>{
+    h.addEventListener("click", ()=>{
+      const acc = h.closest(".acc");
+      acc.classList.toggle("open");
+      if (acc.classList.contains("open")) setTimeout(()=>drawSection(acc.dataset.acc), 0);
+    });
+  });
+
+  // ================= 병원용 기록지 (출력) =================
+  let allReadings = [];            // 최신순 전체 혈당 (render에서 채움)
+  let allWeights = [];             // 최신순 전체 체중 (renderWeights에서 채움)
+  let reportChart = null;
+  let reportWChart = null;
+  let reportBpChart = null;
+  let reportEnd = 0;               // 이번 리포트의 종료 시각(증분 커서 후보)
+  let reportMode = "all";
+  const metaRef = db.collection("meta").doc("print");
+
+  function dateInputToStart(v){ return v ? new Date(v + "T00:00:00").getTime() : 0; }
+  function dateInputToEnd(v){ return v ? new Date(v + "T23:59:59.999").getTime() : Date.now(); }
+  function fmtDateTime(ms){
+    const d = new Date(ms);
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function fmtDate(ms){
+    const d = new Date(ms); const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  }
+
+  // 출력 버튼 → 범위 모달 열기
+  $("openReport").addEventListener("click", async ()=>{
+    $("rangePick").classList.remove("on");
+    $("rangeModal").classList.remove("hidden");
+    // 마지막 출력 시점 표시
+    $("lastPrintInfo").textContent = "마지막 출력 기록을 확인 중…";
+    let last = 0;
+    try{
+      const doc = await metaRef.get();
+      last = (doc.exists && doc.data().lastPrintedAt) ? doc.data().lastPrintedAt : 0;
+    }catch(e){ console.error(e); }
+    $("lastPrintInfo")._last = last;
+    $("lastPrintInfo").textContent = last
+      ? `마지막 출력: ${fmtDateTime(last)} 까지 완료됨`
+      : "아직 출력 기록이 없어요 (증분 = 처음부터 전체와 동일)";
+    // 종료일 기본값 = 오늘
+    $("rangeEnd").value = fmtDate(Date.now());
+    $("rangeStart").value = "";
+  });
+
+  $("rangeCancel").addEventListener("click", ()=> $("rangeModal").classList.add("hidden"));
+
+  // 모드 버튼
+  $("rangeModal").querySelector(".opts").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    const mode = b.dataset.mode;
+    if (mode === "custom"){ $("rangePick").classList.toggle("on"); return; }
+    const last = $("lastPrintInfo")._last || 0;
+    if (mode === "incremental") buildReport(last, Date.now(), "incremental");
+    else buildReport(0, Date.now(), "all");
+  });
+
+  $("makeCustom").addEventListener("click", ()=>{
+    const s = dateInputToStart($("rangeStart").value);
+    const e = dateInputToEnd($("rangeEnd").value);
+    if (!$("rangeEnd").value){ toast("종료일을 선택하세요"); return; }
+    if (s > e){ toast("시작일이 종료일보다 늦어요"); return; }
+    buildReport(s, e, "custom");
+  });
+
+  // 리포트 생성
+  function buildReport(start, end, mode){
+    reportMode = mode; reportEnd = end;
+    const useBg = $("itemBg").checked, useW = $("itemW").checked, useBp = $("itemBp").checked;
+    const inRange = r => typeof r.at === "number" && (mode === "incremental" ? r.at > start : r.at >= start) && r.at <= end;
+    const bg = useBg ? allReadings.filter(inRange).slice().sort((a,b)=> a.at - b.at) : [];
+    const wt = useW ? allWeights.filter(inRange).slice().sort((a,b)=> a.at - b.at) : [];
+    const bp = useBp ? allBP.filter(inRange).slice().sort((a,b)=> a.at - b.at) : [];
+
+    const doc = $("reportDoc");
+    const periodText = (start ? fmtDate(start) : "맨 처음") + " ~ " + fmtDate(end);
+    const header = `<h1>건강 기록지</h1>
+      <div class="sub">대상: 아빠 · 출력일 ${fmtDate(Date.now())}</div>
+      <div class="sub">기간: ${escape(periodText)}</div>
+      <div class="rule"></div>`;
+
+    if (!bg.length && !wt.length && !bp.length){
+      doc.innerHTML = header + `<div class="docEmpty">선택한 항목의 해당 기간 기록이 없어요.<br>항목이나 기간을 다시 선택해 주세요.</div>`;
+      $("rangeModal").classList.add("hidden");
+      $("reportMark").classList.add("hidden");
+      openReportOverlay();
+      return;
+    }
+
+    // ===== 혈당 섹션 =====
+    let bgHtml = "";
+    if (bg.length){
+      const vals = bg.map(r=>r.value);
+      const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      const hi = Math.max(...vals), lo = Math.min(...vals);
+      const lowCnt = bg.filter(r=>r.value < 70).length;
+      const highCnt = bg.filter(r=> classify(r.value,r.context).key==="high").length;
+      const groups = {};
+      bg.forEach(r=>{ (groups[r.context]=groups[r.context]||[]).push(r.value); });
+      const ctxAvgHtml = Object.keys(groups).map(k=>{
+        const g=groups[k]; const a=Math.round(g.reduce((x,y)=>x+y,0)/g.length);
+        return `<b>${escape(k)}</b> 평균 ${a} (${g.length}회)`;
+      }).join(" · ");
+      const rowsHtml = bg.map(r=>{
+        const cl = classify(r.value, r.context);
+        return `<tr>
+          <td>${escape(fmtDate(r.at))}</td>
+          <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+          <td>${escape(r.context)}</td>
+          <td class="v" style="color:${cl.color}">${r.value}</td>
+          <td class="badge"><span style="color:${cl.color}">${cl.label}</span></td>
+          <td>${escape(r.by||"")}</td>
+          <td>${escape(r.memo||"")}</td>
+        </tr>`;
+      }).join("");
+      bgHtml = `
+        <h2 style="font-size:19px;margin:6px 0 12px">🩸 혈당 · 총 ${bg.length}회</h2>
+        <div class="sumGrid">
+          <div class="sumBox"><div class="n">${avg}</div><div class="t">평균 (mg/dL)</div></div>
+          <div class="sumBox"><div class="n">${hi}</div><div class="t">최고</div></div>
+          <div class="sumBox"><div class="n">${lo}</div><div class="t">최저</div></div>
+        </div>
+        <div class="ctxAvg">${ctxAvgHtml}<br>저혈당(70 미만) ${lowCnt}회 · 높음 ${highCnt}회</div>
+        <div class="docChart"><canvas id="reportCanvas"></canvas></div>
+        <table class="rt">
+          <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>혈당</th><th>판정</th><th>기록자</th><th>메모</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>`;
+    } else if (useBg) {
+      bgHtml = `<h2 style="font-size:19px;margin:6px 0 12px">🩸 혈당</h2><div class="ctxAvg">해당 기간 혈당 기록 없음</div>`;
+    }
+
+    // ===== 체중 섹션 =====
+    let wtHtml = "";
+    if (wt.length){
+      const wv = wt.map(r=>r.value);
+      const wStart = wt[0].value, wEnd = wt[wt.length-1].value;
+      const wDiff = Math.round((wEnd - wStart)*10)/10;
+      const diffTxt = wDiff>0 ? `▲ ${wDiff}kg 증가` : wDiff<0 ? `▼ ${Math.abs(wDiff)}kg 감소` : "변화 없음";
+      const wHi = Math.max(...wv), wLo = Math.min(...wv);
+      const wRowsHtml = wt.slice().reverse().map(r=>`<tr>
+          <td>${escape(fmtDate(r.at))}</td>
+          <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+          <td>${escape(r.context||"")}</td>
+          <td class="v">${r.value} kg</td>
+          <td>${escape(r.by||"")}</td>
+          <td>${escape(r.memo||"")}</td>
+        </tr>`).join("");
+      wtHtml = `
+        <div class="rule"></div>
+        <h2 style="font-size:19px;margin:6px 0 12px">⚖️ 체중 · 총 ${wt.length}회</h2>
+        <div class="sumGrid">
+          <div class="sumBox"><div class="n">${wEnd}</div><div class="t">최근 (kg)</div></div>
+          <div class="sumBox"><div class="n">${wHi}</div><div class="t">최고</div></div>
+          <div class="sumBox"><div class="n">${wLo}</div><div class="t">최저</div></div>
+        </div>
+        <div class="ctxAvg">기간 변화: <b>${wStart}kg → ${wEnd}kg</b> (${diffTxt})</div>
+        <div class="docChart"><canvas id="reportWCanvas"></canvas></div>
+        <table class="rt">
+          <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>체중</th><th>기록자</th><th>메모</th></tr></thead>
+          <tbody>${wRowsHtml}</tbody>
+        </table>`;
+    }
+
+    // ===== 혈압 섹션 =====
+    let bpHtml = "";
+    if (bp.length){
+      const sysArr = bp.map(r=>r.sys), diaArr = bp.map(r=>r.dia);
+      const sysAvg = Math.round(sysArr.reduce((a,b)=>a+b,0)/sysArr.length);
+      const diaAvg = Math.round(diaArr.reduce((a,b)=>a+b,0)/diaArr.length);
+      const highCnt = bp.filter(r=>classifyBP(r.sys,r.dia).key==="high").length;
+      // 시점별 평균 (아침/저녁/기타)
+      const bpG = {};
+      bp.forEach(r=>{ const k=r.context||"기타"; (bpG[k]=bpG[k]||[]).push(r); });
+      const bpCtxAvg = ["아침","저녁","기타"].filter(k=>bpG[k]&&bpG[k].length).map(k=>{
+        const g=bpG[k];
+        const sa=Math.round(g.reduce((x,r)=>x+r.sys,0)/g.length);
+        const da=Math.round(g.reduce((x,r)=>x+r.dia,0)/g.length);
+        return `<b>${escape(k)}</b> 평균 ${sa}/${da} (${g.length}회)`;
+      }).join(" · ");
+      const bpRowsHtml = bp.slice().reverse().map(r=>{
+        const cl = classifyBP(r.sys,r.dia);
+        return `<tr>
+          <td>${escape(fmtDate(r.at))}</td>
+          <td>${escape((r.atText||"").split(" ")[1]||"")}</td>
+          <td>${escape(r.context||"")}</td>
+          <td class="v" style="color:${cl.color}">${r.sys}/${r.dia}</td>
+          <td class="badge"><span style="color:${cl.color}">${cl.label}</span></td>
+          <td>${r.pulse||""}</td>
+          <td>${escape(r.by||"")}</td>
+        </tr>`;
+      }).join("");
+      bpHtml = `
+        <div class="rule"></div>
+        <h2 style="font-size:19px;margin:6px 0 12px">🫀 혈압 · 총 ${bp.length}회</h2>
+        <div class="sumGrid">
+          <div class="sumBox"><div class="n">${sysAvg}/${diaAvg}</div><div class="t">평균 (mmHg)</div></div>
+          <div class="sumBox"><div class="n">${Math.max(...sysArr)}</div><div class="t">수축기 최고</div></div>
+          <div class="sumBox"><div class="n">${Math.min(...diaArr)}</div><div class="t">이완기 최저</div></div>
+        </div>
+        <div class="ctxAvg">${bpCtxAvg}<br>고혈압(140/90 이상) ${highCnt}회</div>
+        <div class="docChart"><canvas id="reportBpCanvas"></canvas></div>
+        <table class="rt">
+          <thead><tr><th>날짜</th><th>시간</th><th>시점</th><th>혈압</th><th>판정</th><th>맥박</th><th>기록자</th></tr></thead>
+          <tbody>${bpRowsHtml}</tbody>
+        </table>`;
+    } else if (useBp) {
+      bpHtml = `<div class="rule"></div><h2 style="font-size:19px;margin:6px 0 12px">🫀 혈압</h2><div class="ctxAvg">해당 기간 혈압 기록 없음</div>`;
+    }
+
+    doc.innerHTML = header + bgHtml + wtHtml + bpHtml + `
+      <div class="docNote">
+        혈당 기준(당뇨 관리 목표): 식전 80~130 · 식후 2시간 180 미만 · 70 미만 저혈당.
+        혈압 기준(대한고혈압학회): 정상 120/80 미만 · 고혈압 140/90 이상.
+        본 기록지는 자가측정 참고자료이며 의료 진단이 아닙니다.
+      </div>`;
+
+    // 증분 모드일 때만 '출력완료' 버튼 노출
+    $("reportMark").classList.toggle("hidden", mode !== "incremental");
+
+    $("rangeModal").classList.add("hidden");
+    openReportOverlay();
+    if (bg.length) drawReportChart(bg);
+    if (wt.length) drawReportWeightChart(wt);
+    if (bp.length) drawReportBPChart(bp);
+  }
+
+  function drawReportChart(rows){
+    if (typeof Chart === "undefined") return;
+    const el = document.getElementById("reportCanvas"); if(!el) return;
+    const labels = rows.map(r => fmtDate(r.at) + " " + ((r.atText||"").split(" ")[1]||""));
+    const data = rows.map(r => r.value);
+    const colors = rows.map(r => classify(r.value, r.context).color);
+    if (reportChart){ reportChart.destroy(); }
+    reportChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[{ data, borderColor:"#B9B6AE", borderWidth:2, tension:.3,
+        pointBackgroundColor:colors, pointBorderColor:colors, pointRadius:4, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false} },
+        scales:{ y:{ suggestedMin:60, grid:{color:"#EFEDE7"}, ticks:{font:{size:11}} },
+                 x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6} } } }
+    });
+  }
+
+  function drawReportWeightChart(rows){
+    if (typeof Chart === "undefined") return;
+    const el = document.getElementById("reportWCanvas"); if(!el) return;
+    const labels = rows.map(r => fmtDate(r.at) + " " + ((r.atText||"").split(" ")[1]||""));
+    const data = rows.map(r => r.value);
+    if (reportWChart){ reportWChart.destroy(); }
+    reportWChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[{ data, borderColor:"#3E74D8", borderWidth:2, tension:.3,
+        pointBackgroundColor:"#3E74D8", pointBorderColor:"#3E74D8", pointRadius:4, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> c.parsed.y + " kg" } } },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{font:{size:11}} },
+                 x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6} } } }
+    });
+  }
+
+  function drawReportBPChart(rows){
+    if (typeof Chart === "undefined") return;
+    const el = document.getElementById("reportBpCanvas"); if(!el) return;
+    const labels = rows.map(r => fmtDate(r.at) + " " + ((r.atText||"").split(" ")[1]||""));
+    if (reportBpChart){ reportBpChart.destroy(); }
+    reportBpChart = new Chart(el.getContext("2d"), {
+      type:"line",
+      data:{ labels, datasets:[
+        { label:"수축기", data:rows.map(r=>r.sys), borderColor:"#D9534B", borderWidth:2, tension:.3, pointBackgroundColor:"#D9534B", pointRadius:3, fill:false },
+        { label:"이완기", data:rows.map(r=>r.dia), borderColor:"#3E74D8", borderWidth:2, tension:.3, pointBackgroundColor:"#3E74D8", pointRadius:3, fill:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false} },
+        scales:{ y:{ grid:{color:"#EFEDE7"}, ticks:{font:{size:11}} },
+                 x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6} } } }
+    });
+  }
+
+  function openReportOverlay(){
+    $("reportOverlay").classList.add("on");
+    document.body.classList.add("report-open");
+    $("reportOverlay").scrollTop = 0;
+  }
+  function closeReportOverlay(){
+    $("reportOverlay").classList.remove("on");
+    document.body.classList.remove("report-open");
+    if (reportChart){ reportChart.destroy(); reportChart = null; }
+    if (reportWChart){ reportWChart.destroy(); reportWChart = null; }
+    if (reportBpChart){ reportBpChart.destroy(); reportBpChart = null; }
+  }
+  $("reportClose").addEventListener("click", closeReportOverlay);
+  $("reportPrint").addEventListener("click", ()=> window.print());
+  $("reportMark").addEventListener("click", async ()=>{
+    try{
+      await metaRef.set({ lastPrintedAt: reportEnd, by: who || "", at: Date.now() }, { merge:true });
+      toast("출력완료로 표시했어요. 다음엔 이 이후부터 나와요.");
+      $("reportMark").classList.add("hidden");
+    }catch(err){ console.error(err); toast("표시 실패: " + (err.code||err.message)); }
+  });
+
+  // ---- 실시간 구독 ----
+  let chart = null;
+  col.orderBy("at","desc").onSnapshot(snap=>{
+    $("syncState").innerHTML = '<b>● 실시간 연결됨</b> · 온 가족이 함께 봅니다';
+    const rows = [];
+    snap.forEach(d => rows.push(Object.assign({id:d.id}, d.data())));
+    render(rows);
+  }, err=>{
+    console.error(err);
+    if (err.code === "permission-denied"){
+      $("syncState").innerHTML = '⚠️ Firestore 규칙이 막혀 있어요. 콘솔에서 <b>테스트 모드</b> 규칙으로 바꿔주세요.';
+    } else {
+      $("syncState").textContent = "연결 오류: " + (err.code || err.message);
+    }
+  });
+
+  function fmtWhen(atText, at){
+    if (atText) {
+      const [d,t] = atText.split(" ");
+      const md = d ? d.slice(5).replace("-","/") : "";
+      return md + (t ? " " + t : "");
+    }
+    return new Date(at).toLocaleString("ko-KR");
+  }
+
+  // ---- 렌더 ----
+  function render(rows){
+    allReadings = rows;   // 리포트에서 사용 (최신순)
+    // 최신(hero)
+    const hero = $("hero");
+    if (rows.length){
+      const r = rows[0]; const cl = classify(r.value, r.context);
+      hero.className = "block hero";
+      $("heroBig").innerHTML = r.value + '<span class="unit">mg/dL</span>';
+      let statusEl = hero.querySelector(".status");
+      if (!statusEl){ statusEl = document.createElement("div"); statusEl.className="status"; $("heroBig").after(statusEl); }
+      statusEl.textContent = cl.label;
+      statusEl.style.background = hexA(cl.color, .14);
+      statusEl.style.color = cl.color;
+      $("heroMeta").textContent = `${r.context} · ${fmtWhen(r.atText, r.at)} · ${r.by} 기록`;
+      const sb = $("accSumBg"); sb.textContent = `${r.value} · ${cl.label}`; sb.style.color = cl.color;
+    } else {
+      hero.className = "block hero empty";
+      $("heroBig").textContent = "아직 기록이 없어요";
+      const s = hero.querySelector(".status"); if(s) s.remove();
+      $("heroMeta").textContent = "";
+      $("accSumBg").textContent = "";
+    }
+
+    // 통계 (최근 7일)
+    const weekAgo = Date.now() - 7*24*3600*1000;
+    const wk = rows.filter(r => r.at >= weekAgo).map(r=>r.value);
+    $("stAvg").textContent = wk.length ? Math.round(wk.reduce((a,b)=>a+b,0)/wk.length) : "-";
+    const all = rows.map(r=>r.value);
+    $("stHi").textContent = all.length ? Math.max(...all) : "-";
+    $("stLo").textContent = all.length ? Math.min(...all) : "-";
+
+    // 목록
+    const list = $("list");
+    if (!rows.length){
+      list.innerHTML = '<div class="emptylist">첫 혈당을 기록해 보세요.</div>';
+    } else {
+      list.innerHTML = "";
+      rows.forEach(r=>{
+        const cl = classify(r.value, r.context);
+        const el = document.createElement("div");
+        el.className = "rec";
+        el.innerHTML =
+          `<span class="dot" style="background:${cl.color}"></span>`+
+          `<span class="rv" style="color:${cl.color}">${r.value}</span>`+
+          `<div class="rmid"><div class="rctx">${escape(r.context)} <span style="color:var(--muted);font-weight:600;font-size:12px">${cl.label}</span></div>`+
+          `<div class="rsub">${fmtWhen(r.atText,r.at)} · ${escape(r.by)}${r.memo?" · "+escape(r.memo):""}</div></div>`+
+          `<button class="del" title="삭제">✕</button>`;
+        el.querySelector(".del").addEventListener("click", ()=>del(r.id));
+        list.appendChild(el);
+      });
+    }
+
+    if (sectionOpen("bg")) drawBgCharts(rows);
+  }
+
+  function drawBgCharts(rows){
+    drawChart(rows.slice(0,30).reverse());
+    drawBgByCtx(rows);
+  }
+
+  const BG_CTX = ["공복","식전","아침식후","점심식후","저녁식후","취침전","기타"];
+  let bgCtxCharts = {};
+  function drawBgByCtx(rows){
+    const box = $("bgByCtx");
+    Object.values(bgCtxCharts).forEach(c=>c&&c.destroy()); bgCtxCharts={};
+    const by={}; rows.forEach(r=>{ (by[r.context]=by[r.context]||[]).push(r); });
+    const present = BG_CTX.filter(k=>by[k]&&by[k].length);
+    if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
+    box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="bgc_${i}"></canvas></div></div>`).join("");
+    if (typeof Chart==="undefined") return;
+    present.forEach((k,i)=>{
+      const arr = by[k].slice().sort((a,b)=>a.at-b.at).slice(-30);
+      const el = document.getElementById("bgc_"+i); if(!el) return;
+      bgCtxCharts[k] = new Chart(el.getContext("2d"), {
+        type:"line",
+        data:{ labels:arr.map(r=>fmtWhen(r.atText,r.at)), datasets:[{ data:arr.map(r=>r.value),
+          borderColor:"#B9B6AE", borderWidth:2, tension:.3,
+          pointBackgroundColor:arr.map(r=>classify(r.value,r.context).color),
+          pointBorderColor:arr.map(r=>classify(r.value,r.context).color), pointRadius:4, fill:false }]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.parsed.y+" mg/dL"}}},
+          scales:{ y:{suggestedMin:60,grid:{color:"#EFEDE7"},ticks:{font:{size:11}}}, x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:4}} } }
+      });
+    });
+  }
+
+  function drawChart(rows){
+    const wrap = document.querySelector(".chartwrap");
+    if (typeof Chart === "undefined"){   // 그래프 라이브러리 로드 실패 방어
+      wrap.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:70px 10px">그래프를 불러오지 못했어요.<br>인터넷 연결 후 새로고침 해주세요.</div>';
+      return;
+    }
+    const ctxEl = $("chart").getContext("2d");
+    const labels = rows.map(r => fmtWhen(r.atText, r.at));
+    const data = rows.map(r => r.value);
+    const metas = rows.map(r => { const cl = classify(r.value, r.context); return { ctx:r.context, label:cl.label, color:cl.color }; });
+    const colors = metas.map(m => m.color);
+    if (chart){ chart.destroy(); }
+    chart = new Chart(ctxEl, {
+      type:"line",
+      data:{ labels, datasets:[{
+        data, borderColor:"#B9B6AE", borderWidth:2, tension:.3,
+        pointBackgroundColor:colors, pointBorderColor:colors, pointRadius:5, pointHoverRadius:7,
+        fill:false
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{
+          callbacks:{
+            title: items => labels[items[0].dataIndex],
+            label: c => `${c.parsed.y} mg/dL · ${metas[c.dataIndex].ctx} · ${metas[c.dataIndex].label}`
+          } } },
+        scales:{
+          y:{ beginAtZero:false, suggestedMin:60, grid:{color:"#EFEDE7"}, ticks:{color:"#9AA0A6",font:{size:12}} },
+          x:{ grid:{display:false}, ticks:{color:"#9AA0A6",font:{size:11}, maxRotation:0, autoSkip:true, maxTicksLimit:5} }
+        }
+      }
+    });
+  }
+
+  // ---- 유틸 ----
+  function escape(s){ return String(s==null?"":s).replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+  function hexA(hex, a){
+    hex = hex.replace("#",""); if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
+    const n=parseInt(hex,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+  }
+
+  // ---- 시작 ----
+  subscribeToday();   // 인슐린·복약 오늘 구독 (모든 상수 정의 이후 안전 호출)
+  refreshWho();
+  if (!who) askWho(false);
+})();
+</script>
+</body>
+</html>
