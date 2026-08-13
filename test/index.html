@@ -151,6 +151,13 @@
   .doseRow input{width:76px; font-family:inherit; font-size:16px; font-weight:800; text-align:center;
     padding:7px 6px; border:1px solid var(--line); border-radius:9px; background:#FBFBFA; color:var(--ink)}
   .doseRow input:focus{outline:none; border-color:var(--green)}
+  .doseGuideBox{font-size:14.5px; line-height:1.5}
+  .doseGuideBox .dgRow{font-weight:800; margin-top:9px}
+  .doseGuideBox .dgSub{padding-left:4px; margin-top:3px}
+  .doseGuideBox .dgWarn{margin-top:12px; background:#FFF4E5; border:1px solid #F0C98A; border-radius:10px; padding:11px 13px; font-size:13px; line-height:1.55}
+  .bgTarget .bgtRow{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:15px}
+  .bgTarget .bgtRow b{font-size:16px; color:var(--green)}
+  .bgTarget .bgtRow span{font-weight:600}
 
   /* toast */
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
@@ -481,6 +488,32 @@
         </div>
       </div>
       <div class="block">
+        <div class="doseHead"><h2 class="sec" style="margin:0">용량 조절 지침</h2><span class="note" style="margin:0">세브란스 당뇨교육</span></div>
+        <div class="doseGuideBox">
+          <div class="dgRow">💧 란투스 (기저 인슐린) — 하루 1번, 약효 24시간</div>
+          <div class="dgSub">기준: <b>아침 공복 혈당</b> (현재 6단위 기준)<br>
+            · 📈 3일 연속 <b>150 초과</b> → <b>+2</b><br>
+            · 📉 <b>100 미만</b> → 줄이기<br>
+            · 🚨 <b>80 미만</b> → 즉시 <b>-4</b></div>
+          <div class="dgRow">🍚 휴마로그 (초속효성) — 매 식사 직전, 약효 4시간</div>
+          <div class="dgSub">기준: <b>매 끼니 식사 전 혈당</b><br>
+            · 📈 식전이 기준보다 높으면 → 늘리기<br>
+            · 📉 식전 <b>100 미만</b> → 줄이기</div>
+          <div class="dgWarn">⚠️ 최소 <b>2~3일 지켜보고</b> 조절해요. 그때그때 수치로 즉시 바꾸지 말라고 하셨어요. 조절은 담당 의료진 안내대로.</div>
+        </div>
+      </div>
+      <div class="block">
+        <h2 class="sec">주사 위치 (교육)</h2>
+        <div class="doseGuideBox">
+          <div class="dgSub">
+            ✅ 가장 좋은 곳: <b>피하지방이 두툼한 복부(배)</b><br>
+            🚫 <b>배꼽 주변 3cm 이내 금지</b><br>
+            🔄 몽우리 안 생기게 <b>매번 위치를 돌아가며</b> 주사<br>
+            💪 팔은 어깨 쪽(근육 많은 곳) 말고, <b>삼두(팔 뒤) 살 많은 곳</b>에서 찌르기
+          </div>
+        </div>
+      </div>
+      <div class="block">
         <h2 class="sec">인슐린 최근 7일</h2>
         <div id="insLog"><div class="emptylist">인슐린 체크 기록이 아직 없어요.</div></div>
       </div>
@@ -512,6 +545,12 @@
       <span class="acc-chev">▾</span>
     </button>
     <div class="acc-body">
+      <div class="block bgTarget">
+        <h2 class="sec">우리 목표 혈당</h2>
+        <div class="bgtRow"><span>🌅 아침 공복</span><b>100 ~ 150</b></div>
+        <div class="bgtRow"><span>🍽️ 식사 전</span><b>100 ~ 200</b></div>
+        <div class="note" style="margin-top:8px">세브란스 당뇨교육 기준 · 아래 색상(정상/주의/높음)도 이 목표에 맞춰져 있어요.</div>
+      </div>
       <div class="block hero empty" id="hero">
         <div class="label">최근 혈당</div>
         <div class="big" id="heroBig">아직 기록이 없어요</div>
@@ -828,9 +867,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-07-25e";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-07-26b";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 내분비진료 9·2로 변경"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 당뇨교육 반영·혈당기준 조정"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -975,11 +1014,11 @@ const firebaseConfig = {
   }
 
   // 인슐린 용량 (Firebase 저장 · 편집 가능 · 실시간 반영). 조절 판단은 의료진 몫.
-  const INS_DOSE_DEFAULT = { amLantus:12, amHumalog:6, luHumalog:8, diHumalog:8 };
+  const INS_DOSE_DEFAULT = { amLantus:6, amHumalog:6, luHumalog:8, diHumalog:8 };  // 란투스 현재 6단위(교육 기준). 공복 따라 조절
   const doseRef = db.collection("meta").doc("insulinDose");
   let curDose = Object.assign({}, INS_DOSE_DEFAULT);
   function renderDoseLabels(d){
-    $("doseAM").textContent = `란투스${d.amLantus} + 휴마로그${d.amHumalog}`;
+    $("doseAM").textContent = (d.amLantus>0 ? `란투스${d.amLantus} + ` : "") + `휴마로그${d.amHumalog}`;
     $("doseLU").textContent = `휴마로그${d.luHumalog}`;
     $("doseDI").textContent = `휴마로그${d.diHumalog}`;
   }
@@ -1190,12 +1229,14 @@ const firebaseConfig = {
   }
   // 확정된 예약 시간·병상 (예약 확정되면 여기에 추가. 없는 날짜는 시간 미표시)
   const CHEMO_INFO = {
-    "2026-07-29": { time:"오후 2:30", place:"17호실 3번 병상" }
+    "2026-07-29": { time:"오후 2:30", place:"17호실 3번 병상" },
+    "2026-08-26": { time:"오후 2:30" }  // 내분비 진료(오후 1:30) 후 항암
   };
   // 항암 외 진료 일정 (지난 날짜는 상단 카드에서 자동으로 숨김)
   const APPTS = [
-    { date:"2026-08-12", time:"오전 9:30", dept:"소화기내과", doctor:"임가람", place:"본관 4층 소화기병센터", prep:"채혈 진료 2시간 전 · 4시간 금식" },
-    { date:"2026-09-02", time:"오후 3:50", dept:"내분비내과", doctor:"김혜경", place:"본관 3층",              prep:"채혈 진료 2시간 전 · 8시간 금식" }
+    { date:"2026-08-12", time:"오전 9:30",  dept:"소화기내과",   doctor:"임가람", place:"본관 4층 소화기병센터",        prep:"채혈 진료 2시간 전 · 4시간 금식" },
+    { date:"2026-08-12", time:"오전 10:30", dept:"당뇨병 교육",  doctor:"",       place:"본관 3층 당뇨병센터 9번 교육실", prep:"지금 상황에 맞는 당뇨 대처 교육" },
+    { date:"2026-08-26", time:"오후 1:30",  dept:"내분비내과",   doctor:"김혜경", place:"본관 3층",                     prep:"채혈 진료 2시간 전 · 8시간 금식 · 오후 2:30 항암 전 진료" }
   ];
   function nextChemo(){
     const today = dayKey();
@@ -1225,10 +1266,13 @@ const firebaseConfig = {
       const lbl = s => { const [ ,m,d] = s.split("-"); return `${+m}/${+d}(${wdOf(s)})`; };
       const today = dayKey();
       const list = [];
+      // 시각 문자열("오후 1:30")을 분으로 (같은 날 정렬용)
+      const toMin = t => { const m = (t||"").match(/(오전|오후)?\s*(\d+):(\d+)/); if(!m) return 0;
+        let h=+m[2]; const mi=+m[3]; if(m[1]==="오후"&&h<12)h+=12; if(m[1]==="오전"&&h===12)h=0; return h*60+mi; };
       // 이번 주가 휴약주면 휴지기 안내
       const tci = chemoCycle(today);
       if (tci && tci.rest){
-        list.push({ date:today, chemo:true, icon:"🌙", title:"이번 주는 휴지기", when:"",
+        list.push({ date:today, order:-1, chemo:true, icon:"🌙", title:"이번 주는 휴지기", when:"",
           sub:`${tci.cycle}사이클 휴약주 — 항암 쉬는 주예요`, prep:"" });
       }
       // 다음 항암
@@ -1238,15 +1282,15 @@ const firebaseConfig = {
         const ci = chemoCycle(ncDate);
         const cyc = ci ? `${ci.cycle}사이클 ${ci.week}주차` : "";
         const sub = [cyc, info.place ? `📍 ${info.place}` : ""].filter(Boolean).join(" · ");
-        list.push({ date:ncDate, chemo:true, icon:"🗓️", title:"다음 항암",
+        list.push({ date:ncDate, order: info.time?toMin(info.time):9999, chemo:true, icon:"🗓️", title:"다음 항암",
           when:`${lbl(ncDate)} ${info.time || "시간 미정"}`, sub, prep:"" });
       }
       // 진료
       APPTS.forEach(a=>{
-        if (a.date >= today) list.push({ date:a.date, chemo:false, icon:"🩺", title:a.dept,
-          when:`${lbl(a.date)} ${a.time}`, sub:`${a.doctor} · ${a.place}`, prep:a.prep });
+        if (a.date >= today) list.push({ date:a.date, order:toMin(a.time), chemo:false, icon:"🩺", title:a.dept,
+          when:`${lbl(a.date)} ${a.time}`, sub: a.doctor ? `${a.doctor} · ${a.place}` : a.place, prep:a.prep });
       });
-      list.sort((x,y)=> x.date<y.date?-1 : x.date>y.date?1 : 0);
+      list.sort((x,y)=> x.date<y.date?-1 : x.date>y.date?1 : x.order-y.order);
       if (list.length){
         ncEl.innerHTML = list.map(it=>`
           <div class="up-item${it.chemo?' chemo':''}">
@@ -1302,22 +1346,28 @@ const firebaseConfig = {
                warn:{key:"warn",label:"주의",color:getCss("--amber")},
                high:{key:"high",label:"높음",color:getCss("--red")}};
     if (v < 70) return C.low;                       // 저혈당 (모든 시점 공통)
-    if (/식후/.test(context)){                       // 식후 2시간: 목표 180 미만
-      if (v < 180) return C.ok;
-      if (v < 250) return C.warn;
-      return C.high;                                 // 250+ 현저한 고혈당
+    if (/식후/.test(context)){                       // 식후: 식후 300 계속 넘으면 증량(교육 기준)
+      if (v <= 200) return C.ok;
+      if (v <= 300) return C.warn;
+      return C.high;                                 // 300 초과 현저한 고혈당
     }
-    if (context === "취침전"){                        // 취침전: 90~150 목표
-      if (v < 90) return C.warn;                      // 낮은 편(야간 저혈당 주의)
-      if (v <= 150) return C.ok;
-      if (v <= 180) return C.warn;
+    if (context === "취침전"){                        // 취침전: 100~180 목표 (야간 저혈당 주의)
+      if (v < 100) return C.warn;
+      if (v <= 180) return C.ok;
+      if (v <= 250) return C.warn;
       return C.high;
     }
-    // 공복 / 식전 / 기타: 목표 80~130
-    if (v < 80) return C.warn;                        // 70~79 살짝 낮음
-    if (v <= 130) return C.ok;
-    if (v <= 180) return C.warn;
-    return C.high;
+    if (context === "공복"){                          // 아침 공복 목표 100~150
+      if (v < 100) return C.warn;                     // 100 미만 낮음 (80 미만이면 위험 — 란투스 감량)
+      if (v <= 150) return C.ok;                      // 목표 100~150
+      if (v <= 200) return C.warn;
+      return C.high;                                  // 200 초과
+    }
+    // 식전(식사 전) 목표 100~200
+    if (v < 100) return C.warn;                       // 100 미만 낮음
+    if (v <= 200) return C.ok;                         // 목표 100~200
+    if (v <= 250) return C.warn;
+    return C.high;                                    // 250 초과
   }
   function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
@@ -1702,7 +1752,7 @@ const firebaseConfig = {
     { category:"항암 일정", title:"항암 당일 주의",
       body:"체온 37.8도 정도라도 오한·몸살 등 증상이 함께 있으면 간호사에게 미리 알리기(증상 없이 체온만 살짝 높은 건 대개 경과관찰). 38도 이상 고열은 증상과 무관하게 즉시 응급실. 항암 당일 자가운전 금지, 낙상 주의, 보호자 1인 동반 가능.", tags:["항암","당일","발열","오한","열","체온","운전","보호자","낙상"] },
     { category:"항암 일정", title:"다음 외래 진료",
-      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 진료 2시간 전, 4시간 금식\n9/2(수) 오후 3:50 내분비내과 김혜경 (본관 3층) — 채혈 진료 2시간 전, 8시간 금식", tags:["진료","외래","8월12일","9월2일","채혈","금식","임가람","김혜경"] },
+      body:"8/12(수) 오전 9:30 소화기내과 임가람 (본관 4층 소화기병센터) — 채혈 진료 2시간 전, 4시간 금식\n8/12(수) 오전 10:30 당뇨병 교육 (본관 3층 당뇨병센터 9번 교육실)\n8/26(수) 오후 1:30 내분비내과 김혜경 (본관 3층) — 채혈 진료 2시간 전, 8시간 금식, 오후 2:30 항암 전 진료", tags:["진료","외래","교육","8월12일","8월26일","채혈","금식","임가람","김혜경"] },
     { category:"항암 일정", title:"치료 사이클·채혈·CT",
       body:"4주 1사이클(1~3주 주1회 투여, 4주차 휴약), 80% 용량으로 시작. 채혈은 각 사이클 1주차에만. 2사이클(8주) 후 CT로 효과 평가. 진료 후 귀가 전 암병원 4층 항암치료실 예약실 들러 다음 일정 확인.", tags:["사이클","채혈","휴약","CT","일정","예약실"] },
     // 복약
@@ -1732,8 +1782,12 @@ const firebaseConfig = {
       body:"말초신경병증으로 손발 끝이 찌릿하거나 무뎌질 수 있음. 찬 바람·찬물에 노출되면 급격히 악화 → 미지근한 물 사용, 장갑·양말로 항상 따뜻하게.", tags:["손발저림","저림","마비","신경","찬물","장갑"] },
     { category:"부작용 대처", title:"탈모·근육통·피부",
       body:"탈모는 2~3주 후 시작(종료 후 다시 자람), 순한 샴푸·모자·두건. 근육통·관절통은 가벼운 온찜질·휴식. 피부 가려움엔 기존 항히스타민제·연고를 항암 중에도 그대로 병행 OK.", tags:["탈모","머리","근육통","관절통","가려움","피부"] },
-    { category:"부작용 대처", title:"저녁 식후 고혈당 (의료진 안내)",
-      body:"저녁 식후 혈당이 계속 높으면 저녁 휴마로그를 8→10단위로 올리는 등 유동 조절 가능(의료진 안내 지침). 구체적 자가조절법은 병원 교육을 따를 것.", tags:["저녁","식후","고혈당","휴마로그","혈당","조절"] },
+    { category:"당뇨 관리", title:"우리 목표 혈당 (당뇨교육)",
+      body:"아침 공복: 100~150 / 식사 전: 100~200. 앱의 혈당 색상(정상·주의·높음)도 이 목표에 맞춰져 있어요.", tags:["목표","혈당","공복","식전","당뇨","교육","정상"] },
+    { category:"당뇨 관리", title:"인슐린 용량 조절 규칙 (당뇨교육)",
+      body:"💧 란투스(기저·하루1번·24시간, 기준=아침 공복, 현재 6단위): 3일 연속 150 초과→+2 / 100 미만→줄이기 / 80 미만→즉시 -4.\n🍚 휴마로그(초속효·매 식사 직전·4시간, 기준=식사 전 혈당): 식전 높으면 늘리고 / 식전 100 미만이면 줄이기.\n⚠️ 최소 2~3일 지켜보고 조절, 실시간 수치로 즉시 조절 금지. 조절은 의료진 안내대로.", tags:["인슐린","란투스","휴마로그","공복","식전","혈당","조절","용량","교육"] },
+    { category:"당뇨 관리", title:"인슐린 주사 위치 (당뇨교육)",
+      body:"복부(배)의 피하지방이 두툼한 곳이 가장 좋아요. 배꼽 주변 3cm 이내는 금지. 몽우리가 생기지 않게 매번 위치를 돌아가며 주사. 팔은 어깨 쪽(근육 많은 곳) 말고 삼두(팔 뒤) 살 많은 곳에서 찌르기.", tags:["인슐린","주사","위치","복부","배","배꼽","순환","팔"] },
     { category:"부작용 대처", title:"항암 중 혈당 상승",
       body:"항암 시 스테로이드(덱사메타손)가 함께 들어가 혈당이 평소보다 훨씬 높이 오를 수 있음. 당황 말고 혈당 자주 체크, 교육 지침대로 인슐린 증량. 급변 시 소화기내과가 내분비 협진 연계.", tags:["항암","혈당","스테로이드","덱사메타손","인슐린","협진"] },
     // 식사
@@ -1759,7 +1813,7 @@ const firebaseConfig = {
       tags:["유전자","NGS","재평가","보조치료","고주파"] },
   ];
 
-  const SEED_VERSION = 5;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
+  const SEED_VERSION = 7;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
   async function syncGuideSeed(){
     try{
       const metaRef = db.collection("meta").doc("guideSeed");
@@ -1896,7 +1950,7 @@ const firebaseConfig = {
       { tag:"소화기내과", type:"dept", title:"항암 시작 · 임가람 교수",
         body:"전이성 췌장암(체부·미부) 4기로 확진되어, 수술은 어려워 항암화학요법을 시작했어요.\n\n▪ 항암제: 아브락산 + 젬시타빈(젬자) — 부작용을 줄이려 80% 용량으로 시작\n▪ 주기: 4주 = 1사이클 (1·2·3주 주 1회 투여, 4주차는 쉬는 휴약기)\n▪ 채혈: 매주 아님, 각 사이클 첫 주에만\n▪ 2사이클(8주) 후 CT로 효과 평가\n▪ 유전자검사(NGS) 진행 — 표적치료 가능성 확인용\n\n다음 항암: 7/22(수) 오후 2:30, 7/29(수)\n다음 진료: 8/12(수) 오전 9:30 · 임가람 (본관 4층 소화기병센터)\n채혈 진료 2시간 전, 4시간 금식" },
       { tag:"내분비내과", type:"dept", title:"혈당 관리 · 김소라 / 김혜경 교수",
-        body:"당화혈색소(HbA1c)가 10.9로 높아 혈당 관리 협진을 받았어요.\n\n▪ 인슐린 (모두 식전)\n   - 아침: 란투스 12 + 휴마로그 6\n   - 점심: 휴마로그 8\n   - 저녁: 휴마로그 8\n▪ 먹는 당뇨약: 글루파(메트포르민), 디아미크롱\n▪ 저녁 식후 혈당이 계속 높으면 저녁 휴마로그를 8→10으로 올리는 조절 가능(의료진 안내)\n▪ 퇴원 전 인슐린 자가조절(MDI) 교육 예정\n▪ 항암 때 쓰는 스테로이드로 혈당이 오를 수 있어요 — 교육 지침대로 대응, 급변 시 협진 연계\n\n다음 진료: 9/2(수) 오후 3:50 · 김혜경 (본관 3층)\n채혈 진료 2시간 전, 8시간 금식\n당뇨병 교육실 ☎ 02-2228-5465\n※ 9/14 → 9/2로 변경됨 (예약변경 1599-1004)" },
+        body:"당화혈색소(HbA1c)가 10.9로 높아 혈당 관리 협진을 받았어요.\n\n▪ 인슐린 (모두 식전, 7/15 협진 시작 기준)\n   - 아침: 란투스 12 + 휴마로그 6\n   - 점심: 휴마로그 8\n   - 저녁: 휴마로그 8\n▪ 먹는 당뇨약: 글루파(메트포르민), 디아미크롱\n▪ 퇴원 전 인슐린 자가조절(MDI) 교육 예정\n▪ 항암 때 쓰는 스테로이드로 혈당이 오를 수 있어요 — 교육 지침대로 대응, 급변 시 협진 연계\n\n■ 최신 인슐린 조절 지침 (의료진)\n▪ 란투스 = 공복혈당 기준: 공복이 낮아 현재 중단, 공복 130 넘으면 란투스 4\n▪ 휴마로그 = 식후혈당 기준: 식후 300 계속 넘으면 1~2 증량\n▪ 최소 2~3일 지켜보고 조절 · 실시간 수치로 즉시 조절 금지\n\n다음 진료: 8/26(수) 오후 1:30 · 김혜경 (본관 3층) — 오후 2:30 항암 전 진료\n채혈 진료 2시간 전, 8시간 금식\n당뇨병 교육실 ☎ 02-2228-5465\n※ 진료일 9/14 → 9/2 → 8/26로 변경됨 (예약변경 1599-1004)\n\n■ 당뇨 교육: 8/12(수) 오전 10:30 · 본관 3층 당뇨병센터 9번 교육실 (지금 상황 대처 교육)" },
       { tag:"항암 교육", type:"warn", title:"항암 주의사항 안내",
         body:"🚨 즉시 응급실 6가지 징후\n흑색변 · 혈변 · 혈뇨 · 안 멈추는 코피 · 원인 모를 멍 · 38도 이상 고열\n\n🌡 발열 기준 (의료진 안내)\n▪ 38도 이상 고열은 증상과 관계없이 즉시 응급실 (감염 신호)\n▪ 37.8도 정도는 오한·몸살 등 다른 증상이 함께 있을 때 간호사에게 미리 알리기\n▪ 증상 없이 체온만 살짝 높은 정도는 대개 경과관찰 (판단 어려우면 암병원 3층 항암치료센터 02-2228-4080/4081로 문의)\n\n▪ 감염 예방: 항암 후 7~14일 면역이 가장 낮음. 손씻기·마스크, 날음식(회·게장·생굴) 금지, 자몽 절대 금지\n▪ 부작용: 오심·구토(항구토제 즉시), 설사·변비, 손발저림(찬물 피하기), 탈모\n▪ 식사: 매 끼 단백질, 입맛 없으면 영양음료(뉴케어·하이뮨)\n▪ 치과 치료는 4주차 휴약기에\n▪ 응급·타병원 대비 서류 4종 항상 지참\n\n자세한 항목은 '돌봄 가이드 & 질문'에서 검색하면 나와요." },
       { tag:"전체 진행상황", type:"sum", title:"진단 · 검사 요약",
