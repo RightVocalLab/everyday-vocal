@@ -549,6 +549,8 @@
         <h2 class="sec">우리 목표 혈당</h2>
         <div class="bgtRow"><span>🌅 아침 공복</span><b>100 ~ 150</b></div>
         <div class="bgtRow"><span>🍽️ 식사 전</span><b>100 ~ 200</b></div>
+        <div class="bgtRow"><span>⚠️ 100 미만</span><b style="color:var(--amber)">낮음 주의</b></div>
+        <div class="bgtRow"><span>🚨 80 이하</span><b style="color:var(--blue)">저혈당 위험</b></div>
         <div class="note" style="margin-top:8px">세브란스 당뇨교육 기준 · 아래 색상(정상/주의/높음)도 이 목표에 맞춰져 있어요.</div>
       </div>
       <div class="block hero empty" id="hero">
@@ -571,7 +573,9 @@
           <label class="fl">측정 시점</label>
           <div class="chips" id="ctxChips">
             <div class="chip on" data-v="공복">공복</div>
-            <div class="chip" data-v="식전">식전</div>
+            <div class="chip" data-v="아침식전">아침식전</div>
+            <div class="chip" data-v="점심식전">점심식전</div>
+            <div class="chip" data-v="저녁식전">저녁식전</div>
             <div class="chip" data-v="아침식후">아침식후</div>
             <div class="chip" data-v="점심식후">점심식후</div>
             <div class="chip" data-v="저녁식후">저녁식후</div>
@@ -867,9 +871,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-08-14a";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-08-14c";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 8·12항암완료·오늘기준 정리"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 식전 시점 아침·점심·저녁 분리"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1342,30 +1346,29 @@ const firebaseConfig = {
   // 대한당뇨병학회 조절 목표: 식전 80~130, 식후 2시간 <180, 저혈당 <70
   // 반환: {key, label, color}
   function classify(v, context){
-    const C = {low:{key:"low",label:"저혈당",color:getCss("--blue")},
+    const C = {low:{key:"low",label:"저혈당 위험",color:getCss("--blue")},
+               lowWarn:{key:"lowWarn",label:"낮음 주의",color:getCss("--amber")},
                ok:{key:"ok",label:"정상",color:getCss("--green")},
                warn:{key:"warn",label:"주의",color:getCss("--amber")},
                high:{key:"high",label:"높음",color:getCss("--red")}};
-    if (v < 70) return C.low;                       // 저혈당 (모든 시점 공통)
+    if (v <= 80) return C.low;                       // 저혈당 위험 (80 이하) — 모든 시점 공통
+    if (v < 100) return C.lowWarn;                   // 낮음 주의 (80 초과 ~ 100 미만) — 공통
     if (/식후/.test(context)){                       // 식후: 식후 300 계속 넘으면 증량(교육 기준)
       if (v <= 200) return C.ok;
       if (v <= 300) return C.warn;
       return C.high;                                 // 300 초과 현저한 고혈당
     }
-    if (context === "취침전"){                        // 취침전: 100~180 목표 (야간 저혈당 주의)
-      if (v < 100) return C.warn;
+    if (context === "취침전"){                        // 취침전: 100~180 목표
       if (v <= 180) return C.ok;
       if (v <= 250) return C.warn;
       return C.high;
     }
     if (context === "공복"){                          // 아침 공복 목표 100~150
-      if (v < 100) return C.warn;                     // 100 미만 낮음 (80 미만이면 위험 — 란투스 감량)
       if (v <= 150) return C.ok;                      // 목표 100~150
       if (v <= 200) return C.warn;
       return C.high;                                  // 200 초과
     }
     // 식전(식사 전) 목표 100~200
-    if (v < 100) return C.warn;                       // 100 미만 낮음
     if (v <= 200) return C.ok;                         // 목표 100~200
     if (v <= 250) return C.warn;
     return C.high;                                    // 250 초과
@@ -1373,17 +1376,17 @@ const firebaseConfig = {
   function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
   // ---- 과거 기록 일괄 입력 (병원 수기기록 옮김, 한 번만 실행) ----
-  const BACKFILL_ID = "hosp_20260723_25_v3";   // 요양병원 퇴원 전 기록 최종본 (7/23~7/25, 시점 수정)
+  const BACKFILL_ID = "hosp_20260723_25_v4";   // 식전을 아침·점심 식전으로 세분화
   const BACKFILL_BG = [
-    { d:"2026-07-23T11:30", v:157, c:"식전",     m:"병원 기록 · 오전 11:30" },
+    { d:"2026-07-23T11:30", v:157, c:"점심식전", m:"병원 기록 · 점심 식전(오전 11:30)" },
     { d:"2026-07-23T14:00", v:167, c:"점심식후", m:"병원 기록 · 오후 2시 (식후)" },
     { d:"2026-07-23T19:00", v:138, c:"저녁식후", m:"병원 기록 · 오후 7시 (식후)" },
-    { d:"2026-07-24T07:00", v:80,  c:"식전",     m:"병원 기록 · 아침 식전 (7시)" },
-    { d:"2026-07-24T07:30", v:119, c:"식전",     m:"병원 기록 · 아침 식전 (7시반, 재측정)" },
+    { d:"2026-07-24T07:00", v:80,  c:"아침식전", m:"병원 기록 · 아침 식전 (7시)" },
+    { d:"2026-07-24T07:30", v:119, c:"아침식전", m:"병원 기록 · 아침 식전 (7시반, 재측정)" },
     { d:"2026-07-24T09:00", v:258, c:"아침식후", m:"병원 기록 · 아침 식후 (9시)" },
     { d:"2026-07-24T14:00", v:307, c:"점심식후", m:"병원 기록 · 오후 2시 (식후)" },
     { d:"2026-07-24T19:00", v:386, c:"저녁식후", m:"병원 기록 · 오후 7시 (식후)" },
-    { d:"2026-07-25T07:00", v:95,  c:"식전",     m:"병원 기록 · 아침 식전 (7시)" },
+    { d:"2026-07-25T07:00", v:95,  c:"아침식전", m:"병원 기록 · 아침 식전 (7시)" },
     { d:"2026-07-25T09:00", v:256, c:"아침식후", m:"병원 기록 · 아침 식후 (9시)" }
   ];
   async function runBackfill(){
@@ -2426,7 +2429,7 @@ const firebaseConfig = {
     drawBgByCtx(rows);
   }
 
-  const BG_CTX = ["공복","식전","아침식후","점심식후","저녁식후","취침전","기타"];
+  const BG_CTX = ["공복","아침식전","점심식전","저녁식전","식전","아침식후","점심식후","저녁식후","취침전","기타"];
   let bgCtxCharts = {};
   function drawBgByCtx(rows){
     const box = $("bgByCtx");
