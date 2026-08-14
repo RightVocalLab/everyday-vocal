@@ -871,9 +871,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-08-14c";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-08-14d";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 식전 시점 아침·점심·저녁 분리"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 식전 전체 추이 그래프 추가"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -2429,12 +2429,15 @@ const firebaseConfig = {
     drawBgByCtx(rows);
   }
 
-  const BG_CTX = ["공복","아침식전","점심식전","저녁식전","식전","아침식후","점심식후","저녁식후","취침전","기타"];
+  const BG_CTX = ["공복","식전 전체","아침식전","점심식전","저녁식전","아침식후","점심식후","저녁식후","취침전","기타"];
   let bgCtxCharts = {};
   function drawBgByCtx(rows){
     const box = $("bgByCtx");
     Object.values(bgCtxCharts).forEach(c=>c&&c.destroy()); bgCtxCharts={};
     const by={}; rows.forEach(r=>{ (by[r.context]=by[r.context]||[]).push(r); });
+    // 아침·점심·저녁 식전(+레거시 식전)을 합친 '식전 전체' 추이
+    const preAll = rows.filter(r=>/식전/.test(r.context||""));
+    if (preAll.length) by["식전 전체"] = preAll;
     const present = BG_CTX.filter(k=>by[k]&&by[k].length);
     if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
     box.innerHTML = present.map((k,i)=>`<div class="mini"><h4>${escape(k)} <span style="color:var(--muted)">(${by[k].length}회)</span></h4><div class="chartwrap"><canvas id="bgc_${i}"></canvas></div></div>`).join("");
