@@ -8382,8 +8382,8 @@ function _renderHwStatusWithData(fbData,histData){
     else{try{done=JSON.parse(localStorage.getItem('ev_hw_done_'+s.name+'_'+dateKey)||'[]');}catch(e){}}
     const total=(s.homework||[]).filter(h=>h.active!==false).length;
     /* done 배열에서 현재 active 범위 내(0 ~ total-1)인 것만 카운트 (숙제 개수가 줄어든 경우 대비) */
-    const validDone = Array.isArray(done) ? done.filter(idx => typeof idx === 'number' && idx >= 0 && idx < total) : [];
-    let cnt=validDone.length;let pct=total>0?Math.min(100, Math.round(cnt/total*100)):0;
+    const validDone = Array.isArray(done) ? done.filter(idx => (typeof idx === 'number' && idx >= 0 && idx < total) || (typeof idx === 'string' && idx.length > 0)) : [];
+    let cnt=Math.min(validDone.length, total);let pct=total>0?Math.min(100, Math.round(cnt/total*100)):0;
     const hist=histData[sKey]||null;if(cnt===0&&hist&&typeof hist.done==='number'&&hist.done>0){cnt=Math.min(hist.done,total);pct=total>0?Math.min(100,Math.round(cnt/total*100)):0;}let startStr='',endStr='',durStr='';
     if(hist&&hist.startedAt){const dt=new Date(hist.startedAt);startStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
     if(hist&&hist.updatedAt){const dt=new Date(hist.updatedAt);endStr=String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
@@ -9562,7 +9562,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.1';
+var _WEB_VER='2.2';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -13152,7 +13152,9 @@ function _fbSaveHwDone(studentName, doneArr){
   const key = _fbDateKey();
   const path = 'hwDone/' + studentName.replace(/\s/g,'_') + '/' + key;
   try{
-    _fbDb.ref(path).set(doneArr);
+    /* Firebase는 빈 배열 set 시 노드를 삭제함 — 의도를 명시적으로 표현 */
+    if(!Array.isArray(doneArr) || doneArr.length === 0){ _fbDb.ref(path).remove(); }
+    else { _fbDb.ref(path).set(doneArr); }
   }catch(e){ console.warn('Firebase 저장 실패:', e); }
 }
 
@@ -13168,18 +13170,39 @@ function _fbLoadHwDone(studentName, dateKey, callback){
 }
 
 /* 회차 진행도 Firebase 저장/로드 */
+/* Firebase 키 금지문자( . $ # [ ] / )를 안전 문자열로 치환 — 서명키에 '#'이 항상 포함되어 쓰기가 거부되던 문제 */
+function _hwProgKeyEnc(k){
+  return String(k).replace(/%/g,'%25').replace(/#/g,'%23').replace(/\./g,'%2E')
+                  .replace(/\$/g,'%24').replace(/\[/g,'%5B').replace(/\]/g,'%5D')
+                  .replace(/\//g,'%2F');
+}
+function _hwProgKeyDec(k){
+  return String(k).replace(/%23/g,'#').replace(/%2E/g,'.').replace(/%24/g,'$')
+                  .replace(/%5B/g,'[').replace(/%5D/g,']').replace(/%2F/g,'/')
+                  .replace(/%25/g,'%');
+}
+function _hwProgEncObj(o){
+  const r={}; if(!o||typeof o!=='object') return r;
+  Object.keys(o).forEach(function(k){ r[_hwProgKeyEnc(k)]=o[k]; });
+  return r;
+}
+function _hwProgDecObj(o){
+  const r={}; if(!o||typeof o!=='object') return r;
+  Object.keys(o).forEach(function(k){ r[_hwProgKeyDec(k)]=o[k]; });
+  return r;
+}
 function _fbSaveHwProgress(studentName, progObj){
   if(!_fbReady || !studentName) return;
   const key = _fbDateKey();
   const path = 'hwProgress/' + studentName.replace(/\s/g,'_') + '/' + key;
-  try{ _fbDb.ref(path).set(progObj); }catch(e){ console.warn('Firebase 진행도 저장 실패:', e); }
+  try{ _fbDb.ref(path).set(_hwProgEncObj(progObj)); }catch(e){ console.warn('Firebase 진행도 저장 실패:', e); }
 }
 function _fbLoadHwProgress(studentName, dateKey, callback){
   if(!_fbReady || !studentName){ callback({}); return; }
   const path = 'hwProgress/' + studentName.replace(/\s/g,'_') + '/' + dateKey;
   try{
     _fbDb.ref(path).once('value').then(function(snap){
-      callback(snap.val() || {});
+      callback(_hwProgDecObj(snap.val() || {}));
     }).catch(function(){ callback({}); });
   }catch(e){ callback({}); }
 }
