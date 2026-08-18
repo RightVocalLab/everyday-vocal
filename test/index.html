@@ -871,9 +871,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-08-14d";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-08-14f";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 식전 전체 추이 그래프 추가"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 8·19 항암 병상·도착안내"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1234,14 +1234,16 @@ const firebaseConfig = {
   // 확정된 예약 시간·병상 (예약 확정되면 여기에 추가. 없는 날짜는 시간 미표시)
   const CHEMO_INFO = {
     "2026-07-29": { time:"오후 2:30", place:"17호실 3번 병상" },
-    "2026-08-19": { time:"오후 2:30" },
+    "2026-08-19": { time:"오후 2:30", place:"19호실 9번 병상", prep:"예약 10분 전 도착 → 혈압 측정 후 접수" },
     "2026-08-26": { time:"오후 2:30" }  // 내분비 진료(오후 1:30) 후 항암
   };
   // 항암 외 진료 일정 (지난 날짜는 상단 카드에서 자동으로 숨김)
   const APPTS = [
     { date:"2026-08-12", time:"오전 9:30",  dept:"소화기내과",   doctor:"임가람", place:"본관 4층 소화기병센터",        prep:"채혈 진료 2시간 전 · 4시간 금식" },
     { date:"2026-08-12", time:"오전 10:30", dept:"당뇨병 교육",  doctor:"",       place:"본관 3층 당뇨병센터 9번 교육실", prep:"지금 상황에 맞는 당뇨 대처 교육" },
-    { date:"2026-08-26", time:"오후 1:30",  dept:"내분비내과",   doctor:"김혜경", place:"본관 3층",                     prep:"채혈 진료 2시간 전 · 8시간 금식 · 오후 2:30 항암 전 진료" }
+    { date:"2026-08-26", time:"오후 1:30",  dept:"내분비내과",   doctor:"김혜경", place:"본관 3층",                     prep:"채혈 진료 2시간 전 · 8시간 금식 · 오후 2:30 항암 전 진료" },
+    { date:"2026-08-27", time:"오전 9:45",  dept:"복부 CT (담도 조영)", icon:"🩻", doctor:"", place:"CT 64호 · 본관 4층", prep:"⚠️ 4시간 금식 · 원무과 수납 후 검사실로 · 이날 채혈 없음" },
+    { date:"2026-08-27", time:"오전 9:52",  dept:"흉부 CT",             icon:"🩻", doctor:"", place:"CT 62호 · 본관 4층", prep:"원무과 수납 후 검사실로" }
   ];
   function nextChemo(){
     const today = dayKey();
@@ -1288,11 +1290,11 @@ const firebaseConfig = {
         const cyc = ci ? `${ci.cycle}사이클 ${ci.week}주차` : "";
         const sub = [cyc, info.place ? `📍 ${info.place}` : ""].filter(Boolean).join(" · ");
         list.push({ date:ncDate, order: info.time?toMin(info.time):9999, chemo:true, icon:"🗓️", title:"다음 항암",
-          when:`${lbl(ncDate)} ${info.time || "시간 미정"}`, sub, prep:"" });
+          when:`${lbl(ncDate)} ${info.time || "시간 미정"}`, sub, prep: info.prep || "" });
       }
       // 진료
       APPTS.forEach(a=>{
-        if (a.date >= today) list.push({ date:a.date, order:toMin(a.time), chemo:false, icon:"🩺", title:a.dept,
+        if (a.date >= today) list.push({ date:a.date, order:toMin(a.time), chemo:false, icon:a.icon||"🩺", title:a.dept,
           when:`${lbl(a.date)} ${a.time}`, sub: a.doctor ? `${a.doctor} · ${a.place}` : a.place, prep:a.prep });
       });
       list.sort((x,y)=> x.date<y.date?-1 : x.date>y.date?1 : x.order-y.order);
@@ -1301,7 +1303,7 @@ const firebaseConfig = {
           <div class="up-item${it.chemo?' chemo':''}">
             <div class="up-top"><span class="up-title">${it.icon} ${it.title}</span>${it.when?`<span class="up-when">${it.when}</span>`:""}</div>
             ${it.sub  ? `<div class="up-sub">${it.sub}</div>` : ""}
-            ${it.prep ? `<div class="up-prep">🩸 ${it.prep}</div>` : ""}
+            ${it.prep ? `<div class="up-prep">📌 ${it.prep}</div>` : ""}
           </div>`).join("");
         ncEl.classList.add("show");
       } else {
@@ -1812,6 +1814,9 @@ const firebaseConfig = {
     { category:"기타", title:"과거 병력",
       body:"위암(2015, 위 아전절제술 + XELOX 8차 완치), 에스결장(대장)암 수술, 위 선종 내시경절제(ESD, 2022). 위 절제 이력 있으니 식사 관련은 의료진 안내를 따를 것.",
       tags:["과거력","위암","대장암","위절제","수술"] },
+    { category:"진료 일정", title:"CT 촬영 일정 (8/27)",
+      body:"8/27(목) CT 두 가지. ① 복부 CT 조영검사(담도) 오전 9:45 · CT 64호(본관 4층), ⚠️4시간 금식. ② 흉부 CT 오전 9:52 · CT 62호(본관 4층). 검사 전 원무과 수납 후 검사실로(하이패스 등록 시 바로). 이날 채혈 없음. 조영검사라 글루파 중단은 의료진과 상의.",
+      tags:["CT","촬영","검사","복부","흉부","담도","조영","금식","8월27일","62호","64호"] },
     { category:"기타", title:"유전자 검사·재평가",
       body:"표적치료제 가능성(약 5%) 확인 위해 유전자검사(Germline NGS) 진행. 항암 2사이클 후 반응 재평가 예정. 고주파 등 온열 보조치료는 담당의가 '근거 없다'고 안내.",
       tags:["유전자","NGS","재평가","보조치료","고주파"] },
@@ -1841,7 +1846,7 @@ const firebaseConfig = {
       tags:["위보호제","케이캡","처방","소진","위장약"] },
   ];
 
-  const SEED_VERSION = 8;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
+  const SEED_VERSION = 9;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
   async function syncGuideSeed(){
     try{
       const metaRef = db.collection("meta").doc("guideSeed");
@@ -1970,6 +1975,10 @@ const firebaseConfig = {
 
   // ================= 진료 기록 (날짜별) =================
   const RECORDS = [
+    { date:"2026-08-27", label:"8월 27일 (목)", topics:[
+      { tag:"CT 검사", type:"dept", title:"CT 촬영 (복부 담도 조영 + 흉부)",
+        body:"이날 CT 두 가지를 촬영해요. (2사이클 후 반응 평가)\n\n① 복부 CT 조영검사(담도)\n   ⏰ 오전 9:45 · CT 64호(본관 4층)\n   ⚠️ 4시간 금식\n\n② 흉부 CT\n   ⏰ 오전 9:52 · CT 62호(본관 4층)\n\n■ 공통 안내\n▪ 검사/촬영 전 원무과 수납 후 검사실로 이동 (하이패스 등록되어 있으면 검사실로 바로)\n▪ 이날 채혈은 없음\n▪ 조영검사라 글루파(당뇨약) 중단 여부는 미리 의료진과 상의" }
+    ]},
     { date:"2026-08-12", label:"8월 12일 (수)", topics:[
       { tag:"항암 2사이클", type:"dept", title:"2사이클 1주차 항암 (당일 진료 후 투여 완료)",
         body:"이날 소화기내과 외래 진료 → 당뇨병 교육 → 당일 항암(2사이클 1주차)까지 진행했어요. 다음 항암은 8/19(수) 오후 2:30." },
