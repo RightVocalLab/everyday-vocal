@@ -25,7 +25,70 @@ input,select,button,textarea{font-family:inherit;}
 .scr{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff;
   transition:transform .30s cubic-bezier(.4,0,.2,1),opacity .26s;}
 .scr.hidden{transform:translateX(100%);pointer-events:none;}
-.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;}
+.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;z-index:-1;}
+/* ═══ 훈련 스킬 트리 ═══ */
+.stBanner{border-radius:18px;padding:15px;background:linear-gradient(140deg,#fff7ed 0%,#ffedd5 55%,#fde8d0 100%);
+border:1px solid #fed7aa;cursor:pointer;margin-bottom:14px}
+.stBanner .lab{font-size:10.5px;font-weight:800;color:#c2410c;letter-spacing:.4px}
+.stBanner h3{margin:4px 0 3px;font-size:16.5px;letter-spacing:-.6px;color:#1c1917}
+.stBanner p{margin:0 0 11px;font-size:11.5px;color:#78716c;line-height:1.5;word-break:keep-all}
+.stMini{display:flex;gap:5px;margin-bottom:11px}
+.stMini>div{flex:1;background:#fff;border:1px solid #f1ede8;border-radius:11px;padding:7px 3px;text-align:center}
+.stMini b{display:block;font-size:9.5px;letter-spacing:-.4px;margin-bottom:5px}
+.stMini .dots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.stMini i{width:9px;height:9px;border-radius:3px;display:block;background:#eceae7}
+.stGo{width:100%;border:0;border-radius:12px;padding:11px;background:#f97316;color:#fff;
+font:800 13px/1 inherit;cursor:pointer;font-family:inherit}
+#scr-skilltree .stRoot{flex:0 0 auto;padding:11px 12px 0;background:#fff}
+.stRc{display:flex;align-items:center;gap:10px;background:#fff7ed;border:1px solid #fed7aa;
+border-radius:14px;padding:10px 12px}
+.stRc .ic{width:36px;height:36px;border-radius:11px;background:#16a34a;flex:0 0 36px;
+display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px}
+.stRc b{display:block;font-size:12.5px;color:#1c1917} .stRc small{font-size:10.5px;color:#c2410c}
+.stRc .st{margin-left:auto;font-size:10px;font-weight:800;color:#fff;background:#16a34a;padding:4px 9px;border-radius:20px}
+.stViews{flex:1;min-height:0;position:relative}
+.stView{position:absolute;inset:0;transition:opacity .22s,transform .26s}
+.stView.off{opacity:0;pointer-events:none;transform:scale(.97)}
+#stOver{padding:10px 10px 12px;display:flex;flex-direction:column}
+.stOvg{flex:1;min-height:0;display:flex;gap:6px}
+.stOvp{flex:1 1 0;min-width:0;background:#fff;border:1px solid #f1ede8;border-radius:14px;
+overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+.stOvh{padding:7px 3px 6px;text-align:center;border-bottom:1px solid #f1ede8}
+.stOvh b{display:block;font-size:10px;letter-spacing:-.4px}
+.stOvh i{display:block;font-style:normal;font-size:8px;color:#78716c;margin-top:2px}
+.stOvb{flex:1;min-height:0;position:relative;padding:8px 2px;overflow:hidden}
+.stTip{text-align:center;font-size:11px;color:#78716c;padding:8px 0 0}
+#stDet{display:flex;flex-direction:column}
+.stDots{flex:0 0 auto;display:flex;justify-content:center;gap:10px;padding:9px 0 7px;border-bottom:1px solid #f1ede8}
+.stDots button{border:0;background:none;padding:2px 3px;cursor:pointer;font:700 11.5px/1 inherit;
+color:#c8c2bb;position:relative;font-family:inherit}
+.stDots button.on:after{content:'';position:absolute;left:3px;right:3px;bottom:-8px;height:2.5px;border-radius:2px;background:currentColor}
+.stPager{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+.stPager::-webkit-scrollbar{display:none}
+.stPage{flex:0 0 100%;scroll-snap-align:center;overflow-y:auto;padding:12px 0 24px;scrollbar-width:none}
+.stPage::-webkit-scrollbar{display:none}
+.stIntro{padding:0 14px 12px}
+.stIntro p{margin:0 0 8px;font-size:12.5px;font-weight:700;letter-spacing:-.4px}
+.stKw{display:inline-block;font-size:10.5px;padding:4px 9px;border-radius:20px;border:1.5px solid;
+background:#fff;font-weight:600;margin:0 5px 5px 0}
+.stGrid{position:relative;z-index:2}
+.stEdges{position:absolute;left:0;top:0;z-index:1;pointer-events:none;overflow:visible}
+.stNode{position:absolute;transform:translateX(-50%);border:0;background:none;padding:0;cursor:pointer;
+font-family:inherit;text-align:center}
+.stTile{border-radius:14px;margin:0 auto;display:flex;align-items:center;justify-content:center;
+background:#fff;position:relative;font-weight:800;color:#f97316}
+.stNm{display:block;font-size:9.5px;line-height:1.25;margin-top:5px;letter-spacing:-.5px;
+word-break:keep-all;color:#44403c;font-weight:600}
+.st-open .stTile{border:2.5px dashed #f97316}
+.st-soon .stTile{background:#fbfaf9;border:2px dashed #ddd9d4;color:#c9c4be}
+.st-soon .stNm{color:#bdb8b2;font-weight:500}
+.st-done .stTile{background:#16a34a;border:2px solid #16a34a;color:#fff}
+.stXl{position:absolute;left:-5px;top:-5px;width:16px;height:16px;border-radius:50%;background:#f97316;
+display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:800}
+.stOvb .stNode{}
+.stOvb .stNm{display:none}
+.stOvb .stXl{width:7px;height:7px;left:-1px;top:-1px;font-size:5px}
+
 
 /* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:2px solid var(--or-b);padding:0 14px;height:54px;
@@ -955,7 +1018,14 @@ input,select,button,textarea{font-family:inherit;}
     <!-- ═══════════════════════════════════════ -->
     <!-- 섹션 1: 훈련 코스 -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="menu-course-section">
+        <div class="stBanner" onclick="_stOpen()">
+      <div class="lab">NEW</div>
+      <h3>훈련 스킬 트리</h3>
+      <p>발성훈련을 실시하여 나의 발성능력을 키워보세요!</p>
+      <div class="stMini" id="stMiniHome"></div>
+      <button class="stGo" onclick="event.stopPropagation();_stOpen()">스킬 트리 열기</button>
+    </div>
+<div id="menu-course-section">
       <div class="v2-section-header">
         <div class="v2-section-title">훈련 코스</div>
         <div class="v2-section-more" onclick="toggleCourseList()" style="display:none" id="course-section-more">전체보기 ›</div>
@@ -1495,6 +1565,24 @@ input,select,button,textarea{font-family:inherit;}
 </div>
 
 <!-- HOMEWORK -->
+<div id="scr-skilltree" class="scr hidden">
+  <div class="hd" style="flex:0 0 auto;height:52px;display:flex;align-items:center;gap:8px;padding:0 8px 0 12px;border-bottom:1px solid #f1ede8;background:#fff">
+    <button onclick="_stBack()" style="width:34px;height:34px;border:0;background:none;cursor:pointer;font-size:20px;color:#1c1917;padding:0">&#8249;</button>
+    <span id="stTtl" style="font-weight:800;font-size:15px;letter-spacing:-.5px">훈련 스킬 트리</span>
+    <span id="stCnt" style="margin-left:auto;font-size:11px;color:#78716c"></span>
+  </div>
+  <div class="stRoot">
+    <div class="stRc">
+      <span class="ic">&#10003;</span>
+      <span><b>호흡 훈련하기</b><small>모든 계열의 뿌리 &middot; 15일 코스</small></span>
+      <span class="st" id="stRootSt">진행 중</span>
+    </div>
+  </div>
+  <div class="stViews">
+    <div class="stView" id="stOver"><div class="stOvg" id="stOvg"></div><div class="stTip">계열을 눌러 자세히 보고, 좌우로 넘겨보세요</div></div>
+    <div class="stView off" id="stDet"><div class="stDots" id="stDots"></div><div class="stPager" id="stPager"></div></div>
+  </div>
+</div>
 <div id="scr-homework" class="scr hidden">
   <div class="topbar">
     <button class="ico" onclick="cancelTTS();pop()">←</button>
@@ -2906,7 +2994,7 @@ input,select,button,textarea{font-family:inherit;}
 .scr{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff;
   transition:transform .30s cubic-bezier(.4,0,.2,1),opacity .26s;}
 .scr.hidden{transform:translateX(100%);pointer-events:none;}
-.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;}
+.scr.behind{transform:translateX(-20%);opacity:.65;pointer-events:none;z-index:-1;}
 
 /* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:2px solid var(--or-b);padding:0 14px;height:54px;
@@ -8100,6 +8188,177 @@ function _syncFixedNavVisibility(){
   var show=(top==='scr-step' && Array.isArray(_guideCards) && _guideCards.length>0);
   fnav.style.display=show?'block':'none';
 }
+
+/* ═══ 훈련 스킬 트리 ═══ */
+var SKILLTREE = {"cs": {"저음": {"k": "low", "c": "#2563eb", "tl": "울림의 바닥부터 넓히는 계열", "kw": ["소리가 작다는 말을 들었을 때", "기초부터 탄탄히 하고 싶을 때"]}, "중음": {"k": "mid", "c": "#0d9488", "tl": "가장 많이 쓰는 음역, 가장 많이 티 나는 구간", "kw": ["말하듯이 노래하고 싶을 때", "발라드 한 곡 제대로 부르고 싶을 때"]}, "고음": {"k": "high", "c": "#7c3aed", "tl": "위로 가는 길을 뚫는 계열", "kw": ["노래방 약속이 잡힌 금요일", "락이 그리울 때"]}, "성대결절 케어": {"k": "care", "c": "#16a34a", "tl": "지친 성대를 되돌리는 시간", "kw": ["어제 좀 무리했다 싶을 때", "쉬는 것도 훈련이니까"]}}, "order": ["저음", "중음", "고음", "성대결절 케어"], "nodes": [{"id": "L1-3", "cs": "저음", "ly": 1, "po": 3, "nm": "소울음소리", "sc": "", "scM": "", "rep": 10, "min": 1, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "L2-1", "cs": "저음", "ly": 2, "po": 1, "nm": "우~우~우~", "sc": "", "scM": "", "rep": 10, "min": 1, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "L2-2", "cs": "저음", "ly": 2, "po": 2, "nm": "아~아~아~", "sc": "", "scM": "", "rep": 10, "min": 1, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "L2-3", "cs": "저음", "ly": 2, "po": 3, "nm": "립트릴", "sc": "5D-A", "scM": "5D-J", "rep": 1, "min": 5, "prev": "L1-3", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "L2-4", "cs": "저음", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L2-5", "cs": "저음", "ly": 2, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L3-1", "cs": "저음", "ly": 3, "po": 1, "nm": "강한 우~우~우~", "sc": "", "scM": "", "rep": 1, "min": 3, "prev": "L2-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L3-2", "cs": "저음", "ly": 3, "po": 2, "nm": "강한 아~아~아~", "sc": "", "scM": "", "rep": 1, "min": 3, "prev": "L2-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L3-3", "cs": "저음", "ly": 3, "po": 3, "nm": "립트릴", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L2-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L3-4", "cs": "저음", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L2-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L3-5", "cs": "저음", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L2-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L4-1", "cs": "저음", "ly": 4, "po": 1, "nm": "강한 우(앞)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L3-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L4-2", "cs": "저음", "ly": 4, "po": 2, "nm": "강한 아(앞)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L3-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L4-3", "cs": "저음", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L3-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L4-4", "cs": "저음", "ly": 4, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L3-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L4-5", "cs": "저음", "ly": 4, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L3-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L5-1", "cs": "저음", "ly": 5, "po": 1, "nm": "강한 우(뒤)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L4-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L5-2", "cs": "저음", "ly": 5, "po": 2, "nm": "강한 아(뒤)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L4-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L5-3", "cs": "저음", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L4-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L5-4", "cs": "저음", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L4-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L5-5", "cs": "저음", "ly": 5, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L4-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L6-1", "cs": "저음", "ly": 6, "po": 1, "nm": "우", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L5-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L6-2", "cs": "저음", "ly": 6, "po": 2, "nm": "아", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 10, "prev": "L5-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L6-3", "cs": "저음", "ly": 6, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L5-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L6-4", "cs": "저음", "ly": 6, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L5-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "L6-5", "cs": "저음", "ly": 6, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "L5-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M1-1", "cs": "중음", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M1-2", "cs": "중음", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M1-3", "cs": "중음", "ly": 1, "po": 3, "nm": "립트릴", "sc": "5D-E", "scM": "5D-F", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "M1-4", "cs": "중음", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M1-5", "cs": "중음", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M2-1", "cs": "중음", "ly": 2, "po": 1, "nm": "허밍", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M1-1", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "M2-2", "cs": "중음", "ly": 2, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M1-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M2-3", "cs": "중음", "ly": 2, "po": 3, "nm": "립트릴", "sc": "5D-B", "scM": "", "rep": "", "min": 5, "prev": "M1-3", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "M2-4", "cs": "중음", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M1-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M2-5", "cs": "중음", "ly": 2, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M1-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M3-1", "cs": "중음", "ly": 3, "po": 1, "nm": "오픈 허밍 1번", "sc": "5H-G", "scM": "5H-H", "rep": "", "min": 5, "prev": "M2-1", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "M3-2", "cs": "중음", "ly": 3, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M2-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M3-3", "cs": "중음", "ly": 3, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M2-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M3-4", "cs": "중음", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M2-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M3-5", "cs": "중음", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M2-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M4-1", "cs": "중음", "ly": 4, "po": 1, "nm": "오픈 허밍 2번", "sc": "5H-H", "scM": "", "rep": "", "min": 5, "prev": "M3-1", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "M4-2", "cs": "중음", "ly": 4, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M3-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M4-3", "cs": "중음", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M3-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M4-4", "cs": "중음", "ly": 4, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M3-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "M4-5", "cs": "중음", "ly": 4, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "M3-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H1-1", "cs": "고음", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H1-2", "cs": "고음", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H1-3", "cs": "고음", "ly": 1, "po": 3, "nm": "허밍 1번", "sc": "5D-G", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "H1-4", "cs": "고음", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H1-5", "cs": "고음", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H2-1", "cs": "고음", "ly": 2, "po": 1, "nm": "립트릴 1번", "sc": "9D-B", "scM": "9D-C", "rep": "", "min": 5, "prev": "H1-1", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "H2-2", "cs": "고음", "ly": 2, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-B", "scM": "", "rep": "", "min": 5, "prev": "H1-2", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "H2-3", "cs": "고음", "ly": 2, "po": 3, "nm": "허밍 2번", "sc": "5H-C", "scM": "5H-D", "rep": "", "min": 5, "prev": "H1-3", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "H2-4", "cs": "고음", "ly": 2, "po": 4, "nm": "후~ 내려오기", "sc": "5DN-D", "scM": "5DN-E", "rep": "", "min": 5, "prev": "H1-4", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "H2-5", "cs": "고음", "ly": 2, "po": 5, "nm": "Back Pressure 1번", "sc": "5D-H", "scM": "5D-I", "rep": "", "min": 5, "prev": "H1-5", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "H3-1", "cs": "고음", "ly": 3, "po": 1, "nm": "립트릴 2번", "sc": "9H-B", "scM": "9H-C", "rep": "", "min": 5, "prev": "H2-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H3-2", "cs": "고음", "ly": 3, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-C", "scM": "", "rep": "", "min": 5, "prev": "H2-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H3-3", "cs": "고음", "ly": 3, "po": 3, "nm": "허밍 3번", "sc": "5H-C", "scM": "5H-D", "rep": "", "min": 5, "prev": "H2-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H3-4", "cs": "고음", "ly": 3, "po": 4, "nm": "오 두성", "sc": "5D-H", "scM": "5D-I", "rep": "", "min": 5, "prev": "H2-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H3-5", "cs": "고음", "ly": 3, "po": 5, "nm": "Back Pressure 2번", "sc": "5D-H", "scM": "5D-I", "rep": "", "min": 5, "prev": "H2-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H4-1", "cs": "고음", "ly": 4, "po": 1, "nm": "립트릴 3번", "sc": "9H-B", "scM": "9H-C", "rep": "", "min": 5, "prev": "H3-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H4-2", "cs": "고음", "ly": 4, "po": 2, "nm": "오픈 허밍 2번", "sc": "5D-H", "scM": "5D-I", "rep": "", "min": 5, "prev": "H3-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H4-3", "cs": "고음", "ly": 4, "po": 3, "nm": "허밍 4번", "sc": "9D-B", "scM": "9H-C", "rep": "", "min": 5, "prev": "H3-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H4-4", "cs": "고음", "ly": 4, "po": 4, "nm": "오 성구전환", "sc": "9D-B", "scM": "9D-C", "rep": "", "min": 5, "prev": "H3-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H4-5", "cs": "고음", "ly": 4, "po": 5, "nm": "Back Pressure 3번", "sc": "5D-H", "scM": "5D-I", "rep": "", "min": 5, "prev": "H3-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H5-1", "cs": "고음", "ly": 5, "po": 1, "nm": "립트릴 4번", "sc": "9H-B", "scM": "9H-C", "rep": "", "min": 5, "prev": "H4-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H5-2", "cs": "고음", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "H4-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H5-3", "cs": "고음", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "H4-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H5-4", "cs": "고음", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "H4-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "H5-5", "cs": "고음", "ly": 5, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "H4-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C1-1", "cs": "성대결절 케어", "ly": 1, "po": 1, "nm": "허밍", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "C1-2", "cs": "성대결절 케어", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C1-3", "cs": "성대결절 케어", "ly": 1, "po": 3, "nm": "립트릴 1번", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "C1-4", "cs": "성대결절 케어", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C1-5", "cs": "성대결절 케어", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": null, "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C2-1", "cs": "성대결절 케어", "ly": 2, "po": 1, "nm": "오픈 허밍 1번", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C1-1", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "C2-2", "cs": "성대결절 케어", "ly": 2, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C1-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C2-3", "cs": "성대결절 케어", "ly": 2, "po": 3, "nm": "립트릴 2번", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C1-3", "p1": "", "p2": "", "px": "", "br": "", "st": "open"}, {"id": "C2-4", "cs": "성대결절 케어", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C1-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C2-5", "cs": "성대결절 케어", "ly": 2, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C1-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C3-1", "cs": "성대결절 케어", "ly": 3, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C2-1", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C3-2", "cs": "성대결절 케어", "ly": 3, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C2-2", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C3-3", "cs": "성대결절 케어", "ly": 3, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C2-3", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C3-4", "cs": "성대결절 케어", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C2-4", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}, {"id": "C3-5", "cs": "성대결절 케어", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 5, "prev": "C2-5", "p1": "", "p2": "", "px": "", "br": "", "st": "soon"}]};
+var _stBuilt=false, _stCols=5;
+function _stNodeCls(n){ return n.st==='soon' ? 'st-soon' : (n.st==='done' ? 'st-done' : 'st-open'); }
+function _stMkNode(n){
+  var b=document.createElement('button');
+  b.className='stNode '+_stNodeCls(n); b.setAttribute('data-sid',n.id);
+  var xl = n.px ? '<span class="stXl">&rarr;</span>' : '';
+  var mark = (n.st==='soon') ? '&middot;&middot;&middot;' : (n.nm ? n.nm.substring(0,1) : '?');
+  b.innerHTML='<span class="stTile">'+mark+xl+'</span><span class="stNm">'+(n.nm||'준비 중')+'</span>';
+  b.onclick=function(){ _stSheet(n.id); };
+  return b;
+}
+function _stMkGrid(cs){
+  var w=document.createElement('div'); w.style.position='relative';
+  var s=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('class','stEdges');
+  var g=document.createElement('div'); g.className='stGrid'; g.setAttribute('data-cs',cs);
+  SKILLTREE.nodes.filter(function(n){return n.cs===cs;}).forEach(function(n){ g.appendChild(_stMkNode(n)); });
+  w.appendChild(s); w.appendChild(g); return w;
+}
+function _stLayout(g){
+  var cs=g.getAttribute('data-cs'), box=g.clientWidth||g.parentElement.clientWidth;
+  if(!box) return null;
+  var mini = !!g.closest('.stOvb');
+  var EDGE = mini?4:10, ROWH = mini?30:88;
+  var cellW=(box-EDGE*2)/_stCols;
+  var labW=Math.min(cellW-(mini?2:6), mini?24:104);
+  var tileW=mini?Math.min(15,labW):Math.min(50,labW-10);
+  var list=SKILLTREE.nodes.filter(function(n){return n.cs===cs;});
+  var maxLy=1; list.forEach(function(n){ if(n.ly>maxLy) maxLy=n.ly; });
+  g.style.height=(ROWH*maxLy+(mini?8:24))+'px';
+  var X=function(po){ return EDGE+cellW*(po-0.5); };
+  var Y=function(ly){ return (mini?4:12)+(ly-1)*ROWH; };
+  var els=g.querySelectorAll('.stNode');
+  for(var i=0;i<els.length;i++){
+    var sid=els[i].getAttribute('data-sid'), n=null;
+    for(var j=0;j<list.length;j++){ if(list[j].id===sid){ n=list[j]; break; } }
+    if(!n) continue;
+    els[i].style.left=X(n.po)+'px'; els[i].style.top=Y(n.ly)+'px'; els[i].style.width=labW+'px';
+    var t=els[i].querySelector('.stTile');
+    if(t){ t.style.width=tileW+'px'; t.style.height=tileW+'px'; t.style.fontSize=(mini?8:15)+'px'; }
+  }
+  return {X:X,Y:Y,tileW:tileW,box:box,h:ROWH*maxLy+(mini?8:24),list:list};
+}
+function _stDraw(w){
+  var g=w.querySelector('.stGrid'), s=w.querySelector('.stEdges');
+  if(!g||!g.offsetParent) return;
+  var L=_stLayout(g); if(!L) return;
+  var cs=g.getAttribute('data-cs'), col=SKILLTREE.cs[cs].c, out='';
+  L.list.forEach(function(n){
+    if(!n.prev) return;
+    var p=null;
+    for(var i=0;i<L.list.length;i++){ if(L.list[i].id===n.prev){ p=L.list[i]; break; } }
+    if(!p) return;
+    var x1=L.X(p.po), y1=L.Y(p.ly)+L.tileW, x2=L.X(n.po), y2=L.Y(n.ly), my=(y1+y2)/2;
+    out+='<path d="M'+x1+','+y1+' C'+x1+','+my+' '+x2+','+my+' '+x2+','+y2+
+      '" fill="none" stroke="'+col+'" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>';
+  });
+  s.setAttribute('width',L.box); s.setAttribute('height',L.h);
+  s.style.left='0px'; s.style.top='0px'; s.innerHTML=out;
+}
+function _stBuild(){
+  if(_stBuilt) return;
+  var ovg=document.getElementById('stOvg'); if(!ovg) return;
+  var pager=document.getElementById('stPager'), dots=document.getElementById('stDots');
+  ovg.innerHTML=''; pager.innerHTML=''; dots.innerHTML='';
+  SKILLTREE.order.forEach(function(cs,i){
+    var list=SKILLTREE.nodes.filter(function(n){return n.cs===cs;});
+    var done=list.filter(function(n){return n.st==='done';}).length;
+    var p=document.createElement('div'); p.className='stOvp';
+    p.innerHTML='<div class="stOvh"><b style="color:'+SKILLTREE.cs[cs].c+'">'+cs.replace(' 케어','케어')+
+      '</b><i>'+done+' / '+list.length+'</i></div>';
+    var b=document.createElement('div'); b.className='stOvb'; b.appendChild(_stMkGrid(cs));
+    p.appendChild(b); ovg.appendChild(p);
+    p.onclick=function(){ _stGoDet(i); };
+    var pg=document.createElement('div'); pg.className='stPage';
+    var it=document.createElement('div'); it.className='stIntro';
+    it.innerHTML='<p style="color:'+SKILLTREE.cs[cs].c+'">'+SKILLTREE.cs[cs].tl+'</p>'+
+      SKILLTREE.cs[cs].kw.map(function(t){return '<span class="stKw" style="border-color:'+
+      SKILLTREE.cs[cs].c+'33;color:'+SKILLTREE.cs[cs].c+'">'+t+'</span>';}).join('');
+    pg.appendChild(it); pg.appendChild(_stMkGrid(cs)); pager.appendChild(pg);
+    var d=document.createElement('button'); d.textContent=cs.replace(' 케어','케어');
+    d.onclick=function(){ pager.scrollTo({left:pager.clientWidth*i,behavior:'smooth'}); _stDot(i); };
+    dots.appendChild(d);
+  });
+  var to=null;
+  pager.addEventListener('scroll',function(){ clearTimeout(to);
+    to=setTimeout(function(){ _stDot(Math.round(pager.scrollLeft/pager.clientWidth)); },90); });
+  _stBuilt=true;
+}
+function _stDot(i){
+  var dots=document.getElementById('stDots'); if(!dots) return;
+  var cs=SKILLTREE.order[i];
+  for(var j=0;j<dots.children.length;j++){
+    dots.children[j].className = (j===i)?'on':'';
+    dots.children[j].style.color = (j===i)?SKILLTREE.cs[SKILLTREE.order[i]].c:'';
+  }
+  var list=SKILLTREE.nodes.filter(function(n){return n.cs===cs;});
+  document.getElementById('stTtl').textContent=cs;
+  document.getElementById('stCnt').textContent='스킬 '+list.length+' · 준비 중 '+
+    list.filter(function(n){return n.st==='soon';}).length;
+}
+function _stGoDet(i){
+  document.getElementById('stOver').classList.add('off');
+  document.getElementById('stDet').classList.remove('off');
+  var pager=document.getElementById('stPager');
+  requestAnimationFrame(function(){
+    pager.scrollLeft=pager.clientWidth*i; _stDot(i);
+    var ps=pager.querySelectorAll('.stPage>div'); for(var k=0;k<ps.length;k++) _stDraw(ps[k]);
+  });
+}
+function _stGoOver(){
+  document.getElementById('stDet').classList.add('off');
+  document.getElementById('stOver').classList.remove('off');
+  document.getElementById('stTtl').textContent='훈련 스킬 트리';
+  document.getElementById('stCnt').textContent='스킬 '+SKILLTREE.nodes.length+' · 계열 '+SKILLTREE.order.length;
+  requestAnimationFrame(function(){
+    var os=document.getElementById('stOvg').querySelectorAll('.stOvb>div');
+    for(var k=0;k<os.length;k++) _stDraw(os[k]);
+  });
+}
+function _stBack(){
+  if(!document.getElementById('stDet').classList.contains('off')){ _stGoOver(); return; }
+  if(typeof pop==='function') pop(); else _stOpenHome();
+}
+function _stOpenHome(){ if(typeof push==='function') push('scr-home'); }
+function _stOpen(){
+  if(typeof push==='function') push('scr-skilltree');
+  _stBuild(); _stGoOver();
+}
+function _stSheet(sid){
+  var n=null, i;
+  for(i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===sid){ n=SKILLTREE.nodes[i]; break; } }
+  if(!n) return;
+  var msg;
+  if(n.st==='soon'){
+    msg='준비 중인 훈련이에요.\n\n아직 공개되지 않았습니다. 준비가 끝나면 이 자리에 열립니다.';
+  }else{
+    var req=[];
+    if(n.prev){ for(i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===n.prev){ req.push('· '+(SKILLTREE.nodes[i].nm||'앞 스킬')+' 완료'); break; } } }
+    [n.p1,n.p2].forEach(function(p){ if(!p) return;
+      for(var j=0;j<SKILLTREE.nodes.length;j++){ if(SKILLTREE.nodes[j].id===p && p!==n.prev){ req.push('· '+(SKILLTREE.nodes[j].nm||p)+' 완료'); break; } } });
+    if(n.px){ for(i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===n.px){ req.push('· '+SKILLTREE.nodes[i].cs+' · '+(SKILLTREE.nodes[i].nm||n.px)+' 완료 (다른 계열)'); break; } } }
+    if(n.br) req.push('· 호흡 훈련하기 '+n.br+'일차 이상');
+    var sc = n.sc ? (n.scM ? ('스케일 여 '+n.sc+' / 남 '+n.scM) : ('스케일 '+n.sc)) : '스케일 미지정';
+    msg = n.nm+'\n'+n.cs+' · '+n.ly+'층 '+n.po+'자리\n'+sc+
+      '\n\n정해진 기간은 없습니다.\n내 소리가 올바르게 날 때까지 반복하고 다음 스킬로 넘어가세요.\n(완료까지 최소 '+n.min+'회)'+
+      (req.length? ('\n\n[선행조건]\n'+req.join('\n')) : '\n\n[선행조건] 없음');
+  }
+  alert(msg);
+}
+function _stMiniHome(){
+  var host=document.getElementById('stMiniHome'); if(!host) return;
+  host.innerHTML='';
+  SKILLTREE.order.forEach(function(cs){
+    var c=SKILLTREE.cs[cs].c, d=document.createElement('div'), dots='';
+    for(var i=0;i<6;i++){ dots+='<i style="'+(i===0?('background:'+c):(i<2?('background:'+c+'44'):''))+'"></i>'; }
+    d.innerHTML='<b style="color:'+c+'">'+cs.replace(' 케어','케어')+'</b><div class="dots">'+dots+'</div>';
+    host.appendChild(d);
+  });
+}
+window.addEventListener('resize',function(){
+  if(!_stBuilt) return;
+  var os=document.getElementById('stOvg').querySelectorAll('.stOvb>div');
+  for(var k=0;k<os.length;k++) _stDraw(os[k]);
+  var ps=document.getElementById('stPager').querySelectorAll('.stPage>div');
+  for(k=0;k<ps.length;k++) _stDraw(ps[k]);
+});
+document.addEventListener('DOMContentLoaded',function(){ try{ _stMiniHome(); }catch(e){} });
+
 function push(id){
 const cur=scrStack[scrStack.length-1];
 if(cur===id)return;
@@ -9562,7 +9821,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.2';
+var _WEB_VER='2.3';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
