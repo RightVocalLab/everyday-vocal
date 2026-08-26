@@ -494,15 +494,18 @@
         <div class="doseHead"><h2 class="sec" style="margin:0">용량 조절 지침</h2><span class="note" style="margin:0">세브란스 당뇨교육</span></div>
         <div class="doseGuideBox">
           <div class="dgRow">💧 란투스 (기저 인슐린) — 하루 1번, 약효 24시간</div>
-          <div class="dgSub">기준: <b>아침 공복 혈당</b> (현재 6단위 기준)<br>
-            · 📈 3일 연속 <b>150 초과</b> → <b>+2</b><br>
-            · 📉 <b>100 미만</b> → 줄이기<br>
-            · 🚨 <b>80 미만</b> → 즉시 <b>-4</b></div>
+          <div class="dgSub">기준: <b>아침 공복(식전) 혈당</b><br>
+            · <b>식사 여부와 상관없이 매일 정해진 용량 반드시</b> 투여<br>
+            · 📈 아침 공복이 3일 연속 <b>150 초과</b> → <b>1단위씩</b> 증량<br>
+            · <span style="color:var(--muted)">위 수술 이력·설사로 저혈당 위험 있어 1단위씩 보수적으로</span></div>
           <div class="dgRow">🍚 휴마로그 (초속효성) — 매 식사 직전, 약효 4시간</div>
-          <div class="dgSub">기준: <b>매 끼니 식사 전 혈당</b><br>
-            · 📈 식전이 기준보다 높으면 → 늘리기<br>
-            · 📉 식전 <b>100 미만</b> → 줄이기</div>
-          <div class="dgWarn">⚠️ 최소 <b>2~3일 지켜보고</b> 조절해요. 그때그때 수치로 즉시 바꾸지 말라고 하셨어요. 조절은 담당 의료진 안내대로.</div>
+          <div class="dgSub">· <b>식사할 때만</b> 투여 (식사 거르면 투여 금지)<br>
+            · 1단위 ≈ 혈당 <b>60~100 낮춤</b><br>
+            · 야간 저혈당 방지 위해 <b>저녁 식후 추가 투여는 자제</b><br>
+            · 간식(주스·옥수수 등) 후 혈당이 튈 수 있어 <b>당분간 점심 식후를 집중 측정</b></div>
+          <div class="dgRow">💊 먹는 당뇨약 — <b>전면 중단</b></div>
+          <div class="dgSub">췌장 인슐린 분비 기능이 낮아 알약(디아미크롱 등) 효과가 떨어지고, 소화불량·저혈당·설사 시 산증 위험이 있어 <b>먹는 당뇨약은 모두 중단</b>. 인슐린 주사 + 콜레스테롤 약 1종만 유지.</div>
+          <div class="dgWarn">⚠️ 조절은 담당 의료진(김혜경 교수) 안내대로. 그때그때 수치로 즉시 바꾸지 않기. (2026-08-26 내분비 진료 기준)</div>
         </div>
       </div>
       <div class="block">
@@ -550,8 +553,8 @@
     <div class="acc-body">
       <div class="block bgTarget">
         <h2 class="sec">우리 목표 혈당</h2>
-        <div class="bgtRow"><span>🌅 아침 공복</span><b>100 ~ 150</b></div>
-        <div class="bgtRow"><span>🍽️ 식사 전</span><b>100 ~ 200</b></div>
+        <div class="bgtRow"><span>🌅 아침 식전(공복)</span><b>100 ~ 150</b></div>
+        <div class="bgtRow"><span>🍽️ 점심·저녁 식전</span><b>100 ~ 200</b></div>
         <div class="bgtRow"><span>⚠️ 100 미만</span><b style="color:var(--amber)">낮음 주의</b></div>
         <div class="bgtRow"><span>🚨 80 이하</span><b style="color:var(--blue)">저혈당 위험</b></div>
         <div class="note" style="margin-top:8px">세브란스 당뇨교육 기준 · 아래 색상(정상/주의/높음)도 이 목표에 맞춰져 있어요.</div>
@@ -575,8 +578,7 @@
         <div class="field">
           <label class="fl">측정 시점</label>
           <div class="chips" id="ctxChips">
-            <div class="chip on" data-v="공복">공복</div>
-            <div class="chip" data-v="아침식전">아침식전</div>
+            <div class="chip on" data-v="아침식전">아침식전</div>
             <div class="chip" data-v="점심식전">점심식전</div>
             <div class="chip" data-v="저녁식전">저녁식전</div>
             <div class="chip" data-v="아침식후">아침식후</div>
@@ -874,9 +876,9 @@ const firebaseConfig = {
 (function(){
   "use strict";
 
-  const APP_VERSION = "2026-08-14i";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
+  const APP_VERSION = "2026-08-26a";  // 배포마다 올려줘. 화면 하단·콘솔에 표시됨.
   console.log("🩸 아빠 건강 다이어리 버전:", APP_VERSION);
-  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 유산균 추가+8·26항암 확정"; } catch(e){}
+  try { document.getElementById("appVer").textContent = "버전 " + APP_VERSION + " · 아침식전통합+당뇨약중단+진료반영"; } catch(e){}
 
   const $ = id => document.getElementById(id);
   function showLoadError(msg){
@@ -1135,8 +1137,6 @@ const firebaseConfig = {
       { name:"고덱스", use:"간장약", img:"고덱스" },
       { name:"우루사", use:"간장약(담즙)", img:"우루사" },
       { name:"케이캡", use:"위 보호(위산 차단)", img:"케이캡" },
-      { name:"글루파", use:"당뇨약", img:"글루파" },
-      { name:"디아미크롱", use:"당뇨약", img:"디아미크롱" },
       { name:"리바로젯", use:"고지혈증", img:"리바로젯" },
     ],
     "점심": [
@@ -1146,12 +1146,10 @@ const firebaseConfig = {
     "저녁": [
       { name:"고덱스", use:"간장약", img:"고덱스" },
       { name:"우루사", use:"간장약(담즙)", img:"우루사" },
-      { name:"글루파", use:"당뇨약", img:"글루파" },
-      { name:"디아미크롱", use:"당뇨약", img:"디아미크롱" },
     ],
   };
   const MED_ICON = { "아침":"🌅", "점심":"☀️", "저녁":"🌙" };
-  const MED_NOTE = "모두 식후에 복용. 케이캡·리바로젯은 아침만, 당뇨약(글루파·디아미크롱)은 아침·저녁. 글루파는 CT 조영검사 전 중단 여부 상의.";
+  const MED_NOTE = "모두 식후에 복용. 케이캡·리바로젯은 아침만. ※ 먹는 당뇨약(글루파·디아미크롱)은 2026-08-26 내분비 진료에서 전면 중단됨 — 혈당은 인슐린으로 관리.";
 
   // 유산균(처방약) — 아침/저녁 식후, 냉장보관. 기존 약과 묶지 않고 각 카드 아래 별도 표시
   const MED_PROBIOTIC = { name:"라시도필", use:"유산균 · 냉장고 보관", img:"라시도필", slots:["아침","저녁"] };
@@ -1265,11 +1263,10 @@ const firebaseConfig = {
   };
   // 항암 외 진료 일정 (지난 날짜는 상단 카드에서 자동으로 숨김)
   const APPTS = [
-    { date:"2026-08-12", time:"오전 9:30",  dept:"소화기내과",   doctor:"임가람", place:"본관 4층 소화기병센터",        prep:"채혈 진료 2시간 전 · 4시간 금식" },
-    { date:"2026-08-12", time:"오전 10:30", dept:"당뇨병 교육",  doctor:"",       place:"본관 3층 당뇨병센터 9번 교육실", prep:"지금 상황에 맞는 당뇨 대처 교육" },
-    { date:"2026-08-26", time:"오후 1:30",  dept:"내분비내과",   doctor:"김혜경", place:"본관 3층",                     prep:"채혈은 미리 완료 · 금식 필요 없음 · 항암(오후 12:30) 후 진료" },
     { date:"2026-08-27", time:"오전 9:45",  dept:"복부 CT (담도 조영)", icon:"🩻", doctor:"", place:"CT 64호 · 본관 4층", prep:"⚠️ 4시간 금식 · 원무과 수납 후 검사실로 · 이날 채혈 없음" },
-    { date:"2026-08-27", time:"오전 9:52",  dept:"흉부 CT",             icon:"🩻", doctor:"", place:"CT 62호 · 본관 4층", prep:"원무과 수납 후 검사실로" }
+    { date:"2026-08-27", time:"오전 9:52",  dept:"흉부 CT",             icon:"🩻", doctor:"", place:"CT 62호 · 본관 4층", prep:"원무과 수납 후 검사실로" },
+    { date:"2026-09-09", time:"오전 9:50",  dept:"소화기내과", doctor:"임가람", place:"본관 4층 소화기병센터", prep:"채혈 진료 2시간 전 (피검사)" },
+    { date:"2026-11-25", time:"오후 2:50",  dept:"내분비내과", doctor:"김혜경", place:"본관 3층 내분비내과(당뇨관리센터)", prep:"채혈 진료 2시간 전 · 8시간 금식" }
   ];
   function nextChemo(){
     const today = dayKey();
@@ -1356,7 +1353,7 @@ const firebaseConfig = {
   $("nextChemoLine").addEventListener("click", ()=>openAccByName("records"));
 
 
-  let ctx = "공복";   // 혈당 측정 시점 (기본 칩과 일치). 선언 누락 시 저장에서 ReferenceError 발생했었음.
+  let ctx = "아침식전";   // 혈당 측정 시점 (기본 칩과 일치). 선언 누락 시 저장에서 ReferenceError 발생했었음.
   $("ctxChips").addEventListener("click", e=>{
     const c = e.target.closest(".chip"); if(!c) return;
     document.querySelectorAll("#ctxChips .chip").forEach(x=>x.classList.remove("on"));
@@ -1391,15 +1388,15 @@ const firebaseConfig = {
       if (v <= 250) return C.warn;
       return C.high;
     }
-    if (context === "공복"){                          // 아침 공복 목표 100~150
-      if (v <= 150) return C.ok;                      // 목표 100~150
-      if (v <= 200) return C.warn;
-      return C.high;                                  // 200 초과
+    if (context === "공복" || context === "아침식전"){    // 아침 공복/식전 목표 100~150
+      if (v <= 150) return C.ok;                          // 목표 100~150
+      if (v <= 200) return C.warn;                        // 150 초과 주의
+      return C.high;                                      // 200 초과
     }
-    // 식전(식사 전) 목표 100~200
-    if (v <= 200) return C.ok;                         // 목표 100~200
+    // 점심·저녁 식전 목표 100~200
+    if (v <= 200) return C.ok;                             // 목표 100~200
     if (v <= 250) return C.warn;
-    return C.high;                                    // 250 초과
+    return C.high;                                        // 250 초과
   }
   function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
@@ -1815,9 +1812,11 @@ const firebaseConfig = {
     { category:"부작용 대처", title:"탈모·근육통·피부",
       body:"탈모는 2~3주 후 시작(종료 후 다시 자람), 순한 샴푸·모자·두건. 근육통·관절통은 가벼운 온찜질·휴식. 피부 가려움엔 기존 항히스타민제·연고를 항암 중에도 그대로 병행 OK.", tags:["탈모","머리","근육통","관절통","가려움","피부"] },
     { category:"당뇨 관리", title:"우리 목표 혈당 (당뇨교육)",
-      body:"아침 공복: 100~150 / 식사 전: 100~200. 앱의 혈당 색상(정상·주의·높음)도 이 목표에 맞춰져 있어요.", tags:["목표","혈당","공복","식전","당뇨","교육","정상"] },
-    { category:"당뇨 관리", title:"인슐린 용량 조절 규칙 (당뇨교육)",
-      body:"💧 란투스(기저·하루1번·24시간, 기준=아침 공복, 현재 6단위): 3일 연속 150 초과→+2 / 100 미만→줄이기 / 80 미만→즉시 -4.\n🍚 휴마로그(초속효·매 식사 직전·4시간, 기준=식사 전 혈당): 식전 높으면 늘리고 / 식전 100 미만이면 줄이기.\n⚠️ 최소 2~3일 지켜보고 조절, 실시간 수치로 즉시 조절 금지. 조절은 의료진 안내대로.", tags:["인슐린","란투스","휴마로그","공복","식전","혈당","조절","용량","교육"] },
+      body:"아침 공복(식전): 100~150 (150 초과면 주의) / 점심·저녁 식전: 100~200. 100 미만은 주의, 80 이하는 저혈당. 앱의 혈당 색상도 이 목표에 맞춰져 있어요.", tags:["목표","혈당","공복","아침식전","식전","당뇨","교육","정상","저혈당"] },
+    { category:"당뇨 관리", title:"인슐린 용량 조절 규칙 (2026-08-26 내분비)",
+      body:"💧 란투스(기저·하루1번·24시간, 기준=아침 공복): 식사 여부와 상관없이 매일 정해진 용량 반드시 투여. 아침 공복 3일 연속 150 초과면 1단위씩 증량(위 수술·설사로 저혈당 위험 → 보수적 1단위).\n🍚 휴마로그(초속효·식사 직전): 식사할 때만 투여(거르면 금지). 1단위 ≈ 혈당 60~100 낮춤. 야간 저혈당 방지 위해 저녁 식후 추가 투여 자제. 간식 후 혈당 튈 수 있어 당분간 점심 식후 집중 측정.\n조절은 담당 의료진 안내대로.", tags:["인슐린","란투스","휴마로그","공복","식전","식후","혈당","조절","용량","저혈당"] },
+    { category:"당뇨 관리", title:"먹는 당뇨약 중단 (2026-08-26 내분비)",
+      body:"췌장 인슐린 분비 기능이 낮아 알약(디아미크롱·글루파 등)은 효과가 떨어지고, 소화불량·저혈당·설사 시 산증 위험이 있어 먹는 당뇨약은 전면 중단. 혈당은 인슐린 주사로 관리하고, 콜레스테롤 약 1종만 유지.", tags:["당뇨약","디아미크롱","글루파","중단","알약","인슐린","산증"] },
     { category:"당뇨 관리", title:"인슐린 주사 위치 (당뇨교육)",
       body:"복부(배)의 피하지방이 두툼한 곳이 가장 좋아요. 배꼽 주변 3cm 이내는 금지. 몽우리가 생기지 않게 매번 위치를 돌아가며 주사. 팔은 어깨 쪽(근육 많은 곳) 말고 삼두(팔 뒤) 살 많은 곳에서 찌르기.", tags:["인슐린","주사","위치","복부","배","배꼽","순환","팔"] },
     { category:"부작용 대처", title:"항암 중 혈당 상승",
@@ -1872,7 +1871,7 @@ const firebaseConfig = {
       tags:["위보호제","케이캡","처방","소진","위장약"] },
   ];
 
-  const SEED_VERSION = 12;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
+  const SEED_VERSION = 13;  // ★ 기본 가이드 내용을 바꿀 때마다 이 숫자를 올리면, 다음 접속 때 기본자료가 자동으로 최신본으로 교체됨
   async function syncGuideSeed(){
     try{
       const metaRef = db.collection("meta").doc("guideSeed");
@@ -2001,6 +2000,10 @@ const firebaseConfig = {
 
   // ================= 진료 기록 (날짜별) =================
   const RECORDS = [
+    { date:"2026-08-26", label:"8월 26일 (수)", topics:[
+      { tag:"내분비내과", type:"dept", title:"내분비 진료 (김혜경 교수) · 당뇨 관리 대폭 변경",
+        body:"■ 먹는 당뇨약 전면 중단\n췌장의 인슐린 분비 기능이 낮아 기존 알약(디아미크롱 등)은 효과가 떨어져요. 소화불량·저혈당·설사 시 산증 위험도 있어 먹는 당뇨약은 모두 중단합니다.\n→ 유지: 인슐린 주사 + 콜레스테롤 약 1종만.\n\n■ 인슐린 수칙\n▪ 란투스(기저): 식사 여부와 상관없이 매일 정해진 용량 반드시 투여. 아침 공복이 3일 연속 150 초과면 1단위씩 증량(위 수술 이력·설사로 저혈당 위험 → 보수적으로 1단위씩).\n▪ 휴마로그(식후): 식사할 때만 투여(식사 거르면 금지). 1단위 ≈ 혈당 60~100 낮춤.\n\n■ 혈당 목표·측정\n▪ 아침 공복(식전): 100~150 / 식전: 100~200\n▪ 100 미만 주의, 80 이하 저혈당\n▪ 간식(주스·옥수수 등) 후 혈당이 튈 수 있어 당분간 점심 식후를 집중 측정. 야간 저혈당 방지 위해 저녁 식후 추가 투여는 자제.\n\n■ 기타\n▪ 다음 외래: 3개월 뒤 → 11/25(수) 오후 2:50, 본관 3층 내분비내과 (2시간 전 채혈, 8시간 금식)\n▪ 당뇨 소모성 재료 처방전은 처방과 함께 발행" },
+    ]},
     { date:"2026-08-27", label:"8월 27일 (목)", topics:[
       { tag:"CT 검사", type:"dept", title:"CT 촬영 (복부 담도 조영 + 흉부)",
         body:"이날 CT 두 가지를 촬영해요. (2사이클 후 반응 평가)\n\n① 복부 CT 조영검사(담도)\n   ⏰ 오전 9:45 · CT 64호(본관 4층)\n   ⚠️ 4시간 금식\n\n② 흉부 CT\n   ⏰ 오전 9:52 · CT 62호(본관 4층)\n\n■ 공통 안내\n▪ 검사/촬영 전 원무과 수납 후 검사실로 이동 (하이패스 등록되어 있으면 검사실로 바로)\n▪ 이날 채혈은 없음\n▪ 조영검사라 글루파(당뇨약) 중단 여부는 미리 의료진과 상의" }
@@ -2464,14 +2467,14 @@ const firebaseConfig = {
     drawBgByCtx(rows);
   }
 
-  const BG_CTX = ["공복","식전 전체","아침식전","점심식전","저녁식전","아침식후","점심식후","저녁식후","취침전","기타"];
+  const BG_CTX = ["식전 전체","아침식전","점심식전","저녁식전","아침식후","점심식후","저녁식후","취침전","기타"];
   let bgCtxCharts = {};
   function drawBgByCtx(rows){
     const box = $("bgByCtx");
     Object.values(bgCtxCharts).forEach(c=>c&&c.destroy()); bgCtxCharts={};
-    const by={}; rows.forEach(r=>{ (by[r.context]=by[r.context]||[]).push(r); });
-    // 아침·점심·저녁 식전(+레거시 식전)을 합친 '식전 전체' 추이
-    const preAll = rows.filter(r=>/식전/.test(r.context||""));
+    const by={}; rows.forEach(r=>{ const k = (r.context==="공복") ? "아침식전" : r.context; (by[k]=by[k]||[]).push(r); });
+    // 아침·점심·저녁 식전(+공복·레거시 식전)을 합친 '식전 전체' 추이
+    const preAll = rows.filter(r=>/식전/.test(r.context||"") || r.context==="공복");
     if (preAll.length) by["식전 전체"] = preAll;
     const present = BG_CTX.filter(k=>by[k]&&by[k].length);
     if (!present.length){ box.innerHTML='<div class="emptylist">기록이 쌓이면 시점별로 나눠서 보여드려요.</div>'; return; }
