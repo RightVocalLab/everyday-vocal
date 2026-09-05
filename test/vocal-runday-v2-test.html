@@ -1934,7 +1934,7 @@ input,select,button,textarea{font-family:inherit;}
       <div id="pt-debug-wrap" style="display:none;margin-bottom:10px">
         <button onclick="_ptToggleDebug()" id="pt-debug-toggle" style="font-size:10px;color:#94a3b8;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;cursor:pointer">🔧 디버그 보기</button>
         <button onclick="_ptCopyDebug()" id="pt-debug-copy" style="font-size:10px;color:#0369a1;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">📋 전체복사</button>
-        <button onclick="_ptClearDebug()" id="pt-debug-clear" style="font-size:10px;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">🧹 지우기</button>
+        <button onclick="_ptSendDebug()" id="pt-debug-send" style="display:none;font-size:10px;color:#15803d;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">☁️ 서버 저장</button><button onclick="_ptClearDebug()" id="pt-debug-clear" style="font-size:10px;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">🧹 지우기</button>
         <div id="pt-debug-status" style="margin-top:5px;font-size:10px;color:#64748b">준비됨</div>
         <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
         <div id="pt-debug-url" style="display:none;margin-top:6px;padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;font-size:9px;color:#334155;font-family:monospace;word-break:break-all"></div>
@@ -5605,7 +5605,7 @@ let _chunkSession = 0; /* 청크 재생 세션 ID. 새 _speakChunked 호출 또�
    독립 함수. 기존 재생/렌더 로직 일절 건드리지 않음.
    ============================================================ */
 var _BGM_BASE = 'https://rightvocallab.github.io/everyday-vocal/';
-var _BGM_VOL  = 0.22;
+var _BGM_VOL  = 0.317;
 var _bgmAudio = null;
 var _BGM_INTRO_MS = 7000;       /* 일차 첫 카드: BGM 먼저 흐르는 시간 */
 var _bgmIntroPending = false;   /* 첫 카드 첫 멘트를 인트로만큼 지연할지 */
@@ -6599,7 +6599,7 @@ ko.map(v=>`${v===ttsV?'★ ':' '}${v.name}`).join('<br>');
 if(window.speechSynthesis){const _u=mkUtt('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!');if(_u){speechSynthesis.cancel();speechSynthesis.speak(_u);}}
 }
 
-var _volScale=50,_volTTS=50,_volCoach=10;
+var _volScale=72,_volTTS=72,_volCoach=14;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
@@ -9562,7 +9562,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.4';
+var _WEB_VER='2.5';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -17849,6 +17849,7 @@ async function _startPitchTest(){
       var _dbgWrap = document.getElementById('pt-debug-wrap');
       var _isAdm = (typeof _isAppAdmin === 'function') && _isAppAdmin();
       if(_dbgWrap) _dbgWrap.style.display = _isAdm ? 'block' : 'none';
+      try{ var _sb=document.getElementById('pt-debug-send'); if(_sb) _sb.style.display = _isAdm ? 'inline-block' : 'none'; }catch(_e2){}
       if(_isAdm){
         window._ptDebug = true;
         window._ptDbgLog = [];
@@ -18330,11 +18331,13 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   /* === H1-H2 점수 (성별 분기) === */
   if(isFemale){
     /* 여성: 기존 임계값 유지 (여성 실측 데이터로 추후 재조정 예정) */
+    /* 실측 2026-09-05: H1H2는 가성(-4.3)과 중성(-4.7)을 구분하지 못함
+       → 음수 감점을 완화하고 H2H4/H1H4로 무게 이동 */
     if(h1h2 > 7) score += 3;
     else if(h1h2 > 3) score += 2;
     else if(h1h2 > -1) score += 1;
-    else if(h1h2 < -5) score -= 3;
-    else if(h1h2 < -2) score -= 2;
+    else if(h1h2 < -8) score -= 2;
+    else if(h1h2 < -5) score -= 1;
   } else {
     /* 남성(실측 2026-06): H1H2 양수는 가성 지표가 아님 (믹스가 오히려 H1H2 더 높음 11~37 vs 가성 8~14).
        → 양수 가점 제거. 흉성 방향(음수)만 유지 */
@@ -18343,16 +18346,34 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   }
   
   /* H2-H4 점수 (공통 - 스펙트럼 기울기, 흉성/가성 분리에 유효) */
+  if(isFemale){
+    /* 여성 실측 2026-09-05 (D4~F4 중앙값): 진성 -5.9 / 중성 5.4 / 가성 22.1 */
+    if(h2h4 > 22) score += 3;
+    else if(h2h4 > 15) score += 2;
+    else if(h2h4 > 9) score += 1;
+    else if(h2h4 < 0) score -= 2;
+    else if(h2h4 < 3) score -= 1;
+  } else {
   if(h2h4 > 18) score += 2;
   else if(h2h4 > 12) score += 1;
   else if(h2h4 < 4) score -= 2;
   else if(h2h4 < 8) score -= 1;
+  }
   
   /* H1-H4 점수 (공통) */
+  if(isFemale){
+    /* 여성 실측 2026-09-05 (D4~F4 중앙값): 진성 -14.3 / 중성 -0.6 / 가성 19.9 */
+    if(h1h4 > 22) score += 3;
+    else if(h1h4 > 15) score += 2;
+    else if(h1h4 > 8) score += 1;
+    else if(h1h4 < -8) score -= 2;
+    else if(h1h4 < 0) score -= 1;
+  } else {
   if(h1h4 > 25) score += 2;
   else if(h1h4 > 18) score += 1;
   else if(h1h4 < 8) score -= 2;
   else if(h1h4 < 12) score -= 1;
+  }
   
   /* === 고주파 에너지 점수 (가장 신뢰할 수 있는 지표, 성별 분기) === */
   if(isFemale){
@@ -18423,6 +18444,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     else if(f0 > 988) score += 3;   /* B5 이상 = 가성 강 보정 */
     else if(f0 > 784) score += 2;   /* G5 이상 = 가성 보정 */
     else if(f0 > 698) score += 1;   /* F5 이상 = 약한 가성 보정 */
+    else if(f0 > 450) score += 1;   /* 문헌상 여성 성구 전환점(≈450Hz)부터 약한 가성 보정 */
   } else {
     /* 남자 - 가성 판정 정밀화 */
     if(f0 < 165) score -= 3;        /* E3 이하 = 진성 강 보정 */
@@ -18453,7 +18475,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      - 여성: F4(349Hz) 이하에서는 가성 발성 매우 드뭄 (이전 G4=392Hz에서 약간 하향)
        → D4~F4의 작은소리+강한H1H2 가성은 인정해야 함 */
   if(result === 'falsetto'){
-    const falsettoLowLimit = isFemale ? 349 : 220;  /* 여성: G4(392) → F4(349) 완화 */
+    const falsettoLowLimit = isFemale ? 294 : 220;  /* 여성: G4(392) → F4(349) 완화 */
     if(f0 < falsettoLowLimit){
       result = score <= -1 ? 'chest' : 'mix';
     }
@@ -19309,8 +19331,16 @@ function _ptFinalizeCurrentTone(){
     _ptCurrentTone = null;
     return;
   }
-  /* (2) 프레임 수 기준: 너무 적은 측정 횟수 → 노이즈 가능성 */
-  if(count < PT_MIN_FRAME_COUNT){
+  /* (2) 프레임 수 기준: 너무 적은 측정 횟수 → 노이즈 가능성
+         단, 가성 우세 톤은 짧고 여리게 내는 경우가 많아 관문을 완화 (실측 2026-09-05) */
+  var _falsettoLead = false;
+  try{
+    var _rc = _ptCurrentTone.regCount || {};
+    var _tt = 0, _mx = 0, _mr = '';
+    for(var _k in _rc){ _tt += _rc[_k]; if(_rc[_k] > _mx){ _mx = _rc[_k]; _mr = _k; } }
+    _falsettoLead = (_mr === 'falsetto' && _tt > 0 && _mx / _tt >= 0.5);
+  }catch(_e){}
+  if(count < (_falsettoLead ? 3 : PT_MIN_FRAME_COUNT)){
     _ptCurrentTone = null;
     return;
   }
@@ -19318,7 +19348,7 @@ function _ptFinalizeCurrentTone(){
   const avgDB = _ptCurrentTone.dBSum / count;
   const variance = (_ptCurrentTone.dBSumSq / count) - (avgDB * avgDB);
   const stdDev = Math.sqrt(Math.max(0, variance));
-  if(stdDev > PT_MAX_DB_VARIANCE){
+  if(stdDev > (_falsettoLead ? 28 : PT_MAX_DB_VARIANCE)){
     _ptCurrentTone = null;
     return;
   }
@@ -19459,6 +19489,14 @@ function _ptToggleDebug(){
   if(btn) btn.textContent = window._ptDebug ? '🔧 디버그 끄기' : '🔧 디버그 보기';
 }
 
+/* 관리자에게만 서버 저장 버튼 노출 */
+function _ptSyncDbgSendBtn(){
+  try{
+    var b=document.getElementById('pt-debug-send'); if(!b) return;
+    var ok=(typeof _isAppAdmin==='function') && _isAppAdmin();
+    b.style.display = ok ? 'inline-block' : 'none';
+  }catch(e){}
+}
 function _ptDbgStatus(msg){
   var el=document.getElementById('pt-debug-status');
   if(el) el.textContent = msg;
@@ -19493,7 +19531,10 @@ function _ptCopyDebug(){
   if(!log.length){ _ptDbgStatus('복사할 로그 없음 (측정하며 소리를 내세요)'); return; }
   var text = _ptDbgHeader(log.length)+'\n'+log.join('\n');
   var done=function(){ _ptDbgStatus('클립보드 복사됨 ('+log.length+'줄) → Claude 채팅에 붙여넣기'); };
-  var fail=function(m){ _ptDbgStatus('복사 실패: '+m+' → ☁️전송 사용'); };
+  var fail=function(m){
+    _ptDbgStatus('복사 실패 ('+m+') · 줄이 많으면 클립보드가 막힙니다 → ☁️ 서버 저장을 눌러주세요');
+    try{ if(typeof _isAppAdmin==='function' && _isAppAdmin()){ _ptSendDebug(); } }catch(_e){}
+  };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(function(){ _ptDbgFallbackCopy(text, done, fail); });
   } else {
