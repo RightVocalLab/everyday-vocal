@@ -1937,7 +1937,7 @@ input,select,button,textarea{font-family:inherit;}
         <button onclick="_ptSendDebug()" id="pt-debug-send" style="display:none;font-size:10px;color:#15803d;background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">☁️ 서버 저장</button><button onclick="_ptClearDebug()" id="pt-debug-clear" style="font-size:10px;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px">🧹 지우기</button>
         <div id="pt-debug-status" style="margin-top:5px;font-size:10px;color:#64748b">준비됨</div>
         <div id="pt-debug-box" style="display:none;margin-top:6px;padding:8px 10px;background:#0f172a;border-radius:8px;font-size:9px;line-height:1.5;color:#cbd5e1;font-family:monospace;max-height:140px;overflow-y:auto"></div>
-        <div id="pt-debug-url" style="display:none;margin-top:6px;padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;font-size:9px;color:#334155;font-family:monospace;word-break:break-all"></div>
+        <div id="pt-debug-url" onclick="_ptCopyDbgUrl()" style="display:none;margin-top:6px;padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;font-size:9px;color:#334155;font-family:monospace;word-break:break-all;cursor:pointer;-webkit-user-select:all;user-select:all"></div><button id="pt-debug-url-copy" onclick="_ptCopyDbgUrl()" style="display:none;margin-top:5px;width:100%;font-size:11px;font-weight:700;color:#0369a1;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:6px;padding:7px;cursor:pointer">주소 복사</button>
       </div>
       <!-- 상단: 현재 음정 (큰 표시) -->
       <div class="v2-pt-card v2-pt-pitch-card">
@@ -19549,6 +19549,36 @@ function _ptCopyDebug(){
   }
 }
 
+function _ptCopyDbgUrl(){
+  var u=document.getElementById('pt-debug-url'); if(!u) return;
+  var t=(u.textContent||'').trim(); if(!t) return;
+  var done=function(){ _ptDbgStatus('주소가 복사되었습니다. Claude 채팅에 붙여넣기 하세요.'); };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done).catch(function(){ _ptSelectDbgUrl(); });
+      return;
+    }
+  }catch(e){}
+  _ptSelectDbgUrl();
+}
+function _ptSelectDbgUrl(){
+  var u=document.getElementById('pt-debug-url'); if(!u) return;
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=(u.textContent||'').trim();
+    ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    var ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    if(ok){ _ptDbgStatus('주소가 복사되었습니다. Claude 채팅에 붙여넣기 하세요.'); return; }
+  }catch(e){}
+  try{
+    var r=document.createRange(); r.selectNodeContents(u);
+    var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }catch(e){}
+  _ptDbgStatus('주소가 선택되었습니다. 길게 눌러 복사하세요.');
+}
 function _ptSendDebug(){
   var log = window._ptDbgLog || [];
   if(!log.length){ _ptDbgStatus('전송할 로그 없음 (측정하며 소리를 내세요)'); return; }
@@ -19561,6 +19591,7 @@ function _ptSendDebug(){
         var url = 'https://everyday-vocal-default-rtdb.asia-southeast1.firebasedatabase.app/pvrDebug/'+ref.key+'.json';
         var u=document.getElementById('pt-debug-url');
         if(u){ u.style.display='block'; u.textContent=url; }
+        var ub=document.getElementById('pt-debug-url-copy'); if(ub){ ub.style.display='block'; }
         if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).catch(function(){}); }
         _ptDbgStatus('전송 완료 ('+log.length+'줄). 아래 URL 복사됨 → Claude 채팅에 붙여넣기');
       })
