@@ -18393,10 +18393,14 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     /* 남성(실측 2026-06): 흉성≈-23, 믹스≈-36~-49, 가성≈-47~-58.
        믹스/가성이 -47~-50에서 겹쳐서 highRatio 단독으론 못 가름.
        → 깊은 가성(<-52)만 가점, 믹스 본체(-30~-52)는 0점, 경계는 H2H4/H1H4 기울기로 분리 */
-    if(highRatio > -20) score -= 3;       /* 강한 진성/흉성 */
-    else if(highRatio > -30) score -= 1;  /* 흉성 경계 (≈-23) */
-    else if(highRatio < -52) score += 2;  /* 깊은 가성만 가점 */
-    else if(highRatio < -45) score += 1;  /* 실측 2026-09-06: 남성 가성 대부분 -34~-51 */
+    /* 실측 2026-09-06(남성): 같은 음역에서 가성과 중성/진성의 highRatio가 17~20dB 벌어짐
+       (D4 -49.5 vs -29.2, A4 -36.8 vs -20.0, C#5 -41.0 vs -21.9)
+       → 이 지표가 남성 성구 분리에 가장 강력. 실측 분포에 맞춰 배점 재배치 */
+    if(highRatio > -24) score -= 3;       /* 강한 진성/흉성 */
+    else if(highRatio > -30) score -= 1;  /* 흉성 경계 */
+    else if(highRatio < -48) score += 3;  /* 깊은 가성 */
+    else if(highRatio < -40) score += 2;
+    else if(highRatio < -34) score += 1;
     /* -30 ~ -52: 0점 */
   }
   
