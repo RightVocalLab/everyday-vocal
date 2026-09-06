@@ -6730,7 +6730,7 @@ ko.map(v=>`${v===ttsV?'★ ':' '}${v.name}`).join('<br>');
 if(window.speechSynthesis){const _u=mkUtt('안녕하세요! 훈련을 시작합니다. 목에 힘 빼고 따라와!');if(_u){speechSynthesis.cancel();speechSynthesis.speak(_u);}}
 }
 
-var _volScale=72,_volTTS=72,_volCoach=14;
+var _volScale=88,_volTTS=80,_volCoach=16;
 (function(){try{var s=JSON.parse(localStorage.getItem('ev_vol_settings')||'{}');if(s.scale!==undefined)_volScale=s.scale;if(s.tts!==undefined)_volTTS=s.tts;if(s.coach!==undefined)_volCoach=s.coach;}catch(e){}})();
 function _saveVolSettings(){try{localStorage.setItem('ev_vol_settings',JSON.stringify({scale:_volScale,tts:_volTTS,coach:_volCoach}));}catch(e){}}
 function _applyVolScale(){if(mGain)mGain.gain.value=(_volScale/100)*2.5;_saveVolSettings();}
@@ -6837,7 +6837,7 @@ function gCtx(){
 if(!actx){
 actx=new(window.AudioContext||window.webkitAudioContext)();
 cmp=actx.createDynamicsCompressor();
-cmp.threshold.value=-6;cmp.knee.value=10;cmp.ratio.value=2;
+cmp.threshold.value=-3;cmp.knee.value=8;cmp.ratio.value=1.6;
 cmp.attack.value=0.002;cmp.release.value=0.15;cmp.connect(actx.destination);
 mGain=actx.createGain();mGain.gain.value=(_volScale/100)*2.5;mGain.connect(cmp);
 
@@ -10000,7 +10000,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.5';
+var _WEB_VER='2.6';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -18779,8 +18779,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   } else {
     /* 남성(실측 2026-06): H1H2 양수는 가성 지표가 아님 (믹스가 오히려 H1H2 더 높음 11~37 vs 가성 8~14).
        → 양수 가점 제거. 흉성 방향(음수)만 유지 */
-    if(h1h2 < -5) score -= 3;
-    else if(h1h2 < -2) score -= 2;
+    /* 실측 2026-09-06(남성 가성): G#4~C#5 가성인데 H1H2가 -10~-6로 음수.
+       H1H2 음수만으로 가성을 배제할 수 없어 감점 완화 */
+    if(h1h2 < -12) score -= 2;
+    else if(h1h2 < -8) score -= 1;
   }
   
   /* H2-H4 점수 (공통 - 스펙트럼 기울기, 흉성/가성 분리에 유효) */
@@ -18792,8 +18794,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     else if(h2h4 < 0) score -= 2;
     else if(h2h4 < 3) score -= 1;
   } else {
-  if(h2h4 > 18) score += 2;
-  else if(h2h4 > 12) score += 1;
+  /* 남성 실측 2026-09-06(가성): H2H4가 27~39까지 올라감 → 상위 구간 신설 */
+  if(h2h4 > 28) score += 3;
+  else if(h2h4 > 18) score += 2;
+  else if(h2h4 > 11) score += 1;
   else if(h2h4 < 4) score -= 2;
   else if(h2h4 < 8) score -= 1;
   }
@@ -18807,8 +18811,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     else if(h1h4 < -8) score -= 2;
     else if(h1h4 < 0) score -= 1;
   } else {
-  if(h1h4 > 25) score += 2;
-  else if(h1h4 > 18) score += 1;
+  /* 남성 실측 2026-09-06(가성): H1H4가 17~34 → 상위 구간 신설 */
+  if(h1h4 > 28) score += 3;
+  else if(h1h4 > 20) score += 2;
+  else if(h1h4 > 13) score += 1;
   else if(h1h4 < 8) score -= 2;
   else if(h1h4 < 12) score -= 1;
   }
@@ -18828,6 +18834,7 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
     if(highRatio > -20) score -= 3;       /* 강한 진성/흉성 */
     else if(highRatio > -30) score -= 1;  /* 흉성 경계 (≈-23) */
     else if(highRatio < -52) score += 2;  /* 깊은 가성만 가점 */
+    else if(highRatio < -45) score += 1;  /* 실측 2026-09-06: 남성 가성 대부분 -34~-51 */
     /* -30 ~ -52: 0점 */
   }
   
