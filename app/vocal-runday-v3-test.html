@@ -18910,6 +18910,43 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      - 진성: 점수 -3 이하 
      - 모호한 경우: mix 
      여자는 음역 자체가 높아서 가성 오판 가능성이 큼 → 가성 임계값을 더 높임 */
+  /* === 여성 고음역(C5 이상) 전용 재계산 ===
+     실측 2026-09-07(장현아): 같은 사람 같은 진성인데 저음역과 고음역의 기준선이 통째로 다름
+       저음역 D4~F4 진성: H2H4 -5.9 / H1H4 -14.3 / highRatio -27.9
+       고음역 C5~C#6 진성: H2H4 30.2 / H1H4 19.6 / highRatio -34.2
+     음이 높으면 배음 수가 줄어 스펙트럼 기울기가 원래 커지므로, 고정 임계값은 고음역에서 전부 가성으로 쏠림.
+     고음역 실측 중앙값: 진성 H1H2 -10.2 / H1H4 19.8 / hiR -34.4
+                        중성 H1H2  -5.0 / H1H4 28.2 / hiR -40.0
+                        가성 H1H2  13.4 / H1H4 44.1 / hiR -49.7
+     → H2H4는 고음역에서 변별력이 없어 제외하고 H1H2·H1H4·highRatio로만 재계산 */
+  if(isFemale && f0 >= 494){
+    score = 0;
+    if(h1h2 > 18) score += 3;
+    else if(h1h2 > 6) score += 2;
+    else if(h1h2 > -2) score += 1;
+    else if(h1h2 < -9) score -= 2;
+    else if(h1h2 < -6) score -= 1;
+
+    if(h1h4 > 40) score += 3;
+    else if(h1h4 > 33) score += 2;
+    else if(h1h4 > 26) score += 1;
+    else if(h1h4 < 20) score -= 2;
+    else if(h1h4 < 24) score -= 1;
+
+    if(highRatio < -47) score += 3;
+    else if(highRatio < -42) score += 2;
+    else if(highRatio < -37) score += 1;
+    else if(highRatio > -33) score -= 2;
+    else if(highRatio > -36) score -= 1;
+
+    if(dB < 50) score += 1;
+    else if(dB < 55) score += 0.5;
+
+    /* 고음이라는 이유만으로 주는 보정은 최소화 (고음역에서도 진성이 존재) */
+    if(f0 > 988) score += 1;
+    else if(f0 > 784) score += 0.5;
+  }
+
   let result;
   const falsettoThreshold = isFemale ? 4 : 3;
   if(score >= falsettoThreshold) result = 'falsetto';
