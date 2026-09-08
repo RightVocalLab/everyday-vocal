@@ -10000,7 +10000,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.6';
+var _WEB_VER='2.7';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -18948,7 +18948,11 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
   }
 
   let result;
-  const falsettoThreshold = isFemale ? 4 : 3;
+  /* 실측 2026-09-08(장현아 3종): C6(1047Hz) 이상에서는 진성·중성의 지표가 거의 같아지고
+     (진성 H1H2 13.8/H1H4 20.1, 중성 17.8/18.7) 둘 다 점수 4.0으로 가성선에 걸침.
+     반면 가성은 점수 최저 7.0으로 여유가 커서, C6 이상만 가성선을 한 칸 올리면
+     진성·중성이 믹스로 내려오고 가성은 100% 유지됨 (전체 34,423줄 중 61줄만 변경) */
+  const falsettoThreshold = isFemale ? (f0 >= 1047 ? 5 : 4) : 3;
   if(score >= falsettoThreshold) result = 'falsetto';
   else if(score <= -3) result = 'chest';
   else result = 'mix';
