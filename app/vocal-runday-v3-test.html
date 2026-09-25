@@ -118,6 +118,26 @@ display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;
 .stOvb .stNode{}
 .stOvb .stNm{display:none}
 .stOvb .stXl{width:7px;height:7px;left:-1px;top:-1px;font-size:5px}
+/* 스킬트리 v3 — 잠김/진행 표시 · 안내창 · 세로 영상 자리 */
+.st-lock .stTile{background:#f5f5f4;border:2px solid #e7e5e4;color:#a8a29e}
+.st-lock .stIco{stroke:#a8a29e}
+.st-lock .stNm{color:#8a837c}
+.stLock{position:absolute;right:-5px;bottom:-5px;width:16px;height:16px;border-radius:50%;background:#78716c;
+display:flex;align-items:center;justify-content:center}
+.stLock svg{width:10px;height:10px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.stOvb .stLock{display:none}
+.stCntTag{color:#f97316;font-weight:700}
+.stMd{max-width:360px;width:100%}
+.stMdT{font-size:17px;font-weight:800;margin:0 0 10px;color:#1c1917;text-align:center}
+.stMdB{font-size:13.5px;line-height:1.7;color:#44403c}
+.stMdB p{margin:0 0 8px}
+.stMdSub{font-size:12px;color:#78716c}
+.stMdList{margin:6px 0 4px;padding-left:18px;font-size:13px;color:#57534e}
+.stMdBtns{display:flex;gap:8px;margin-top:14px}
+.stMdBtn{flex:1;padding:12px;border-radius:12px;border:1.5px solid #e7e5e4;background:#fff;font-size:14px;font-weight:700;color:#44403c;cursor:pointer;font-family:inherit}
+.stMdBtn.pri{background:#16a34a;border-color:#16a34a;color:#fff}
+.stGSwitch{display:block;margin:6px auto 0;background:none;border:0;color:#78716c;font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit}
+.card-media-ph.stVidV{width:56%;max-width:230px;aspect-ratio:9/16;margin:12px auto 0;min-height:0;padding:0}
 
 
 /* ── TOPBAR ── */
@@ -6651,6 +6671,7 @@ function playTrainDesc(){
   
   if(!descAutoPlay){
     /* OFF로 전환 → 현재 재생 중인 설명 즉시 멈춤 */
+    if(typeof _stStopMent==='function') _stStopMent(); /* 스킬 멘트 대기/재생도 끔 → 화이팅 멘트 다시 나옴 */
     if(window._descPlaying){
       cancelTTS();
       stopEL();
@@ -6662,6 +6683,8 @@ function playTrainDesc(){
   
   /* ON으로 전환 → 즉시 현재 훈련 설명 재생 시작 */
   if(btn) btn.textContent = '설명⏹';
+  /* 스킬트리 스케일 카드: 설명 ON = 멘트 다시 켜기 (스케일 진행 중이면 바로 재생) */
+  if(curMod && curMod.stMent){ if(playing) _stPlayMent(curMod, 0); return; }
   if(!curMod){
     /* 훈련 컨텍스트 없으면 라벨만 바꿈 (다음 훈련부터 자동재생 적용) */
     return;
@@ -7238,7 +7261,7 @@ if(isDN){
 }
 return a;
 }
-function clrCT(){coachT.forEach(t=>clearTimeout(t));coachT=[];}
+function clrCT(){coachT.forEach(t=>clearTimeout(t));coachT=[];if(typeof _stStopMent==='function')_stStopMent();}
 
 var _CHEER_EARLY=['화이팅!','할 수 있어!','잘 하고 있어!','힘내!','좋아, 계속해!','최고야!','멋지다!','포기하지 마!','집중해, 잘 되고 있어!','오늘도 최고!','그렇지, 바로 그거야!','훌륭해!','완전 잘하고 있어!','그 느낌 맞아!','최고의 훈련이야!','이 느낌 유지해!'];
 var _CHEER_LATE=['거의 다 왔어!','조금만 더!','끝까지 가자!','완벽해!'];
@@ -7250,6 +7273,8 @@ return pool[Math.floor(Math.random()*pool.length)];
 
 function schedCoach(mod){
 clrCT();
+/* 스킬트리 스케일 카드: 시작 5초 뒤 [멘트만] (설명 ON일 때) */
+if(mod && mod.stMent && (typeof descAutoPlay==='undefined' || descAutoPlay)) _stPlayMent(mod, 5000);
 
 /* ── 화이팅 멘트만 자동재생 (설명은 버튼으로만) ── */
 
@@ -7284,6 +7309,7 @@ if(totalSec2 > 8){
           /* 다른 멘트(설명/안내) 재생 중이면 기다렸다가 끝나면 화이팅 재생 */
           const _tryPlayCheer=function(){
             if(!playing||!cheerAuto) return;
+            if(window._stMentActive) return; /* 스킬 멘트 중엔 화이팅 멘트 없음 (끝나면 다음 차례부터 자동으로 나옴) */
             /* 현재 재생 중이면 잠시 후 다시 체크 */
             if(window._elSrc || (window.speechSynthesis && window.speechSynthesis.speaking)){
               coachT.push(setTimeout(_tryPlayCheer, 500));
@@ -7636,6 +7662,7 @@ showDone('✅',`${seqIdx+1}/${seqList.length} 완료!`,'수고했습니다!',[
 ]);
 } else {
 if(curStudent&&seqList[seqIdx]&&seqList[seqIdx].hwIdx!==undefined)_incHwRepeat(seqList[seqIdx].hwIdx);
+if(window._stCur && scrStack.includes('scr-step')){ _stScaleDone(); return; }
 const _fromStep = scrStack.includes('scr-step');
 const _hasMoreStep = _fromStep && stepIdx < stepItems.length-1;
 showDone(_MEDAL_SVG, isSeq?'전체 완주!':'훈련 완료!', isSeq?'코스를 모두 마쳤어요':'수고했습니다!', [
@@ -8233,7 +8260,9 @@ function _syncFixedNavVisibility(){
 }
 
 /* ═══ 훈련 스킬 트리 ═══ */
-var SKILLTREE = {"cs": {"저음": {"k": "low", "c": "#2563eb", "tl": "울림의 바닥부터 넓히는 계열", "kw": ["소리가 작다는 말을 들었을 때", "기초부터 탄탄히 하고 싶을 때"]}, "중음": {"k": "mid", "c": "#0d9488", "tl": "가장 많이 쓰는 음역, 가장 많이 티 나는 구간", "kw": ["말하듯이 노래하고 싶을 때", "발라드 한 곡 제대로 부르고 싶을 때"]}, "고음": {"k": "high", "c": "#7c3aed", "tl": "위로 가는 길을 뚫는 계열", "kw": ["노래방 약속이 잡힌 금요일", "락이 그리울 때"]}, "성대결절 케어": {"k": "care", "c": "#16a34a", "tl": "지친 성대를 되돌리는 시간", "kw": ["어제 좀 무리했다 싶을 때", "쉬는 것도 훈련이니까"]}}, "order": ["저음", "중음", "고음", "성대결절 케어"], "nodes": [{"id": "L1-3", "cs": "저음", "ly": 1, "po": 3, "nm": "소울음소리", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "L2-1", "cs": "저음", "ly": 2, "po": 1, "nm": "우~우~우~", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L2-2", "cs": "저음", "ly": 2, "po": 2, "nm": "Z 소리내기", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L2-3", "cs": "저음", "ly": 2, "po": 3, "nm": "립트릴", "sc": "5D-A", "scM": "5D-J", "rep": 1, "min": 7, "prev": "L1-3", "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L2-4", "cs": "저음", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L2-5", "cs": "저음", "ly": 2, "po": 5, "nm": "아~아~아~", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-1", "cs": "저음", "ly": 3, "po": 1, "nm": "강한 우~우~우~", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "L2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-2", "cs": "저음", "ly": 3, "po": 2, "nm": "Z 스타카토", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": "L2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-3", "cs": "저음", "ly": 3, "po": 3, "nm": "립트릴", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-4", "cs": "저음", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L3-5", "cs": "저음", "ly": 3, "po": 5, "nm": "강한 아~아~아~", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "L2-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L4-1", "cs": "저음", "ly": 4, "po": 1, "nm": "강한 우(앞)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-2", "cs": "저음", "ly": 4, "po": 2, "nm": "Z 소리내기", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-3", "cs": "저음", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-4", "cs": "저음", "ly": 4, "po": 4, "nm": "호흡 석은 우", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-5", "cs": "저음", "ly": 4, "po": 5, "nm": "강한 아(앞)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-1", "cs": "저음", "ly": 5, "po": 1, "nm": "강한 우(뒤)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L4-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-2", "cs": "저음", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L4-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-3", "cs": "저음", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L4-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-4", "cs": "저음", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L4-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-5", "cs": "저음", "ly": 5, "po": 5, "nm": "강한 아(뒤)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L4-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-1", "cs": "저음", "ly": 6, "po": 1, "nm": "우", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-2", "cs": "저음", "ly": 6, "po": 2, "nm": "Back Pressure", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-3", "cs": "저음", "ly": 6, "po": 3, "nm": "강한 오", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-4", "cs": "저음", "ly": 6, "po": 4, "nm": "오픈허밍", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-5", "cs": "저음", "ly": 6, "po": 5, "nm": "아", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-1", "cs": "중음", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-2", "cs": "중음", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-3", "cs": "중음", "ly": 1, "po": 3, "nm": "립트릴", "sc": "5D-E", "scM": "5D-F", "rep": 1, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "M1-4", "cs": "중음", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-5", "cs": "중음", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M2-1", "cs": "중음", "ly": 2, "po": 1, "nm": "허밍", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "M1-1", "p1": "M1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M2-2", "cs": "중음", "ly": 2, "po": 2, "nm": "호흡 섞은 우", "sc": "3D-E", "scM": "3D-F", "rep": 1, "min": 7, "prev": "M1-2", "p1": "", "p2": "", "p3": "", "px": "L4-4", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M2-3", "cs": "중음", "ly": 2, "po": 3, "nm": "립트릴", "sc": "5D-B", "scM": "", "rep": 1, "min": 7, "prev": "M1-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M2-4", "cs": "중음", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M1-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M2-5", "cs": "중음", "ly": 2, "po": 5, "nm": "Z 소리내기", "sc": "3D-E", "scM": "3D-F", "rep": 1, "min": 7, "prev": "M1-5", "p1": "M1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M3-1", "cs": "중음", "ly": 3, "po": 1, "nm": "오픈 허밍 1번", "sc": "5H-G", "scM": "5H-H", "rep": 1, "min": 7, "prev": "M2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-2", "cs": "중음", "ly": 3, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-3", "cs": "중음", "ly": 3, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-4", "cs": "중음", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-5", "cs": "중음", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-1", "cs": "중음", "ly": 4, "po": 1, "nm": "오픈 허밍 2번", "sc": "5H-H", "scM": "", "rep": 1, "min": 7, "prev": "M3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-2", "cs": "중음", "ly": 4, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-3", "cs": "중음", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-4", "cs": "중음", "ly": 4, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-5", "cs": "중음", "ly": 4, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-1", "cs": "고음", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-2", "cs": "고음", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-3", "cs": "고음", "ly": 1, "po": 3, "nm": "허밍 1번", "sc": "5H-G", "scM": "5H-H", "rep": 1, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "H1-4", "cs": "고음", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-5", "cs": "고음", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H2-1", "cs": "고음", "ly": 2, "po": 1, "nm": "립트릴 1번", "sc": "9D-B", "scM": "9D-C", "rep": 1, "min": 7, "prev": "H1-1", "p1": "H1-3", "p2": "", "p3": "", "px": "M1-3", "px2": "L3-3", "rec": "", "br": "", "st": "open"}, {"id": "H2-2", "cs": "고음", "ly": 2, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-B", "scM": "5H-C", "rep": 1, "min": 7, "prev": "H1-2", "p1": "H1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "M4-1", "br": "", "st": "open"}, {"id": "H2-3", "cs": "고음", "ly": 2, "po": 3, "nm": "허밍 2번", "sc": "5H-C", "scM": "5H-D", "rep": 1, "min": 7, "prev": "H1-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H2-4", "cs": "고음", "ly": 2, "po": 4, "nm": "후~ 내려오기", "sc": "5DN-D", "scM": "5DN-E", "rep": 1, "min": 7, "prev": "H1-4", "p1": "H1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H2-5", "cs": "고음", "ly": 2, "po": 5, "nm": "Back Pressure 1번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H1-5", "p1": "H1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H3-1", "cs": "고음", "ly": 3, "po": 1, "nm": "립트릴 2번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H3-2", "cs": "고음", "ly": 3, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-C", "scM": "", "rep": 1, "min": 7, "prev": "H2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "M3-1", "br": "", "st": "soon"}, {"id": "H3-3", "cs": "고음", "ly": 3, "po": 3, "nm": "허밍 3번", "sc": "5H-C", "scM": "5H-D", "rep": 1, "min": 7, "prev": "H2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H3-4", "cs": "고음", "ly": 3, "po": 4, "nm": "오 두성", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H3-5", "cs": "고음", "ly": 3, "po": 5, "nm": "Back Pressure 2번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H2-5", "p1": "", "p2": "", "p3": "", "px": "L4-3", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-1", "cs": "고음", "ly": 4, "po": 1, "nm": "립트릴 3번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-2", "cs": "고음", "ly": 4, "po": 2, "nm": "오픈 허밍 2번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-3", "cs": "고음", "ly": 4, "po": 3, "nm": "허밍 4번", "sc": "9D-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-4", "cs": "고음", "ly": 4, "po": 4, "nm": "오 성구전환", "sc": "9D-B", "scM": "9D-C", "rep": 1, "min": 7, "prev": "H3-4", "p1": "", "p2": "", "p3": "", "px": "L6-3", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-5", "cs": "고음", "ly": 4, "po": 5, "nm": "Back Pressure 3번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-1", "cs": "고음", "ly": 5, "po": 1, "nm": "립트릴 4번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H4-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-2", "cs": "고음", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-3", "cs": "고음", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-4", "cs": "고음", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-5", "cs": "고음", "ly": 5, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C1-1", "cs": "성대결절 케어", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C1-2", "cs": "성대결절 케어", "ly": 1, "po": 2, "nm": "허밍", "sc": "5H-G", "scM": "5H-H", "rep": 1, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "C1-3", "cs": "성대결절 케어", "ly": 1, "po": 3, "nm": "립트릴", "sc": "5D-E", "scM": "5D-F", "rep": 1, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C1-4", "cs": "성대결절 케어", "ly": 1, "po": 4, "nm": "설압자 문장 읽기", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C1-5", "cs": "성대결절 케어", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C2-1", "cs": "성대결절 케어", "ly": 2, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C1-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C2-2", "cs": "성대결절 케어", "ly": 2, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-B", "scM": "", "rep": 1, "min": 7, "prev": "C1-2", "p1": "C1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C2-3", "cs": "성대결절 케어", "ly": 2, "po": 3, "nm": "립트릴 1번", "sc": "9D-B", "scM": "9D-C", "rep": 1, "min": 7, "prev": "C1-3", "p1": "C1-1", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C2-4", "cs": "성대결절 케어", "ly": 2, "po": 4, "nm": "엎드려 문장 읽기", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "C1-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C2-5", "cs": "성대결절 케어", "ly": 2, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C1-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-1", "cs": "성대결절 케어", "ly": 3, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-2", "cs": "성대결절 케어", "ly": 3, "po": 2, "nm": "오픈 허밍 2번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "C2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-3", "cs": "성대결절 케어", "ly": 3, "po": 3, "nm": "립트릴 2번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "C2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-4", "cs": "성대결절 케어", "ly": 3, "po": 4, "nm": "벽에 붙어 문장 읽기", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "C2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-5", "cs": "성대결절 케어", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C2-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-1", "cs": "성대결절 케어", "ly": 4, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-2", "cs": "성대결절 케어", "ly": 4, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-3", "cs": "성대결절 케어", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-4", "cs": "성대결절 케어", "ly": 4, "po": 4, "nm": "서서 문장 읽기", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "C3-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-5", "cs": "성대결절 케어", "ly": 4, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-1", "cs": "성대결절 케어", "ly": 5, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-2", "cs": "성대결절 케어", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-3", "cs": "성대결절 케어", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-4", "cs": "성대결절 케어", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-5", "cs": "성대결절 케어", "ly": 5, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}]};
+var SKILLTREE = {"cs": {"저음": {"k": "low", "c": "#2563eb", "tl": "울림의 바닥부터 넓히는 계열", "kw": ["소리가 작다는 말을 들었을 때", "기초부터 탄탄히 하고 싶을 때"]}, "중음": {"k": "mid", "c": "#0d9488", "tl": "가장 많이 쓰는 음역, 가장 많이 티 나는 구간", "kw": ["말하듯이 노래하고 싶을 때", "발라드 한 곡 제대로 부르고 싶을 때"]}, "고음": {"k": "high", "c": "#7c3aed", "tl": "위로 가는 길을 뚫는 계열", "kw": ["노래방 약속이 잡힌 금요일", "락이 그리울 때"]}, "성대결절 케어": {"k": "care", "c": "#16a34a", "tl": "지친 성대를 되돌리는 시간", "kw": ["어제 좀 무리했다 싶을 때", "쉬는 것도 훈련이니까"]}}, "order": ["저음", "중음", "고음", "성대결절 케어"], "nodes": [{"id": "L1-3", "cs": "저음", "ly": 1, "po": 3, "nm": "소울음소리", "sc": "", "scM": "", "rep": 10, "min": 1, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "L2-1", "cs": "저음", "ly": 2, "po": 1, "nm": "우~우~우~", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L2-2", "cs": "저음", "ly": 2, "po": 2, "nm": "Z 소리내기", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L2-3", "cs": "저음", "ly": 2, "po": 3, "nm": "립트릴", "sc": "5D-A", "scM": "5D-J", "rep": 1, "min": 7, "prev": "L1-3", "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L2-4", "cs": "저음", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L2-5", "cs": "저음", "ly": 2, "po": 5, "nm": "아~아~아~", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": null, "p1": "L1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-1", "cs": "저음", "ly": 3, "po": 1, "nm": "강한 우~우~우~", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "L2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-2", "cs": "저음", "ly": 3, "po": 2, "nm": "Z 스타카토", "sc": "", "scM": "", "rep": 10, "min": 7, "prev": "L2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-3", "cs": "저음", "ly": 3, "po": 3, "nm": "립트릴", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L3-4", "cs": "저음", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L3-5", "cs": "저음", "ly": 3, "po": 5, "nm": "강한 아~아~아~", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "L2-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "L4-1", "cs": "저음", "ly": 4, "po": 1, "nm": "강한 우(앞)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-2", "cs": "저음", "ly": 4, "po": 2, "nm": "Z 소리내기", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-3", "cs": "저음", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-4", "cs": "저음", "ly": 4, "po": 4, "nm": "호흡 석은 우", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L4-5", "cs": "저음", "ly": 4, "po": 5, "nm": "강한 아(앞)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-1", "cs": "저음", "ly": 5, "po": 1, "nm": "강한 우(뒤)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L4-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-2", "cs": "저음", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L4-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-3", "cs": "저음", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L4-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-4", "cs": "저음", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "L4-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L5-5", "cs": "저음", "ly": 5, "po": 5, "nm": "강한 아(뒤)", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L4-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-1", "cs": "저음", "ly": 6, "po": 1, "nm": "우", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-2", "cs": "저음", "ly": 6, "po": 2, "nm": "Back Pressure", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-3", "cs": "저음", "ly": 6, "po": 3, "nm": "강한 오", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-4", "cs": "저음", "ly": 6, "po": 4, "nm": "오픈허밍", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "L6-5", "cs": "저음", "ly": 6, "po": 5, "nm": "아", "sc": "3D-A", "scM": "3D-B", "rep": 1, "min": 7, "prev": "L5-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-1", "cs": "중음", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-2", "cs": "중음", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-3", "cs": "중음", "ly": 1, "po": 3, "nm": "립트릴", "sc": "5D-E", "scM": "5D-F", "rep": 1, "min": 1, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "M1-4", "cs": "중음", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M1-5", "cs": "중음", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M2-1", "cs": "중음", "ly": 2, "po": 1, "nm": "허밍", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "M1-1", "p1": "M1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M2-2", "cs": "중음", "ly": 2, "po": 2, "nm": "호흡 섞은 우", "sc": "3D-E", "scM": "3D-F", "rep": 1, "min": 7, "prev": "M1-2", "p1": "", "p2": "", "p3": "", "px": "L4-4", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M2-3", "cs": "중음", "ly": 2, "po": 3, "nm": "립트릴", "sc": "5D-B", "scM": "", "rep": 1, "min": 7, "prev": "M1-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M2-4", "cs": "중음", "ly": 2, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M1-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M2-5", "cs": "중음", "ly": 2, "po": 5, "nm": "Z 소리내기", "sc": "3D-E", "scM": "3D-F", "rep": 1, "min": 7, "prev": "M1-5", "p1": "M1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M3-1", "cs": "중음", "ly": 3, "po": 1, "nm": "오픈 허밍 1번", "sc": "5H-G", "scM": "5H-H", "rep": 1, "min": 7, "prev": "M2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "M3-2", "cs": "중음", "ly": 3, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-3", "cs": "중음", "ly": 3, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-4", "cs": "중음", "ly": 3, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M3-5", "cs": "중음", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M2-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-1", "cs": "중음", "ly": 4, "po": 1, "nm": "오픈 허밍 2번", "sc": "5H-H", "scM": "", "rep": 1, "min": 7, "prev": "M3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-2", "cs": "중음", "ly": 4, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-3", "cs": "중음", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-4", "cs": "중음", "ly": 4, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "M4-5", "cs": "중음", "ly": 4, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "M3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-1", "cs": "고음", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-2", "cs": "고음", "ly": 1, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-3", "cs": "고음", "ly": 1, "po": 3, "nm": "허밍 1번", "sc": "5H-G", "scM": "5H-H", "rep": 1, "min": 1, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "H1-4", "cs": "고음", "ly": 1, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H1-5", "cs": "고음", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H2-1", "cs": "고음", "ly": 2, "po": 1, "nm": "립트릴 1번", "sc": "9D-B", "scM": "9D-C", "rep": 1, "min": 7, "prev": "H1-1", "p1": "H1-3", "p2": "", "p3": "", "px": "M1-3", "px2": "L3-3", "rec": "", "br": "", "st": "open"}, {"id": "H2-2", "cs": "고음", "ly": 2, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-B", "scM": "5H-C", "rep": 1, "min": 7, "prev": "H1-2", "p1": "H1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "M4-1", "br": "", "st": "open"}, {"id": "H2-3", "cs": "고음", "ly": 2, "po": 3, "nm": "허밍 2번", "sc": "5H-C", "scM": "5H-D", "rep": 1, "min": 7, "prev": "H1-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H2-4", "cs": "고음", "ly": 2, "po": 4, "nm": "후~ 내려오기", "sc": "5DN-D", "scM": "5DN-E", "rep": 1, "min": 7, "prev": "H1-4", "p1": "H1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H2-5", "cs": "고음", "ly": 2, "po": 5, "nm": "Back Pressure 1번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H1-5", "p1": "H1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H3-1", "cs": "고음", "ly": 3, "po": 1, "nm": "립트릴 2번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H3-2", "cs": "고음", "ly": 3, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-C", "scM": "", "rep": 1, "min": 7, "prev": "H2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "M3-1", "br": "", "st": "open"}, {"id": "H3-3", "cs": "고음", "ly": 3, "po": 3, "nm": "허밍 3번", "sc": "5H-C", "scM": "5H-D", "rep": 1, "min": 7, "prev": "H2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H3-4", "cs": "고음", "ly": 3, "po": 4, "nm": "오 두성", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H3-5", "cs": "고음", "ly": 3, "po": 5, "nm": "Back Pressure 2번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H2-5", "p1": "", "p2": "", "p3": "", "px": "L4-3", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "H4-1", "cs": "고음", "ly": 4, "po": 1, "nm": "립트릴 3번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-2", "cs": "고음", "ly": 4, "po": 2, "nm": "오픈 허밍 2번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-3", "cs": "고음", "ly": 4, "po": 3, "nm": "허밍 4번", "sc": "9D-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-4", "cs": "고음", "ly": 4, "po": 4, "nm": "오 성구전환", "sc": "9D-B", "scM": "9D-C", "rep": 1, "min": 7, "prev": "H3-4", "p1": "", "p2": "", "p3": "", "px": "L6-3", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H4-5", "cs": "고음", "ly": 4, "po": 5, "nm": "Back Pressure 3번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "H3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-1", "cs": "고음", "ly": 5, "po": 1, "nm": "립트릴 4번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "H4-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-2", "cs": "고음", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-3", "cs": "고음", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-4", "cs": "고음", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "H5-5", "cs": "고음", "ly": 5, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "H4-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C1-1", "cs": "성대결절 케어", "ly": 1, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C1-2", "cs": "성대결절 케어", "ly": 1, "po": 2, "nm": "허밍", "sc": "5H-G", "scM": "5H-H", "rep": 1, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": 13, "st": "open"}, {"id": "C1-3", "cs": "성대결절 케어", "ly": 1, "po": 3, "nm": "립트릴", "sc": "5D-E", "scM": "5D-F", "rep": 1, "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C1-4", "cs": "성대결절 케어", "ly": 1, "po": 4, "nm": "설압자 문장 읽기", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C1-5", "cs": "성대결절 케어", "ly": 1, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": null, "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C2-1", "cs": "성대결절 케어", "ly": 2, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C1-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C2-2", "cs": "성대결절 케어", "ly": 2, "po": 2, "nm": "오픈 허밍 1번", "sc": "5H-B", "scM": "", "rep": 1, "min": 7, "prev": "C1-2", "p1": "C1-3", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C2-3", "cs": "성대결절 케어", "ly": 2, "po": 3, "nm": "립트릴 1번", "sc": "9D-B", "scM": "9D-C", "rep": 1, "min": 7, "prev": "C1-3", "p1": "C1-1", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C2-4", "cs": "성대결절 케어", "ly": 2, "po": 4, "nm": "엎드려 문장 읽기", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "C1-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C2-5", "cs": "성대결절 케어", "ly": 2, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C1-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-1", "cs": "성대결절 케어", "ly": 3, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C2-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C3-2", "cs": "성대결절 케어", "ly": 3, "po": 2, "nm": "오픈 허밍 2번", "sc": "5D-H", "scM": "5D-I", "rep": 1, "min": 7, "prev": "C2-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C3-3", "cs": "성대결절 케어", "ly": 3, "po": 3, "nm": "립트릴 2번", "sc": "9H-B", "scM": "9H-C", "rep": 1, "min": 7, "prev": "C2-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C3-4", "cs": "성대결절 케어", "ly": 3, "po": 4, "nm": "벽에 붙어 문장 읽기", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "C2-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "open"}, {"id": "C3-5", "cs": "성대결절 케어", "ly": 3, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C2-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-1", "cs": "성대결절 케어", "ly": 4, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-2", "cs": "성대결절 케어", "ly": 4, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-3", "cs": "성대결절 케어", "ly": 4, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-4", "cs": "성대결절 케어", "ly": 4, "po": 4, "nm": "서서 문장 읽기", "sc": "", "scM": "", "rep": 1, "min": 7, "prev": "C3-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C4-5", "cs": "성대결절 케어", "ly": 4, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C3-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-1", "cs": "성대결절 케어", "ly": 5, "po": 1, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-1", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-2", "cs": "성대결절 케어", "ly": 5, "po": 2, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-2", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-3", "cs": "성대결절 케어", "ly": 5, "po": 3, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-3", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-4", "cs": "성대결절 케어", "ly": 5, "po": 4, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-4", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}, {"id": "C5-5", "cs": "성대결절 케어", "ly": 5, "po": 5, "nm": "", "sc": "", "scM": "", "rep": "", "min": 7, "prev": "C4-5", "p1": "", "p2": "", "p3": "", "px": "", "px2": "", "rec": "", "br": "", "st": "soon"}]};
+/* 스킬 훈련내용 — 엑셀 훈련내용_* 시트에서 생성 (스킬ID → 카드 배열: no/sc/scM/b 본문/m 멘트만/md 영상링크) */
+var SKILLTREE_CT = {"L1-3": [{"no": 1, "sc": "", "scM": "", "b": "흉성훈련코스에 오신 여러분 환영합니다.\n오늘부터 여러분은 본격적인 흉성훈련에 들어갈 것입니다.\n\n그 첫번째 훈련으로 **소울음소리**라는 다소 생소하지만 중요한 훈련을 진행할 예정입니다.\n─────────────────────\n[쉬기2]\n이 훈련에서 정의하는 흉성의 의미는 단순히 저음 성구를 이야기하는 것이 아닌, 가슴 흉 자에 소리 성 자를 쓰는, 가슴이 울리는 듯한 소리의 느낌을 만드는 흉성을 의미합니다.\n\n[쉬기0.5]\n\n흉성훈련을 하는 이유를 세 가지 측면에서 살펴볼게요.\n목소리 측면에서 보자면 안정적이고 좋은 목소리를 만들기 위한 훈련의 바탕이 됩니다.\n발성 훈련의 측면에서 보자면 안정적인 나무의 뿌리기둥을 세우는 것과도 같으며, 나아가 가슴에 소리를 대는 느낌을 찾아 목구멍을 열어 소리를 내는 방식에 대해 익힙니다.\n과학적인 측면에서 보자면 TA근육(갑상피열근)의 활성화 및 강화로, 안정적이고 좋은 목소리의 저음과 중음과 고음에서의 강한 호흡압력을 함께 버텨주는 핵심 바디근육의 강도를 강화해 줍니다.\n\n[쉬기0.5]\n\n그 첫번째 훈련인 **소울음소리**를 내는 방법을 먼저 배워보겠습니다!\n\n소울음소리는 훈련명 그대로 소의 울음소리인 '음머어~'라는 의성어를 사용하는 훈련 방법입니다.\n\n우리는 여기서 벌써부터 성대를 붙여서 좋은 소리를 내는 느낌보다는, 호흡을 가슴에 대고 유지해보는 느낌을 우선으로 하여 훈련을 시작합니다.\n\n한 호흡당 한 번씩, 열 번 반복하시면 됩니다.\n[영상1]\n[쉬기2]\n그럼 **소울음소리 x10** 시작하세요!\n[BGM:5]", "m": "소울음소리는 아직 성문을 완전히 닫지 않는 훈련이라, 호흡이 빨리 많이 빠져나가고 짧아지는 게 정상입니다! 억지로 버티려 하지 마시고, 가슴으로 호흡이 안정적으로 흘러나간다고 생각하면서 훈련하세요.\n\n호흡이 부족하면 호흡을 다 내뱉고, 다시 한번 호흡을 마시고 실시합니다.\n\n오늘 훈련은 성대음을 많이 사용하지 않으니 좋은 소리가 나지 않는다고 걱정하지 마시고, '가슴의 울림'과 '호흡이 가슴을 지나 흘러나가는 느낌'에 집중하면서 훈련해 보세요!\n\n[쉬기20]\n\n훈련이 완료되었다면 훈련 완료 버튼을 눌러주세요!", "md": {}}], "L2-1": [{"no": 1, "sc": "", "scM": "", "b": "오늘은 강한 소리를 만들기 위한 훈련 중, '우' 모음을 활용한 훈련의 처음을 배우는 차례입니다.\n\n[쉬기0.5]\n\n훈련 방법부터 바로 알려드리도록 하겠습니다.\n[영상1]\n[쉬기2]\n우선 발성 준비 자세에서 통합호흡을 실시합니다.\n호흡훈련하기 코스를 잘 이행하셨다면, 호흡을 들이마실 때 목구멍이 확장하고 후두가 열린 위치로 내려가게 될 것입니다.\n\n그 상태를 유지하면서 가슴으로 가볍게 불어낸다는 느낌으로\n'우~ 우~ 우~' 하고 '소울음소리'에서와 비슷한 느낌의 소리를 내줍니다.\n\n아직 성대를 강하게 붙일 필요는 없으며, '우'라는 깊은 모음에서 가슴에 호흡을 대고 불어낸다는 느낌을 가지면 성공입니다.\n\n[쉬기0.5]\n\n자! 그럼 **우~우~우~ 소리내기 x10** 시작하세요!\n[BGM:5]", "m": "왜 '우' 모음을 통해 훈련하게 될까요?\n\n그 이유는 모음 중 가장 깊은 모음을 활용하여 훈련함으로써, 후두의 안정과 목구멍의 확장을 유도하여 보다 일관된 소리와 훈련 효과를 유도하기 위함입니다.\n\n모음은 혀의 위치에 따라 전설모음과 후설모음으로 나눌 수 있어요. '이', '에'처럼 혀가 입 앞쪽으로 올라오는 모음을 전설모음, '우', '오', '아'처럼 혀가 뒤쪽에 자리 잡는 모음을 후설모음이라고 합니다.\n\n발성훈련에서는 여기에 후두의 높이를 더해 깊은 모음과 얕은 모음으로 나눠 봅니다. '우', '오'는 입술이 동그랗게 모이고 혀가 뒤로 가면서 후두가 낮은 위치에 머물기 쉬워 깊은 모음이에요. 반대로 '이', '에'는 혀가 앞으로 올라오면서 후두도 함께 올라가기 쉬워 얕은 모음이라고 합니다.\n\n그럼 '아'는 어떨까요? '아'는 혀가 가장 낮게 내려가고 입이 크게 열리는 후설모음이라 그 중간쯤에 있어요. 입 안이 넓어 소리가 시원하게 나오지만, 혀뿌리가 목 쪽으로 밀리기 쉬워서 처음 훈련할 때는 목이 조이기 쉬운 모음이기도 합니다.\n\n쉽게 말해 후두의 높낮이를 세팅하고 훈련을 하기 위함인데요, 후두의 높낮이는 곧 목구멍의 넓이와 같다고 생각하시면 편합니다.\n\n후두가 밑으로 내려갈수록 목구멍은 넓어지지만, 그만큼 소리를 어택할 때 막아야 하는 호흡의 양이 많아지고 성문을 닫아야 하는 각도도 넓어집니다. 반대로 후두가 올라갈수록 목구멍은 좁아지지만, 그만큼 막아야 하는 호흡의 양이 적어지고 성문을 닫아야 하는 각도도 좁아집니다. 그래서 후두 높이에 따라 호흡과 몸의 활용이 달라진다고 생각하시면 됩니다.\n\n오늘 훈련에서는 넓어진 각도를 닫는 것보다는, 넓어져 있는 후두의 상태 그대로 호흡을 사용하는 느낌까지만 가져가시면 됩니다!\n\n[쉬기5]\n\n훈련이 완료되었다면 훈련 완료 버튼을 눌러주세요!", "md": {}}], "L2-2": [{"no": 1, "sc": "", "scM": "", "b": "오늘 훈련할 내용은 지난 호흡훈련하기 코스에서 진행했던 'S로 호흡뱉기'에서 디벨롭된 훈련인 'Z로 소리내기' 훈련입니다.\n\n지난번 'S로 호흡뱉기'에서는 노래할 때의 호흡 사용을 간접적으로 체험하면서, 동시에 호흡근을 발달시키는 훈련을 하였습니다.\n\n요번엔 그 알파벳 'S'에서 성대음을 추가한 알파벳 'Z'를 활용하여 훈련을 하게 됩니다.\n\n[쉬기0.5]\n\n먼저 훈련 방법입니다.\n[영상1]\n[쉬기2]\n'S로 호흡뱉기'를 먼저 진행한 후, 곧바로 성대음을 '으~' 하고 추가하여 '즈~' 소리가 나도록 유지해줍니다.\n\n이때 바람 소리는 사라지고 성대음만 남지 않게 주의해주세요!\n\n반복하여 연습해주시고 어느 정도 익숙해진다면, 한 번에 '즈~' 하고 소리를 내줍니다.\n[영상2]\n[쉬기2]\n숙련도 및 본인이 원하는 발성에 따라 소리의 깊이(후두의 높낮이)를 다르게 하여 소리를 유지해줍니다.\n\n이때 소리의 위치를 상상하며 훈련하면 되는데, 본인이 시도했을 때 성대음이 잘 유지된 '즈~'가 나오는 위치가 현재 본인이 사용하기 쉬운 목구멍의 넓이, 즉 후두의 위치입니다.\n\n눈 라인부터 가슴 라인까지 위에서부터 아래로 낮추어 가며 시도해보세요.\n\n잘 모르겠다면 최대값을 활용하여 연습하는 게 가장 좋으니, 소리의 위치(후두의 위치)를 가장 낮게 세팅하여 소리를 내줍니다.\n[영상3]\n[쉬기2]\n그럼 각자에게 맞게 **'Z로 소리내기 x10'** 시작하세요!\n[BGM:5]", "m": "Z로 소리내는 방식은 어떤 효과를 가지고 있을까요?\n\n우리가 소리를 낼 때의 과학적인 원리를 살펴보면, 성대라는 진동체 하나가 마찰하며 소리를 생성하여 밖으로 보내게 됩니다.\n\n이때 입은 열려 있는 상태가 되므로 대기압력과 같은 압력이 형성되어, 기압 차이는 0인 상태가 됩니다.\n\n그래서 성대가 잘 훈련된 사람은 압력이 성대를 뚫고 터져 나가지 않도록 조절하며 노래하거나 말할 수 있어요. 하지만 성대 훈련이 되어 있지 않거나 성대 기능에 문제가 있는 사람은 이 압력을 버티지 못해 성대가 풀리는 피치브레이크, 일명 삑사리가 나오게 됩니다.\n\nZ로 소리내기는 성대 하나, 이빨 사이 하나, 이렇게 마찰하는 곳을 두 군데로 만들어 줍니다. 이빨 사이의 좁은 틈이 입 안의 압력을 살짝 높여서 성대가 혼자 버티던 압력을 덜어주기 때문에, 성대 기능이 약해 피치브레이크가 생기는 분도 효과적으로 성대훈련을 할 수 있어요.\n\n흉성에서는 바디근육을 단단하게 버티도록 훈련하는 걸 목표로 훈련을 하게 됩니다.\n\n[쉬기15]\n\n훈련이 완료되었다면 훈련 완료 버튼을 눌러주세요!", "md": {}}], "L2-3": [{"no": 1, "sc": "", "scM": "", "b": "요번 훈련은 발성훈련의 꽃인 '립트릴'입니다.\n목소리를 한 번이라도 훈련해봤던 사람이라면 아마 경험해보셨을 가능성이 큰! 그만큼 효과적이고 대중적으로 알려져 있어, 실제 가수들이 목을 가볍게 풀기 시작할 때 대부분이 사용하는 방식의 발성법입니다.\n\n오늘은 바른발성연구소 훈련코스에서 처음으로 스케일을 사용하여 훈련해보는 날입니다!\n기본적이고 익숙한 5도 스케일로 먼저 시작할 예정이니, 긴장하지 마시고 설명을 잘 보고 따라 해주세요!\n\n[쉬기0.5]\n\n우선 립트릴을 처음 경험해보는 초보자라는 가정하에 첫번째 훈련을 실시하겠습니다.\n[영상1]\n[쉬기2]\n양쪽 입꼬리 끝에 손가락을 가볍게 대서 아주 살짝 서포트해준다는 느낌으로 올려, 입술이 받는 부하를 줄여 줘서 입술이 안정적으로 마찰하게 도와줍니다. (너무 강하게 올리면 안 좋습니다.)\n\n그 상태로 G3에서 A3 정도의 음정을 내주며 유지해보는 연습을 합니다.\n이 상태로 안정적으로 10초 이상은 유지할 수 있어야 스케일 훈련하는 데 무리가 없으니, 될 때까지 훈련하시고 다음으로 넘어가주세요!\n\n[쉬기0.5]\n\n자! 그럼 **립트릴 유지하기 x10** 시작하세요!\n[BGM:5]", "m": "립트릴은 Z로 소리내기와 비슷하게 두 개의 진동체를 사용해주어 성대의 부담을 덜어주며, 성대의 근력을 키워주는 훈련이자 목풀기입니다.\n\n여러 가지 많고 좋은 훈련법들이 있지만, 이 립트릴만 잘 익혀놔도 목소리를 쓰는 직업이라면 평생 사용하게 될 훈련이니 정확히 익혀두는 게 중요합니다!\n\n[쉬기15]\n\n훈련이 완료되었다면 다음 페이지로 넘겨주세요!", "md": {}}, {"no": 2, "sc": "5D-A", "scM": "5D-J", "b": "그다음 두 번째 단계입니다.\n[영상2]\n[쉬기2]\n아직 입술에 적당한 힘이 들어가지 않는다면 손가락으로 서포트해주셔도 좋습니다. 어느 정도 발전이 돼서 손가락을 사용하지 않아도 잘 된다면, 그때부터는 손가락 서포트는 사용하지 않는 게 더 좋습니다.\n\n스케일에 맞추어 성대음이 잘 유지되도록 신경 쓰면서 진행합니다.\n첫번째 연습과 마찬가지로 현재 본인이 편한 후두 위치에 맞추어 진행하시면 되고, 열린 소리, 강한 흉성 및 목소리 크기의 증대가 목표라면 가슴 위치에서 소리의 위치를 유지하는 연습을 진행해야 합니다.\n\n[쉬기0.5]\n\n자! 그럼 **스케일 시작** 버튼을 눌러 훈련을 시작해보세요!", "m": "음정이 들어가니까 조금 힘드시죠?\n여기서 우리가 중요하게 생각하고 연습해야 하는 사실이 있습니다.\n\n노래를 잘 부른다는 거, 성대를 훈련한다는 것은 결국\n본인이 사용하려는 소리의 성대 접촉 면적의 질감을 목구멍이 조여지지 않게 잘 표현해 낼 수 있다는 건데요!\n그렇게 되기 위해서는 본인이 사용할 소리의 후두 위치가 너무 바뀌지 않게 훈련하는 것이 가장 중요합니다.\n\n그러기 위해서 지금 흉성구 훈련 중에는 내가 내고 있는 소리의 높낮이를 계속해서 지켜보려고 하는 게 중요합니다!\n잘 유의하면서 훈련해보세요!\n\n[쉬기5]\n\n반복 훈련하실 때 멘트를 들으실 필요가 없으시면, 설명 버튼을 눌러 멘트를 끄고 스케일에 집중하셔도 좋습니다!\n\n훈련이 완료되었다면 훈련 완료 버튼을 눌러주세요!", "md": {}}]};
 var _stBuilt=false, _stCols=5;
 /* 준비 중(이름 미정) 스킬은 화면에 표시하지 않음 */
 function _stVisible(cs){
@@ -8272,7 +8301,7 @@ function _stIcon(nm){
   if(/소울음|우~|아~|^우$|^아$|음머/.test(s)) return 'sti-low';
   return 'sti-etc';
 }
-function _stNodeCls(n){ return n.st==='soon' ? 'st-soon' : (n.st==='done' ? 'st-done' : 'st-open'); }
+function _stNodeCls(n){ return 'st-'+_stState(n); }
 function _stMkNode(n){
   var b=document.createElement('button');
   b.className='stNode '+_stNodeCls(n); b.setAttribute('data-sid',n.id);
@@ -8281,10 +8310,13 @@ function _stMkNode(n){
   var mark = (n.st==='soon' && !n.nm)
     ? '&middot;&middot;&middot;'
     : '<svg class="stIco" viewBox="0 0 32 32"><use href="#'+_stIcon(n.nm)+'"/></svg>';
+  var _ss=_stState(n), _sc=_stCount(n.id);
   var lab = (n.st==='soon')
     ? (n.nm ? n.nm+'<i class="stSoonTag">(준비중)</i>' : '<i class="stSoonTag">준비 중</i>')
-    : n.nm;
-  b.innerHTML='<span class="stTile">'+mark+xl+'</span><span class="stNm">'+lab+'</span>';
+    : n.nm + (_ss==='lock' ? '<i class="stSoonTag">잠김</i>'
+      : (_ss==='open' && _sc>0 ? '<i class="stSoonTag stCntTag">'+_sc+' / '+_stMin(n)+'</i>' : ''));
+  var lk = (_ss==='lock') ? '<span class="stLock"><svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg></span>' : '';
+  b.innerHTML='<span class="stTile">'+mark+xl+lk+'</span><span class="stNm">'+lab+'</span>';
   b.onclick=function(){ _stSheet(n.id); };
   return b;
 }
@@ -8395,7 +8427,7 @@ function _stBuild(){
   })();
   SKILLTREE.order.forEach(function(cs,i){
     var list=SKILLTREE.nodes.filter(function(n){return n.cs===cs;});
-    var done=list.filter(function(n){return n.st==='done';}).length;
+    var done=list.filter(function(n){return _stIsDone(n);}).length;
     var c=SKILLTREE.cs[cs].c;
     var p=document.createElement('button'); p.className='stCsBtn';
     p.innerHTML='<span class="stCsBar" style="background:'+c+'"></span>'+
@@ -8416,7 +8448,7 @@ function _stBuild(){
     dots.appendChild(d);
   });
   var to=null;
-  pager.addEventListener('scroll',function(){ clearTimeout(to);
+  if(!pager._stScrollBound) pager._stScrollBound=true, pager.addEventListener('scroll',function(){ clearTimeout(to);
     to=setTimeout(function(){ _stDot(Math.round(pager.scrollLeft/pager.clientWidth)); },90); });
   _stBuilt=true;
 }
@@ -8483,34 +8515,8 @@ function _stOpenBreath(){
 function _stOpenHome(){ if(typeof push==='function') push('scr-home'); }
 function _stOpen(){
   if(typeof push==='function') push('scr-skilltree');
+  _stPC=null; _stBuilt=false; /* 열 때마다 최신 완료 기록(Firebase 복원분 포함)으로 다시 그림 */
   _stBuild(); _stGoOver();
-}
-function _stSheet(sid){
-  var n=null, i;
-  for(i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===sid){ n=SKILLTREE.nodes[i]; break; } }
-  if(!n) return;
-  var msg;
-  if(n.st==='soon'){
-    msg='준비 중인 훈련이에요.\n\n아직 공개되지 않았습니다. 준비가 끝나면 이 자리에 열립니다.';
-  }else{
-    var req=[];
-    if(n.prev){ for(i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===n.prev){ req.push('· '+(SKILLTREE.nodes[i].nm||'앞 스킬')+' 완료'); break; } } }
-    [n.p1,n.p2,n.p3].forEach(function(p){ if(!p) return;
-      for(var j=0;j<SKILLTREE.nodes.length;j++){ if(SKILLTREE.nodes[j].id===p && p!==n.prev){ req.push('· '+(SKILLTREE.nodes[j].nm||p)+' 완료'); break; } } });
-    [n.px,n.px2].forEach(function(pid){ if(!pid) return;
-      for(var j=0;j<SKILLTREE.nodes.length;j++){ if(SKILLTREE.nodes[j].id===pid){
-        req.push('· '+SKILLTREE.nodes[j].cs+' · '+(SKILLTREE.nodes[j].nm||pid)+' 완료 (다른 계열)'); break; } } });
-    var rec='';
-    if(n.rec){ for(i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===n.rec){
-      rec='\n\n[추천]\n· '+SKILLTREE.nodes[i].cs+' · '+(SKILLTREE.nodes[i].nm||n.rec)+
-          '\n필수는 아니지만, 먼저 해두면 이 훈련이 훨씬 수월해집니다.'; break; } } }
-    if(n.br) req.push('· 호흡 훈련하기 '+n.br+'일차 이상');
-    var sc = n.sc ? (n.scM ? ('스케일 여 '+n.sc+' / 남 '+n.scM) : ('스케일 '+n.sc)) : '스케일 미지정';
-    msg = n.nm+'\n'+n.cs+' · '+n.ly+'층 '+n.po+'자리\n'+sc+
-      '\n\n정해진 기간은 없습니다.\n내 소리가 올바르게 날 때까지 반복하고 다음 스킬로 넘어가세요.\n\n'+n.min+'일을 채우면 다음 스킬이 열립니다.\n완료 기록은 하루에 한 번만 쌓이며, 하루에 여러 번 연습해도 괜찮습니다.\n다음 스킬이 열린 뒤에도 이 스킬은 언제든 다시 반복할 수 있습니다.'+
-      (req.length? ('\n\n[선행조건]\n'+req.join('\n')) : '\n\n[선행조건] 없음') + rec;
-  }
-  alert(msg);
 }
 function _stBreathHome(){
   var host=document.getElementById('stBreathHome'); if(!host) return;
@@ -8537,6 +8543,311 @@ window.addEventListener('resize',function(){
   for(var k=0;k<ps.length;k++) _stDraw(ps[k]);
 });
 document.addEventListener('DOMContentLoaded',function(){ try{ _stMiniHome(); _stBreathHome(); }catch(e){} });
+/* ══════════════════════════════════════════════════════════════
+   스킬트리 v3 — 진행 저장 · 해금 판정 · 카드 화면 연결
+   · 완료 기록: 스킬당 하루 1회 — 호흡 코스와 같은 저장 방식(_markDayDone) 재사용
+       localStorage  ev_done_{학생}_st_{스킬ID}_d{YYYYMMDD} = '1'
+       Firebase      courseProgress/{학생}/st_{스킬ID}/d{YYYYMMDD} = true  (학생 로그인 시, 기기 간 동기화)
+       → 로그인 시 _fbLoadCourseProgress가 호흡 코스와 함께 자동 복원
+   · 해금: 호흡해금일차 + 같은 열 아래층 + 선행스킬1~3 + 타계열선행1~2
+           (준비 중 선행은 완료할 수 없으므로 조건에서 제외)
+   · 카드: SKILLTREE_CT → 기존 카드 플레이어(openStepPlayer) 재사용
+   · 스케일 카드: '스케일 시작' → 바로 시작, 5초 뒤 [멘트만], 멘트 중 화이팅 멘트 없음
+══════════════════════════════════════════════════════════════ */
+var _stMentTimer=null, _stPC=null;
+function _stWho(){ return (typeof curStudent!=='undefined' && curStudent && curStudent.name) ? curStudent.name.replace(/\s/g,'_') : 'guest'; }
+function _stToday(){ var d=new Date(); return ''+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); } /* YYYYMMDD (기기 날짜) */
+/* 진행 현황 {스킬ID:{c:완료일수, d:마지막 완료일}} — localStorage 완료 키를 모아 계산 (캐시, 저장/화면 갱신 때 초기화) */
+function _stProgAll(){
+  if(_stPC) return _stPC;
+  var out={}, pre='ev_done_'+_stWho()+'_st_', re=/^(.+)_d(\d{8})$/;
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(!k || k.indexOf(pre)!==0 || localStorage.getItem(k)!=='1') continue;
+      var m=k.slice(pre.length).match(re); if(!m) continue;
+      var o=out[m[1]]||(out[m[1]]={c:0,d:''});
+      o.c++; if(m[2]>o.d) o.d=m[2];
+    }
+  }catch(e){}
+  _stPC=out; return out;
+}
+function _stCount(sid){ var p=_stProgAll()[sid]; return (p&&p.c)||0; }
+function _stNodeById(id){ if(!id) return null; for(var i=0;i<SKILLTREE.nodes.length;i++){ if(SKILLTREE.nodes[i].id===id) return SKILLTREE.nodes[i]; } return null; }
+function _stMin(n){ return (n&&n.min)||7; }
+function _stIsDone(n){ return !!n && n.st!=='soon' && _stCount(n.id) >= _stMin(n); }
+function _stIsAdmin(){ try{ return (typeof _isAppAdmin==='function') && !!_isAppAdmin(); }catch(e){ return false; } }
+/* 아직 채우지 못한 해금 조건 (문구 배열) */
+function _stUnmet(n){
+  var out=[], seen={};
+  function need(id, other){
+    if(!id || seen[id]) return; seen[id]=1;
+    var p=_stNodeById(id); if(!p || p.st==='soon') return;
+    if(!_stIsDone(p)) out.push((other? p.cs+' · ' : '')+(p.nm||id)+' 완료 ('+Math.min(_stCount(p.id),_stMin(p))+' / '+_stMin(p)+')');
+  }
+  if(n.br){ var pr=_stBreathProgress(); if(pr.done < n.br) out.push('호흡 훈련하기 '+n.br+'일차까지 완료 (지금 '+pr.done+'일차)'); }
+  need(n.prev,false); need(n.p1,false); need(n.p2,false); need(n.p3,false);
+  need(n.px,true); need(n.px2,true);
+  return out;
+}
+/* soon / lock / open / done */
+function _stState(n){
+  if(n.st==='soon') return 'soon';
+  if(_stIsDone(n)) return 'done';
+  if(_stUnmet(n).length) return 'lock';
+  return 'open';
+}
+function _stRefresh(){
+  _stPC=null;
+  try{ _stBreathHome(); }catch(e){}
+  if(!_stBuilt) return;
+  var pager=document.getElementById('stPager'), sl=pager?pager.scrollLeft:0;
+  var det=document.getElementById('stDet'), detOn=det && !det.classList.contains('off');
+  _stBuilt=false; _stBuild();
+  if(detOn && pager){
+    requestAnimationFrame(function(){
+      pager.scrollLeft=sl;
+      var i=Math.round(sl/(pager.clientWidth||1)); _stDot(i);
+      var ps=pager.querySelectorAll('.stPage>div'); for(var k=0;k<ps.length;k++) _stDraw(ps[k]);
+    });
+  }
+}
+/* 앱 스타일 안내창 (브라우저 alert 대신) */
+function _stModal(title, html, btns){
+  var old=document.getElementById('st-modal'); if(old) old.remove();
+  var bg=document.createElement('div'); bg.className='v2-ios-modal-bg active'; bg.id='st-modal';
+  bg.addEventListener('click',function(e){ if(e.target===bg) bg.remove(); });
+  var card=document.createElement('div'); card.className='v2-ios-modal-card stMd';
+  card.innerHTML='<h3 class="stMdT">'+title+'</h3><div class="stMdB">'+html+'</div>';
+  var row=document.createElement('div'); row.className='stMdBtns';
+  (btns||[{label:'확인',primary:true}]).forEach(function(b){
+    var x=document.createElement('button'); x.type='button'; x.textContent=b.label;
+    x.className='stMdBtn'+(b.primary?' pri':'');
+    x.addEventListener('click',function(){ bg.remove(); if(b.fn) b.fn(); });
+    row.appendChild(x);
+  });
+  card.appendChild(row); bg.appendChild(card); document.body.appendChild(bg);
+}
+/* 노드 탭 */
+function _stSheet(sid){
+  _stPC=null;
+  var n=_stNodeById(sid); if(!n) return;
+  if(n.st==='soon'){
+    _stModal(n.nm||'준비 중','<p>준비 중인 훈련이에요.<br>준비가 끝나면 이 자리에 열립니다.</p>'); return;
+  }
+  var unmet=_stUnmet(n);
+  if(unmet.length && !_stIsDone(n)){
+    var btns=[{label:'확인',primary:true}];
+    if(_stIsAdmin()) btns.unshift({label:'관리자: 그냥 열기',fn:function(){ _stTryOpen(n,true); }});
+    _stModal(n.nm,'<p class="stMdSub">'+n.cs+' · '+n.ly+'층</p><p>아직 잠겨 있어요. 아래 훈련을 먼저 마쳐주세요.</p>'+
+      '<ul class="stMdList"><li>'+unmet.join('</li><li>')+'</li></ul>', btns);
+    return;
+  }
+  _stTryOpen(n,false);
+}
+function _stTryOpen(n, skipRec){
+  if(!skipRec && n.rec){
+    var r=_stNodeById(n.rec);
+    if(r && r.st!=='soon' && !_stIsDone(r)){
+      _stModal('먼저 해보면 좋은 훈련','<p><b>'+r.cs+' · '+(r.nm||r.id)+'</b></p>'+
+        '<p>필수는 아니지만, 먼저 해두면 <b>'+n.nm+'</b> 훈련이 훨씬 수월해집니다.</p>',
+        [{label:'그래도 시작',fn:function(){ _stTryOpen(n,true); }},{label:'닫기',primary:true}]);
+      return;
+    }
+  }
+  var cards=(typeof SKILLTREE_CT!=='undefined' && SKILLTREE_CT[n.id])||[];
+  if(!cards.length){ _stModal(n.nm,'<p>훈련 내용을 준비하고 있어요.<br>조금만 기다려 주세요!</p>'); return; }
+  var needG=cards.some(function(c){ return c.sc && c.scM; });
+  if(needG) _stGender(function(g){ _stOpenSkill(n,cards,g); });
+  else _stOpenSkill(n,cards,'');
+}
+/* 스케일 음역(성별): ①훈련 화면에서 직접 바꾼 값 ②음역대 측정·가입 성별 ③처음 한 번 질문 */
+function _stGender(cb){
+  var g='';
+  try{
+    var norm=(typeof _ptNormGender==='function')?_ptNormGender:function(x){return x||'';};
+    g=norm(localStorage.getItem('st_scale_gender_manual')||'')
+      || norm(localStorage.getItem('pt_user_gender')||'')
+      || norm((window._generalUser&&window._generalUser.gender)||'')
+      || norm((typeof curStudent!=='undefined'&&curStudent&&curStudent.gender)||'')
+      || norm(localStorage.getItem('st_scale_gender')||'');
+  }catch(e){}
+  if(g==='male'||g==='female'){ cb(g); return; }
+  _stModal('스케일 음역 선택','<p>훈련 스케일은 남녀 음역이 달라요.<br>어떤 음역으로 연습할까요?</p>'+
+    '<p class="stMdSub">처음 한 번만 물어봐요. 음역대 측정을 하면 그 결과를 따릅니다.</p>',
+    [{label:'여성 음역',fn:function(){ try{localStorage.setItem('st_scale_gender','female');}catch(e){} cb('female'); }},
+     {label:'남성 음역',primary:true,fn:function(){ try{localStorage.setItem('st_scale_gender','male');}catch(e){} cb('male'); }}]);
+}
+/* 엑셀 본문 → 카드 플레이어용 텍스트 */
+function _stPrepText(t){
+  return String(t||'').replace(/\r\n?/g,'\n')
+    .replace(/\[쉬기\s+([\d.]+)\]/g,'[쉬기$1]')        /* [쉬기 20] → [쉬기20] (띄우면 소리 내 읽힘) */
+    .replace(/\[영상\d+\]/g,'(참조 세로영상)');       /* 세로 영상 자리 — 음성에서는 자동 제외 */
+}
+/* 스킬트리 전용 발음 교정 — 스킬 카드/멘트에만 적용 (기존 코스·이론 캐시 해시에는 영향 없음)
+   ※ 스킬트리 TTS 사전 캐싱 도구도 _normTTS 전에 이 규칙을 똑같이 적용해야 해시가 맞음 */
+function _stNormTTS(t){
+  return String(t||'')
+    .replace(/TA\s*근육\s*\(갑상피열근\)/g,'티에이 근육, 갑상피열근')
+    .replace(/TA\s*근육/g,'티에이 근육')
+    .replace(/(^|[^A-Za-z])S(?![A-Za-z0-9])/g,'$1에쓰')
+    .replace(/(^|[^A-Za-z])Z(?![A-Za-z0-9])/g,'$1제트');
+}
+function _stOpenSkill(n,cards,g){
+  var parts=[], meta=[], vids=[];
+  cards.forEach(function(c){
+    var hasScale=!!c.sc;
+    var body=_stPrepText(c.b), ment=_stPrepText(c.m);
+    parts.push(body);
+    /* 운동 카드: [멘트만]을 카드 뒤에 붙임(호흡 코스와 동일). 스케일 카드: 스케일 시작 후 재생하므로 따로 보관 */
+    if(ment && !hasScale) parts.push('[멘트만]\n'+ment);
+    meta.push({sid:n.id, scF:c.sc||'', scM:c.scM||'', sc:(hasScale?((g==='male'&&c.scM)?c.scM:c.sc):''), ment:(hasScale?ment:'')});
+    var v=[];
+    (String(c.b||'').match(/\[영상\d+\]/g)||[]).forEach(function(mk){
+      var k=mk.replace(/\D/g,''); v.push((c.md&&c.md[k])?_vidTag(c.md[k]):'');
+    });
+    vids.push(v);
+  });
+  var item={dayNum:1,stageNum:1,stageName:'',isRest:false,exId:'',exLabel:n.nm,scaleId:'',videoId:'',
+    guide:parts.join('\n[===]\n')+'\n[===]', videoUrls:[], images:[], _stMeta:meta, _stVids:vids};
+  window._stCur={sid:n.id, g:g};
+  window._stOpening=true;
+  try{ openStepPlayer(n.nm,[item]); } finally { window._stOpening=false; }
+}
+/* 카드 진입 시: 스케일 카드면 '스케일 시작' 버튼·스케일 정보·음역 바꾸기 표시 */
+function _stOnCard(idx){
+  var pb=document.getElementById('step-piano-btn'); if(!pb) return;
+  if(!pb.dataset.orig) pb.dataset.orig=pb.innerHTML;
+  var c=_guideCards[idx], m=(c&&typeof c==='object')?c._st:null;
+  var wrap=document.getElementById('step-scale-wrap'), nameEl=document.getElementById('step-scale-name');
+  var gs=document.getElementById('st-g-switch');
+  if(!gs){
+    gs=document.createElement('button'); gs.type='button'; gs.id='st-g-switch'; gs.className='stGSwitch';
+    gs.addEventListener('click',_stSwitchGender);
+    pb.parentNode.parentNode.insertBefore(gs, pb.parentNode.nextSibling);
+  }
+  if(m && m.sc){
+    var sc=(DB.scales||[]).find(function(s){return s.id===m.sc;});
+    pb.textContent='스케일 시작'; pb.style.display=sc?'':'none';
+    if(sc && nameEl){ nameEl.textContent=sc.name+' ('+sc.range+') · BPM '+(sc.bpm||60); if(wrap) wrap.style.display='block'; }
+    if(m.scF && m.scM){
+      gs.textContent=(window._stCur&&window._stCur.g==='male')?'여성 음역으로 바꾸기':'남성 음역으로 바꾸기';
+      gs.style.display='';
+    } else gs.style.display='none';
+  } else {
+    pb.style.display='none'; gs.style.display='none';
+    if(wrap) wrap.style.display='none';
+  }
+}
+function _stSwitchGender(){
+  if(!window._stCur) return;
+  var g=(window._stCur.g==='male')?'female':'male';
+  window._stCur.g=g;
+  try{ localStorage.setItem('st_scale_gender_manual',g); }catch(e){}
+  (_guideCards||[]).forEach(function(c){
+    var m=c&&c._st; if(m && m.scF) m.sc=(g==='male'&&m.scM)?m.scM:m.scF;
+  });
+  _stOnCard(_guideCardIdx);
+}
+/* '스케일 시작' — 숙제처럼 자동 시작하지 않고, 이 버튼을 누르는 순간 바로 시작 */
+function _stStartScale(){
+  var c=_guideCards[_guideCardIdx], m=(c&&typeof c==='object')?c._st:null;
+  if(!m || !m.sc) return;
+  var sc=(DB.scales||[]).find(function(s){return s.id===m.sc;}); if(!sc) return;
+  var n=_stNodeById(m.sid)||{nm:''};
+  var desc=String(c.text||'').replace(/\[쉬기[\d.]+\]|\[BGM:\d+\]|\([^)]*참조[^)]*\)/g,'').replace(/\n{3,}/g,'\n\n').trim();
+  /* 훈련 화면 설명 칸에서는 '스케일 시작 버튼을 눌러~' 안내 문단 제외 (이미 시작한 화면이므로) */
+  desc=desc.split(/\n{2,}/).filter(function(p){ return !/스케일 시작/.test(p); }).join('\n\n').trim();
+  var mod={id:'st_'+m.sid+'_'+sc.id, exId:n.nm, scaleId:sc.id,
+    label:n.nm+' — '+sc.name+' ('+sc.range+')', rangeLabel:sc.range, desc:desc, scaleNote:sc.note||'',
+    startNote:sc.startNote, endNote:sc.endNote, pattern:sc.pattern, bpm:sc.bpm||60,
+    previewType:sc.previewType||'없음', videoId:'', stMent:m.ment||''};
+  cancelTTS(); try{ _bgmStop(); }catch(e){}
+  seqList=[mod]; seqIdx=0; isSeq=false;
+  push('scr-train'); updSeqBar(); prepTrain(mod);
+  setCoachTxt(mod.label);
+  startEngine();
+}
+/* 스케일 카드 [멘트만] — 설명 버튼(⏹/▶)으로 켜고 끔. 재생 중엔 화이팅 멘트 없음 */
+function _stPlayMent(mod, delay){
+  clearTimeout(_stMentTimer);
+  if(!mod || !mod.stMent) return;
+  window._stMentActive=true;
+  _stMentTimer=setTimeout(function(){
+    if(!playing || curMod!==mod || (typeof descAutoPlay!=='undefined' && !descAutoPlay)){ window._stMentActive=false; return; }
+    window._courseStability=0.60; window._courseStyle=0.15; window._courseSpeed=1.00;
+    window._courseSpeakerBoost=true; window._courseVoiceId='CUKfeNrwNgJaYD2bqklP';
+    window._descPlaying=true;
+    /* 카드 [멘트만]과 같은 정리(참조 제거·가로공백 합침·줄바꿈 보존) → 캐싱 도구와 해시 일치 */
+    var _mt=String(mod.stMent).replace(/\([^)]*참조[^)]*\)/g,'').replace(/\[\[[\s\S]*?\]\]/g,'').replace(/\{\{([\s\S]*?)\}\}/g,'$1').replace(/[^\S\n]+/g,' ').trim();
+    _speakChunked(_stNormTTS(_mt), function(){
+      window._stMentActive=false; window._descPlaying=false;
+      window._courseStability=undefined; window._courseStyle=undefined; window._courseSpeed=undefined;
+      window._courseSpeakerBoost=undefined; window._courseVoiceId=undefined;
+    }, undefined, 0, true);
+  }, delay);
+}
+function _stStopMent(){
+  clearTimeout(_stMentTimer);
+  if(window._stMentActive){
+    window._stMentActive=false;
+    try{ if(typeof _chunkSession!=='undefined') _chunkSession++; stopEL(); }catch(e){}
+  }
+}
+function _stBackToStep(){
+  cancelTTS(); stopEngine();
+  var tr=document.getElementById('scr-train'); if(tr) tr.classList.add('hidden');
+  scrStack=scrStack.filter(function(s){ return s!=='scr-train'; });
+  var st=document.getElementById('scr-step'); if(st) st.classList.remove('hidden','behind');
+  if(scrStack.indexOf('scr-step')<0) scrStack.push('scr-step');
+}
+/* 스케일이 끝났을 때 (훈련 화면) */
+function _stScaleDone(){
+  var last=(_guideCardIdx>=_guideCards.length-1);
+  showDone(_MEDAL_SVG,'스케일 완료!','수고했습니다!',[
+    {label:'↺ 다시',ol:true,fn:function(){ closeDone(); doRestart(); }},
+    {label:last?'훈련 완료':'다음 카드로',fn:function(){
+      closeDone(); _stBackToStep();
+      if(last) nextStep(); else _showGuideCard(_guideCardIdx+1,true);
+    }}
+  ]);
+}
+/* 마지막 카드 '훈련 완료' — 하루 1회 기록 + 해금 안내 */
+function _stComplete(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  var n=_stNodeById(window._stCur&&window._stCur.sid); if(!n) return;
+  _stPC=null;
+  var today=_stToday(), rec0=_stProgAll()[n.id]||{c:0,d:''};
+  var min=_stMin(n), wasDone=_stIsDone(n), already=(rec0.d===today);
+  /* 호흡 코스와 동일: localStorage + (학생 로그인 시) Firebase courseProgress 저장 */
+  if(!already){ _markDayDone('st_'+n.id, today); _stPC=null; }
+  var rec=_stProgAll()[n.id]||{c:0,d:''};
+  var head, txt;
+  if(already){
+    head='오늘은 이미 기록했어요';
+    txt='완료 기록은 하루에 한 번만 쌓여요. 연습은 얼마든지 더 하셔도 좋아요! ('+Math.min(rec.c,min)+' / '+min+')';
+  } else if(!wasDone && rec.c>=min){
+    var opened=SKILLTREE.nodes.filter(function(x){
+      return x.st!=='soon' && !_stIsDone(x) && [x.prev,x.p1,x.p2,x.p3,x.px,x.px2].indexOf(n.id)>=0 && _stUnmet(x).length===0;
+    }).map(function(x){ return x.nm; });
+    head='스킬 완료!';
+    txt=n.nm+' 스킬을 마쳤어요.'+(opened.length?' 새로 열린 훈련: '+opened.join(', '):'');
+  } else if(wasDone){
+    head='오늘 훈련 완료!'; txt='이미 마친 스킬이에요. 꾸준한 복습 최고예요!';
+  } else {
+    head='오늘 훈련 완료!';
+    txt='완료 기록 '+rec.c+' / '+min+' — '+(min-rec.c)+'번 더 하면 다음 스킬이 열려요. (기록은 하루 한 번)';
+  }
+  showDone(_MEDAL_SVG, head, txt, [{label:'스킬 트리로',green:true,fn:function(){ closeDone(); _stExitToTree(); }}]);
+}
+function _stExitToTree(){
+  window._stCur=null; cancelTTS();
+  try{ _bgmStop(); }catch(e){}
+  var guard=0;
+  while(scrStack.length>1 && scrStack[scrStack.length-1]!=='scr-skilltree' && guard++<6) pop();
+  _stRefresh();
+}
+
 
 function push(id){
 const cur=scrStack[scrStack.length-1];
@@ -10829,6 +11140,7 @@ ${day}일차가 열립니다!`,[
 
 let stepItems=[],stepIdx=0,stepTitle='';
 function openStepPlayer(title,items){
+if(!window._stOpening) window._stCur=null; /* 스킬트리에서 연 게 아니면 스킬 모드 해제 */
 stepTitle=title;
 /* 휴식 제외 + guide(안내 멘트) 있는 슬롯만 카드로 표시.
    호흡 14일 등 day 코스는 stage1에 그날 카드뉴스가 전부 들어있고
@@ -10883,6 +11195,7 @@ const _rawSid=(item.scaleId||'').replace(/\s+x\d+$/i,'').trim();
 const hasScale=!!_rawSid&&!!(DB.scales||[]).find(s=>s.id===_rawSid);
 const pb=document.getElementById('step-piano-btn');
 pb.style.display=hasScale?'':'none';
+if(!window._stCur){ if(pb.dataset.orig) pb.innerHTML=pb.dataset.orig; var _stgs=document.getElementById('st-g-switch'); if(_stgs) _stgs.style.display='none'; }
 
 /* 다음 훈련 버튼 — 카드 완료 후 표시 (_showGuideCard 콜백에서 처리) */
 const _snr=document.getElementById('step-next-row');
@@ -10893,6 +11206,7 @@ if(_snt){
   if(_isLast){
     _snt.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="vertical-align:-3px;margin-right:7px"><path d="M5 12.5L10 17.5L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>오늘 훈련 완료';
     _snt.style.cssText='width:100%;padding:14px;font-size:14px;font-weight:800;border:none;border-radius:12px;background:#16a34a;color:#fff;cursor:pointer';
+    if(window._stCur) _snt.innerHTML=_snt.innerHTML.replace('오늘 훈련 완료','훈련 완료');
   }else{
     _snt.textContent='다음 훈련 →';
     _snt.style.cssText='width:100%;padding:14px;font-size:14px;font-weight:800';
@@ -11088,7 +11402,7 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
   }
 
   /* 미디어 HTML 생성기 */
-  function _vidHtml(ytTag){
+  function _vidHtml(ytTag,_vPh){
     var _vp=_vidParse(ytTag);
     var ytId=_vp.id, _vert=_vp.vert;
     if(ytId){
@@ -11105,6 +11419,7 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
           +'<div style="background:rgba(0,0,0,.6);color:#fff;padding:10px 18px;border-radius:99px;font-size:15px;font-weight:600">▶ 재생</div>'
           +'</div></div></div>';
     }
+    if(_vPh) return '<div class="card-media-ph card-vid-ph stVidV"><div class="card-ph-icon">▶</div><div class="card-ph-label">영상 준비 중</div></div>';
     return '<div class="card-media-ph card-vid-ph"><div class="card-ph-icon">▶</div><div class="card-ph-label">참조 영상 (준비 중)</div></div>';
   }
   function _imgHtml(imgUrl){
@@ -11131,7 +11446,7 @@ function _renderCardHtml(txt,cardIdx,cardMedia){
     var parts=inner.indexOf(',')>=0?inner.split(','):[inner];
     parts.forEach(function(p){
       var t=p.trim();
-      if(/영상/.test(t)){ html+=_vidHtml(vids[vi]); vi++; }
+      if(/영상/.test(t)){ html+=_vidHtml(vids[vi], /세로/.test(t)); vi++; }
       else if(/사진|이미지/.test(t)){ html+=_imgHtml(imgs[ii]); ii++; }
     });
     lastIdx=markerRe.lastIndex;
@@ -11394,6 +11709,7 @@ function _showGuideCard(idx,animate){
   if(idx<0||idx>=N)return;
   _guideCardIdx=idx;
   var myToken=++_guideCardToken;
+  try{ if(window._stCur) _stOnCard(idx); }catch(e){}
   try{ _bgmCancelFadeOut(); }catch(e){} /* 카드 진입 → 예약된 페이드아웃 취소, 멈췄던 BGM 복귀 */
 
   /* 다른 카드(또는 같은 카드 재진입)의 재생중 영상 iframe 정리 → 썸네일 복원 */
@@ -11536,6 +11852,8 @@ function _showGuideCard(idx,animate){
   if(voiceAfterText){
     voiceAfterText=voiceAfterText.replace(/\([^)]*참조[^)]*\)/g, '').replace(/\[\[[\s\S]*?\]\]/g,'').replace(/\{\{([\s\S]*?)\}\}/g,'$1').replace(/[^\S\n]+/g, ' ').trim();
   }
+  /* 스킬트리 카드만 발음 교정 (S→에쓰, Z→제트, TA근육) — 화면 글자는 그대로 */
+  if(window._stCur){ cardTtsText=_stNormTTS(cardTtsText); if(voiceAfterText) voiceAfterText=_stNormTTS(voiceAfterText); }
 
   function _playVoiceAfter(onDone){
     if(!voiceAfterText||!voiceAfterText.trim()){onDone();return;}
@@ -11720,6 +12038,13 @@ function _initGuideCards(guide,item){
     });
   });
 
+  /* 스킬트리 카드: 카드별 메타(스케일·멘트) + 카드별 영상 매핑 */
+  if(item && item._stMeta){
+    _guideCards.forEach(function(card,ci){
+      if(card && typeof card==='object') card._st=item._stMeta[ci]||null;
+      if(item._stVids && item._stVids[ci] && _cardMediaMap[ci]) _cardMediaMap[ci].vids=item._stVids[ci].slice();
+    });
+  }
   _buildCardSlider(_guideCards);
   requestAnimationFrame(function(){
     var outer=document.getElementById('step-slider-outer');
@@ -11764,6 +12089,7 @@ function _stepGaugeStart(){}
 function _stepGaugeFinish(){}
 
 function nextStep(){
+if(window._stCur && stepIdx>=stepItems.length-1){ _stComplete(); return; }
 if(stepIdx>=stepItems.length-1){
 
 if(window.speechSynthesis)window.speechSynthesis.cancel();
@@ -11783,6 +12109,7 @@ stepIdx++;renderStep();
 }
 function prevStep(){if(stepIdx>0){stepIdx--;renderStep();}}
 function startStepPiano(){
+if(window._stCur){ _stStartScale(); return; }
 const item=stepItems[stepIdx];
 
 const rawScaleId=item.scaleId||'';
@@ -11826,7 +12153,7 @@ const onTrainScreen=scrStack[scrStack.length-1]==='scr-train';
 if(!playing&&onTrainScreen)startEngine();
 });
 }
-function closeStep(){ _introHLActive=false; try{ _introClearHL(); }catch(e){} cancelTTS();pop();}
+function closeStep(){ _introHLActive=false; try{ _introClearHL(); }catch(e){} cancelTTS();pop(); if(window._stCur){ window._stCur=null; setTimeout(function(){ try{ _stRefresh(); }catch(e){} },60); } }
 function toggleStepTTS(){
 if((window.speechSynthesis&&speechSynthesis.speaking)||window._elSrc){stopEL();if(window.speechSynthesis)speechSynthesis.cancel();}
 else{
