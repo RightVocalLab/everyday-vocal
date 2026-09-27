@@ -45,8 +45,8 @@ display:flex;align-items:center;justify-content:center;flex:0 0 24px}
 .stMini{display:flex;gap:5px;margin-bottom:11px}
 .stMini>div{flex:1;background:#fff;border:1px solid #f1ede8;border-radius:11px;padding:7px 3px;text-align:center}
 .stMini b{display:block;font-size:9.5px;letter-spacing:-.4px;margin-bottom:5px}
-.stMini .dots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
-.stMini i{width:9px;height:9px;border-radius:3px;display:block;background:#eceae7}
+.stMini .dots{display:flex;flex-wrap:nowrap;gap:2px;justify-content:center;padding:0 2px}
+.stMini i{flex:0 1 9px;min-width:0;aspect-ratio:1/1;border-radius:3px;display:block;background:#eceae7} /* 폰 폭에서도 6칸 한 줄 */
 .stGo{width:100%;border:0;border-radius:12px;padding:11px;background:#f97316;color:#fff;
 font:800 13px/1 inherit;cursor:pointer;font-family:inherit}
 #scr-skilltree .stRoot{flex:0 0 auto;padding:11px 12px 0;background:#fff}
@@ -8516,6 +8516,7 @@ function _stOpenHome(){ if(typeof push==='function') push('scr-home'); }
 function _stOpen(){
   if(typeof push==='function') push('scr-skilltree');
   _stPC=null; _stBuilt=false; /* 열 때마다 최신 완료 기록(Firebase 복원분 포함)으로 다시 그림 */
+  try{ _stHomeRefresh(); }catch(e){}
   _stBuild(); _stGoOver();
 }
 function _stBreathHome(){
@@ -8532,7 +8533,12 @@ function _stMiniHome(){
   host.innerHTML='';
   SKILLTREE.order.forEach(function(cs){
     var c=SKILLTREE.cs[cs].c, d=document.createElement('div'), dots='';
-    for(var i=0;i<6;i++){ dots+='<i style="'+(i===0?('background:'+c):(i<2?('background:'+c+'44'):''))+'"></i>'; }
+    /* 실제 진행: 공개 스킬 중 완료 비율을 6칸으로 (완료 1개라도 있으면 최소 1칸), 진행 중이면 연한 칸 1개 */
+    var pub=SKILLTREE.nodes.filter(function(n){ return n.cs===cs && n.st!=='soon'; });
+    var dn=pub.filter(function(n){ return _stIsDone(n); }).length;
+    var prog=pub.some(function(n){ return !_stIsDone(n) && _stCount(n.id)>0; });
+    var full=pub.length? Math.round(dn/pub.length*6) : 0; if(dn>0 && full<1) full=1;
+    for(var i=0;i<6;i++){ dots+='<i style="'+(i<full?('background:'+c):((i===full && prog)?('background:'+c+'44'):''))+'"></i>'; }
     d.innerHTML='<b style="color:'+c+'">'+cs.replace(' 케어','케어')+'</b><div class="dots">'+dots+'</div>';
     host.appendChild(d);
   });
@@ -8543,6 +8549,18 @@ window.addEventListener('resize',function(){
   for(var k=0;k<ps.length;k++) _stDraw(ps[k]);
 });
 document.addEventListener('DOMContentLoaded',function(){ try{ _stMiniHome(); _stBreathHome(); }catch(e){} });
+/* 메인 배너·트리 상단의 호흡/진행 표시를 실제 기록으로 갱신 (로그인 후 Firebase 복원, 화면 복귀 때 호출) */
+function _stHomeRefresh(){
+  try{ if(typeof _stPC!=='undefined') _stPC=null; }catch(e){}
+  try{ _stBreathHome(); }catch(e){}
+  try{ _stMiniHome(); }catch(e){}
+  try{
+    var el=document.getElementById('stRootSt'); if(el){
+      var pr=_stBreathProgress(), done=(pr.total>0 && pr.done>=pr.total);
+      el.textContent = done ? '완료' : (pr.done+' / '+pr.total+'일');
+    }
+  }catch(e){}
+}
 /* ══════════════════════════════════════════════════════════════
    스킬트리 v3 — 진행 저장 · 해금 판정 · 카드 화면 연결
    · 완료 기록: 스킬당 하루 1회 — 호흡 코스와 같은 저장 방식(_markDayDone) 재사용
@@ -8599,7 +8617,7 @@ function _stState(n){
 }
 function _stRefresh(){
   _stPC=null;
-  try{ _stBreathHome(); }catch(e){}
+  try{ _stHomeRefresh(); }catch(e){}
   if(!_stBuilt) return;
   var pager=document.getElementById('stPager'), sl=pager?pager.scrollLeft:0;
   var det=document.getElementById('stDet'), detOn=det && !det.classList.contains('off');
@@ -8876,6 +8894,7 @@ function pop(){
     prevEl.classList.remove('hidden');
   }
   _syncFixedNavVisibility();
+  if(prevId==='scr-home' || prevId==='scr-skilltree'){ try{ _stHomeRefresh(); }catch(e){} }
   /* scr-step으로 복귀 시 현재 카드 자동 재개 */
   if(prevId === 'scr-step' && Array.isArray(_guideCards) && _guideCards.length > 0){
     setTimeout(function(){ _showGuideCard(_guideCardIdx, false); }, 300);
@@ -10624,6 +10643,7 @@ if(arrow)arrow.style.transform=open?'rotate(180deg)':'rotate(0deg)';
 }
 
 function buildHome(){
+try{ setTimeout(_stHomeRefresh,0); }catch(e){} /* 스킬트리 배너도 최신 기록으로 */
 /* 1. 훈련 코스 카드 - 큰 그리드 카드 */
 const courseEl = document.getElementById('course-cards');
 const courseEmpty = document.getElementById('course-empty');
