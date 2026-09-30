@@ -2677,18 +2677,7 @@ display:flex;align-items:center;justify-content:center}
     <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:10px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-left:4px">
         <div style="font-size:12px;font-weight:800;color:#374151">📈 PVR 그래프 (음정 × 강도)</div>
-        <!-- 관리자 전용: 점 편집 / 디버그 CSV -->
-        <span style="display:inline-flex;gap:6px;align-items:center">
-        <button id="pt-edit-toggle-btn" onclick="_ptToggleEditMode()" 
-                style="display:none;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;cursor:pointer">
-          🛠 점 편집
-        </button>
-        <button id="pt-dbg-csv-btn" onclick="_ptExportDbgCSV()" 
-                style="display:none;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;cursor:pointer">
-          🔬 디버그 CSV
-        </button>
-        </span>
-      </div>
+        </div>
       <!-- 편집 모드 안내 (관리자 + 편집모드 ON 시 표시) -->
       <div id="pt-edit-hint" style="display:none;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10.5px;color:#92400e;line-height:1.5">
         💡 점을 탭하면 제거 표시(✕)됩니다. 다시 탭하면 복원. 완료 후 "적용" 버튼을 누르세요.
@@ -2757,6 +2746,24 @@ display:flex;align-items:center;justify-content:center}
     <!-- 닫기 버튼 -->
     <div style="display:flex;justify-content:center">
       <button onclick="_closePtResult()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:11px 32px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
+    </div>
+    <!-- 관리자 도구 (결과지 맨 아래 — 캡처 범위 밖) -->
+    <div id="pt-admin-tools" style="display:none;margin-top:18px;padding-top:12px;border-top:1px dashed #cbd5e1">
+      <div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:8px;text-align:center">관리자 도구</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+        <button id="pt-dots-toggle-btn" onclick="_ptToggleDots()"
+                style="font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:6px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;cursor:pointer">
+          점 숨기기 (등고선만)
+        </button>
+        <button id="pt-edit-toggle-btn" onclick="_ptToggleEditMode()"
+                style="display:none;font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;cursor:pointer">
+          🛠 점 편집
+        </button>
+        <button id="pt-dbg-csv-btn" onclick="_ptExportDbgCSV()"
+                style="display:none;font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:6px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;cursor:pointer">
+          🔬 디버그 CSV
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -21362,6 +21369,8 @@ function _drawSinglePtToCanvas(canvasId, result){
     window._ptPointPositions = [];
     const _editing = (window._ptEditMode === true);
     const _removed = window._ptRemovedIdx || new Set();
+    /* 관리자 '점 숨기기(등고선만)' — 결과지 캔버스에만, 편집 중엔 무시 */
+    const _hideDots = (canvasId === 'pt-result-canvas') && !_editing && _ptDotsHidden();
     
     /* 모든 점을 register 색상으로 그리되, 편집모드에서 제거 표시된 점은 X 표시 */
     result.dataPoints.forEach((p, idx) => {
@@ -21386,6 +21395,8 @@ function _drawSinglePtToCanvas(canvasId, result){
         ctx.moveTo(px-4, py-4); ctx.lineTo(px+4, py+4);
         ctx.moveTo(px+4, py-4); ctx.lineTo(px-4, py+4);
         ctx.stroke();
+      } else if(_hideDots){
+        /* 등고선만 모드: 점은 그리지 않음 */
       } else {
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -21476,7 +21487,11 @@ function _ptInitEditModeUI(result, historyId){
   }
   if(hint) hint.style.display = 'none';
   if(actions) actions.style.display = 'none';
-  
+  /* 관리자 도구 칸 (결과지 맨 아래) */
+  var _tools = document.getElementById('pt-admin-tools');
+  if(_tools) _tools.style.display = isAdmin ? '' : 'none';
+  _ptSyncDotsBtn();
+
   /* 디버그 CSV 버튼 (관리자 + dbg 데이터 있는 결과에만) */
   var csvBtn = document.getElementById('pt-dbg-csv-btn');
   if(csvBtn){
@@ -21526,6 +21541,28 @@ function _ptShowDbgCsvFallback(csv){
 }
 
 /* 편집 모드 토글 */
+/* 관리자 전용: 결과지 점 표시 on/off (등고선만 보기) — 설정은 기억됨 */
+function _ptDotsHidden(){
+  try{
+    if(typeof _isAdminLoggedIn !== 'function' || !_isAdminLoggedIn()) return false;
+    return localStorage.getItem('pt_hide_dots') === '1';
+  }catch(e){ return false; }
+}
+function _ptSyncDotsBtn(){
+  var b = document.getElementById('pt-dots-toggle-btn'); if(!b) return;
+  var hid = _ptDotsHidden();
+  b.textContent = hid ? '점 보이기' : '점 숨기기 (등고선만)';
+  b.style.background = hid ? '#fff7ed' : '#f0fdf4';
+  b.style.color = hid ? '#c2410c' : '#15803d';
+  b.style.borderColor = hid ? '#fed7aa' : '#bbf7d0';
+}
+function _ptToggleDots(){
+  if(typeof _isAdminLoggedIn !== 'function' || !_isAdminLoggedIn()) return;
+  try{ localStorage.setItem('pt_hide_dots', _ptDotsHidden() ? '0' : '1'); }catch(e){}
+  _ptSyncDotsBtn();
+  if(window._ptCurrentResult) _drawSinglePtToCanvas('pt-result-canvas', window._ptCurrentResult);
+}
+
 function _ptToggleEditMode(){
   if(typeof _isAdminLoggedIn !== 'function' || !_isAdminLoggedIn()){
     alert('관리자만 사용할 수 있습니다.');
@@ -21560,6 +21597,8 @@ function _ptToggleEditMode(){
     if(hint) hint.style.display = '';
     if(actions) actions.style.display = 'flex';
     if(canvas) canvas.style.cursor = 'pointer';
+    /* 버튼이 결과지 맨 아래에 있으므로 그래프 위치로 이동 */
+    try{ if(hint) hint.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
   } else {
     /* 편집 종료 (취소와 동일 효과) */
     _ptCancelEdit();
