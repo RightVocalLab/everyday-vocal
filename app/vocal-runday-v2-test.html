@@ -9623,7 +9623,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.9.4';
+var _WEB_VER='2.9.5';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -12383,8 +12383,35 @@ async function _hwUploadConfirm(){
    - 2차: Firebase RTDB (백그라운드 fetch, schemaVersion 비교)
    - 3차: HTML 내장 백업 (둘 다 실패 시 자동 사용)
    ============================================================ */
+var _stuSyncLast=0;
+function _rebindCurStudent(){
+  if(!curStudent || !STUDENTS_DB) return false;
+  var n=curStudent.name;
+  var m=STUDENTS_DB.find(function(s){ return s.name===n; });
+  if(m && m!==curStudent){ curStudent=m; return true; }
+  return false;
+}
+function _hwAfterStudentsSync(){
+  if(!_rebindCurStudent()) return;
+  var top=(typeof scrStack!=='undefined'&&scrStack.length)?scrStack[scrStack.length-1]:'';
+  if(top==='scr-homework' && !(typeof isSeq!=='undefined' && isSeq)){
+    _loadHwList(); rndrHw(); _updateHwProgress();
+  }
+}
+function _hwCheckStudentsFresh(force){
+  var now=Date.now();
+  if(!force && now-_stuSyncLast<20000) return;
+  _stuSyncLast=now;
+  try{ _syncStudentsFromFirebase(); }catch(e){}
+}
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible' && curStudent) _hwCheckStudentsFresh(false);
+});
+window.addEventListener('pageshow',function(){ if(curStudent) _hwCheckStudentsFresh(false); });
 function _syncStudentsFromFirebase(){
-  if(typeof firebase === 'undefined' || !firebase.database){
+  _stuSyncLast=Date.now();
+  if(typeof firebase === 'undefined' || !firebase.database || !_fbReady){
+    /* SDK 로딩 중이면 Firebase 연결 완료 시 다시 호출됨 (_initFirebase) */
     /* Firebase 미연결 - localStorage 또는 내장 백업으로 진행 */
     if(!STUDENTS_DB || !STUDENTS_DB.length){
       STUDENTS_DB = JSON.parse(JSON.stringify(_STUDENTS_DB_FALLBACK));
@@ -12426,6 +12453,7 @@ function _syncStudentsFromFirebase(){
           localStorage.setItem('ev_students_db', JSON.stringify(STUDENTS_DB));
           localStorage.setItem(_STUDENTS_LS_VER_KEY, String(remoteVer));
           if(typeof _updateHwMenuSub === 'function') _updateHwMenuSub();
+          try{ _hwAfterStudentsSync(); }catch(e){}
           console.log('[students-sync] 동기화 완료: ' + newDb.length + '명');
         }).catch(function(e){
           console.warn('[students-sync] students fetch 실패 - 기존 데이터 유지:', e.message);
@@ -12553,6 +12581,8 @@ pop();
 
 function openHomework(){
 if(!curStudent) return;
+_rebindCurStudent();
+_hwCheckStudentsFresh(true);
 _loadHwList();
 rndrHw();
 document.getElementById('hw-topbar-title').textContent = curStudent.name + '님 숙제';
@@ -12578,6 +12608,7 @@ _fbLoadHwDone(curStudent.name, _fbDateKey(), function(fbDone){
       });
       try{ localStorage.setItem(_hwProgressKey(),JSON.stringify(localProg)); }catch(e){}
     }
+    _rebindCurStudent(); _loadHwList(); /* 기다리는 사이 최신 숙제가 도착했으면 반영 */
     /* === 자동 마이그레이션: 현재 목록의 유효 서명만 유지 (옛 순번데이터 자동 폐기) === */
     const _doneNow=_getHwDone();
     const _progNow=_getHwProgress();
@@ -13058,6 +13089,8 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
           _fbDb = firebase.database();
           _fbReady = true;
           console.log('✅ Firebase 연결 완료');
+          /* 학생 숙제 최신화: 앱 시작 1.5초 타이머가 SDK 로딩보다 빨랐던 경우 대비 */
+          try{ if(typeof _syncStudentsFromFirebase === 'function') _syncStudentsFromFirebase(); }catch(e){}
           /* 자동 로그인이 Firebase보다 먼저 끝난 경우 대비: 로그인된 학생의 코스 진행 복원 */
           if(typeof curStudent !== 'undefined' && curStudent && typeof _fbLoadCourseProgress === 'function'){
             _fbLoadCourseProgress(curStudent.name, function(){ try{ if(typeof buildHome==='function') buildHome(); }catch(e){} });
