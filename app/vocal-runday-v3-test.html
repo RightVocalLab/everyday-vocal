@@ -10391,7 +10391,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.9.6';
+var _WEB_VER='2.9.8';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -19492,7 +19492,10 @@ function _ptDetectRegister(timeBuf, f0, sampleRate, dB){
      → 고음역(F5+)에서 배음이 기본파보다 훨씬 우세(H1H2-H2H4 < -12)면 두성=믹스로 강등.
        (진짜 가성은 숨섞여 H1H2가 우세 → 이 조건 미충족, 보존. 음-단위 다수결이 잔여 오탐 정리.)
      검증: 두성 74% mix 적중, 가성 오판 18%(음 단위론 82% falsetto 유지). */
-  if(isFemale && result === 'falsetto' && f0 >= 700 && (h1h2 - h2h4) < -12){
+  /* [2026-10-14 조정 -12 → -20] 고연지(가성 H1H2-H2H4 중앙 -18)가 두성으로 오강등되던 문제.
+     4인 실측(F5~A#5): 장현아 가성 -1~-8 / 고연지 가성 -18 / 강다인 중성 ~-37 / 장현아 중성 더 낮음.
+     -20: 고연지 가성 강등 66→45%, 중성(장현아·강다인) 강등 유지율 -6~8%p만 감소. */
+  if(isFemale && result === 'falsetto' && f0 >= 700 && (h1h2 - h2h4) < -20){
     result = 'mix';
   }
 
@@ -22636,6 +22639,44 @@ function _ptHandleRecommendationClick(item){
 }
 
 /* ===== [2026-10-14] 측정 이력 보존: 용량 안전 저장 + 서버 백업 자동 재시도 ===== */
+/* [2026-10-14] 측정 이력 영구 보관본: IndexedDB(수백MB급)에 timestamp 키로 계속 쌓음. 삭제 안 함.
+   localStorage 목록이 용량 때문에 정리돼도 원본은 여기 남고, 서버 백업 재시도도 여기서 읽는다. */
+function _ptIdb(){
+  return new Promise(function(res,rej){
+    try{
+      var rq=indexedDB.open('vr_pt_archive',1);
+      rq.onupgradeneeded=function(){ var db=rq.result; if(!db.objectStoreNames.contains('rec')) db.createObjectStore('rec',{keyPath:'timestamp'}); };
+      rq.onsuccess=function(){ res(rq.result); }; rq.onerror=function(){ rej(rq.error); };
+    }catch(e){ rej(e); }
+  });
+}
+function _ptArchivePut(rec){
+  if(!rec || !rec.timestamp || typeof indexedDB==='undefined') return Promise.resolve();
+  return _ptIdb().then(function(db){ return new Promise(function(res){
+    try{ var tx=db.transaction('rec','readwrite'); tx.objectStore('rec').put(JSON.parse(JSON.stringify(rec))); tx.oncomplete=function(){res();}; tx.onerror=function(){res();}; }catch(e){ res(); }
+  }); }).catch(function(){});
+}
+function _ptArchiveAll(){
+  if(typeof indexedDB==='undefined') return Promise.resolve([]);
+  return _ptIdb().then(function(db){ return new Promise(function(res){
+    try{ var rq=db.transaction('rec','readonly').objectStore('rec').getAll(); rq.onsuccess=function(){ res(rq.result||[]); }; rq.onerror=function(){ res([]); }; }catch(e){ res([]); }
+  }); }).catch(function(){ return []; });
+}
+function _ptArchiveMark(ts, fields){
+  return _ptIdb().then(function(db){ return new Promise(function(res){
+    try{ var st=db.transaction('rec','readwrite').objectStore('rec'); var g=st.get(ts);
+      g.onsuccess=function(){ var r=g.result; if(r){ Object.assign(r,fields); if(fields._fbSynced) delete r._fbPending; st.put(r); } res(); }; g.onerror=function(){res();};
+    }catch(e){ res(); }
+  }); }).catch(function(){});
+}
+/* 관리자 기기 판정: 지금 관리자(김동현)로 로그인돼 있으면 이 기기를 '관리자 기기'로 기억.
+   한 번 기억된 기기는 잠깐 로그아웃해도 관리자 측정 기록이 30개 제한에 잘리지 않음. */
+function _ptUnlimitedDevice(){
+  try{
+    if(typeof _isAppAdmin==='function' && _isAppAdmin()){ localStorage.setItem('pt_admin_device','1'); return true; }
+    return localStorage.getItem('pt_admin_device')==='1';
+  }catch(e){ return false; }
+}
 function _ptLocalPut(list){
   var key='pt_history_local';
   for(var guard=0; guard<500; guard++){
@@ -22658,14 +22699,19 @@ function _ptLocalUpdate(ts, fn){
     if(hit) _ptLocalPut(list);
   }catch(e){}
 }
-function _ptMarkSynced(ts, name){ _ptLocalUpdate(ts, function(r){ r._fbSynced=true; r._fbName=name; delete r._fbPending; }); }
-function _ptMarkPending(ts, name){ _ptLocalUpdate(ts, function(r){ r._fbPending=name; }); }
+function _ptMarkSynced(ts, name){ _ptLocalUpdate(ts, function(r){ r._fbSynced=true; r._fbName=name; delete r._fbPending; }); _ptArchiveMark(ts,{_fbSynced:true,_fbName:name}); }
+function _ptMarkPending(ts, name){ _ptLocalUpdate(ts, function(r){ r._fbPending=name; }); _ptArchiveMark(ts,{_fbPending:name}); }
 var _ptRetryDone=false;
 async function _ptRetryUnsynced(){
   if(_ptRetryDone) return; _ptRetryDone=true;
   try{
     if(typeof firebase==='undefined' || !_fbReady) { _ptRetryDone=false; return; }
     var list=JSON.parse(localStorage.getItem('pt_history_local')||'[]');
+    /* 기존 로컬 목록을 보관본에 한 번 옮겨 담기(업데이트 전 기록 보호) + 보관본에만 남은 기록 합치기 */
+    var _seen={}; var _unl=_ptUnlimitedDevice();
+    list.forEach(function(r){ if(r&&r.timestamp){ _seen[r.timestamp]=1; if(_unl) _ptArchivePut(r); } });
+    var _arc=_unl ? await _ptArchiveAll() : [];
+    _arc.forEach(function(r){ if(r && r.timestamp && !_seen[r.timestamp]){ list.push(r); _seen[r.timestamp]=1; } });
     var norm=function(x){ return String(x||'').replace(/\s/g,''); };
     var todo={};
     list.forEach(function(r){
@@ -22703,9 +22749,15 @@ function _ptSaveResult(result){
     const storageKey = 'pt_history_local';
     const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
     list.unshift(result);
-    /* [2026-10-14] 30개 제한 제거: 기기 용량이 허락하는 만큼 보관.
-       용량 초과 시 '서버에 이미 백업된(_fbSynced)' 오래된 기록부터 정리 → 백업 안 된 기록은 최대한 보존 */
-    _ptLocalPut(list);
+    /* [2026-10-14] 관리자 기기(김동현 로그인 이력이 있는 기기)만 무제한 + 영구 보관본.
+       일반 사용자·학생 기기는 기존대로 최근 30개만 보관. */
+    if(_ptUnlimitedDevice()){
+      _ptLocalPut(list);       /* 개수 제한 없음, 용량 초과 시 서버 백업된 것부터 정리 */
+      _ptArchivePut(result);   /* IndexedDB 영구 보관본 (삭제 안 함) */
+    } else {
+      if(list.length > 30) list.length = 30;
+      _ptLocalPut(list);
+    }
   } catch(e){
     console.warn('localStorage 저장 실패:', e);
   }
