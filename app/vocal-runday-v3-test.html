@@ -10391,7 +10391,7 @@ setTimeout(()=>{box.style.animation='shake .3s ease';},10);
 }
 }
 
-var _WEB_VER='2.9.5';
+var _WEB_VER='2.9.6';
 function _showAppVersion(){
 try{
 var inner=document.querySelector('#scr-home .inner');
@@ -13876,6 +13876,8 @@ let _fbAuthUid = null;  /* Anonymous Auth UID (게시판 권한용) */
           console.log('✅ Firebase 연결 완료');
           /* 학생 숙제 최신화: 앱 시작 1.5초 타이머가 SDK 로딩보다 빨랐던 경우 대비 */
           try{ if(typeof _syncStudentsFromFirebase === 'function') _syncStudentsFromFirebase(); }catch(e){}
+          /* 측정 이력 중 서버 백업 안 된 것 자동 재시도 (학생 명단 로드 후) */
+          setTimeout(function(){ try{ if(typeof _ptRetryUnsynced==='function') _ptRetryUnsynced(); }catch(e){} }, 6000);
           /* 자동 로그인이 Firebase보다 먼저 끝난 경우 대비: 로그인된 학생의 코스 진행 복원 */
           if(typeof curStudent !== 'undefined' && curStudent && typeof _fbLoadCourseProgress === 'function'){
             _fbLoadCourseProgress(curStudent.name, function(){ try{ if(typeof buildHome==='function') buildHome(); }catch(e){} });
@@ -22633,6 +22635,66 @@ function _ptHandleRecommendationClick(item){
   }, 200);
 }
 
+/* ===== [2026-10-14] 측정 이력 보존: 용량 안전 저장 + 서버 백업 자동 재시도 ===== */
+function _ptLocalPut(list){
+  var key='pt_history_local';
+  for(var guard=0; guard<500; guard++){
+    try{ localStorage.setItem(key, JSON.stringify(list)); return true; }
+    catch(e){
+      if(list.length<=1) { console.warn('측정 이력 로컬 저장 실패(용량):', e); return false; }
+      var idx=-1;
+      for(var i=list.length-1;i>0;i--){ if(list[i] && list[i]._fbSynced){ idx=i; break; } }
+      if(idx<0) idx=list.length-1; /* 전부 미백업이면 가장 오래된 것 */
+      list.splice(idx,1);
+    }
+  }
+  return false;
+}
+function _ptLocalUpdate(ts, fn){
+  try{
+    var list=JSON.parse(localStorage.getItem('pt_history_local')||'[]');
+    var hit=false;
+    list.forEach(function(r){ if(r && r.timestamp===ts){ fn(r); hit=true; } });
+    if(hit) _ptLocalPut(list);
+  }catch(e){}
+}
+function _ptMarkSynced(ts, name){ _ptLocalUpdate(ts, function(r){ r._fbSynced=true; r._fbName=name; delete r._fbPending; }); }
+function _ptMarkPending(ts, name){ _ptLocalUpdate(ts, function(r){ r._fbPending=name; }); }
+var _ptRetryDone=false;
+async function _ptRetryUnsynced(){
+  if(_ptRetryDone) return; _ptRetryDone=true;
+  try{
+    if(typeof firebase==='undefined' || !_fbReady) { _ptRetryDone=false; return; }
+    var list=JSON.parse(localStorage.getItem('pt_history_local')||'[]');
+    var norm=function(x){ return String(x||'').replace(/\s/g,''); };
+    var todo={};
+    list.forEach(function(r){
+      if(!r || r._fbSynced || !r.timestamp) return;
+      var name=r._fbPending||null;
+      if(!name && r.userName && typeof STUDENTS_DB!=='undefined' && Array.isArray(STUDENTS_DB)){
+        var m=STUDENTS_DB.find(function(s){ return norm(s.name)===norm(r.userName); });
+        if(m) name=m.name;
+      }
+      if(!name) return; /* 명단 밖 이름은 관리자 수동 동기화로 */
+      (todo[name]=todo[name]||[]).push(r);
+    });
+    var db=firebase.database(), up=0;
+    for(var name in todo){
+      var have=new Set();
+      try{ var v=(await db.ref('pt_history/'+name).once('value')).val()||{}; Object.keys(v).forEach(function(k){ if(v[k]&&v[k].timestamp) have.add(v[k].timestamp); }); }
+      catch(e){ continue; }
+      for(var j=0;j<todo[name].length;j++){
+        var r=todo[name][j];
+        if(have.has(r.timestamp)){ _ptMarkSynced(r.timestamp,name); continue; }
+        try{
+          var clean=JSON.parse(JSON.stringify(r)); delete clean._fbSynced; delete clean._fbPending; delete clean._fbName;
+          await db.ref('pt_history/'+name).push().set(clean); _ptMarkSynced(r.timestamp,name); up++;
+        }catch(e){ _ptMarkPending(r.timestamp,name); }
+      }
+    }
+    if(up) console.log('[pt-sync] 서버에 미백업 측정 이력 '+up+'건 자동 백업');
+  }catch(e){ _ptRetryDone=false; }
+}
 function _ptSaveResult(result){
   if(!result) return;
   
@@ -22641,9 +22703,9 @@ function _ptSaveResult(result){
     const storageKey = 'pt_history_local';
     const list = JSON.parse(localStorage.getItem(storageKey) || '[]');
     list.unshift(result);
-    /* 최근 30개만 보관 */
-    if(list.length > 30) list.length = 30;
-    localStorage.setItem(storageKey, JSON.stringify(list));
+    /* [2026-10-14] 30개 제한 제거: 기기 용량이 허락하는 만큼 보관.
+       용량 초과 시 '서버에 이미 백업된(_fbSynced)' 오래된 기록부터 정리 → 백업 안 된 기록은 최대한 보존 */
+    _ptLocalPut(list);
   } catch(e){
     console.warn('localStorage 저장 실패:', e);
   }
@@ -22680,8 +22742,8 @@ function _ptSaveResult(result){
         const db = firebase.database();
         const ref = db.ref(`pt_history/${studentName}`).push();
         ref.set(result)
-          .then(() => console.log('✅ Firebase 저장 완료:', studentName))
-          .catch(e => console.warn('Firebase 저장 실패:', e));
+          .then(() => { console.log('✅ Firebase 저장 완료:', studentName); _ptMarkSynced(result.timestamp, studentName); })
+          .catch(e => { console.warn('Firebase 저장 실패(다음 실행 때 자동 재시도):', e); _ptMarkPending(result.timestamp, studentName); });
       } else {
         console.log('ℹ️ 학생 이름 미일치 - Firebase 저장 건너뜀 (localStorage에만 저장)');
       }
